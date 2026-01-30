@@ -28,9 +28,19 @@
                     <TextBlock Text="Salesforce Debug Log Analyzer" FontSize="22" VerticalAlignment="Center" FontWeight="Medium"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Content="Connect to Salesforce" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
-                    <Button Content="Upload Log" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
-                    <Button Content="Settings" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
+                    <Button Content="Connect to Salesforce" 
+                            Command="{Binding ConnectToSalesforceCommand}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"
+                            Style="{StaticResource MaterialDesignFlatButton}" 
+                            Margin="8,0"/>
+                    <Button Content="Upload Log" 
+                            Command="{Binding UploadLogCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}" 
+                            Margin="8,0"/>
+                    <Button Content="Settings" 
+                            Command="{Binding OpenSettingsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}" 
+                            Margin="8,0"/>
                 </StackPanel>
             </DockPanel>
         </materialDesign:ColorZone>
@@ -126,8 +136,19 @@
         <!-- Status Bar -->
         <materialDesign:ColorZone Mode="PrimaryLight" Padding="8" Grid.Row="2">
             <DockPanel>
-                <TextBlock Text="Ready" VerticalAlignment="Center" Margin="8,0"/>
-                <TextBlock Text="Not connected" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0"/>
+                <ProgressBar IsIndeterminate="True" 
+                             Width="100" 
+                             Height="4"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                             Margin="8,0"
+                             DockPanel.Dock="Left"/>
+                <TextBlock Text="{Binding StatusMessage}" 
+                           VerticalAlignment="Center" 
+                           Margin="8,0"/>
+                <TextBlock Text="{Binding ConnectionStatus}" 
+                           DockPanel.Dock="Right" 
+                           VerticalAlignment="Center" 
+                           Margin="8,0"/>
             </DockPanel>
         </materialDesign:ColorZone>
     </Grid>
