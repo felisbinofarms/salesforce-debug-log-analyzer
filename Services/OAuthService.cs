@@ -3,18 +3,18 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 namespace SalesforceDebugAnalyzer.Services;
 
 /// <summary>
-/// Handles OAuth 2.0 authentication flow with Salesforce
+/// Handles OAuth 2.0 authentication flow with Salesforce using PKCE (public client)
 /// </summary>
 public class OAuthService
 {
-    // You'll need to create a Connected App in Salesforce and use these values
-    private const string ClientId = "YOUR_CONNECTED_APP_CLIENT_ID";
-    private const string ClientSecret = "YOUR_CONNECTED_APP_CLIENT_SECRET";
+    // Using Salesforce's public client ID for desktop apps (PKCE flow - no secret needed)
+    private const string ClientId = "PlatformCLI";
     private const string RedirectUri = "http://localhost:8080/callback";
     
     private const string AuthorizationEndpoint = "https://login.salesforce.com/services/oauth2/authorize";
@@ -23,7 +23,7 @@ public class OAuthService
     private HttpListener? _httpListener;
 
     /// <summary>
-    /// Start the OAuth 2.0 authorization flow
+    /// Start the OAuth 2.0 authorization flow with PKCE
     /// </summary>
     public async Task<OAuthResult> AuthenticateAsync(bool useSandbox = false)
     {
@@ -37,13 +37,19 @@ public class OAuthService
 
         // Generate state for CSRF protection
         var state = Guid.NewGuid().ToString("N");
+        
+        // Generate PKCE code verifier and challenge
+        var codeVerifier = GenerateCodeVerifier();
+        var codeChallenge = GenerateCodeChallenge(codeVerifier);
 
-        // Build authorization URL
+        // Build authorization URL with PKCE
         var authUrl = $"{authEndpoint}?" +
                      $"response_type=code&" +
                      $"client_id={Uri.EscapeDataString(ClientId)}&" +
                      $"redirect_uri={Uri.EscapeDataString(RedirectUri)}&" +
-                     $"scope={Uri.EscapeDataString("api refresh_token")}&" +
+                     $"scope={Uri.EscapeDataString("api refresh_token web")}&" +
+                     $"code_challenge={codeChallenge}&" +
+                     $"code_challenge_method=S256&" +
                      $"state={state}";
 
         // Start local HTTP server to receive callback
@@ -54,8 +60,8 @@ public class OAuthService
             return new OAuthResult { Success = false, Error = "Authorization was cancelled or failed" };
         }
 
-        // Exchange authorization code for access token
-        return await ExchangeCodeForTokenAsync(authCode, tokenEndpoint);
+        // Exchange authorization code for access token with PKCE
+        return await ExchangeCodeForTokenAsync(authCode, codeVerifier, tokenEndpoint);
     }
 
     /// <summary>
@@ -155,7 +161,7 @@ public class OAuthService
         }
     }
 
-    private async Task<OAuthResult> ExchangeCodeForTokenAsync(string authCode, string tokenEndpoint)
+    private async Task<OAuthResult> ExchangeCodeForTokenAsync(string authCode, string codeVerifier, string tokenEndpoint)
     {
         using var httpClient = new HttpClient();
         
@@ -164,7 +170,7 @@ public class OAuthService
             { "grant_type", "authorization_code" },
             { "code", authCode },
             { "client_id", ClientId },
-            { "client_secret", ClientSecret },
+            { "code_verifier", codeVerifier },
             { "redirect_uri", RedirectUri }
         };
 
@@ -203,6 +209,41 @@ public class OAuthService
         {
             return new OAuthResult { Success = false, Error = $"Exception during token exchange: {ex.Message}" };
         }
+    }
+
+    /// <summary>
+    /// Generate a cryptographically random code verifier for PKCE (43-128 characters)
+    /// </summary>
+    private string GenerateCodeVerifier()
+    {
+        var bytes = new byte[32]; // 32 bytes = 43 characters in base64url
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(bytes);
+        }
+        return Base64UrlEncode(bytes);
+    }
+
+    /// <summary>
+    /// Generate code challenge from verifier using SHA256
+    /// </summary>
+    private string GenerateCodeChallenge(string codeVerifier)
+    {
+        using var sha256 = SHA256.Create();
+        var bytes = Encoding.ASCII.GetBytes(codeVerifier);
+        var hash = sha256.ComputeHash(bytes);
+        return Base64UrlEncode(hash);
+    }
+
+    /// <summary>
+    /// Base64 URL encode (RFC 4648 Section 5)
+    /// </summary>
+    private string Base64UrlEncode(byte[] input)
+    {
+        return Convert.ToBase64String(input)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
     }
 
     private int FindAvailablePort()

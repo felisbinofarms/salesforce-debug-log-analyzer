@@ -29,7 +29,7 @@ public class InverseBooleanConverter : IValueConverter
 }
 
 /// <summary>
-/// Converts boolean to Visibility
+/// Converts boolean to Visibility (with optional inversion)
 /// </summary>
 public class BooleanToVisibilityConverter : IValueConverter
 {
@@ -37,6 +37,10 @@ public class BooleanToVisibilityConverter : IValueConverter
     {
         if (value is bool boolValue)
         {
+            // Check if we should invert
+            bool invert = parameter is string str && str.Equals("Inverse", StringComparison.OrdinalIgnoreCase);
+            if (invert) boolValue = !boolValue;
+            
             return boolValue ? Visibility.Visible : Visibility.Collapsed;
         }
         return Visibility.Collapsed;
@@ -46,7 +50,13 @@ public class BooleanToVisibilityConverter : IValueConverter
     {
         if (value is Visibility visibility)
         {
-            return visibility == Visibility.Visible;
+            bool result = visibility == Visibility.Visible;
+            
+            // Check if we should invert
+            bool invert = parameter is string str && str.Equals("Inverse", StringComparison.OrdinalIgnoreCase);
+            if (invert) result = !result;
+            
+            return result;
         }
         return false;
     }

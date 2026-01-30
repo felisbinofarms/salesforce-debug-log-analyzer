@@ -1,0 +1,120 @@
+<Window x:Class="SalesforceDebugAnalyzer.Views.DebugLevelDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Create Debug Level" 
+        Height="500" 
+        Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Create Debug Level" FontSize="20" FontWeight="Bold" Margin="0,0,0,8"/>
+            <TextBlock Text="Configure logging verbosity for different categories" 
+                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        </StackPanel>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="Name" Margin="0,0,0,4"/>
+                <TextBox x:Name="NameTextBox" 
+                         materialDesign:HintAssist.Hint="My Debug Level"
+                         Margin="0,0,0,16"/>
+
+                <TextBlock Text="Log Levels (NONE → ERROR → WARN → INFO → DEBUG → FINE → FINER → FINEST)" 
+                           TextWrapping="Wrap"
+                           FontSize="10"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           Margin="0,0,0,16"/>
+
+                <!-- Apex Code -->
+                <TextBlock Text="Apex Code" Margin="0,8,0,4"/>
+                <ComboBox x:Name="ApexCodeComboBox" SelectedIndex="7" Margin="0,0,0,8">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- Database -->
+                <TextBlock Text="Database" Margin="0,8,0,4"/>
+                <ComboBox x:Name="DatabaseComboBox" SelectedIndex="7" Margin="0,0,0,8">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- System -->
+                <TextBlock Text="System" Margin="0,8,0,4"/>
+                <ComboBox x:Name="SystemComboBox" SelectedIndex="4" Margin="0,0,0,8">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- Other categories with moderate defaults -->
+                <TextBlock Text="Workflow" Margin="0,8,0,4"/>
+                <ComboBox x:Name="WorkflowComboBox" SelectedIndex="3" Margin="0,0,0,8">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <TextBlock Text="Validation" Margin="0,8,0,4"/>
+                <ComboBox x:Name="ValidationComboBox" SelectedIndex="3" Margin="0,0,0,8">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" 
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Click="CancelButton_Click"
+                    Margin="0,0,8,0"/>
+            <Button Content="Create" 
+                    x:Name="CreateButton"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Click="CreateButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

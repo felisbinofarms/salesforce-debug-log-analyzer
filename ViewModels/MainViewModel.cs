@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
+using SalesforceDebugAnalyzer.Views;
 using System.Collections.ObjectModel;
 using System.IO;
 
@@ -47,11 +48,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<DatabaseOperation> _databaseOperations = new();
 
-    public MainViewModel()
+    public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
-        _oauthService = new OAuthService();
-        _apiService = new SalesforceApiService();
-        _parserService = new LogParserService();
+        _apiService = salesforceApi;
+        _parserService = parserService;
+        _oauthService = oauthService;
+    }
+
+    public void OnConnected()
+    {
+        IsConnected = true;
+        ConnectionStatus = $"Connected: {_apiService.Connection?.InstanceUrl}";
+        StatusMessage = "Ready";
     }
 
     partial void OnSelectedLogChanged(LogAnalysis? value)
@@ -75,41 +83,29 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ConnectToSalesforce()
     {
-        StatusMessage = "Connecting to Salesforce...";
-        IsLoading = true;
+        StatusMessage = "Opening connection dialog...";
 
         try
         {
-            // For now, use manual token authentication (will implement full OAuth later)
-            // You can get a token from Workbench or SF CLI: sf org display --target-org myOrg
-            
-            StatusMessage = "Opening browser for authentication...";
-            var result = await _oauthService.AuthenticateAsync(useSandbox: false);
-
-            if (result.Success)
+            var connectionDialog = new ConnectionDialog(_oauthService, _apiService);
+            if (connectionDialog.ShowDialog() == true)
             {
-                await _apiService.AuthenticateAsync(result.InstanceUrl, result.AccessToken, result.RefreshToken);
-                
                 IsConnected = true;
-                ConnectionStatus = $"Connected to {result.InstanceUrl}";
+                ConnectionStatus = $"Connected to {_apiService.Connection?.InstanceUrl}";
                 StatusMessage = "✓ Connected successfully";
 
-                // Load recent logs
-                await LoadRecentLogsAsync();
+                // Optionally load recent logs
+                // await LoadRecentLogsAsync();
             }
             else
             {
-                StatusMessage = $"Connection failed: {result.Error}";
+                StatusMessage = "Connection cancelled";
             }
         }
         catch (Exception ex)
         {
             StatusMessage = $"Connection failed: {ex.Message}";
             IsConnected = false;
-        }
-        finally
-        {
-            IsLoading = false;
         }
     }
 
@@ -203,5 +199,31 @@ public partial class MainViewModel : ObservableObject
         IsConnected = false;
         ConnectionStatus = "Not connected";
         StatusMessage = "Disconnected from Salesforce";
+    }
+
+    [RelayCommand]
+    private async Task ManageDebugLogs()
+    {
+        if (!_apiService.IsConnected)
+        {
+            StatusMessage = "⚠️ Please connect to Salesforce first";
+            return;
+        }
+
+        try
+        {
+            var dialog = new TraceFlagDialog(_apiService, _parserService);
+            if (dialog.ShowDialog() == true && dialog.DownloadedLogAnalysis != null)
+            {
+                // Add the downloaded log to the list
+                Logs.Insert(0, dialog.DownloadedLogAnalysis);
+                SelectedLog = dialog.DownloadedLogAnalysis;
+                StatusMessage = "✓ Log downloaded and analyzed";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
     }
 }

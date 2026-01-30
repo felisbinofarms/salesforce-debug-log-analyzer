@@ -4,14 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:SalesforceDebugAnalyzer.Helpers"
         mc:Ignorable="d"
         Title="Salesforce Debug Log Analyzer" 
-        Height="800" 
-        Width="1400"
+        Height="600" 
+        Width="1000"
+        MinHeight="400"
+        MinWidth="800"
         WindowStartupLocation="CenterScreen"
+        WindowState="Normal"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{materialDesign:MaterialDesignFont}">
+    
+    <Window.Resources>
+        <helpers:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -22,31 +31,41 @@
 
         <!-- Menu Bar -->
         <materialDesign:ColorZone Mode="PrimaryMid" Padding="16" Grid.Row="0">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
                     <materialDesign:PackIcon Kind="CloudSearch" Width="32" Height="32" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="Salesforce Debug Log Analyzer" FontSize="22" VerticalAlignment="Center" FontWeight="Medium"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Content="Connect to Salesforce" 
-                            Command="{Binding ConnectToSalesforceCommand}"
-                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"
-                            Style="{StaticResource MaterialDesignFlatButton}" 
+                
+                <StackPanel Orientation="Horizontal" Grid.Column="1">
+                    <Button Content="Manage Debug Logs" 
+                            Command="{Binding ManageDebugLogsCommand}"
+                            Foreground="White"
                             Margin="8,0"/>
                     <Button Content="Upload Log" 
                             Command="{Binding UploadLogCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}" 
+                            Foreground="White"
                             Margin="8,0"/>
-                    <Button Content="Settings" 
-                            Command="{Binding OpenSettingsCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}" 
+                    <Button Content="Disconnect" 
+                            Command="{Binding DisconnectCommand}"
+                            Foreground="White"
                             Margin="8,0"/>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
         </materialDesign:ColorZone>
 
         <!-- Main Content Area -->
         <Grid Grid.Row="1">
+            <!-- Connections View (when not connected) -->
+            <ContentControl x:Name="ConnectionsViewContainer" Visibility="Visible"/>
+            
+            <!-- Main Analysis View (when connected) -->
+            <Grid x:Name="MainContentGrid" Visibility="Collapsed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="5"/>
@@ -131,6 +150,7 @@
                     </Grid>
                 </TabItem>
             </TabControl>
+            </Grid>
         </Grid>
 
         <!-- Status Bar -->
