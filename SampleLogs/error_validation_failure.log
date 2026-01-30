@@ -1,0 +1,32 @@
+48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,FINEST;SYSTEM,DEBUG;VALIDATION,INFO;VISUALFORCE,INFO;WORKFLOW,INFO
+Execute Anonymous: try { Account a = new Account(); insert a; } catch(Exception e) { System.debug('Error: ' + e.getMessage()); }
+14:30:22.001 (1000000)|EXECUTION_STARTED
+14:30:22.001 (1500000)|CODE_UNIT_STARTED|[EXTERNAL]|execute_anonymous_apex
+14:30:22.002 (2000000)|METHOD_ENTRY|[1]|01pxx000000XXXXX|AnonymousBlock.AnonymousBlock()
+14:30:22.003 (3000000)|USER_DEBUG|[1]|DEBUG|Attempting to insert account
+14:30:22.004 (4000000)|DML_BEGIN|[1]|Op:Insert|Type:Account|Rows:1
+14:30:22.005 (5000000)|SYSTEM_METHOD_ENTRY|[1]|Database.insert(Account)
+14:30:22.006 (6000000)|VALIDATION_RULE|[1]|03dxx000000YYYYY|Account_Name_Required
+14:30:22.007 (7000000)|VALIDATION_FAIL|[1]|03dxx000000YYYYY|Account name is required
+14:30:22.008 (8000000)|EXCEPTION_THROWN|[1]|System.DmlException: Insert failed. First exception on row 0; first error: FIELD_CUSTOM_VALIDATION_EXCEPTION, Account name is required: [Name]
+14:30:22.009 (9000000)|DML_END|[1]
+14:30:22.010 (10000000)|SYSTEM_METHOD_EXIT|[1]|Database.insert(Account)
+14:30:22.011 (11000000)|USER_DEBUG|[2]|DEBUG|Error: Insert failed. First exception on row 0; first error: FIELD_CUSTOM_VALIDATION_EXCEPTION, Account name is required: [Name]
+14:30:22.012 (12000000)|METHOD_EXIT|[1]|AnonymousBlock
+14:30:22.013 (13000000)|CUMULATIVE_LIMIT_USAGE
+14:30:22.013 (13100000)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 0 out of 100
+  Number of query rows: 0 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 1 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 45 out of 10000
+  Maximum heap size: 8 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+14:30:22.014 (14000000)|CUMULATIVE_LIMIT_USAGE_END
+14:30:22.014 (14500000)|CODE_UNIT_FINISHED|execute_anonymous_apex
+14:30:22.014 (14600000)|EXECUTION_FINISHED

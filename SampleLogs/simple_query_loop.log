@@ -1,0 +1,36 @@
+48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,FINEST;SYSTEM,DEBUG;VALIDATION,INFO;VISUALFORCE,INFO;WORKFLOW,INFO
+Execute Anonymous: List<Account> accounts = [SELECT Id, Name FROM Account LIMIT 10]; for(Account a : accounts) { System.debug(a.Name); }
+09:23:45.001 (1000000)|EXECUTION_STARTED
+09:23:45.001 (1500000)|CODE_UNIT_STARTED|[EXTERNAL]|execute_anonymous_apex
+09:23:45.002 (2000000)|METHOD_ENTRY|[1]|01pxx000000XXXXX|AnonymousBlock.AnonymousBlock()
+09:23:45.003 (3000000)|SOQL_EXECUTE_BEGIN|[1]|Aggregations:0|SELECT Id, Name FROM Account LIMIT 10
+09:23:45.156 (156000000)|SOQL_EXECUTE_END|[1]|Rows:10
+09:23:45.157 (157000000)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:150
+09:23:45.158 (158000000)|USER_DEBUG|[2]|DEBUG|Acme Corporation
+09:23:45.159 (159000000)|USER_DEBUG|[2]|DEBUG|Burlington Textiles
+09:23:45.160 (160000000)|USER_DEBUG|[2]|DEBUG|Dickenson plc
+09:23:45.161 (161000000)|USER_DEBUG|[2]|DEBUG|Edge Communications
+09:23:45.162 (162000000)|USER_DEBUG|[2]|DEBUG|Express Logistics
+09:23:45.163 (163000000)|USER_DEBUG|[2]|DEBUG|GenePoint
+09:23:45.164 (164000000)|USER_DEBUG|[2]|DEBUG|Grand Hotels & Resorts
+09:23:45.165 (165000000)|USER_DEBUG|[2]|DEBUG|United Oil & Gas Corp.
+09:23:45.166 (166000000)|USER_DEBUG|[2]|DEBUG|sForce
+09:23:45.167 (167000000)|USER_DEBUG|[2]|DEBUG|Pyramid Construction Inc.
+09:23:45.168 (168000000)|METHOD_EXIT|[1]|AnonymousBlock
+09:23:45.169 (169000000)|CUMULATIVE_LIMIT_USAGE
+09:23:45.169 (169100000)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 10 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 168 out of 10000
+  Maximum heap size: 150 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+09:23:45.170 (170000000)|CUMULATIVE_LIMIT_USAGE_END
+09:23:45.170 (170500000)|CODE_UNIT_FINISHED|execute_anonymous_apex
+09:23:45.170 (170600000)|EXECUTION_FINISHED

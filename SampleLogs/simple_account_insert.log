@@ -1,0 +1,38 @@
+48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,FINEST;SYSTEM,DEBUG;VALIDATION,INFO;VISUALFORCE,INFO;WORKFLOW,INFO
+Execute Anonymous: Account acc = new Account(Name='Test Account'); insert acc;
+13:45:12.001 (1000000)|EXECUTION_STARTED
+13:45:12.001 (1500000)|CODE_UNIT_STARTED|[EXTERNAL]|execute_anonymous_apex
+13:45:12.002 (2000000)|METHOD_ENTRY|[1]|01pxx000000XXXXX|AnonymousBlock.AnonymousBlock()
+13:45:12.002 (2500000)|SYSTEM_METHOD_ENTRY|[1]|Schema.getGlobalDescribe()
+13:45:12.003 (3000000)|SYSTEM_METHOD_EXIT|[1]|Schema.getGlobalDescribe()
+13:45:12.003 (3500000)|USER_DEBUG|[1]|DEBUG|Creating account record
+13:45:12.004 (4000000)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+13:45:12.005 (5000000)|VARIABLE_ASSIGNMENT|[1]|this.acc|{"Name":"Test Account"}
+13:45:12.006 (6000000)|STATEMENT_EXECUTE|[1]
+13:45:12.007 (7000000)|DML_BEGIN|[1]|Op:Insert|Type:Account|Rows:1
+13:45:12.008 (8000000)|SYSTEM_METHOD_ENTRY|[1]|Database.insert(Account)
+13:45:12.009 (9000000)|SOQL_EXECUTE_BEGIN|[1]|Aggregations:0|SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND IsActive = true
+13:45:12.010 (10000000)|SOQL_EXECUTE_END|[1]|Rows:3
+13:45:12.011 (11000000)|VALIDATION_RULE|[1]|03dxx000000YYYYY|Account_Must_Have_Industry
+13:45:12.011 (11500000)|VALIDATION_PASS
+13:45:12.012 (12000000)|DML_END|[1]
+13:45:12.012 (12500000)|SYSTEM_METHOD_EXIT|[1]|Database.insert(Account)
+13:45:12.013 (13000000)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+13:45:12.014 (14000000)|METHOD_EXIT|[1]|AnonymousBlock
+13:45:12.015 (15000000)|CUMULATIVE_LIMIT_USAGE
+13:45:12.015 (15100000)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 3 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 1 out of 150
+  Number of DML rows: 1 out of 10000
+  Maximum CPU time: 156 out of 10000
+  Maximum heap size: 15 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+13:45:12.016 (16000000)|CUMULATIVE_LIMIT_USAGE_END
+13:45:12.016 (16500000)|CODE_UNIT_FINISHED|execute_anonymous_apex
+13:45:12.016 (16600000)|EXECUTION_FINISHED

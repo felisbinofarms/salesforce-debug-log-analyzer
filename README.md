@@ -38,12 +38,15 @@ A modern Windows desktop application that transforms complex Salesforce debug lo
 ### Prerequisites
 
 - Windows 10/11
-- .NET 8.0 SDK
-- Salesforce Developer/Admin account with appropriate permissions
+- .NET 8.0 SDK or higher
+- Salesforce Developer/Admin account with appropriate permissions (for API features)
 
 ### Building the Project
 
 ```powershell
+# Clone or download the repository
+cd log_analyser
+
 # Restore dependencies
 dotnet restore
 
@@ -54,12 +57,46 @@ dotnet build
 dotnet run
 ```
 
-### Connecting to Salesforce
+### Quick Start - Analyzing a Local Log
 
-1. Click "Connect to Salesforce" in the toolbar
-2. Log in through the OAuth flow
-3. Grant access to your org
-4. Start analyzing debug logs!
+1. **Launch the application**: Run `dotnet run` or double-click the compiled .exe
+2. **Click "Upload Log"** in the top toolbar
+3. **Select a log file**: Choose a `.log` or `.txt` file from your computer
+4. **View the analysis**: The app will parse and display:
+   - **Summary**: English explanation of what happened
+   - **Issues**: Detected problems (N+1 queries, slow operations, errors)
+   - **Recommendations**: Suggestions for optimization
+   - **Tabs**: Browse execution tree, timeline, database operations, and more
+
+### Sample Logs
+
+Sample logs are included in the `SampleLogs/` directory:
+- `simple_account_insert.log` - Basic DML operation with validation
+- `simple_query_loop.log` - SOQL query with loop processing
+- `error_validation_failure.log` - Validation rule failure example
+
+Use these to test the parser and understand the analysis features!
+
+### Connecting to Salesforce (Optional)
+
+To retrieve logs directly from your Salesforce org:
+
+1. **Create a Connected App** in Salesforce:
+   - Setup → App Manager → New Connected App
+   - Enable OAuth Settings
+   - Callback URL: `http://localhost:8080/callback`
+   - Scopes: `api`, `refresh_token`
+   - Copy the Consumer Key and Consumer Secret
+
+2. **Update OAuth Configuration**:
+   - Open `Services/OAuthService.cs`
+   - Replace `ClientId` and `ClientSecret` with your values
+
+3. **Connect**:
+   - Click "Connect to Salesforce"
+   - Log in through your browser
+   - Grant access
+   - View and download logs from your org
 
 ## Project Structure
 
@@ -80,28 +117,35 @@ SalesforceDebugAnalyzer/
 
 ## Roadmap
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation ✅
 - [x] Project structure and dependencies
 - [x] Material Design UI implementation
-- [ ] Basic log parsing engine
-- [ ] Salesforce OAuth authentication
+- [x] Complete log parsing engine with all event types
+- [x] File upload and local log analysis
+- [x] Intelligent issue detection and recommendations
+- [x] ViewModel integration with services
 
-### Phase 2: Core Features
-- [ ] Complete log parser with all event types
-- [ ] Execution tree visualization
-- [ ] Database operations grid
-- [ ] Performance dashboard
+### Phase 2: Core Features (In Progress)
+- [x] Salesforce OAuth authentication framework
+- [x] Salesforce API service for log retrieval
+- [ ] Execution tree TreeView visualization
+- [ ] Database operations DataGrid
+- [ ] Performance dashboard with charts
+- [ ] Governor limits visualization
 
 ### Phase 3: Advanced Analysis
 - [ ] Timeline/Gantt chart visualization
-- [ ] Flowchart generation
-- [ ] AI-powered issue detection
-- [ ] Export to PDF/HTML
+- [ ] Flowchart generation with MSAGL
+- [ ] Raw log viewer with AvalonEdit
+- [ ] Enhanced error stack trace display
+- [ ] Export analysis to PDF/HTML
 
 ### Phase 4: Power Features
-- [ ] Real-time log streaming
+- [ ] Real-time log streaming from Salesforce
 - [ ] Batch log comparison
 - [ ] Custom rules engine
+- [ ] Trace flag management UI
+- [ ] Debug level configuration
 - [ ] Integration with CI/CD pipelines
 
 ## Contributing
