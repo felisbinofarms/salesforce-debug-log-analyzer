@@ -21,7 +21,7 @@ public class ExecutionNode
     public ExecutionNodeType Type { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    public long DurationMs => (long)(EndTime - StartTime)?.TotalMilliseconds;
+    public long DurationMs => EndTime.HasValue ? (long)(EndTime.Value - StartTime).TotalMilliseconds : 0;
     public List<ExecutionNode> Children { get; set; } = new();
     public Dictionary<string, object> Metadata { get; set; } = new();
     public int StartLineNumber { get; set; }
