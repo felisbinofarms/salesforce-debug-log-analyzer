@@ -1,0 +1,134 @@
+﻿<Window x:Class="SalesforceDebugAnalyzer.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Salesforce Debug Log Analyzer" 
+        Height="800" 
+        Width="1400"
+        WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Menu Bar -->
+        <materialDesign:ColorZone Mode="PrimaryMid" Padding="16" Grid.Row="0">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="CloudSearch" Width="32" Height="32" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Salesforce Debug Log Analyzer" FontSize="22" VerticalAlignment="Center" FontWeight="Medium"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Content="Connect to Salesforce" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
+                    <Button Content="Upload Log" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
+                    <Button Content="Settings" Style="{StaticResource MaterialDesignFlatButton}" Margin="8,0"/>
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:ColorZone>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Sidebar - Log List & Filters -->
+            <Grid Grid.Column="0" Background="{DynamicResource MaterialDesignCardBackground}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Debug Logs" FontSize="16" FontWeight="SemiBold" Margin="16,16,16,8" Grid.Row="0"/>
+                
+                <ListBox Grid.Row="1" Margin="8">
+                    <ListBoxItem Content="Log - 2026-01-29 10:23:45"/>
+                    <ListBoxItem Content="Log - 2026-01-29 09:15:32"/>
+                    <ListBoxItem Content="Log - 2026-01-28 16:42:11"/>
+                </ListBox>
+
+                <Expander Header="Filters" Grid.Row="2" Margin="8" IsExpanded="True">
+                    <StackPanel Margin="8">
+                        <CheckBox Content="SOQL Queries" IsChecked="True" Margin="0,4"/>
+                        <CheckBox Content="DML Operations" IsChecked="True" Margin="0,4"/>
+                        <CheckBox Content="Errors" IsChecked="True" Margin="0,4"/>
+                        <CheckBox Content="Debug Statements" IsChecked="False" Margin="0,4"/>
+                        <CheckBox Content="System Methods" IsChecked="False" Margin="0,4"/>
+                    </StackPanel>
+                </Expander>
+            </Grid>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource MaterialDesignDivider}"/>
+
+            <!-- Right Content Area - Tabs -->
+            <TabControl Grid.Column="2" Margin="8">
+                <TabItem Header="Execution Tree">
+                    <Grid>
+                        <TextBlock Text="Execution tree view will be displayed here" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="16" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Timeline">
+                    <Grid>
+                        <TextBlock Text="Timeline/Gantt chart view will be displayed here" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="16" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Database Operations">
+                    <Grid>
+                        <TextBlock Text="SOQL/DML operations grid will be displayed here" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="16" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Performance">
+                    <Grid>
+                        <TextBlock Text="Performance dashboard and charts will be displayed here" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="16" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Raw Log">
+                    <Grid>
+                        <TextBlock Text="Raw log viewer with syntax highlighting will be displayed here" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="16" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <!-- Status Bar -->
+        <materialDesign:ColorZone Mode="PrimaryLight" Padding="8" Grid.Row="2">
+            <DockPanel>
+                <TextBlock Text="Ready" VerticalAlignment="Center" Margin="8,0"/>
+                <TextBlock Text="Not connected" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0"/>
+            </DockPanel>
+        </materialDesign:ColorZone>
+    </Grid>
+</Window>
