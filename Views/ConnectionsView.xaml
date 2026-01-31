@@ -9,16 +9,38 @@
         </Grid.RowDefinitions>
 
         <!-- Welcome Header -->
-        <materialDesign:Card Grid.Row="0" Margin="32,32,32,16" Padding="32">
+        <materialDesign:Card Grid.Row="0" Margin="32,32,32,16" Padding="32" materialDesign:ElevationAssist.Elevation="Dp4">
             <StackPanel>
-                <TextBlock Text="Welcome to Salesforce Debug Log Analyzer" 
-                           FontSize="28" 
-                           FontWeight="Bold" 
-                           Margin="0,0,0,16"/>
-                <TextBlock Text="Connect to your Salesforce org to start analyzing debug logs" 
-                           FontSize="16" 
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                           TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                    <materialDesign:PackIcon Kind="CloudSearch" Width="36" Height="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock Text="Welcome to Salesforce Debug Log Analyzer" 
+                               FontSize="28" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock FontSize="16" TextWrapping="Wrap" Margin="0,0,0,12">
+                    <Run Text="Connect to your Salesforce org to:"/>
+                    <LineBreak/>
+                    <Run Text="✓ Set up debug logging for any user" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="✓ Download and analyze debug logs" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="✓ Get plain-English explanations of what your code is doing" FontWeight="SemiBold"/>
+                </TextBlock>
+                <Border Background="{DynamicResource PrimaryHueLightBrush}" 
+                        Padding="12" 
+                        CornerRadius="4"
+                        Margin="0,8,0,0">
+                    <StackPanel>
+                        <TextBlock Text="🔒 Secure OAuth Login" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,4"/>
+                        <TextBlock Text="We use Salesforce's official login (no passwords stored). Works with Single Sign-On (SSO) and Multi-Factor Authentication (MFA)." 
+                                   TextWrapping="Wrap" 
+                                   FontSize="13"
+                                   Foreground="{DynamicResource MaterialDesignBody}"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </materialDesign:Card>
 
@@ -26,78 +48,27 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="32,0,32,32" MaxWidth="800">
                 
-                <!-- New Connection -->
-                <materialDesign:Card Padding="24" Margin="0,0,0,16">
+                <!-- Recent Connections - Show First if Available -->
+                <materialDesign:Card Padding="24" Margin="0,0,0,16" x:Name="RecentConnectionsCard" materialDesign:ElevationAssist.Elevation="Dp3">
                     <StackPanel>
-                        <TextBlock Text="New Connection" 
-                                   FontSize="20" 
-                                   FontWeight="SemiBold" 
-                                   Margin="0,0,0,16"/>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <!-- Production -->
-                            <Button Grid.Column="0"
-                                    Click="ConnectProduction_Click"
-                                    Height="120"
-                                    Margin="0,0,8,0"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}">
-                                <StackPanel>
-                                    <materialDesign:PackIcon Kind="Cloud" 
-                                                           Width="48" 
-                                                           Height="48" 
-                                                           Margin="0,0,0,8"/>
-                                    <TextBlock Text="Production" FontSize="16" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Connect to production org" 
-                                             FontSize="12" 
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             TextWrapping="Wrap"
-                                             TextAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            
-                            <!-- Sandbox -->
-                            <Button Grid.Column="1"
-                                    Click="ConnectSandbox_Click"
-                                    Height="120"
-                                    Margin="8,0,0,0"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}">
-                                <StackPanel>
-                                    <materialDesign:PackIcon Kind="TestTube" 
-                                                           Width="48" 
-                                                           Height="48" 
-                                                           Margin="0,0,0,8"/>
-                                    <TextBlock Text="Sandbox" FontSize="16" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Connect to sandbox org" 
-                                             FontSize="12" 
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             TextWrapping="Wrap"
-                                             TextAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </StackPanel>
-                </materialDesign:Card>
-
-                <!-- Recent Connections -->
-                <materialDesign:Card Padding="24" Margin="0,0,0,16" x:Name="RecentConnectionsCard">
-                    <StackPanel>
-                        <TextBlock Text="Recent Connections" 
-                                   FontSize="20" 
-                                   FontWeight="SemiBold" 
-                                   Margin="0,0,0,16"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <materialDesign:PackIcon Kind="History" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Quick Connect" 
+                                       FontSize="20" 
+                                       FontWeight="SemiBold" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
                         
                         <ItemsControl x:Name="RecentConnectionsList">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
-                                            BorderThickness="0,0,0,1" 
-                                            Padding="0,12"
-                                            Margin="0,0,0,8">
+                                    <Button Click="ReconnectButton_Click"
+                                            Tag="{Binding}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            HorizontalContentAlignment="Stretch"
+                                            Padding="16"
+                                            Margin="0,0,0,12"
+                                            Height="Auto">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -112,7 +83,7 @@
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,0,16,0"/>
                                             
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
                                                 <TextBlock Text="{Binding OrgName}" 
                                                          FontSize="16" 
                                                          FontWeight="SemiBold"/>
@@ -124,29 +95,139 @@
                                                          Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                                             </StackPanel>
                                             
-                                            <Button Grid.Column="2"
-                                                    Content="Connect"
-                                                    Click="ReconnectButton_Click"
-                                                    Tag="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"/>
+                                            <materialDesign:PackIcon Grid.Column="2" 
+                                                                   Kind="ChevronRight" 
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="8,0,0,0"/>
                                         </Grid>
-                                    </Border>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         
                         <TextBlock x:Name="NoRecentConnectionsText"
-                                   Text="No recent connections"
+                                   Text="No recent connections. Choose an option below to connect for the first time."
                                    Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                   TextAlignment="Center"
-                                   Margin="0,16"/>
+                                   TextWrapping="Wrap"
+                                   Margin="0,8"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- New Connection -->
+                <materialDesign:Card Padding="24" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <materialDesign:PackIcon Kind="Plus" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Connect to Another Org" 
+                                       FontSize="20" 
+                                       FontWeight="SemiBold" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Choose your Salesforce environment type:" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Production -->
+                            <Button Grid.Column="0"
+                                    Click="ConnectProduction_Click"
+                                    Height="140"
+                                    Margin="0,0,8,0"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}">
+                                <StackPanel Margin="12">
+                                    <materialDesign:PackIcon Kind="Cloud" 
+                                                           Width="48" 
+                                                           Height="48" 
+                                                           Margin="0,0,0,12"/>
+                                    <TextBlock Text="Production" 
+                                             FontSize="18" 
+                                             FontWeight="Bold"
+                                             Margin="0,0,0,4"/>
+                                    <TextBlock Text="login.salesforce.com" 
+                                             FontSize="11" 
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             Margin="0,0,0,8"/>
+                                    <TextBlock Text="Live data, real users" 
+                                             FontSize="12" 
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             TextWrapping="Wrap"
+                                             TextAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Sandbox -->
+                            <Button Grid.Column="1"
+                                    Click="ConnectSandbox_Click"
+                                    Height="140"
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}">
+                                <StackPanel Margin="12">
+                                    <materialDesign:PackIcon Kind="TestTube" 
+                                                           Width="48" 
+                                                           Height="48" 
+                                                           Margin="0,0,0,12"/>
+                                    <TextBlock Text="Sandbox" 
+                                             FontSize="18" 
+                                             FontWeight="Bold"
+                                             Margin="0,0,0,4"/>
+                                    <TextBlock Text="test.salesforce.com" 
+                                             FontSize="11" 
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             Margin="0,0,0,8"/>
+                                    <TextBlock Text="Test environment" 
+                                             FontSize="12" 
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             TextWrapping="Wrap"
+                                             TextAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- What Happens Next -->
+                <materialDesign:Card Padding="24" Background="{DynamicResource PrimaryHueLightBrush}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="InformationOutline" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <TextBlock Text="What Happens After You Connect?" FontSize="18" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        
+                        <StackPanel Margin="32,0,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="1." FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Text="You'll see a Salesforce login screen (browser)" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="2." FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Text="Log in with your username and password (SSO/MFA supported)" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="3." FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Text="Click 'Allow' to grant the app access to view debug logs" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="4." FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Text="We'll guide you through setting up debug logging step-by-step!" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>
 
                 <!-- Manual Token -->
-                <Expander Header="Advanced: Manual Token" Margin="0,0,0,16">
+                <Expander Header="Advanced: Manual Token" Margin="0,16,0,16">
                     <materialDesign:Card Padding="16" Margin="0,8,0,0">
                         <StackPanel>
+                            <TextBlock Text="For developers: Use an existing access token from Salesforce CLI or Workbench" 
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       Margin="0,0,0,16"/>
+                            
                             <TextBlock Text="Instance URL" Margin="0,0,0,4"/>
                             <TextBox x:Name="ManualInstanceUrl" 
                                      materialDesign:HintAssist.Hint="https://yourorg.my.salesforce.com"

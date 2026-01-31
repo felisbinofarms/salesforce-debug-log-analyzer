@@ -212,13 +212,23 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var dialog = new TraceFlagDialog(_apiService, _parserService);
-            if (dialog.ShowDialog() == true && dialog.DownloadedLogAnalysis != null)
+            // Show the guided setup wizard for first-time or easy setup
+            var wizard = new DebugSetupWizard(_apiService);
+
+            if (wizard.ShowDialog() == true && wizard.LoggingEnabled)
             {
-                // Add the downloaded log to the list
-                Logs.Insert(0, dialog.DownloadedLogAnalysis);
-                SelectedLog = dialog.DownloadedLogAnalysis;
-                StatusMessage = "✓ Log downloaded and analyzed";
+                // Wizard completed, now show the trace flag dialog to view logs
+                StatusMessage = "✓ Debug logging enabled. Opening logs view...";
+                
+                var dialog = new TraceFlagDialog(_apiService, _parserService);
+                
+                if (dialog.ShowDialog() == true && dialog.DownloadedLogAnalysis != null)
+                {
+                    // Add the downloaded log to the list
+                    Logs.Insert(0, dialog.DownloadedLogAnalysis);
+                    SelectedLog = dialog.DownloadedLogAnalysis;
+                    StatusMessage = "✓ Log downloaded and analyzed";
+                }
             }
         }
         catch (Exception ex)
