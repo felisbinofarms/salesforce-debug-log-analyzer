@@ -1,28 +1,74 @@
 # Salesforce Debug Log Analyzer
 
-A modern Windows desktop application that transforms complex Salesforce debug logs into intuitive visualizations, helping both junior admins and experienced developers understand execution flow, performance bottlenecks, and errors.
+> **The only debug log tool that explains logs like a patient mentor, not a technical manual.**
 
-## Features
+A revolutionary Windows desktop application that **translates** complex Salesforce debug logs into plain English that anyone can understand - whether you're a seasoned developer or an admin with little coding knowledge.
 
-### Salesforce Integration
+## What Makes This Different?
+
+Traditional debug log tools show you raw technical data: timestamps, event types, stack traces, and governor limits with no context.
+
+**This tool explains what actually happened in conversational language:**
+
+### Traditional Debug Tool:
+```
+Execution completed in 2500ms. Executed 5 methods. Performed 3 SOQL queries.
+SOQL queries: 87/100 (87%)
+⚠️ High number of SOQL queries: 87 (Consider bulkification)
+```
+
+### Our Tool:
+```
+📋 What Happened:
+✅ This transaction completed successfully in 2.5 seconds.
+
+What Your Code Did:
+• Called 5 different methods (pieces of code)
+• Talked to the database 3 times to get or save information
+
+⚠️ Too Many Database Queries: 
+You're asking the database for information too many times (87 times). 
+Think of it like making 87 separate phone calls instead of one call 
+with a list of questions.
+
+💡 Recommendation: Try to combine multiple queries into one where possible.
+```
+
+**No Salesforce expertise required** - understand debug logs on your first day!
+
+## Key Features
+
+### 🗣️ Plain-English Translation
+- **Conversational summaries** that tell the story of your transaction
+- **Real-world analogies** for technical concepts (N+1 queries = "asking 'What's the weather?' 100 times")
+- **Contextual explanations** - "You're using 25% of allowed processing time - plenty of room to spare!"
+- **Actionable recommendations** with specific solutions, not just problems
+
+### 🔌 Salesforce Integration
 - **OAuth 2.0 Authentication** - Connect securely to any Salesforce org
 - **API Integration** - Query and retrieve debug logs via Tooling API
 - **Trace Flag Management** - Set debug levels and configure logging for users
 - **Respects Permissions** - Works within your Salesforce security model
 
-### Log Analysis
-- **Intelligent Parsing** - Processes logs up to 20MB with advanced tokenization
+### 📊 Intelligent Analysis
 - **Execution Tree** - Hierarchical view of method calls and operations
 - **Timeline Visualization** - Gantt chart showing execution duration
 - **Database Operations** - Dedicated view for SOQL queries and DML operations
 - **Performance Dashboard** - Governor limits, CPU time, heap usage metrics
-- **Error Detection** - Automatic identification and highlighting of exceptions
+- **Smart Issue Detection** - Identifies N+1 queries, recursive triggers, slow operations
 
-### Insights & Recommendations
-- **Plain English Summaries** - Understand what happened without technical jargon
-- **Issue Detection** - Identifies N+1 queries, recursive triggers, slow operations
-- **Performance Hotspots** - Highlights methods and queries consuming most time
-- **Actionable Recommendations** - Suggestions for code optimization
+### 💡 Learning Tool
+- Perfect for **junior developers** learning Salesforce best practices
+- Helps **admins** understand what automation is doing without code knowledge
+- Enables **business analysts** to review system behavior
+- Gives **experienced developers** quick insights without wading through logs
+
+## Who Is This For?
+
+✅ **Salesforce Administrators** - Understand workflow and Process Builder execution without coding knowledge  
+✅ **Junior Developers** - Learn best practices through clear explanations  
+✅ **Business Analysts** - Read what code is doing and communicate issues  
+✅ **Senior Developers** - Get quick plain-English summaries plus detailed technical data when needed
 
 ## Technology Stack
 
@@ -30,8 +76,7 @@ A modern Windows desktop application that transforms complex Salesforce debug lo
 - **WPF** - Rich Windows desktop UI framework
 - **Material Design** - Modern, intuitive user interface
 - **MVVM Pattern** - Clean separation of concerns
-- **AvalonEdit** - Syntax-highlighted log viewer
-- **SQLite** - Local log caching
+- **AvalonEdit** - Syntax-highlighted log viewer (coming soon)
 
 ## Getting Started
 

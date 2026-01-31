@@ -477,47 +477,130 @@ public class LogParserService
         var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
         var errorCount = analysis.Errors.Count;
 
-        var summary = $"Execution completed in {totalDuration}ms. ";
-        
-        if (methodCount > 0)
-            summary += $"Executed {methodCount} unique method(s). ";
-        
-        if (soqlCount > 0)
-            summary += $"Performed {soqlCount} SOQL query(ies)";
-        
-        if (dmlCount > 0)
-            summary += soqlCount > 0 ? $" and {dmlCount} DML operation(s). " : $"Performed {dmlCount} DML operation(s). ";
-        else if (soqlCount > 0)
-            summary += ". ";
-        
+        var summary = "📋 **What Happened:**\n\n";
+
+        // Opening statement
         if (errorCount > 0)
-            summary += $"⚠️ Encountered {errorCount} error(s).";
+        {
+            summary += $"❌ This transaction encountered problems and took {FormatDuration(totalDuration)} to complete.\n\n";
+        }
+        else if (totalDuration > 5000)
+        {
+            summary += $"⚠️ This transaction completed successfully but was slow, taking {FormatDuration(totalDuration)}.\n\n";
+        }
         else
-            summary += "✓ No errors detected.";
+        {
+            summary += $"✅ This transaction completed successfully in {FormatDuration(totalDuration)}.\n\n";
+        }
+
+        // What was executed
+        summary += "**What Your Code Did:**\n";
+        if (methodCount > 0)
+        {
+            summary += $"• Called {methodCount} different method{(methodCount > 1 ? "s" : "")} (pieces of code)\n";
+        }
+        
+        // Database interactions
+        if (soqlCount > 0 || dmlCount > 0)
+        {
+            summary += $"• Talked to the database {soqlCount + dmlCount} time{(soqlCount + dmlCount > 1 ? "s" : "")}\n";
+            if (soqlCount > 0)
+                summary += $"  - Read data {soqlCount} time{(soqlCount > 1 ? "s" : "")} (queries)\n";
+            if (dmlCount > 0)
+                summary += $"  - Wrote/updated data {dmlCount} time{(dmlCount > 1 ? "s" : "")} (inserts/updates)\n";
+        }
+
+        summary += "\n";
+
+        // Performance assessment
+        summary += "**Performance:**\n";
+        var lastLimitSnapshot = analysis.LimitSnapshots.LastOrDefault();
+        if (lastLimitSnapshot != null)
+        {
+            var soqlPercent = (lastLimitSnapshot.SoqlQueries * 100.0) / lastLimitSnapshot.SoqlQueriesLimit;
+            var cpuPercent = (lastLimitSnapshot.CpuTime * 100.0) / lastLimitSnapshot.CpuTimeLimit;
+            
+            if (soqlPercent < 30 && cpuPercent < 30)
+            {
+                summary += "✓ Your code is using resources efficiently - plenty of room to spare!\n";
+            }
+            else if (soqlPercent < 70 && cpuPercent < 70)
+            {
+                summary += "⚡ Your code is using a moderate amount of resources - this is normal for most operations.\n";
+            }
+            else
+            {
+                summary += "⚠️ Your code is pushing Salesforce's limits - you might want to optimize it.\n";
+            }
+
+            summary += $"• Database query budget: Used {lastLimitSnapshot.SoqlQueries} out of {lastLimitSnapshot.SoqlQueriesLimit} allowed ({soqlPercent:F0}%)\n";
+            summary += $"• Processing time: Used {lastLimitSnapshot.CpuTime}ms out of {lastLimitSnapshot.CpuTimeLimit}ms allowed ({cpuPercent:F0}%)\n";
+        }
+        else
+        {
+            summary += "✓ No resource limits were recorded (likely a simple operation).\n";
+        }
+
+        summary += "\n";
+
+        // Overall verdict
+        if (errorCount > 0)
+        {
+            summary += $"**Result:** ❌ Failed with {errorCount} error{(errorCount > 1 ? "s" : "")}. Check the 'Issues' tab for details.\n";
+        }
+        else if (soqlCount > 100 || (lastLimitSnapshot != null && 
+                 ((lastLimitSnapshot.SoqlQueries * 100.0 / lastLimitSnapshot.SoqlQueriesLimit) > 80 ||
+                  (lastLimitSnapshot.CpuTime * 100.0 / lastLimitSnapshot.CpuTimeLimit) > 80)))
+        {
+            summary += "**Result:** ⚠️ Completed successfully, but you should review the recommendations to prevent future issues.\n";
+        }
+        else
+        {
+            summary += "**Result:** ✅ Everything looks good! Your code executed as expected.\n";
+        }
 
         return summary;
+    }
+
+    private string FormatDuration(long ms)
+    {
+        if (ms < 1000) return $"{ms}ms";
+        if (ms < 60000) return $"{ms / 1000.0:F1} seconds";
+        return $"{ms / 60000.0:F1} minutes";
     }
 
     private List<string> DetectIssues(LogAnalysis analysis)
     {
         var issues = new List<string>();
 
-        // Check for excessive SOQL queries
+        // Check for excessive SOQL queries in plain English
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
         if (soqlCount > 50)
         {
-            issues.Add($"⚠️ High number of SOQL queries: {soqlCount} (Consider bulkification)");
+            issues.Add($"⚠️ **Too Many Database Queries**: Your code asked the database for data {soqlCount} times. " +
+                "Salesforce recommends keeping this under 100, but ideally under 20. " +
+                "High query counts can make your code slow and may cause failures if you hit the limit.");
         }
         else if (soqlCount > 20)
         {
-            issues.Add($"⚡ Moderate SOQL usage: {soqlCount} queries (Review for optimization opportunities)");
+            issues.Add($"⚡ **Moderate Query Usage**: You're running {soqlCount} database queries. " +
+                "This isn't critical, but consider optimizing - fewer queries = faster code.");
         }
 
         // Check for slow queries
         var slowQueries = analysis.DatabaseOperations.Where(d => d.DurationMs > 1000).ToList();
         if (slowQueries.Any())
         {
-            issues.Add($"🐌 Found {slowQueries.Count} slow database operation(s) (>1000ms) - Review indexes and selectivity");
+            if (slowQueries.Count == 1)
+            {
+                issues.Add($"🐌 **Slow Query Detected**: One of your database queries took over 1 second. " +
+                    "This is like waiting on hold - it wastes time. Speed it up by using filters (WHERE) or indexes.");
+            }
+            else
+            {
+                issues.Add($"🐌 **Multiple Slow Queries**: {slowQueries.Count} of your queries took over 1 second each. " +
+                    "These are performance bottlenecks - focus optimization here first.");
+            }
         }
 
         // Check for N+1 query pattern
@@ -531,7 +614,10 @@ public class LogParserService
             
             if (queryCounts.Any())
             {
-                issues.Add($"🔁 Possible N+1 query pattern detected - {queryCounts.Count} query type(s) executed multiple times");
+                issues.Add($"🔁 **Repetitive Query Pattern (N+1)**: You're asking the database the same question multiple times. " +
+                    "This classic mistake happens when you query inside a loop. " +
+                    "Example: Instead of asking 'Who is customer #1? Who is customer #2? Who is customer #3?' 100 times, " +
+                    "ask once: 'Who are customers #1-100?'");
             }
         }
 
@@ -544,13 +630,18 @@ public class LogParserService
             var heapPercent = (lastLimitSnapshot.HeapSize * 100.0) / lastLimitSnapshot.HeapSizeLimit;
 
             if (soqlPercent > 80)
-                issues.Add($"⚠️ SOQL queries near limit: {lastLimitSnapshot.SoqlQueries}/{lastLimitSnapshot.SoqlQueriesLimit} ({soqlPercent:F0}%)");
+                issues.Add($"⚠️ **Query Limit Warning**: You've used {lastLimitSnapshot.SoqlQueries} out of {lastLimitSnapshot.SoqlQueriesLimit} allowed queries ({soqlPercent:F0}%). " +
+                    "You're dangerously close to the limit! If you hit 100%, your code will stop with an error.");
             
             if (cpuPercent > 80)
-                issues.Add($"⚠️ CPU time near limit: {lastLimitSnapshot.CpuTime}/{lastLimitSnapshot.CpuTimeLimit}ms ({cpuPercent:F0}%)");
+                issues.Add($"⏱️ **Processing Time Warning**: Your code used {lastLimitSnapshot.CpuTime}ms out of {lastLimitSnapshot.CpuTimeLimit}ms allowed ({cpuPercent:F0}%). " +
+                    "You're running out of processing time! This means your code is doing too much work. " +
+                    "Simplify logic or move heavy processing to background jobs.");
             
             if (heapPercent > 80)
-                issues.Add($"⚠️ Heap size near limit: {lastLimitSnapshot.HeapSize}/{lastLimitSnapshot.HeapSizeLimit} bytes ({heapPercent:F0}%)");
+                issues.Add($"💾 **Memory Warning**: You're using {lastLimitSnapshot.HeapSize} bytes out of {lastLimitSnapshot.HeapSizeLimit} allowed ({heapPercent:F0}%). " +
+                    "Your code is holding too much data in memory at once. " +
+                    "Process data in smaller batches to avoid running out of memory.");
         }
 
         // Check for recursive triggers
@@ -560,13 +651,31 @@ public class LogParserService
         
         if (triggerMethods.Any())
         {
-            issues.Add($"🔄 Possible recursive trigger: {string.Join(", ", triggerMethods.Select(t => t.Key))} called multiple times");
+            var triggerNames = string.Join(", ", triggerMethods.Select(t => t.Key));
+            issues.Add($"🔄 **Recursive Trigger Detected**: The trigger '{triggerNames}' is calling itself multiple times. " +
+                "This is like a hall of mirrors - the trigger fires, which changes data, which fires the trigger again, and so on. " +
+                "This can cause infinite loops and performance problems. Add logic to prevent re-entry.");
         }
 
         // Check for errors
         if (analysis.Errors.Any())
         {
-            issues.Add($"❌ Execution failed with {analysis.Errors.Count} error(s) - Review exception details below");
+            if (analysis.Errors.Count == 1)
+            {
+                issues.Add($"❌ **Your Code Failed**: The execution stopped with an error. " +
+                    "Check the error details below to see what went wrong and where.");
+            }
+            else
+            {
+                issues.Add($"❌ **Multiple Errors Detected**: Your code encountered {analysis.Errors.Count} different errors. " +
+                    "Review each one below to understand what went wrong.");
+            }
+        }
+
+        // All clear!
+        if (!issues.Any())
+        {
+            issues.Add("✅ **No Issues Found**: Your code ran cleanly with no warnings or errors!");
         }
 
         return issues;
@@ -583,17 +692,91 @@ public class LogParserService
     private List<string> GenerateRecommendations(LogAnalysis analysis)
     {
         var recommendations = new List<string>();
-
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
-        
-        if (soqlCount > 20 && soqlCount <= 50)
+        var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
+
+        // SOQL query recommendations in plain English
+        if (soqlCount > 50)
         {
-            recommendations.Add("💡 Consider using bulkified patterns to reduce SOQL queries");
+            recommendations.Add($"💡 **Too Many Database Queries**: You're asking the database for information too many times ({soqlCount} times). " +
+                "Think of it like making 50+ separate phone calls instead of one call with a list of questions. " +
+                "Try to combine multiple queries into one where possible.");
+        }
+        else if (soqlCount > 20)
+        {
+            recommendations.Add($"📊 **Moderate Database Usage**: You're querying the database {soqlCount} times. " +
+                "This works fine now, but if you're looping through records, consider using 'bulkification' - " +
+                "which means processing multiple records at once instead of one at a time.");
         }
 
-        // Check for methods called many times
+        // Slow query recommendations
+        var slowQueries = analysis.DatabaseOperations.Where(d => d.DurationMs > 1000).ToList();
+        if (slowQueries.Any())
+        {
+            recommendations.Add($"🐌 **Slow Database Queries Detected**: {slowQueries.Count} of your database queries took over 1 second each. " +
+                "This usually means either: (1) You're searching through too much data, or (2) The database needs better 'indexes' " +
+                "(think of indexes like a book's table of contents - they help find things faster). " +
+                "Consider adding filters (WHERE clauses) to narrow down your search.");
+        }
+
+        // N+1 pattern detection in plain English
+        if (soqlCount > 10)
+        {
+            var repeatedQueries = analysis.DatabaseOperations
+                .Where(d => d.OperationType == "SOQL")
+                .GroupBy(d => SimplifyQuery(d.Query))
+                .Where(g => g.Count() > 5)
+                .ToList();
+            
+            if (repeatedQueries.Any())
+            {
+                recommendations.Add("🔁 **Repetitive Queries (N+1 Pattern)**: Your code is asking the same question over and over. " +
+                    "This is like asking 'What's the weather?' 100 times instead of asking once and remembering the answer. " +
+                    "Solution: Move your queries outside of loops, or better yet, query for all the data you need at once.");
+            }
+        }
+
+        // Governor limit warnings in plain English
+        var lastLimitSnapshot = analysis.LimitSnapshots.LastOrDefault();
+        if (lastLimitSnapshot != null)
+        {
+            var soqlPercent = (lastLimitSnapshot.SoqlQueries * 100.0) / lastLimitSnapshot.SoqlQueriesLimit;
+            var cpuPercent = (lastLimitSnapshot.CpuTime * 100.0) / lastLimitSnapshot.CpuTimeLimit;
+            var heapPercent = (lastLimitSnapshot.HeapSize * 100.0) / lastLimitSnapshot.HeapSizeLimit;
+
+            if (soqlPercent > 80)
+            {
+                recommendations.Add($"⚠️ **Running Out of Query Allowance**: You've used {soqlPercent:F0}% of your allowed database queries. " +
+                    "Salesforce limits how many times you can query the database to keep things running smoothly for everyone. " +
+                    "If you hit 100%, your code will fail. Reduce the number of queries by combining them or processing in batches.");
+            }
+            
+            if (cpuPercent > 80)
+            {
+                recommendations.Add($"⏱️ **Running Out of Processing Time**: Your code used {cpuPercent:F0}% of allowed processing time. " +
+                    "This means your code is doing a lot of work. Consider: (1) Doing fewer calculations, " +
+                    "(2) Processing fewer records at once, or (3) Moving heavy processing to asynchronous jobs that run in the background.");
+            }
+            
+            if (heapPercent > 80)
+            {
+                recommendations.Add($"💾 **Using Too Much Memory**: Your code is using {heapPercent:F0}% of available memory. " +
+                    "This happens when you're holding onto too much data at once. " +
+                    "Try processing data in smaller chunks instead of loading everything into memory at once.");
+            }
+        }
+
+        // DML recommendations
+        if (dmlCount > 100)
+        {
+            recommendations.Add($"📝 **Too Many Database Updates**: You're saving/updating data {dmlCount} times. " +
+                "Instead of saving one record at a time in a loop, collect all your changes and save them all at once. " +
+                "Think of it like making one trip to the store with a shopping list instead of 100 separate trips.");
+        }
+
+        // Method frequency recommendations
         var frequentMethods = analysis.MethodStats.Values
-            .Where(m => m.CallCount > 10)
+            .Where(m => m.CallCount > 20)
             .OrderByDescending(m => m.CallCount)
             .Take(3)
             .ToList();
@@ -602,11 +785,13 @@ public class LogParserService
         {
             foreach (var method in frequentMethods)
             {
-                recommendations.Add($"💡 Method '{method.MethodName}' called {method.CallCount} times - Consider caching or refactoring");
+                recommendations.Add($"🔄 **Method Called Many Times**: '{method.MethodName}' was called {method.CallCount} times. " +
+                    "If this method does database queries or complex calculations, it could slow things down. " +
+                    "Consider storing the result (caching) and reusing it instead of recalculating every time.");
             }
         }
 
-        // Check for slow operations
+        // Database time percentage
         var totalDbTime = analysis.DatabaseOperations.Sum(d => d.DurationMs);
         var totalExecution = analysis.RootNode.DurationMs;
         
@@ -615,19 +800,50 @@ public class LogParserService
             var dbPercent = (totalDbTime * 100.0) / totalExecution;
             if (dbPercent > 70)
             {
-                recommendations.Add($"💡 Database operations account for {dbPercent:F0}% of execution time - Focus optimization here");
+                recommendations.Add($"⏳ **Most Time Spent on Database**: {dbPercent:F0}% of your execution time is spent talking to the database. " +
+                    "This is where you should focus optimization efforts - make your queries more efficient by adding filters or using indexes.");
             }
         }
 
-        // General best practices
-        if (analysis.DatabaseOperations.Any(d => !d.Query.Contains("LIMIT", StringComparison.OrdinalIgnoreCase) && d.OperationType == "SOQL"))
+        // LIMIT clause check
+        var queriesWithoutLimit = analysis.DatabaseOperations
+            .Where(d => d.OperationType == "SOQL" && !d.Query.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+            
+        if (queriesWithoutLimit.Any())
         {
-            recommendations.Add("💡 Some SOQL queries don't have LIMIT clauses - Consider adding limits for safety");
+            recommendations.Add($"🎯 **Add Safety Limits**: {queriesWithoutLimit.Count} of your queries don't have LIMIT clauses. " +
+                "Without limits, your query could accidentally try to load thousands of records at once. " +
+                "Always add 'LIMIT 200' (or whatever number makes sense) to protect against unexpected data growth.");
         }
 
-        if (!analysis.Errors.Any() && soqlCount < 20 && totalExecution < 5000)
+        // Error-specific recommendations
+        if (analysis.Errors.Any())
         {
-            recommendations.Add("✅ Good performance! Execution is efficient and within best practices");
+            var firstError = analysis.Errors.First().Name;
+            if (firstError.Contains("UNABLE_TO_LOCK_ROW", StringComparison.OrdinalIgnoreCase))
+            {
+                recommendations.Add("🔒 **Record Locking Issue**: Someone else was trying to update the same record at the same time as you. " +
+                    "This is like two people trying to edit the same document simultaneously. " +
+                    "The system protected the data by blocking one of the updates. Your code should retry the operation or handle this gracefully.");
+            }
+            else if (firstError.Contains("REQUIRED_FIELD_MISSING", StringComparison.OrdinalIgnoreCase))
+            {
+                recommendations.Add("📋 **Missing Required Information**: You tried to create/update a record without filling in all required fields. " +
+                    "It's like trying to submit a form without filling in the mandatory fields marked with an asterisk (*).");
+            }
+            else if (firstError.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase))
+            {
+                recommendations.Add("✋ **Validation Rule Blocked Your Change**: A validation rule (a business rule set up in Salesforce) prevented your update. " +
+                    "Think of it like a bouncer at a club - the rule is checking if your data meets certain criteria before allowing it in. " +
+                    "Check what validation rules exist on this object and make sure your data passes them.");
+            }
+        }
+
+        // All good!
+        if (!recommendations.Any() && !analysis.Errors.Any() && soqlCount < 20 && totalExecution < 5000)
+        {
+            recommendations.Add("✅ **Everything Looks Great!**: Your code is running efficiently and following best practices. No optimization needed right now.");
         }
 
         return recommendations;
