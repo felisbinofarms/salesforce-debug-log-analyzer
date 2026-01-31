@@ -104,6 +104,84 @@
 
             <!-- Right Content Area - Tabs -->
             <TabControl Grid.Column="2" Margin="8">
+                <!-- Summary Tab - FIRST and most prominent -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Plain English Summary" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <!-- Summary Section -->
+                            <materialDesign:Card Padding="16" Margin="0,0,0,16" materialDesign:ElevationAssist.Elevation="Dp2">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <materialDesign:PackIcon Kind="InformationOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="What Happened" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding SummaryText}" 
+                                               TextWrapping="Wrap" 
+                                               FontSize="14" 
+                                               LineHeight="22"
+                                               Foreground="{DynamicResource MaterialDesignBody}"/>
+                                </StackPanel>
+                            </materialDesign:Card>
+
+                            <!-- Issues Section -->
+                            <materialDesign:Card Padding="16" Margin="0,0,0,16" materialDesign:ElevationAssist.Elevation="Dp2">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <materialDesign:PackIcon Kind="AlertCircleOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#FF9800"/>
+                                        <TextBlock Text="Issues Detected" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <ItemsControl ItemsSource="{Binding Issues}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                                                        BorderThickness="0,0,0,1" 
+                                                        Padding="0,8" 
+                                                        Margin="0,0,0,8">
+                                                    <TextBlock Text="{Binding}" 
+                                                               TextWrapping="Wrap" 
+                                                               FontSize="14" 
+                                                               LineHeight="22"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </materialDesign:Card>
+
+                            <!-- Recommendations Section -->
+                            <materialDesign:Card Padding="16" materialDesign:ElevationAssist.Elevation="Dp2">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <materialDesign:PackIcon Kind="Lightbulb" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#4CAF50"/>
+                                        <TextBlock Text="Recommendations" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <ItemsControl ItemsSource="{Binding Recommendations}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                                                        BorderThickness="0,0,0,1" 
+                                                        Padding="0,8" 
+                                                        Margin="0,0,0,8">
+                                                    <TextBlock Text="{Binding}" 
+                                                               TextWrapping="Wrap" 
+                                                               FontSize="14" 
+                                                               LineHeight="22"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </materialDesign:Card>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                
                 <TabItem Header="Execution Tree">
                     <Grid>
                         <TextBlock Text="Execution tree view will be displayed here" 
