@@ -252,7 +252,7 @@ public class LogMetadataExtractor
     /// <summary>
     /// Detect execution context (Interactive, Batch, Integration, etc.)
     /// </summary>
-    private ExecutionContext DetectExecutionContext(List<string> headerLines, string codeUnitName, string methodName)
+    private Models.ExecutionContext DetectExecutionContext(List<string> headerLines, string codeUnitName, string methodName)
     {
         var combinedText = string.Join(" ", headerLines.Take(500)).ToLower();
 
@@ -262,7 +262,7 @@ public class LogMetadataExtractor
             codeUnitName.Contains("Batch", StringComparison.OrdinalIgnoreCase) ||
             methodName.Contains("execute") && codeUnitName.Contains("Batch"))
         {
-            return ExecutionContext.Batch;
+            return Models.ExecutionContext.Batch;
         }
 
         // Check for API/Integration (REST, SOAP, Connected App)
@@ -273,7 +273,7 @@ public class LogMetadataExtractor
             combinedText.Contains("connected app") ||
             codeUnitName.StartsWith("REST:", StringComparison.OrdinalIgnoreCase))
         {
-            return ExecutionContext.Integration;
+            return Models.ExecutionContext.Integration;
         }
 
         // Check for Scheduled Apex/Flow
@@ -282,7 +282,7 @@ public class LogMetadataExtractor
             combinedText.Contains("time-based workflow") ||
             codeUnitName.Contains("Schedule", StringComparison.OrdinalIgnoreCase))
         {
-            return ExecutionContext.Scheduled;
+            return Models.ExecutionContext.Scheduled;
         }
 
         // Check for Async operations
@@ -291,7 +291,7 @@ public class LogMetadataExtractor
             combinedText.Contains("platform event") ||
             methodName.Contains("@future"))
         {
-            return ExecutionContext.Async;
+            return Models.ExecutionContext.Async;
         }
 
         // Check for Lightning/Aura components (Interactive)
@@ -301,7 +301,7 @@ public class LogMetadataExtractor
             codeUnitName.Contains("Controller", StringComparison.OrdinalIgnoreCase) ||
             codeUnitName.Contains("LWC", StringComparison.OrdinalIgnoreCase))
         {
-            return ExecutionContext.Interactive;
+            return Models.ExecutionContext.Interactive;
         }
 
         // Check for triggers (could be interactive or async)
@@ -310,13 +310,13 @@ public class LogMetadataExtractor
             // If trigger name contains batch/schedule keywords, classify accordingly
             if (codeUnitName.Contains("Batch") || codeUnitName.Contains("Schedule"))
             {
-                return ExecutionContext.Async;
+                return Models.ExecutionContext.Async;
             }
             // Otherwise assume interactive (user-initiated DML)
-            return ExecutionContext.Interactive;
+            return Models.ExecutionContext.Interactive;
         }
 
         // Default to Unknown if we can't determine
-        return ExecutionContext.Unknown;
+        return Models.ExecutionContext.Unknown;
     }
 }

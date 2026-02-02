@@ -9,7 +9,9 @@ public class SalesforceConnection
     public string AccessToken { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
     public string OrgId { get; set; } = string.Empty;
+    public string OrgName { get; set; } = string.Empty;
     public DateTime TokenIssuedAt { get; set; }
     public DateTime TokenExpiresAt { get; set; }
     public bool IsConnected => !string.IsNullOrEmpty(AccessToken) && DateTime.UtcNow < TokenExpiresAt;

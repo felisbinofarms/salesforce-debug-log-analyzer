@@ -58,6 +58,14 @@ public class SalesforceApiService
                 {
                     _connection.UserId = userInfo.ContainsKey("user_id") ? userInfo["user_id"].ToString() ?? "" : "";
                     _connection.OrgId = userInfo.ContainsKey("organization_id") ? userInfo["organization_id"].ToString() ?? "" : "";
+                    _connection.Username = userInfo.ContainsKey("preferred_username") ? userInfo["preferred_username"].ToString() ?? "" : "";
+                    _connection.OrgName = userInfo.ContainsKey("organization_id") ? userInfo["organization_id"].ToString() ?? "" : "";
+                    
+                    // Also try to get email if username not available
+                    if (string.IsNullOrEmpty(_connection.Username) && userInfo.ContainsKey("email"))
+                    {
+                        _connection.Username = userInfo["email"].ToString() ?? "";
+                    }
                 }
             }
         }
@@ -130,12 +138,21 @@ public class SalesforceApiService
     }
 
     /// <summary>
-    /// Create a new TraceFlag for a user
+    /// Create a new TraceFlag for a user (or update existing one)
     /// </summary>
     public async Task<string> CreateTraceFlagAsync(string userId, string debugLevelId, DateTime expirationDate)
     {
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
+
+        // First, check if a TraceFlag already exists for this user
+        var existingFlag = await GetExistingTraceFlagAsync(userId);
+        
+        if (existingFlag != null)
+        {
+            // Update the existing TraceFlag instead of creating a new one
+            return await UpdateTraceFlagAsync(existingFlag.Id, debugLevelId, expirationDate);
+        }
 
         var traceFlag = new
         {
@@ -151,12 +168,80 @@ public class SalesforceApiService
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync(url, content);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to create TraceFlag: {errorContent}");
+        }
 
         var responseContent = await response.Content.ReadAsStringAsync();
         var result = JsonConvert.DeserializeObject<CreateResult>(responseContent);
 
         return result?.Id ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Get existing TraceFlag for a user
+    /// </summary>
+    private async Task<TraceFlag?> GetExistingTraceFlagAsync(string userId)
+    {
+        if (_connection == null) return null;
+
+        try
+        {
+            var query = $"SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag WHERE TracedEntityId = '{userId}' AND LogType = 'USER_DEBUG'";
+            var encodedQuery = Uri.EscapeDataString(query);
+            var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<QueryResult<TraceFlag>>(content);
+
+            return result?.Records?.FirstOrDefault();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Update an existing TraceFlag
+    /// </summary>
+    private async Task<string> UpdateTraceFlagAsync(string traceFlagId, string debugLevelId, DateTime expirationDate)
+    {
+        if (_connection == null || !_connection.IsConnected)
+            throw new InvalidOperationException("Not connected to Salesforce");
+
+        var updateData = new
+        {
+            DebugLevelId = debugLevelId,
+            StartDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            ExpirationDate = expirationDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        };
+
+        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/TraceFlag/{traceFlagId}";
+        var json = JsonConvert.SerializeObject(updateData);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        // Use PATCH for update
+        var request = new HttpRequestMessage(new HttpMethod("PATCH"), url)
+        {
+            Content = content
+        };
+
+        var response = await _httpClient.SendAsync(request);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to update TraceFlag: {errorContent}");
+        }
+
+        return traceFlagId; // Return the existing ID since update was successful
     }
 
     /// <summary>

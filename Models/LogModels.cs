@@ -26,6 +26,11 @@ public class ExecutionNode
     public Dictionary<string, object> Metadata { get; set; } = new();
     public int StartLineNumber { get; set; }
     public int? EndLineNumber { get; set; }
+    
+    /// <summary>
+    /// For Exception nodes: indicates if this exception was handled (caught) or unhandled
+    /// </summary>
+    public ExceptionSeverity Severity { get; set; } = ExceptionSeverity.Unhandled;
 }
 
 /// <summary>
@@ -43,6 +48,21 @@ public enum ExecutionNodeType
     UserDebug,
     Validation,
     Flow
+}
+
+/// <summary>
+/// Severity classification for exceptions - distinguishes handled from unhandled
+/// </summary>
+public enum ExceptionSeverity
+{
+    /// <summary>Exception was caught by a try/catch - code continued normally</summary>
+    Handled,
+    /// <summary>Exception was thrown but transaction continued (soft failure)</summary>
+    Warning,
+    /// <summary>Exception caused transaction to fail</summary>
+    Unhandled,
+    /// <summary>FATAL_ERROR - complete transaction failure</summary>
+    Fatal
 }
 
 /// <summary>
@@ -86,12 +106,42 @@ public class GovernorLimitSnapshot
 public class LogAnalysis
 {
     public string LogId { get; set; } = string.Empty;
+    public string LogName { get; set; } = string.Empty;
     public DateTime ParsedAt { get; set; }
+    public double DurationMs { get; set; }
+    public int LineCount { get; set; }
+    public bool HasErrors { get; set; }
     public ExecutionNode RootNode { get; set; } = new();
     public List<DatabaseOperation> DatabaseOperations { get; set; } = new();
     public List<GovernorLimitSnapshot> LimitSnapshots { get; set; } = new();
     public List<ExecutionNode> Errors { get; set; } = new();
+    
+    /// <summary>
+    /// Entry point that started this transaction (e.g., "CaseTrigger on Case (BeforeInsert)")
+    /// </summary>
+    public string EntryPoint { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Exceptions that were caught by try/catch blocks (informational, not errors)
+    /// </summary>
+    public List<ExecutionNode> HandledExceptions { get; set; } = new();
+    
+    /// <summary>
+    /// True only if there are unhandled exceptions or fatal errors
+    /// </summary>
+    public bool TransactionFailed { get; set; }
+    
+    /// <summary>
+    /// CPU time from governor limits (actual processing time)
+    /// </summary>
+    public int CpuTimeMs { get; set; }
+    
+    /// <summary>
+    /// Wall clock duration (includes waiting time, async gaps, etc.)
+    /// </summary>
+    public double WallClockMs { get; set; }
     public Dictionary<string, MethodStatistics> MethodStats { get; set; } = new();
+    public StackDepthAnalysis StackAnalysis { get; set; } = new();
     public string Summary { get; set; } = string.Empty;
     public List<string> Issues { get; set; } = new();
     public List<string> Recommendations { get; set; } = new();
@@ -220,4 +270,106 @@ public enum PhaseType
     Backend,
     Frontend,
     Async
+}
+
+/// <summary>
+/// Analysis of call stack depth to detect stack overflow risks
+/// </summary>
+public class StackDepthAnalysis
+{
+    /// <summary>
+    /// Maximum stack depth observed during execution
+    /// </summary>
+    public int MaxDepth { get; set; }
+    
+    /// <summary>
+    /// Line number where max depth occurred
+    /// </summary>
+    public int MaxDepthLine { get; set; }
+    
+    /// <summary>
+    /// Method name at max depth point
+    /// </summary>
+    public string MaxDepthMethod { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Estimated total stack frames (including debug overhead)
+    /// </summary>
+    public int EstimatedTotalFrames { get; set; }
+    
+    /// <summary>
+    /// Whether FINEST logging is enabled (adds massive overhead)
+    /// </summary>
+    public bool HasFinestLogging { get; set; }
+    
+    /// <summary>
+    /// Debug log level settings detected
+    /// </summary>
+    public string DebugLevelSettings { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Estimated frames added by debug logging overhead
+    /// </summary>
+    public int DebugLoggingOverhead { get; set; }
+    
+    /// <summary>
+    /// Risk level: Safe, Warning, Critical
+    /// </summary>
+    public StackRiskLevel RiskLevel { get; set; }
+    
+    /// <summary>
+    /// Methods called in a loop pattern (high frequency)
+    /// </summary>
+    public List<LoopMethodPattern> LoopPatterns { get; set; } = new();
+    
+    /// <summary>
+    /// Deepest call chains detected
+    /// </summary>
+    public List<CallChain> DeepestCallChains { get; set; } = new();
+    
+    /// <summary>
+    /// Whether stack overflow is imminent (estimated > 800 frames)
+    /// </summary>
+    public bool IsStackOverflowRisk => EstimatedTotalFrames > 800;
+    
+    /// <summary>
+    /// Human-readable summary
+    /// </summary>
+    public string Summary { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Stack risk level
+/// </summary>
+public enum StackRiskLevel
+{
+    Safe,       // < 300 frames
+    Moderate,   // 300-600 frames
+    Warning,    // 600-800 frames
+    Critical    // > 800 frames (approaching 1000 limit)
+}
+
+/// <summary>
+/// Pattern of a method called repeatedly in a loop
+/// </summary>
+public class LoopMethodPattern
+{
+    public string MethodName { get; set; } = string.Empty;
+    public int CallCount { get; set; }
+    public int FramesPerCall { get; set; }
+    public int TotalFrames => CallCount * FramesPerCall;
+    public string ParentContext { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// A chain of nested method calls
+/// </summary>
+public class CallChain
+{
+    public List<string> Methods { get; set; } = new();
+    public int Depth => Methods.Count;
+    public int LineNumber { get; set; }
+    
+    public string Display => string.Join(" → ", Methods.Take(5)) + 
+        (Methods.Count > 5 ? $" → ... ({Methods.Count - 5} more)" : "");
 }

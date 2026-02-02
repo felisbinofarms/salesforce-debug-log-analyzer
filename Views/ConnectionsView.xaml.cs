@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
 using System.Collections.ObjectModel;
@@ -18,6 +20,7 @@ public partial class ConnectionsView : UserControl
     private static readonly System.Net.Http.HttpClient _httpClient = new();
 
     public event EventHandler<SalesforceApiService>? ConnectionEstablished;
+    public event EventHandler<string>? LogFileDropped;
 
     public ConnectionsView(SalesforceApiService apiService)
     {
@@ -234,6 +237,152 @@ public partial class ConnectionsView : UserControl
         {
             // Silently fail if we can't save
         }
+    }
+
+    // Drag-Drop handlers for log files
+    private void DropZone_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files?.Length > 0 && IsLogFile(files[0]))
+            {
+                e.Effects = DragDropEffects.Copy;
+                DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81)); // Green
+                DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x10, 0x3A, 0x2D)); // Dark green
+                DropZoneText.Text = "Drop to analyze!";
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    private void DropZone_DragLeave(object sender, DragEventArgs e)
+    {
+        DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2)); // Original blue
+        DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22)); // Original dark
+        DropZoneText.Text = "Drop a .log file here";
+    }
+
+    private void DropZone_Drop(object sender, DragEventArgs e)
+    {
+        DropZone_DragLeave(sender, e); // Reset visual state
+        
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files?.Length > 0 && IsLogFile(files[0]) && File.Exists(files[0]))
+            {
+                LogFileDropped?.Invoke(this, files[0]);
+            }
+        }
+        e.Handled = true;
+    }
+
+    private void DropZone_Click(object sender, MouseButtonEventArgs e)
+    {
+        // Show paste dialog
+        var dialog = new Window
+        {
+            Title = "Paste Log File Path",
+            Width = 500,
+            Height = 180,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Window.GetWindow(this),
+            Background = new SolidColorBrush(Color.FromRgb(0x31, 0x33, 0x38)),
+            ResizeMode = ResizeMode.NoResize,
+            WindowStyle = WindowStyle.ToolWindow
+        };
+
+        var grid = new Grid { Margin = new Thickness(20) };
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        var label = new TextBlock 
+        { 
+            Text = "Paste the full path to your .log file:", 
+            Foreground = Brushes.White,
+            FontSize = 14,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        Grid.SetRow(label, 0);
+
+        var textBox = new TextBox
+        {
+            Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22)),
+            Foreground = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.FromRgb(0x4E, 0x50, 0x58)),
+            Padding = new Thickness(10),
+            FontSize = 13
+        };
+        Grid.SetRow(textBox, 1);
+
+        var buttonPanel = new StackPanel 
+        { 
+            Orientation = Orientation.Horizontal, 
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 15, 0, 0)
+        };
+        Grid.SetRow(buttonPanel, 2);
+
+        var okButton = new Button
+        {
+            Content = "Load File",
+            Padding = new Thickness(20, 8, 20, 8),
+            Background = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Margin = new Thickness(0, 0, 10, 0)
+        };
+        okButton.Click += (s, args) =>
+        {
+            var path = textBox.Text.Trim().Trim('"');
+            if (!string.IsNullOrEmpty(path) && File.Exists(path) && IsLogFile(path))
+            {
+                dialog.DialogResult = true;
+                dialog.Close();
+                LogFileDropped?.Invoke(this, path);
+            }
+            else
+            {
+                MessageBox.Show("Please enter a valid path to a .log or .txt file.", "Invalid Path", 
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        };
+
+        var cancelButton = new Button
+        {
+            Content = "Cancel",
+            Padding = new Thickness(20, 8, 20, 8),
+            Background = new SolidColorBrush(Color.FromRgb(0x4E, 0x50, 0x58)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0)
+        };
+        cancelButton.Click += (s, args) => dialog.Close();
+
+        buttonPanel.Children.Add(okButton);
+        buttonPanel.Children.Add(cancelButton);
+
+        grid.Children.Add(label);
+        grid.Children.Add(textBox);
+        grid.Children.Add(buttonPanel);
+
+        dialog.Content = grid;
+        dialog.ShowDialog();
+    }
+
+    private static bool IsLogFile(string path)
+    {
+        return path.EndsWith(".log", StringComparison.OrdinalIgnoreCase) ||
+               path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase);
     }
 }
 

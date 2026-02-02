@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Views;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 
 namespace SalesforceDebugAnalyzer.ViewModels;
 
@@ -19,6 +19,7 @@ public partial class MainViewModel : ObservableObject
     private readonly LogParserService _parserService;
     private readonly LogMetadataExtractor _metadataExtractor;
     private readonly LogGroupService _groupService;
+    private readonly SalesforceCliService _cliService;
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -56,6 +57,109 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<DatabaseOperation> _databaseOperations = new();
 
+    // Stack Analysis display
+    [ObservableProperty]
+    private string _stackAnalysisSummary = "";
+
+    [ObservableProperty]
+    private bool _hasStackRisk = false;
+
+    // ===== VISUAL DASHBOARD PROPERTIES =====
+    
+    // Hero Stats
+    [ObservableProperty]
+    private string _heroStatus = ""; // "SUCCESS", "WARNING", "FAILED"
+    
+    [ObservableProperty]
+    private string _heroDuration = "0ms";
+    
+    [ObservableProperty]
+    private string _heroEntryPoint = "";
+    
+    // Stat Cards
+    [ObservableProperty]
+    private int _statSoqlCount = 0;
+    
+    [ObservableProperty]
+    private int _statSoqlLimit = 100;
+    
+    [ObservableProperty]
+    private int _statDmlCount = 0;
+    
+    [ObservableProperty]
+    private int _statDmlLimit = 150;
+    
+    [ObservableProperty]
+    private int _statCpuTime = 0;
+    
+    [ObservableProperty]
+    private int _statCpuLimit = 10000;
+    
+    [ObservableProperty]
+    private int _statMethodCount = 0;
+    
+    [ObservableProperty]
+    private int _statErrorCount = 0;
+    
+    [ObservableProperty]
+    private int _statWarningCount = 0;
+    
+    // Governor Limit Percentages (for progress bars)
+    [ObservableProperty]
+    private double _soqlPercent = 0;
+    
+    [ObservableProperty]
+    private double _dmlPercent = 0;
+    
+    [ObservableProperty]
+    private double _cpuPercent = 0;
+    
+    // Timing breakdown
+    [ObservableProperty]
+    private double _wallClockMs = 0;
+    
+    [ObservableProperty]
+    private double _cpuTimeMs = 0;
+    
+    [ObservableProperty]
+    private double _overheadMs = 0;
+    
+    [ObservableProperty]
+    private bool _showTimingBreakdown = false;
+
+    // Filter properties
+    [ObservableProperty]
+    private bool _showSoqlOperations = true;
+
+    [ObservableProperty]
+    private bool _showDmlOperations = true;
+
+    [ObservableProperty]
+    private bool _showErrorsOnly = false;
+
+    [ObservableProperty]
+    private bool _showDebugStatements = false;
+
+    // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries)
+    [ObservableProperty]
+    private int _selectedTabIndex = 0;
+
+    // Streaming properties
+    [ObservableProperty]
+    private bool _isStreaming = false;
+
+    [ObservableProperty]
+    private bool _isCliInstalled = false;
+
+    [ObservableProperty]
+    private string _streamingStatus = "";
+
+    [ObservableProperty]
+    private ObservableCollection<StreamingLogEntry> _streamingLogs = new();
+
+    [ObservableProperty]
+    private string _streamingUsername = "";
+
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
         _apiService = salesforceApi;
@@ -63,6 +167,14 @@ public partial class MainViewModel : ObservableObject
         _oauthService = oauthService;
         _metadataExtractor = new LogMetadataExtractor();
         _groupService = new LogGroupService();
+        _cliService = new SalesforceCliService();
+        
+        // Check CLI installation
+        IsCliInstalled = _cliService.IsInstalled;
+        
+        // Subscribe to CLI events
+        _cliService.StatusChanged += OnCliStatusChanged;
+        _cliService.LogReceived += OnLogReceived;
     }
 
     public void OnConnected()
@@ -76,10 +188,75 @@ public partial class MainViewModel : ObservableObject
     {
         if (value != null)
         {
-            SummaryText = value.Summary;
-            Issues = new ObservableCollection<string>(value.Issues);
-            Recommendations = new ObservableCollection<string>(value.Recommendations);
-            DatabaseOperations = new ObservableCollection<DatabaseOperation>(value.DatabaseOperations);
+            SummaryText = value.Summary ?? "No summary available";
+            Issues = new ObservableCollection<string>(value.Issues ?? new List<string>());
+            Recommendations = new ObservableCollection<string>(value.Recommendations ?? new List<string>());
+            DatabaseOperations = new ObservableCollection<DatabaseOperation>(value.DatabaseOperations ?? new List<DatabaseOperation>());
+            
+            // Stack analysis display
+            if (value.StackAnalysis != null)
+            {
+                StackAnalysisSummary = value.StackAnalysis.Summary ?? "";
+                HasStackRisk = value.StackAnalysis.RiskLevel >= StackRiskLevel.Warning;
+            }
+            else
+            {
+                StackAnalysisSummary = "";
+                HasStackRisk = false;
+            }
+            
+            // ===== POPULATE VISUAL DASHBOARD =====
+            
+            // Hero section
+            HeroEntryPoint = value.EntryPoint ?? "";
+            HeroDuration = FormatDuration(value.DurationMs);
+            
+            if (value.TransactionFailed)
+                HeroStatus = "FAILED";
+            else if (value.HandledExceptions?.Count > 0 || value.HasErrors)
+                HeroStatus = "WARNING";
+            else
+                HeroStatus = "SUCCESS";
+            
+            // Stat cards
+            StatSoqlCount = value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
+            StatDmlCount = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+            StatMethodCount = value.MethodStats?.Count ?? 0;
+            StatErrorCount = value.Errors?.Count ?? 0;
+            StatWarningCount = value.HandledExceptions?.Count ?? 0;
+            
+            // Governor limits from snapshot
+            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+            if (lastSnapshot != null)
+            {
+                StatSoqlLimit = lastSnapshot.SoqlQueriesLimit;
+                StatDmlLimit = lastSnapshot.DmlStatementsLimit;
+                StatCpuTime = lastSnapshot.CpuTime;
+                StatCpuLimit = lastSnapshot.CpuTimeLimit;
+                
+                // Calculate percentages for progress bars
+                SoqlPercent = lastSnapshot.SoqlQueriesLimit > 0 
+                    ? (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit 
+                    : 0;
+                DmlPercent = lastSnapshot.DmlStatementsLimit > 0 
+                    ? (lastSnapshot.DmlStatements * 100.0) / lastSnapshot.DmlStatementsLimit 
+                    : 0;
+                CpuPercent = lastSnapshot.CpuTimeLimit > 0 
+                    ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit 
+                    : 0;
+            }
+            else
+            {
+                SoqlPercent = 0;
+                DmlPercent = 0;
+                CpuPercent = 0;
+            }
+            
+            // Timing breakdown
+            WallClockMs = value.WallClockMs > 0 ? value.WallClockMs : value.DurationMs;
+            CpuTimeMs = value.CpuTimeMs;
+            OverheadMs = WallClockMs - CpuTimeMs;
+            ShowTimingBreakdown = OverheadMs > 1000 && WallClockMs > 2000;
         }
         else
         {
@@ -87,7 +264,46 @@ public partial class MainViewModel : ObservableObject
             Issues.Clear();
             Recommendations.Clear();
             DatabaseOperations.Clear();
+            StackAnalysisSummary = "";
+            HasStackRisk = false;
+            
+            // Reset visual dashboard
+            HeroStatus = "";
+            HeroDuration = "";
+            HeroEntryPoint = "";
+            StatSoqlCount = 0;
+            StatDmlCount = 0;
+            StatMethodCount = 0;
+            StatErrorCount = 0;
+            StatWarningCount = 0;
+            SoqlPercent = 0;
+            DmlPercent = 0;
+            CpuPercent = 0;
+            ShowTimingBreakdown = false;
         }
+    }
+    
+    private string FormatDuration(double ms)
+    {
+        if (ms < 1000) return $"{ms:N0}ms";
+        if (ms < 60000) return $"{ms / 1000.0:N1}s";
+        return $"{ms / 60000.0:N1}m";
+    }
+
+    [RelayCommand]
+    private void SelectLog(LogAnalysis? log)
+    {
+        if (log != null)
+        {
+            SelectedLog = log;
+            StatusMessage = $"Selected: {log.LogName}";
+        }
+    }
+
+    [RelayCommand]
+    private void SelectTab(int tabIndex)
+    {
+        SelectedTabIndex = tabIndex;
     }
 
     [RelayCommand]
@@ -122,42 +338,60 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task UploadLog()
     {
-        StatusMessage = "Opening file dialog...";
+        StatusMessage = "Opening file selector...";
         
         try
         {
-            var openFileDialog = new OpenFileDialog
+            // Show drag-and-drop dialog (no slow file browser)
+            var filePath = ShowDragDropDialog();
+            
+            if (string.IsNullOrEmpty(filePath))
             {
-                Title = "Select Salesforce Debug Log",
-                Filter = "Log Files (*.log;*.txt)|*.log;*.txt|All Files (*.*)|*.*",
-                Multiselect = false
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                StatusMessage = "Reading log file...";
-                IsLoading = true;
-
-                var filePath = openFileDialog.FileName;
-                var fileName = Path.GetFileName(filePath);
-                var logContent = await File.ReadAllTextAsync(filePath);
-
-                StatusMessage = "Parsing log...";
-                var analysis = await Task.Run(() => _parserService.ParseLog(logContent, fileName));
-                
-                Logs.Insert(0, analysis);
-                SelectedLog = analysis;
-
-                StatusMessage = $"✓ Log parsed successfully - {analysis.Summary}";
+                StatusMessage = "Drag a log file onto the window, or paste the path";
+                return;
             }
-            else
-            {
-                StatusMessage = "File selection cancelled";
-            }
+            
+            await LoadLogFromPath(filePath);
         }
         catch (Exception ex)
         {
             StatusMessage = $"Upload failed: {ex.Message}";
+            IsLoading = false;
+        }
+    }
+    
+    /// <summary>
+    /// Loads and parses a log file from the given path (called from drag-drop or paste)
+    /// </summary>
+    public async Task LoadLogFromPath(string filePath)
+    {
+        try
+        {
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "Invalid Path", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            
+            StatusMessage = "Reading log file...";
+            IsLoading = true;
+
+            var fileName = Path.GetFileName(filePath);
+            
+            // Read file on background thread to prevent UI freeze
+            var logContent = await Task.Run(() => File.ReadAllText(filePath));
+
+            StatusMessage = "Parsing log...";
+            var analysis = await Task.Run(() => _parserService.ParseLog(logContent, fileName));
+            
+            Logs.Insert(0, analysis);
+            SelectedLog = analysis;
+
+            StatusMessage = $"✓ Log parsed successfully - {analysis.Summary}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Failed to load log: {ex.Message}";
         }
         finally
         {
@@ -304,4 +538,230 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = $"Error: {ex.Message}";
         }
     }
+
+    [RelayCommand]
+    private async Task ToggleStreaming()
+    {
+        if (IsStreaming)
+        {
+            StopStreaming();
+        }
+        else
+        {
+            await StartStreamingAsync();
+        }
+    }
+
+    private async Task StartStreamingAsync()
+    {
+        if (!IsCliInstalled)
+        {
+            StatusMessage = "⚠️ Salesforce CLI not installed. Install from: https://developer.salesforce.com/tools/salesforcecli";
+            StreamingStatus = "CLI not installed";
+            return;
+        }
+
+        if (!_apiService.IsConnected || _apiService.Connection == null)
+        {
+            StatusMessage = "⚠️ Please connect to Salesforce first";
+            return;
+        }
+
+        // Use the connected org's username
+        var username = _apiService.Connection.Username;
+        if (string.IsNullOrEmpty(username))
+        {
+            // Fall back to instance URL parsing or ask user
+            StatusMessage = "⚠️ Unable to determine username for streaming";
+            return;
+        }
+
+        StreamingUsername = username;
+        StatusMessage = $"🕷️ Starting log stream for {username}...";
+        StreamingStatus = "Connecting...";
+
+        var success = await _cliService.StartStreamingAsync(username);
+        
+        if (success)
+        {
+            IsStreaming = true;
+            StreamingStatus = $"🔴 LIVE - {username}";
+            StatusMessage = $"🕷️ Black Widow is watching... Waiting for logs from {username}";
+        }
+        else
+        {
+            StreamingStatus = "Failed to start";
+        }
+    }
+
+    private void StopStreaming()
+    {
+        _cliService.StopStreaming();
+        IsStreaming = false;
+        StreamingStatus = "Stopped";
+        StatusMessage = "Log streaming stopped";
+    }
+
+    private void OnCliStatusChanged(object? sender, string status)
+    {
+        // Marshal to UI thread
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            // Add to streaming log
+            StreamingLogs.Insert(0, new StreamingLogEntry
+            {
+                Timestamp = DateTime.Now,
+                Message = status,
+                IsError = status.Contains("⚠️") || status.Contains("Failed")
+            });
+
+            // Keep only last 100 entries
+            while (StreamingLogs.Count > 100)
+            {
+                StreamingLogs.RemoveAt(StreamingLogs.Count - 1);
+            }
+        });
+    }
+
+    private void OnLogReceived(object? sender, LogReceivedEventArgs e)
+    {
+        Application.Current?.Dispatcher.Invoke(async () =>
+        {
+            try
+            {
+                StatusMessage = "🕷️ New log detected! Parsing...";
+
+                // Parse the log content
+                var analysis = await Task.Run(() => _parserService.ParseLog(e.LogContent, $"Stream_{e.Timestamp:HHmmss}"));
+                
+                // Add to logs list
+                Logs.Insert(0, analysis);
+                SelectedLog = analysis;
+
+                // Add notification to streaming log
+                StreamingLogs.Insert(0, new StreamingLogEntry
+                {
+                    Timestamp = e.Timestamp,
+                    Message = $"✅ Log captured and parsed - {analysis.Summary}",
+                    IsError = false,
+                    Analysis = analysis
+                });
+
+                StatusMessage = $"🕷️ Caught a log! {analysis.Summary}";
+            }
+            catch (Exception ex)
+            {
+                StreamingLogs.Insert(0, new StreamingLogEntry
+                {
+                    Timestamp = DateTime.Now,
+                    Message = $"❌ Failed to parse log: {ex.Message}",
+                    IsError = true
+                });
+            }
+        });
+    }
+    
+    /// <summary>
+    /// Shows a simple dialog to paste a file path
+    /// </summary>
+    private string? ShowDragDropDialog()
+    {
+        string? resultPath = null;
+        
+        var dialog = new Window
+        {
+            Title = "Open Debug Log",
+            Width = 550,
+            Height = 160,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            ResizeMode = ResizeMode.NoResize,
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(47, 49, 54))
+        };
+        
+        var mainStack = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
+        
+        // Instructions
+        var label = new System.Windows.Controls.TextBlock
+        {
+            Text = "Paste log file path (right-click file → Copy as path):",
+            Foreground = System.Windows.Media.Brushes.White,
+            FontSize = 14,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        
+        // Path input row
+        var inputRow = new System.Windows.Controls.Grid();
+        inputRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+        inputRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = System.Windows.GridLength.Auto });
+        
+        var textBox = new System.Windows.Controls.TextBox
+        {
+            Padding = new Thickness(10, 8, 10, 8),
+            FontSize = 13,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(64, 68, 75)),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0)
+        };
+        System.Windows.Controls.Grid.SetColumn(textBox, 0);
+        
+        var openButton = new System.Windows.Controls.Button
+        {
+            Content = "Open",
+            Width = 80,
+            Margin = new Thickness(10, 0, 0, 0),
+            Padding = new Thickness(10, 8, 10, 8),
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(88, 101, 242)),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            FontWeight = FontWeights.SemiBold
+        };
+        System.Windows.Controls.Grid.SetColumn(openButton, 1);
+        
+        openButton.Click += (s, e) =>
+        {
+            if (!string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                resultPath = textBox.Text.Trim().Trim('"');
+                dialog.DialogResult = true;
+                dialog.Close();
+            }
+        };
+        
+        // Allow Enter key to submit
+        textBox.KeyDown += (s, e) =>
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && !string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                resultPath = textBox.Text.Trim().Trim('"');
+                dialog.DialogResult = true;
+                dialog.Close();
+            }
+        };
+        
+        inputRow.Children.Add(textBox);
+        inputRow.Children.Add(openButton);
+        
+        mainStack.Children.Add(label);
+        mainStack.Children.Add(inputRow);
+        
+        dialog.Content = mainStack;
+        
+        // Focus the textbox after dialog loads
+        dialog.Loaded += (s, e) => textBox.Focus();
+        
+        dialog.ShowDialog();
+        return resultPath;
+    }
+}
+
+/// <summary>
+/// Entry in the streaming log panel
+/// </summary>
+public class StreamingLogEntry
+{
+    public DateTime Timestamp { get; set; }
+    public string Message { get; set; } = "";
+    public bool IsError { get; set; }
+    public LogAnalysis? Analysis { get; set; }
 }

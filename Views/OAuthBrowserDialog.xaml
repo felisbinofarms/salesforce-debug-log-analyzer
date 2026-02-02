@@ -42,10 +42,21 @@
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="#2B2D31" Padding="16,8">
             <Grid>
-                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center" Foreground="#DBDEE1"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center" Foreground="#DBDEE1" Grid.Column="0"/>
+                <Button Content="Open in Browser" 
+                        Click="OpenInBrowser_Click"
+                        Margin="0,0,8,0"
+                        Grid.Column="1"
+                        Style="{StaticResource DiscordSecondaryButton}"
+                        ToolTip="If the embedded browser isn't working, try opening in your default browser"/>
                 <Button Content="Cancel" 
                         Click="CancelButton_Click"
-                        HorizontalAlignment="Right"
+                        Grid.Column="2"
                         Style="{StaticResource DiscordSecondaryButton}"/>
             </Grid>
         </Border>

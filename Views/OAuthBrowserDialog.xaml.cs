@@ -33,6 +33,38 @@ public partial class OAuthBrowserDialog : Window
         try
         {
             StatusText.Text = "Initializing browser...";
+            
+            // Check if WebView2 is available
+            try
+            {
+                var version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+                StatusText.Text = $"WebView2 version: {version}";
+            }
+            catch (Exception webViewEx)
+            {
+                _completionSource.SetResult(new OAuthResult
+                {
+                    Success = false,
+                    Error = $"WebView2 Runtime is not installed. Please download it from: https://developer.microsoft.com/en-us/microsoft-edge/webview2/\\n\\nError: {webViewEx.Message}"
+                });
+                MessageBox.Show(
+                    "WebView2 Runtime is not installed.\\n\\nPlease download and install it from:\\nhttps://developer.microsoft.com/en-us/microsoft-edge/webview2/\\n\\nClick OK to open the download page.",
+                    "WebView2 Required",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "https://developer.microsoft.com/en-us/microsoft-edge/webview2/",
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+                Close();
+                return;
+            }
+
             await WebBrowser.EnsureCoreWebView2Async(null);
 
             // Use fixed port for PlatformCLI
@@ -46,14 +78,19 @@ public partial class OAuthBrowserDialog : Window
                 _httpListener.Start();
                 StatusText.Text = "Local server started on port 1717...";
             }
-            catch (HttpListenerException)
+            catch (HttpListenerException ex)
             {
                 // Port might be in use, try a different approach
                 _completionSource.SetResult(new OAuthResult
                 {
                     Success = false,
-                    Error = "Port 1717 is already in use. Please close other applications and try again."
+                    Error = $"Port 1717 is already in use (maybe Salesforce CLI is running?).\\n\\nPlease close other applications using port 1717 and try again.\\n\\nError: {ex.Message}"
                 });
+                MessageBox.Show(
+                    $"Port 1717 is already in use.\\n\\nThis port is required for Salesforce OAuth.\\nPlease close Salesforce CLI or other apps using this port and try again.\\n\\nError: {ex.Message}",
+                    "Port In Use",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 Close();
                 return;
             }
@@ -198,21 +235,21 @@ public partial class OAuthBrowserDialog : Window
 
     private async void CoreWebView2_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
     {
-        StatusText.Text = $"Loading...";
-        
-        // WebView will try to navigate to localhost callback, but we're handling it with HttpListener
-        // So we can just show loading status here
+        StatusText.Text = $"Navigating to: {e.Uri?.Substring(0, Math.Min(50, e.Uri?.Length ?? 0))}...";
+        System.Diagnostics.Debug.WriteLine($"[OAuth] Navigation starting: {e.Uri}");
     }
 
     private void CoreWebView2_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
     {
         if (e.IsSuccess)
         {
-            StatusText.Text = "Ready";
+            StatusText.Text = "Page loaded - please login";
+            System.Diagnostics.Debug.WriteLine($"[OAuth] Navigation completed successfully");
         }
         else
         {
-            StatusText.Text = $"Navigation failed";
+            StatusText.Text = $"Navigation failed: {e.WebErrorStatus}";
+            System.Diagnostics.Debug.WriteLine($"[OAuth] Navigation failed: {e.WebErrorStatus}");
         }
     }
 
@@ -312,5 +349,57 @@ public partial class OAuthBrowserDialog : Window
             Error = "Login cancelled by user"
         });
         Close();
+    }
+
+    private void OpenInBrowser_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Build the auth URL
+            var authEndpoint = _useSandbox
+                ? "https://test.salesforce.com/services/oauth2/authorize"
+                : "https://login.salesforce.com/services/oauth2/authorize";
+
+            if (string.IsNullOrEmpty(_codeVerifier))
+            {
+                _codeVerifier = GenerateCodeVerifier();
+            }
+            var codeChallenge = GenerateCodeChallenge(_codeVerifier);
+            
+            if (string.IsNullOrEmpty(_expectedState))
+            {
+                _expectedState = Guid.NewGuid().ToString("N");
+            }
+
+            var authUrl = $"{authEndpoint}?" +
+                         $"response_type=code&" +
+                         $"client_id=PlatformCLI&" +
+                         $"redirect_uri={Uri.EscapeDataString("http://localhost:1717/OauthRedirect")}&" +
+                         $"scope={Uri.EscapeDataString("api refresh_token web")}&" +
+                         $"code_challenge={codeChallenge}&" +
+                         $"code_challenge_method=S256&" +
+                         $"state={_expectedState}&" +
+                         $"prompt=login";
+
+            // Open in default browser
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = authUrl,
+                UseShellExecute = true
+            });
+
+            StatusText.Text = "Opened in browser - complete login there, then return here";
+            MessageBox.Show(
+                "Login page opened in your default browser.\n\n" +
+                "After you complete the login, you'll be redirected back to this app automatically.\n\n" +
+                "If the redirect doesn't work, check that port 1717 is available.",
+                "Login in Browser",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open browser: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

@@ -19,6 +19,7 @@ public class LogParserService
         var analysis = new LogAnalysis
         {
             LogId = logId,
+            LogName = logId,
             ParsedAt = DateTime.UtcNow
         };
 
@@ -29,6 +30,7 @@ public class LogParserService
         }
 
         var lines = logContent.Split('\n');
+        analysis.LineCount = lines.Length;
         var logLines = new List<LogLine>();
         
         // Phase 1: Tokenize all lines
@@ -57,6 +59,9 @@ public class LogParserService
             return analysis;
         }
 
+        // Extract debug level settings from first line
+        var debugLevelSettings = ExtractDebugLevelSettings(lines);
+
         // Phase 2: Build execution tree
         analysis.RootNode = BuildExecutionTree(logLines);
 
@@ -66,13 +71,33 @@ public class LogParserService
         // Phase 4: Extract governor limits
         analysis.LimitSnapshots = ExtractGovernorLimits(logLines);
 
-        // Phase 5: Find errors
-        analysis.Errors = FindErrors(analysis.RootNode);
+        // Phase 5: Extract entry point (trigger/flow that started this transaction)
+        analysis.EntryPoint = ExtractEntryPoint(logLines);
+
+        // Phase 5b: Find and classify exceptions (handled vs unhandled)
+        ClassifyExceptions(logLines, analysis);
+        analysis.HasErrors = analysis.Errors.Count > 0;
+        analysis.TransactionFailed = analysis.Errors.Any(e => 
+            e.Severity == ExceptionSeverity.Fatal || e.Severity == ExceptionSeverity.Unhandled);
 
         // Phase 6: Calculate method statistics
         analysis.MethodStats = CalculateMethodStatistics(analysis.RootNode);
 
-        // Phase 7: Generate summary and recommendations
+        // Phase 7: Analyze stack depth (NEW - Stack Overflow Detection)
+        analysis.StackAnalysis = AnalyzeStackDepth(logLines, debugLevelSettings);
+
+        // Calculate duration from root node
+        analysis.DurationMs = analysis.RootNode.DurationMs;
+        analysis.WallClockMs = analysis.RootNode.DurationMs;
+        
+        // Extract CPU time from governor limits
+        var lastSnapshot = analysis.LimitSnapshots.LastOrDefault();
+        if (lastSnapshot != null)
+        {
+            analysis.CpuTimeMs = lastSnapshot.CpuTime;
+        }
+
+        // Phase 8: Generate summary and recommendations
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
         analysis.Recommendations = GenerateRecommendations(analysis);
@@ -435,6 +460,172 @@ public class LogParserService
         }
     }
 
+    /// <summary>
+    /// Extract the entry point (trigger, flow, VF page, etc.) that started this transaction
+    /// </summary>
+    private string ExtractEntryPoint(List<LogLine> logLines)
+    {
+        foreach (var line in logLines.Take(100))
+        {
+            if (line.EventType == "CODE_UNIT_STARTED")
+            {
+                var details = string.Join("|", line.Details);
+                
+                // Parse trigger format: "__sfdc_trigger/CaseTrigger" or "CaseTrigger on Case trigger event BeforeInsert"
+                if (details.Contains("trigger", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Look for pattern like "CaseTrigger on Case trigger event BeforeInsert"
+                    var match = Regex.Match(details, @"(\w+)\s+on\s+(\w+)\s+trigger\s+event\s+(\w+)", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        return $"{match.Groups[1].Value} on {match.Groups[2].Value} ({match.Groups[3].Value})";
+                    }
+                    
+                    // Fallback: extract trigger name from __sfdc_trigger/TriggerName
+                    match = Regex.Match(details, @"__sfdc_trigger/(\w+)");
+                    if (match.Success)
+                    {
+                        return match.Groups[1].Value;
+                    }
+                }
+                
+                // Parse flow format
+                if (details.Contains("Flow", StringComparison.OrdinalIgnoreCase))
+                {
+                    var match = Regex.Match(details, @"Flow[:|](\w+)");
+                    if (match.Success)
+                    {
+                        return $"Flow: {match.Groups[1].Value}";
+                    }
+                }
+                
+                // Parse VF/Lightning Controller
+                if (details.Contains("VF") || details.Contains("Aura") || details.Contains("LWC"))
+                {
+                    return CleanCodeUnitName(line.Details.LastOrDefault() ?? "Unknown Controller");
+                }
+                
+                // Generic code unit
+                var cleanName = CleanCodeUnitName(line.Details.LastOrDefault() ?? "");
+                if (!string.IsNullOrEmpty(cleanName) && !cleanName.Contains("[EXTERNAL]"))
+                {
+                    return cleanName;
+                }
+            }
+        }
+        
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Classify all exceptions as handled, warning, unhandled, or fatal
+    /// </summary>
+    private void ClassifyExceptions(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        var allExceptions = new List<ExecutionNode>();
+        FindErrorsRecursive(analysis.RootNode, allExceptions);
+        
+        // Check for FATAL_ERROR anywhere in the log - this means transaction failed
+        bool hasFatalError = logLines.Any(l => l.EventType == "FATAL_ERROR");
+        
+        // Find all EXCEPTION_THROWN lines to analyze context
+        var exceptionLines = logLines
+            .Select((line, index) => new { Line = line, Index = index })
+            .Where(x => x.Line.EventType == "EXCEPTION_THROWN")
+            .ToList();
+        
+        foreach (var exception in allExceptions)
+        {
+            // FATAL_ERROR is always Fatal severity
+            if (exception.Name.StartsWith("Fatal Error:"))
+            {
+                exception.Severity = ExceptionSeverity.Fatal;
+                analysis.Errors.Add(exception);
+                continue;
+            }
+            
+            // Find this exception in the log lines
+            var exceptionLine = exceptionLines.FirstOrDefault(x => 
+                x.Line.LineNumber == exception.StartLineNumber);
+            
+            if (exceptionLine != null)
+            {
+                // Look ahead to see what happens after the exception
+                bool isHandled = false;
+                bool causedFatal = false;
+                
+                // Check the next 20 lines to see if code continues or fails
+                for (int i = exceptionLine.Index + 1; i < Math.Min(exceptionLine.Index + 20, logLines.Count); i++)
+                {
+                    var nextLine = logLines[i];
+                    
+                    // If we see FATAL_ERROR immediately after, it's unhandled
+                    if (nextLine.EventType == "FATAL_ERROR")
+                    {
+                        causedFatal = true;
+                        break;
+                    }
+                    
+                    // If we see normal code execution continuing, it was handled
+                    if (nextLine.EventType == "METHOD_ENTRY" || 
+                        nextLine.EventType == "METHOD_EXIT" ||
+                        nextLine.EventType == "STATEMENT_EXECUTE" ||
+                        nextLine.EventType == "USER_DEBUG" ||
+                        nextLine.EventType == "VARIABLE_ASSIGNMENT")
+                    {
+                        isHandled = true;
+                        break;
+                    }
+                    
+                    // If we see another EXCEPTION_THROWN (re-throw), check if it's the same one
+                    if (nextLine.EventType == "EXCEPTION_THROWN")
+                    {
+                        // Exception was re-thrown, not handled yet - keep looking
+                        continue;
+                    }
+                }
+                
+                if (causedFatal)
+                {
+                    exception.Severity = ExceptionSeverity.Unhandled;
+                    analysis.Errors.Add(exception);
+                }
+                else if (isHandled)
+                {
+                    exception.Severity = ExceptionSeverity.Handled;
+                    analysis.HandledExceptions.Add(exception);
+                }
+                else if (hasFatalError)
+                {
+                    // If there's a fatal error somewhere, and we can't determine if this was handled,
+                    // assume it's related to the failure
+                    exception.Severity = ExceptionSeverity.Unhandled;
+                    analysis.Errors.Add(exception);
+                }
+                else
+                {
+                    // No fatal error in the log, and code continued - treat as warning
+                    exception.Severity = ExceptionSeverity.Warning;
+                    analysis.HandledExceptions.Add(exception);
+                }
+            }
+            else
+            {
+                // Can't find the original line - default based on fatal error presence
+                if (hasFatalError)
+                {
+                    exception.Severity = ExceptionSeverity.Unhandled;
+                    analysis.Errors.Add(exception);
+                }
+                else
+                {
+                    exception.Severity = ExceptionSeverity.Warning;
+                    analysis.HandledExceptions.Add(exception);
+                }
+            }
+        }
+    }
+
     private Dictionary<string, MethodStatistics> CalculateMethodStatistics(ExecutionNode root)
     {
         var stats = new Dictionary<string, MethodStatistics>();
@@ -469,20 +660,213 @@ public class LogParserService
         }
     }
 
+    /// <summary>
+    /// Extract debug level settings from the first line of the log
+    /// </summary>
+    private string ExtractDebugLevelSettings(string[] lines)
+    {
+        foreach (var line in lines.Take(5))
+        {
+            // Look for pattern like: 66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;...
+            if (line.Contains("APEX_CODE,") || line.Contains("DB,") || line.Contains("SYSTEM,"))
+            {
+                return line.Trim();
+            }
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Analyze stack depth to detect stack overflow risks
+    /// This is critical for detecting issues that governor limits miss!
+    /// </summary>
+    private StackDepthAnalysis AnalyzeStackDepth(List<LogLine> logLines, string debugLevelSettings)
+    {
+        var analysis = new StackDepthAnalysis
+        {
+            DebugLevelSettings = debugLevelSettings
+        };
+
+        // Detect FINEST logging (adds massive overhead)
+        analysis.HasFinestLogging = debugLevelSettings.Contains("FINEST");
+        
+        // Calculate debug overhead frames
+        if (analysis.HasFinestLogging)
+        {
+            // FINEST logging adds METHOD_ENTRY/EXIT for every method call
+            // This can add 200-400+ extra stack frames
+            var methodEntryCount = logLines.Count(l => l.EventType == "METHOD_ENTRY");
+            analysis.DebugLoggingOverhead = Math.Min(methodEntryCount / 10, 400); // Estimate
+        }
+
+        // Track current stack depth as we process the log
+        int currentDepth = 0;
+        int maxDepth = 0;
+        int maxDepthLine = 0;
+        string maxDepthMethod = "";
+        var currentStack = new Stack<string>();
+        var methodCallCounts = new Dictionary<string, int>();
+        var methodCallChains = new Dictionary<string, List<string>>();
+
+        foreach (var line in logLines)
+        {
+            switch (line.EventType)
+            {
+                case "METHOD_ENTRY":
+                case "SYSTEM_METHOD_ENTRY":
+                case "CODE_UNIT_STARTED":
+                    currentDepth++;
+                    var methodName = line.Details.Length > 1 ? line.Details[1] : 
+                                    (line.Details.Length > 0 ? line.Details[0] : "Unknown");
+                    currentStack.Push(methodName);
+                    
+                    // Track method call counts
+                    if (!methodCallCounts.ContainsKey(methodName))
+                        methodCallCounts[methodName] = 0;
+                    methodCallCounts[methodName]++;
+                    
+                    if (currentDepth > maxDepth)
+                    {
+                        maxDepth = currentDepth;
+                        maxDepthLine = line.LineNumber;
+                        maxDepthMethod = methodName;
+                    }
+                    break;
+
+                case "METHOD_EXIT":
+                case "SYSTEM_METHOD_EXIT":
+                case "CODE_UNIT_FINISHED":
+                    if (currentDepth > 0)
+                    {
+                        currentDepth--;
+                        if (currentStack.Count > 0)
+                            currentStack.Pop();
+                    }
+                    break;
+            }
+        }
+
+        analysis.MaxDepth = maxDepth;
+        analysis.MaxDepthLine = maxDepthLine;
+        analysis.MaxDepthMethod = maxDepthMethod;
+
+        // Detect loop patterns (methods called many times)
+        var loopPatterns = methodCallCounts
+            .Where(kvp => kvp.Value > 10) // Methods called more than 10 times
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(10)
+            .Select(kvp => new LoopMethodPattern
+            {
+                MethodName = kvp.Key,
+                CallCount = kvp.Value,
+                FramesPerCall = EstimateFramesPerCall(kvp.Key), // Estimate based on method name
+                ParentContext = "Loop iteration"
+            })
+            .ToList();
+        
+        analysis.LoopPatterns = loopPatterns;
+
+        // Calculate estimated total frames
+        // Formula: (max depth) + (loop patterns contribution) + (debug overhead)
+        int loopFrameContribution = loopPatterns.Sum(p => p.TotalFrames);
+        analysis.EstimatedTotalFrames = maxDepth + loopFrameContribution + analysis.DebugLoggingOverhead;
+
+        // Determine risk level
+        analysis.RiskLevel = analysis.EstimatedTotalFrames switch
+        {
+            > 800 => StackRiskLevel.Critical,
+            > 600 => StackRiskLevel.Warning,
+            > 300 => StackRiskLevel.Moderate,
+            _ => StackRiskLevel.Safe
+        };
+
+        // Generate summary
+        analysis.Summary = GenerateStackSummary(analysis);
+
+        return analysis;
+    }
+
+    /// <summary>
+    /// Estimate how many stack frames a method call typically adds
+    /// </summary>
+    private int EstimateFramesPerCall(string methodName)
+    {
+        // Methods that call other methods add more frames
+        if (methodName.Contains("getRecordType", StringComparison.OrdinalIgnoreCase))
+            return 3; // getRecordType → getRecordTypeFromMap → putRecordTypeInMap
+        if (methodName.Contains("handle", StringComparison.OrdinalIgnoreCase))
+            return 2;
+        if (methodName.Contains("TriggerHandler", StringComparison.OrdinalIgnoreCase))
+            return 4;
+        return 1;
+    }
+
+    /// <summary>
+    /// Generate a human-readable summary of stack depth analysis
+    /// </summary>
+    private string GenerateStackSummary(StackDepthAnalysis analysis)
+    {
+        var sb = new System.Text.StringBuilder();
+        
+        if (analysis.RiskLevel == StackRiskLevel.Critical)
+        {
+            sb.AppendLine($"🚨 **CRITICAL: Stack Overflow Risk Detected!**");
+            sb.AppendLine($"Estimated stack frames: {analysis.EstimatedTotalFrames} (Salesforce limit: 1,000)");
+            sb.AppendLine();
+        }
+        else if (analysis.RiskLevel == StackRiskLevel.Warning)
+        {
+            sb.AppendLine($"⚠️ **Warning: High Stack Depth**");
+            sb.AppendLine($"Estimated stack frames: {analysis.EstimatedTotalFrames} (approaching 1,000 limit)");
+            sb.AppendLine();
+        }
+
+        if (analysis.HasFinestLogging)
+        {
+            sb.AppendLine($"📊 **FINEST Debug Logging Active**");
+            sb.AppendLine($"This adds ~{analysis.DebugLoggingOverhead} extra stack frames for method tracking.");
+            sb.AppendLine($"Production without logging may have fewer issues, but the underlying code is still risky.");
+            sb.AppendLine();
+        }
+
+        if (analysis.LoopPatterns.Any())
+        {
+            sb.AppendLine("🔁 **Loop Patterns Detected:**");
+            foreach (var pattern in analysis.LoopPatterns.Take(5))
+            {
+                sb.AppendLine($"  • {pattern.MethodName}: {pattern.CallCount} calls × {pattern.FramesPerCall} frames = {pattern.TotalFrames} total frames");
+            }
+        }
+
+        return sb.ToString();
+    }
+
     private string GenerateSummary(LogAnalysis analysis)
     {
         var totalDuration = analysis.RootNode.DurationMs;
         var methodCount = analysis.MethodStats.Count;
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
         var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
-        var errorCount = analysis.Errors.Count;
+        var unhandledErrorCount = analysis.Errors.Count;
+        var handledExceptionCount = analysis.HandledExceptions.Count;
 
         var summary = "📋 **What Happened:**\n\n";
 
-        // Opening statement
-        if (errorCount > 0)
+        // Entry point - what started this transaction
+        if (!string.IsNullOrEmpty(analysis.EntryPoint))
         {
-            summary += $"❌ This transaction encountered problems and took {FormatDuration(totalDuration)} to complete.\n\n";
+            summary += $"**Trigger:** {analysis.EntryPoint}\n\n";
+        }
+
+        // Opening statement - now uses TransactionFailed instead of just error count
+        if (analysis.TransactionFailed)
+        {
+            summary += $"❌ This transaction **failed** and took {FormatDuration(totalDuration)} total.\n\n";
+        }
+        else if (handledExceptionCount > 0)
+        {
+            summary += $"⚠️ This transaction **completed with {handledExceptionCount} caught exception{(handledExceptionCount > 1 ? "s" : "")}** in {FormatDuration(totalDuration)}.\n";
+            summary += "The exceptions were handled gracefully - your code continued running.\n\n";
         }
         else if (totalDuration > 5000)
         {
@@ -512,13 +896,26 @@ public class LogParserService
 
         summary += "\n";
 
-        // Performance assessment
+        // Performance assessment with wall clock vs CPU time distinction
         summary += "**Performance:**\n";
         var lastLimitSnapshot = analysis.LimitSnapshots.LastOrDefault();
         if (lastLimitSnapshot != null)
         {
             var soqlPercent = (lastLimitSnapshot.SoqlQueries * 100.0) / lastLimitSnapshot.SoqlQueriesLimit;
             var cpuPercent = (lastLimitSnapshot.CpuTime * 100.0) / lastLimitSnapshot.CpuTimeLimit;
+            
+            // Show wall clock vs CPU time breakdown
+            var wallClockMs = analysis.WallClockMs > 0 ? analysis.WallClockMs : totalDuration;
+            var cpuTimeMs = lastLimitSnapshot.CpuTime;
+            var overheadMs = wallClockMs - cpuTimeMs;
+            
+            if (overheadMs > 1000 && wallClockMs > 2000)
+            {
+                summary += $"⏱️ **Timing breakdown:**\n";
+                summary += $"  - Total wall clock: {FormatDuration((long)wallClockMs)}\n";
+                summary += $"  - Your code (CPU): {FormatDuration(cpuTimeMs)}\n";
+                summary += $"  - Salesforce overhead: {FormatDuration((long)overheadMs)} (database I/O, async processing)\n\n";
+            }
             
             if (soqlPercent < 30 && cpuPercent < 30)
             {
@@ -543,10 +940,14 @@ public class LogParserService
 
         summary += "\n";
 
-        // Overall verdict
-        if (errorCount > 0)
+        // Overall verdict - now using TransactionFailed and distinguishing handled exceptions
+        if (analysis.TransactionFailed)
         {
-            summary += $"**Result:** ❌ Failed with {errorCount} error{(errorCount > 1 ? "s" : "")}. Check the 'Issues' tab for details.\n";
+            summary += $"**Result:** ❌ Failed with {unhandledErrorCount} unhandled error{(unhandledErrorCount > 1 ? "s" : "")}. Check the 'Issues' tab for details.\n";
+        }
+        else if (handledExceptionCount > 0)
+        {
+            summary += $"**Result:** ⚠️ Completed successfully with {handledExceptionCount} caught exception{(handledExceptionCount > 1 ? "s" : "")} (handled gracefully).\n";
         }
         else if (soqlCount > 100 || (lastLimitSnapshot != null && 
                  ((lastLimitSnapshot.SoqlQueries * 100.0 / lastLimitSnapshot.SoqlQueriesLimit) > 80 ||
@@ -572,6 +973,42 @@ public class LogParserService
     private List<string> DetectIssues(LogAnalysis analysis)
     {
         var issues = new List<string>();
+
+        // 🚨 NEW: Check for stack overflow risk FIRST - this is often the real issue!
+        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical)
+        {
+            issues.Add($"🚨 **CRITICAL: Stack Overflow Risk!** Your code is using an estimated {analysis.StackAnalysis.EstimatedTotalFrames} stack frames " +
+                $"(Salesforce limit: 1,000). This WILL cause a 'System.LimitException: Maximum stack depth reached' error. " +
+                $"The problem is usually a method called inside a loop that itself calls other methods. " +
+                $"Look for: {analysis.StackAnalysis.MaxDepthMethod} at line {analysis.StackAnalysis.MaxDepthLine}.");
+        }
+        else if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Warning)
+        {
+            issues.Add($"⚠️ **High Stack Depth Warning**: Your code is using ~{analysis.StackAnalysis.EstimatedTotalFrames} stack frames " +
+                $"(approaching the 1,000 limit). This may fail in certain conditions, especially with debug logging enabled. " +
+                $"Consider refactoring loops that call nested methods.");
+        }
+
+        // Check for FINEST logging overhead
+        if (analysis.StackAnalysis.HasFinestLogging)
+        {
+            issues.Add($"📊 **FINEST Debug Logging Active**: This log was captured with maximum debug verbosity, " +
+                $"which adds ~{analysis.StackAnalysis.DebugLoggingOverhead} extra stack frames. " +
+                $"Production may work where QA fails, but the underlying code is still risky!");
+        }
+
+        // Check for loop patterns contributing to stack depth
+        var dangerousLoopPatterns = analysis.StackAnalysis.LoopPatterns
+            .Where(p => p.TotalFrames > 100)
+            .ToList();
+        
+        if (dangerousLoopPatterns.Any())
+        {
+            var topPattern = dangerousLoopPatterns.First();
+            issues.Add($"🔄 **Method Called Excessively in Loop**: '{topPattern.MethodName}' was called {topPattern.CallCount} times, " +
+                $"adding ~{topPattern.TotalFrames} stack frames. If this method calls other methods, " +
+                $"it's multiplying the problem. Cache the result or move the call outside the loop.");
+        }
 
         // Check for excessive SOQL queries in plain English
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
@@ -657,19 +1094,40 @@ public class LogParserService
                 "This can cause infinite loops and performance problems. Add logic to prevent re-entry.");
         }
 
-        // Check for errors
+        // Check for errors - now distinguishes handled from unhandled
         if (analysis.Errors.Any())
         {
-            if (analysis.Errors.Count == 1)
+            var fatalErrors = analysis.Errors.Where(e => e.Severity == ExceptionSeverity.Fatal).ToList();
+            var unhandledErrors = analysis.Errors.Where(e => e.Severity == ExceptionSeverity.Unhandled).ToList();
+            
+            if (fatalErrors.Any())
             {
-                issues.Add($"❌ **Your Code Failed**: The execution stopped with an error. " +
-                    "Check the error details below to see what went wrong and where.");
+                issues.Add($"💀 **Fatal Error - Transaction Failed**: The execution crashed with a fatal error. " +
+                    "This is a complete failure - the transaction was rolled back and no changes were saved.");
             }
-            else
+            
+            if (unhandledErrors.Any())
             {
-                issues.Add($"❌ **Multiple Errors Detected**: Your code encountered {analysis.Errors.Count} different errors. " +
-                    "Review each one below to understand what went wrong.");
+                if (unhandledErrors.Count == 1)
+                {
+                    issues.Add($"❌ **Unhandled Exception**: Your code threw an exception that wasn't caught by a try/catch block. " +
+                        "Check the error details below to see what went wrong and where.");
+                }
+                else
+                {
+                    issues.Add($"❌ **Multiple Unhandled Exceptions**: Your code encountered {unhandledErrors.Count} exceptions that weren't caught. " +
+                        "Review each one below to understand what went wrong.");
+                }
             }
+        }
+        
+        // Report handled exceptions as informational (not errors)
+        if (analysis.HandledExceptions.Any())
+        {
+            var handledCount = analysis.HandledExceptions.Count;
+            issues.Add($"ℹ️ **{handledCount} Caught Exception{(handledCount > 1 ? "s" : "")}**: Your code caught {handledCount} exception{(handledCount > 1 ? "s" : "")} " +
+                "with try/catch blocks. These are **not failures** - your code handled them gracefully and continued. " +
+                "This is actually good defensive programming, though you may want to review why they occurred.");
         }
 
         // All clear!
@@ -694,6 +1152,55 @@ public class LogParserService
         var recommendations = new List<string>();
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
         var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
+
+        // 🚨 NEW: Stack depth recommendations FIRST - this is often the critical issue!
+        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical || 
+            analysis.StackAnalysis.RiskLevel == StackRiskLevel.Warning)
+        {
+            recommendations.Add($"🚨 **Fix Stack Overflow Risk**: Your code is at risk of exceeding Salesforce's 1,000 stack frame limit. " +
+                $"The main culprit appears to be '{analysis.StackAnalysis.MaxDepthMethod}'. " +
+                "**How to fix:**\n" +
+                "  1. **Cache record types BEFORE the loop**: Instead of calling getRecordType() 281 times inside a loop, " +
+                "query all needed record types once and store them in a Map.\n" +
+                "  2. **Flatten method chains**: If method A calls B calls C, consider combining them.\n" +
+                "  3. **Process in batches**: Instead of handling all 281 trigger configs at once, chunk them into groups of 50.");
+        }
+
+        // Specific recommendations for loop patterns
+        var topLoopPatterns = analysis.StackAnalysis.LoopPatterns
+            .Where(p => p.TotalFrames > 50)
+            .Take(3)
+            .ToList();
+        
+        foreach (var pattern in topLoopPatterns)
+        {
+            if (pattern.MethodName.Contains("getRecordType", StringComparison.OrdinalIgnoreCase))
+            {
+                recommendations.Add($"🔧 **Optimize {pattern.MethodName}**: This method was called {pattern.CallCount} times. " +
+                    "**Solution**: Before entering the loop, query ALL record types you need:\n" +
+                    "```apex\n" +
+                    "// BEFORE: Called in loop\n" +
+                    "for (Trigger_Detail__c td : triggerDetails) {\n" +
+                    "    RecordType rt = Global_Util.getRecordType(td.Object__c, td.Record_Type_Name__c); // ❌ 281 calls!\n" +
+                    "}\n\n" +
+                    "// AFTER: Cache before loop\n" +
+                    "Set<String> recordTypeNames = new Set<String>();\n" +
+                    "for (Trigger_Detail__c td : triggerDetails) {\n" +
+                    "    recordTypeNames.add(td.Object__c + '.' + td.Record_Type_Name__c);\n" +
+                    "}\n" +
+                    "Map<String, RecordType> rtMap = Global_Util.getRecordTypes(recordTypeNames); // ✅ 1 call!\n" +
+                    "```");
+            }
+        }
+
+        // FINEST logging warning
+        if (analysis.StackAnalysis.HasFinestLogging)
+        {
+            recommendations.Add("📊 **Disable FINEST Logging in Production**: Your log shows APEX_CODE,FINEST which adds " +
+                $"~{analysis.StackAnalysis.DebugLoggingOverhead} extra stack frames. " +
+                "While this helps with debugging, it can push borderline code over the stack limit. " +
+                "The code will likely work in Production without trace flags, but you should still fix the underlying issue.");
+        }
 
         // SOQL query recommendations in plain English
         if (soqlCount > 50)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using SalesforceDebugAnalyzer.Models;
 
@@ -136,10 +137,14 @@ public class SalesforceCliService
         {
             StatusChanged?.Invoke(this, $"Starting log stream for {username}...");
 
-            // Build CLI command
+            // Build CLI command - sf apex get log --tail streams logs in real-time
+            // The user needs to have an active trace flag for this to work
             var command = string.IsNullOrEmpty(orgAlias)
-                ? $"{_cliPath} apex tail log --target-org {username}"
-                : $"{_cliPath} apex tail log -o {orgAlias}";
+                ? $"{_cliPath} apex get log --number 1 --target-org {username}"
+                : $"{_cliPath} apex get log --number 1 -o {orgAlias}";
+            
+            // Note: Real streaming requires polling or using sf apex tail log (if available)
+            // For now, we'll poll for new logs periodically
 
             _cliProcess = new Process
             {
