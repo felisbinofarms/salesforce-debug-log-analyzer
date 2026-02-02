@@ -7,9 +7,31 @@
         Width="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        TextElement.Foreground="#DBDEE1"
+        Background="#313338"
+        FontFamily="Segoe UI">
+    
+    <Window.Resources>
+        <!-- Discord Button Styles -->
+        <Style x:Key="DiscordPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#5865F2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="DiscordSecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
     
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -23,7 +45,7 @@
             <TextBlock Text="Connect to Salesforce" FontSize="24" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBlock Text="Choose how you want to authenticate" 
                        FontSize="14" 
-                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                       Foreground="#B5BAC1"/>
         </StackPanel>
 
         <!-- Connection Options -->
@@ -66,7 +88,7 @@
 
                     <Button x:Name="OAuthLoginButton" 
                             Content="Login with Browser" 
-                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Style="{StaticResource DiscordPrimaryButton}"
                             Click="OAuthLoginButton_Click"/>
                 </StackPanel>
             </TabItem>
@@ -114,7 +136,7 @@
 
                     <Button x:Name="ManualConnectButton" 
                             Content="Connect with Token" 
-                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Style="{StaticResource DiscordPrimaryButton}"
                             Click="ManualConnectButton_Click"/>
                 </StackPanel>
             </TabItem>
@@ -130,11 +152,11 @@
             <TextBlock x:Name="StatusTextBlock" 
                        Text="Ready to connect" 
                        VerticalAlignment="Center"
-                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                       Foreground="#B5BAC1"/>
 
             <Button Grid.Column="1" 
                     Content="Cancel" 
-                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Style="{StaticResource DiscordSecondaryButton}"
                     Click="CancelButton_Click"/>
         </Grid>
     </Grid>

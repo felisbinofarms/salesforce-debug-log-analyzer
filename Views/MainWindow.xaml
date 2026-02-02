@@ -7,247 +7,461 @@
         xmlns:helpers="clr-namespace:SalesforceDebugAnalyzer.Helpers"
         mc:Ignorable="d"
         Title="Salesforce Debug Log Analyzer" 
-        Height="600" 
-        Width="1000"
-        MinHeight="400"
-        MinWidth="800"
+        Height="900" 
+        Width="1600"
+        MinHeight="700"
+        MinWidth="1200"
         WindowStartupLocation="CenterScreen"
-        WindowState="Normal"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        WindowState="Maximized"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="#313338"
+        TextElement.Foreground="#DBDEE1"
+        FontFamily="Segoe UI, Arial">
+    
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48"
+                      ResizeBorderThickness="5"
+                      GlassFrameThickness="0"
+                      CornerRadius="8"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
     
     <Window.Resources>
         <helpers:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
+        <!-- Discord Card Style -->
+        <Style x:Key="DiscordCard" TargetType="Border">
+            <Setter Property="Background" Value="#2B2D31"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="#3F4147"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        
+        <!-- Discord Primary Button -->
+        <Style x:Key="DiscordPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#5865F2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4752C4"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#3C45A5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Discord Secondary Button -->
+        <Style x:Key="DiscordSecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#5D5F67"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Discord CheckBox Style -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#DBDEE1"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBox" Width="18" Height="18" 
+                                    Background="#383A40" BorderBrush="#5865F2" 
+                                    BorderThickness="2" CornerRadius="3" Margin="0,0,8,0">
+                                <Path x:Name="CheckMark" 
+                                      Data="M 2,5 L 7,10 L 14,2" 
+                                      Stroke="#5865F2" StrokeThickness="2"
+                                      Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="CheckBox" Property="Background" Value="#5865F2"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBox" Property="BorderBrush" Value="#4752C4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="72"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="48"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Menu Bar -->
-        <materialDesign:ColorZone Mode="PrimaryMid" Padding="16" Grid.Row="0">
+        
+        <!-- Custom Title Bar (48px) -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                Background="#2B2D31" 
+                BorderBrush="#1E1F22" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="72"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <materialDesign:PackIcon Kind="CloudSearch" Width="32" Height="32" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="Salesforce Debug Log Analyzer" FontSize="22" VerticalAlignment="Center" FontWeight="Medium"/>
-                </StackPanel>
+                <!-- App Icon Area -->
+                <Border Grid.Column="0" Background="#1E1F22">
+                    <materialDesign:PackIcon Kind="Spider" Width="24" Height="24" 
+                                             VerticalAlignment="Center" HorizontalAlignment="Center"
+                                             Foreground="#ED4245"/>
+                </Border>
                 
-                <StackPanel Orientation="Horizontal" Grid.Column="1">
-                    <Button Content="Manage Debug Logs" 
-                            Command="{Binding ManageDebugLogsCommand}"
-                            Foreground="White"
-                            Margin="8,0"/>
-                    <Button Content="Upload Log" 
-                            Command="{Binding UploadLogCommand}"
-                            Foreground="White"
-                            Margin="8,0"/>
-                    <Button Content="Disconnect" 
-                            Command="{Binding DisconnectCommand}"
-                            Foreground="White"
-                            Margin="8,0"/>
+                <!-- App Title -->
+                <TextBlock Grid.Column="1" Text="Black Widow" 
+                           FontSize="14" FontWeight="SemiBold" 
+                           Foreground="#DBDEE1"
+                           VerticalAlignment="Center"
+                           Margin="16,0,0,0"/>
+                
+                <!-- Window Controls (Right) -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" 
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Click="MinimizeButton_Click" 
+                            Width="48" Height="48"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Background="Transparent" BorderThickness="0">
+                        <materialDesign:PackIcon Kind="WindowMinimize" 
+                                                 Foreground="#B5BAC1" Width="16" Height="16"/>
+                    </Button>
+                    <Button Click="MaximizeButton_Click" 
+                            Width="48" Height="48"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Background="Transparent" BorderThickness="0">
+                        <materialDesign:PackIcon Kind="WindowMaximize" 
+                                                 Foreground="#B5BAC1" Width="16" Height="16"/>
+                    </Button>
+                    <Button Click="CloseButton_Click" 
+                            Width="48" Height="48"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Background="Transparent" BorderThickness="0">
+                        <materialDesign:PackIcon Kind="Close" 
+                                                 Foreground="#B5BAC1" Width="16" Height="16"/>
+                    </Button>
                 </StackPanel>
             </Grid>
-        </materialDesign:ColorZone>
-
-        <!-- Main Content Area -->
-        <Grid Grid.Row="1">
-            <!-- Connections View (when not connected) -->
-            <ContentControl x:Name="ConnectionsViewContainer" Visibility="Visible"/>
-            
-            <!-- Main Analysis View (when connected) -->
-            <Grid x:Name="MainContentGrid" Visibility="Collapsed">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left Sidebar - Log List & Filters -->
-            <Grid Grid.Column="0" Background="{DynamicResource MaterialDesignCardBackground}">
+        </Border>
+        
+        <!-- Left Sidebar (72px) -->
+        <Border Grid.Row="1" Grid.Column="0" 
+                Background="#1E1F22" 
+                BorderBrush="#3F4147" BorderThickness="0,0,1,0">
+            <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-
-                <TextBlock Text="Debug Logs" FontSize="16" FontWeight="SemiBold" Margin="16,16,16,8" Grid.Row="0"/>
                 
-                <ListBox Grid.Row="1" Margin="8">
-                    <ListBoxItem Content="Log - 2026-01-29 10:23:45"/>
-                    <ListBoxItem Content="Log - 2026-01-29 09:15:32"/>
-                    <ListBoxItem Content="Log - 2026-01-28 16:42:11"/>
-                </ListBox>
-
-                <Expander Header="Filters" Grid.Row="2" Margin="8" IsExpanded="True">
-                    <StackPanel Margin="8">
-                        <CheckBox Content="SOQL Queries" IsChecked="True" Margin="0,4"/>
-                        <CheckBox Content="DML Operations" IsChecked="True" Margin="0,4"/>
-                        <CheckBox Content="Errors" IsChecked="True" Margin="0,4"/>
-                        <CheckBox Content="Debug Statements" IsChecked="False" Margin="0,4"/>
-                        <CheckBox Content="System Methods" IsChecked="False" Margin="0,4"/>
-                    </StackPanel>
-                </Expander>
+                <!-- Navigation Buttons (Top) -->
+                <StackPanel Grid.Row="0" Margin="0,8,0,0">
+                    <!-- Home (Active) -->
+                    <Button Width="56" Height="56" 
+                            Background="#5865F2" 
+                            BorderThickness="0"
+                            Margin="8"
+                            Cursor="Hand"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="Home" 
+                                                 Foreground="White" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Logs -->
+                    <Button Width="56" Height="56" 
+                            Background="#404249" 
+                            BorderThickness="0"
+                            Margin="8"
+                            Cursor="Hand"
+                            Command="{Binding ManageDebugLogsCommand}"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="FileDocument" 
+                                                 Foreground="#B5BAC1" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Upload -->
+                    <Button Width="56" Height="56" 
+                            Background="#404249" 
+                            BorderThickness="0"
+                            Margin="8"
+                            Cursor="Hand"
+                            Command="{Binding UploadLogCommand}"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="Upload" 
+                                                 Foreground="#B5BAC1" Width="24" Height="24"/>
+                    </Button>
+                </StackPanel>
+                
+                <!-- Disconnect Button (Bottom) -->
+                <Button Grid.Row="1" Width="56" Height="56" 
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Margin="8"
+                        Cursor="Hand"
+                        Command="{Binding DisconnectCommand}"
+                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="16"/>
+                        </Style>
+                    </Button.Resources>
+                    <materialDesign:PackIcon Kind="Power" 
+                                             Foreground="#ED4245" Width="24" Height="24"/>
+                </Button>
             </Grid>
+        </Border>
 
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource MaterialDesignDivider}"/>
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" Grid.Column="1">
+            <!-- Welcome/Connection View -->
+            <ContentControl x:Name="ConnectionsViewContainer" Visibility="Visible"/>
+            
+            <!-- Main Dashboard View (when connected) -->
+            <Grid x:Name="MainContentGrid" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Right Content Area - Tabs -->
-            <TabControl Grid.Column="2" Margin="8">
-                <!-- Summary Tab - FIRST and most prominent -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileDocumentOutline" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Plain English Summary" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
-                        <StackPanel>
-                            <!-- Summary Section -->
-                            <materialDesign:Card Padding="16" Margin="0,0,0,16" materialDesign:ElevationAssist.Elevation="Dp2">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                        <materialDesign:PackIcon Kind="InformationOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="What Happened" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                <!-- Left Panel - Logs & Filters -->
+                <Border Grid.Column="0" Style="{StaticResource DiscordCard}">
+                    <Grid Margin="24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <TextBlock Text="Debug Logs" FontSize="20" FontWeight="Bold" 
+                                   Foreground="White" Margin="0,0,0,16" Grid.Row="0"/>
+                        
+                        <!-- Search Box -->
+                        <Border Background="#FFFFFF" Opacity="0.1" CornerRadius="8" Grid.Row="1" Margin="0,0,0,16">
+                            <TextBox Background="Transparent" BorderThickness="0" 
+                                     Foreground="White" Padding="12"
+                                     FontSize="14" Text="🔍 Search logs..."/>
+                        </Border>
+                        
+                        <!-- Log List -->
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <!-- Log Item Template -->
+                                <Border Background="#FFFFFF" Opacity="0.1" CornerRadius="8" 
+                                        Padding="16" Margin="0,0,0,12" Cursor="Hand">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="Black" Opacity="0.2" BlurRadius="10" ShadowDepth="4"/>
+                                    </Border.Effect>
+                                    <StackPanel>
+                                        <TextBlock Text="Log - 2026-01-31 14:23:45" FontSize="14" 
+                                                   FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Duration: 2.3s • 125 lines" FontSize="12" 
+                                                   Foreground="#FFFFFF" Opacity="0.7" Margin="0,4,0,0"/>
+                                        <Border Background="#10B981" CornerRadius="4" Padding="6,2" 
+                                                HorizontalAlignment="Left" Margin="0,8,0,0">
+                                            <TextBlock Text="SUCCESS" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding SummaryText}" 
-                                               TextWrapping="Wrap" 
-                                               FontSize="14" 
-                                               LineHeight="22"
-                                               Foreground="{DynamicResource MaterialDesignBody}"/>
-                                </StackPanel>
-                            </materialDesign:Card>
-
-                            <!-- Issues Section -->
-                            <materialDesign:Card Padding="16" Margin="0,0,0,16" materialDesign:ElevationAssist.Elevation="Dp2">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                        <materialDesign:PackIcon Kind="AlertCircleOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#FF9800"/>
-                                        <TextBlock Text="Issues Detected" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <Border Background="#FFFFFF" Opacity="0.1" CornerRadius="8" 
+                                        Padding="16" Margin="0,0,0,12" Cursor="Hand">
+                                    <StackPanel>
+                                        <TextBlock Text="Log - 2026-01-31 13:15:32" FontSize="14" 
+                                                   FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Duration: 5.7s • 342 lines" FontSize="12" 
+                                                   Foreground="#FFFFFF" Opacity="0.7" Margin="0,4,0,0"/>
+                                        <Border Background="#EF4444" CornerRadius="4" Padding="6,2" 
+                                                HorizontalAlignment="Left" Margin="0,8,0,0">
+                                            <TextBlock Text="ERROR" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
                                     </StackPanel>
-                                    <ItemsControl ItemsSource="{Binding Issues}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
-                                                        BorderThickness="0,0,0,1" 
-                                                        Padding="0,8" 
-                                                        Margin="0,0,0,8">
-                                                    <TextBlock Text="{Binding}" 
-                                                               TextWrapping="Wrap" 
-                                                               FontSize="14" 
-                                                               LineHeight="22"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </materialDesign:Card>
-
-                            <!-- Recommendations Section -->
-                            <materialDesign:Card Padding="16" materialDesign:ElevationAssist.Elevation="Dp2">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                        <materialDesign:PackIcon Kind="Lightbulb" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#4CAF50"/>
-                                        <TextBlock Text="Recommendations" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <Border Background="#FFFFFF" Opacity="0.1" CornerRadius="8" 
+                                        Padding="16" Margin="0,0,0,12" Cursor="Hand">
+                                    <StackPanel>
+                                        <TextBlock Text="Log - 2026-01-31 12:08:11" FontSize="14" 
+                                                   FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Duration: 1.2s • 89 lines" FontSize="12" 
+                                                   Foreground="#FFFFFF" Opacity="0.7" Margin="0,4,0,0"/>
+                                        <Border Background="#10B981" CornerRadius="4" Padding="6,2" 
+                                                HorizontalAlignment="Left" Margin="0,8,0,0">
+                                            <TextBlock Text="SUCCESS" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
                                     </StackPanel>
-                                    <ItemsControl ItemsSource="{Binding Recommendations}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
-                                                        BorderThickness="0,0,0,1" 
-                                                        Padding="0,8" 
-                                                        Margin="0,0,0,8">
-                                                    <TextBlock Text="{Binding}" 
-                                                               TextWrapping="Wrap" 
-                                                               FontSize="14" 
-                                                               LineHeight="22"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Filters Section -->
+                        <Border Background="#FFFFFF" Opacity="0.08" CornerRadius="12" 
+                                Grid.Row="3" Padding="16" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="🎯 Filters" FontSize="14" FontWeight="SemiBold" 
+                                           Foreground="White" Margin="0,0,0,12"/>
+                                <StackPanel>
+                                    <CheckBox Content="SOQL Queries" IsChecked="True" Foreground="White" Margin="0,4" FontSize="13"/>
+                                    <CheckBox Content="DML Operations" IsChecked="True" Foreground="White" Margin="0,4" FontSize="13"/>
+                                    <CheckBox Content="Errors" IsChecked="True" Foreground="White" Margin="0,4" FontSize="13"/>
+                                    <CheckBox Content="Debug Statements" Foreground="White" Margin="0,4" FontSize="13"/>
+                                    <CheckBox Content="System Methods" Foreground="White" Margin="0,4" FontSize="13"/>
                                 </StackPanel>
-                            </materialDesign:Card>
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
-                
-                <TabItem Header="Execution Tree">
-                    <Grid>
-                        <TextBlock Text="Execution tree view will be displayed here" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="16" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </StackPanel>
+                        </Border>
                     </Grid>
-                </TabItem>
-                <TabItem Header="Timeline">
+                </Border>
+
+                <!-- Spacer -->
+                <Grid Grid.Column="1"/>
+
+                <!-- Right Content - Analysis with Tabs -->
+                <Border Grid.Column="2" Style="{StaticResource DiscordCard}">
                     <Grid>
-                        <TextBlock Text="Timeline/Gantt chart view will be displayed here" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="16" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Tab Headers -->
+                        <Border Grid.Row="0" Background="#2B2D31" BorderBrush="#3F4147" BorderThickness="0,0,0,1" Padding="24,16">
+                            <WrapPanel>
+                                <Button Content="📝 Plain English" Padding="16,10" Margin="0,0,8,0" Background="#5865F2" Foreground="White" BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Style="{StaticResource DiscordPrimaryButton}"/>
+                                <Button Content="🌳 Execution Tree" Padding="16,10" Margin="0,0,8,0" Background="#404249" Foreground="#B5BAC1" BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+                                <Button Content="⏱️ Timeline" Padding="16,10" Margin="0,0,8,0" Background="#404249" Foreground="#B5BAC1" BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+                                <Button Content="💾 Database" Padding="16,10" Margin="0,0,8,0" Background="#404249" Foreground="#B5BAC1" BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+                                <Button Content="⚡ Performance" Padding="16,10" Margin="0,0,8,0" Background="#404249" Foreground="#B5BAC1" BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+                            </WrapPanel>
+                        </Border>
+                        
+                        <!-- Tab Content -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="32,24">
+                            <StackPanel>
+                                <!-- What Happened Card -->
+                                <Border Background="#2B2D31" BorderBrush="#5865F2" BorderThickness="2" CornerRadius="8" Padding="24" Margin="0,0,0,20">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                            <TextBlock Text="💡" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Text="What Happened" FontSize="20" FontWeight="Bold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding SummaryText}" TextWrapping="Wrap" FontSize="15" LineHeight="24" Foreground="#B5BAC1"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Issues Card -->
+                                <Border Background="#2B2D31" BorderBrush="#ED4245" BorderThickness="2" CornerRadius="8" Padding="24" Margin="0,0,0,20">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                            <TextBlock Text="⚠️" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Text="Issues Detected" FontSize="20" FontWeight="Bold" Foreground="#ED4245" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding Issues}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#313338" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="14" LineHeight="22" Foreground="#B5BAC1"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Recommendations Card -->
+                                <Border Background="#2B2D31" BorderBrush="#3BA55D" BorderThickness="2" CornerRadius="8" Padding="24">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                            <TextBlock Text="✨" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Text="Recommendations" FontSize="20" FontWeight="Bold" Foreground="#3BA55D" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding Recommendations}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#313338" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="14" LineHeight="22" Foreground="#B5BAC1"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
-                </TabItem>
-                <TabItem Header="Database Operations">
-                    <Grid>
-                        <TextBlock Text="SOQL/DML operations grid will be displayed here" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="16" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Performance">
-                    <Grid>
-                        <TextBlock Text="Performance dashboard and charts will be displayed here" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="16" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Raw Log">
-                    <Grid>
-                        <TextBlock Text="Raw log viewer with syntax highlighting will be displayed here" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="16" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                    </Grid>
-                </TabItem>
-            </TabControl>
+
+                </Border>
             </Grid>
         </Grid>
-
-        <!-- Status Bar -->
-        <materialDesign:ColorZone Mode="PrimaryLight" Padding="8" Grid.Row="2">
-            <DockPanel>
-                <ProgressBar IsIndeterminate="True" 
-                             Width="100" 
-                             Height="4"
-                             Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-                             Margin="8,0"
-                             DockPanel.Dock="Left"/>
-                <TextBlock Text="{Binding StatusMessage}" 
-                           VerticalAlignment="Center" 
-                           Margin="8,0"/>
-                <TextBlock Text="{Binding ConnectionStatus}" 
-                           DockPanel.Dock="Right" 
-                           VerticalAlignment="Center" 
-                           Margin="8,0"/>
-            </DockPanel>
-        </materialDesign:ColorZone>
     </Grid>
 </Window>

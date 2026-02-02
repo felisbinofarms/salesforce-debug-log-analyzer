@@ -13,6 +13,9 @@ public partial class ConnectionsView : UserControl
     private readonly SalesforceApiService _apiService;
     private readonly string _connectionsFilePath;
     private ObservableCollection<SavedConnection> _recentConnections;
+    
+    // Reuse HttpClient instance to avoid socket exhaustion
+    private static readonly System.Net.Http.HttpClient _httpClient = new();
 
     public event EventHandler<SalesforceApiService>? ConnectionEstablished;
 
@@ -162,11 +165,12 @@ public partial class ConnectionsView : UserControl
     {
         try
         {
-            using var client = new System.Net.Http.HttpClient();
-            client.DefaultRequestHeaders.Authorization = 
+            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get,
+                $"{instanceUrl}/services/data/v60.0/query?q=SELECT+Name+FROM+Organization+LIMIT+1");
+            request.Headers.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
             
-            var response = await client.GetAsync($"{instanceUrl}/services/data/v60.0/query?q=SELECT+Name+FROM+Organization+LIMIT+1");
+            var response = await _httpClient.SendAsync(request);
             
             if (response.IsSuccessStatusCode)
             {

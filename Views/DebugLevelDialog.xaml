@@ -7,9 +7,31 @@
         Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        TextElement.Foreground="#DBDEE1"
+        Background="#313338"
+        FontFamily="Segoe UI">
+    
+    <Window.Resources>
+        <!-- Discord Button Styles -->
+        <Style x:Key="DiscordPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#5865F2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="DiscordSecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
     
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -22,7 +44,7 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="Create Debug Level" FontSize="20" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBlock Text="Configure logging verbosity for different categories" 
-                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                       Foreground="#B5BAC1"/>
         </StackPanel>
 
         <!-- Form -->
@@ -36,7 +58,7 @@
                 <TextBlock Text="Log Levels (NONE → ERROR → WARN → INFO → DEBUG → FINE → FINER → FINEST)" 
                            TextWrapping="Wrap"
                            FontSize="10"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           Foreground="#B5BAC1"
                            Margin="0,0,0,16"/>
 
                 <!-- Apex Code -->
@@ -108,12 +130,12 @@
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" 
-                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Style="{StaticResource DiscordSecondaryButton}"
                     Click="CancelButton_Click"
                     Margin="0,0,8,0"/>
             <Button Content="Create" 
                     x:Name="CreateButton"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Style="{StaticResource DiscordPrimaryButton}"
                     Click="CreateButton_Click"/>
         </StackPanel>
     </Grid>

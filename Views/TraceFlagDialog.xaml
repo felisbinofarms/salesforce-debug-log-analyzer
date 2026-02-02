@@ -6,9 +6,41 @@
         Height="600" 
         Width="700"
         WindowStartupLocation="CenterOwner"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        TextElement.Foreground="#DBDEE1"
+        Background="#313338"
+        FontFamily="Segoe UI">
+    
+    <Window.Resources>
+        <!-- Discord Button Styles -->
+        <Style x:Key="DiscordPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#5865F2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="DiscordSecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="DiscordOutlinedButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#5865F2"/>
+            <Setter Property="BorderBrush" Value="#5865F2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
     
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -22,7 +54,7 @@
             <TextBlock Text="Debug Log Configuration" FontSize="24" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBlock Text="Set trace flags to enable debug logging for your user" 
                        FontSize="14" 
-                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                       Foreground="#B5BAC1"/>
         </StackPanel>
 
         <!-- Main Content -->
@@ -34,7 +66,7 @@
                         <TextBlock Text="Configure Debug Logging" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,16"/>
                         
                         <!-- Current User Info -->
-                        <Border Background="{DynamicResource MaterialDesignDivider}" 
+                        <Border Background="#2B2D31" 
                                 Padding="12" 
                                 Margin="0,0,0,16" 
                                 CornerRadius="4">
@@ -42,7 +74,7 @@
                                 <TextBlock Text="Current User" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <TextBlock x:Name="CurrentUserTextBlock" 
                                           Text="Loading user info..." 
-                                          Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                          Foreground="#B5BAC1"/>
                             </StackPanel>
                         </Border>
 
@@ -53,7 +85,7 @@
                                   Margin="0,0,0,16"/>
                         
                         <Button Content="Create New Debug Level" 
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Style="{StaticResource DiscordOutlinedButton}"
                                 Click="CreateDebugLevelButton_Click"
                                 Margin="0,0,0,16"/>
 
@@ -67,13 +99,13 @@
                                 IsSnapToTickEnabled="True"
                                 Margin="0,0,0,8"/>
                         <TextBlock Text="{Binding Value, ElementName=DurationSlider, StringFormat='Expires in {0} hours'}" 
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   Foreground="#B5BAC1"
                                    Margin="0,0,0,16"/>
 
                         <!-- Action Button -->
                         <Button x:Name="EnableLoggingButton" 
                                 Content="Enable Debug Logging" 
-                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Style="{StaticResource DiscordPrimaryButton}"
                                 Click="EnableLoggingButton_Click"
                                 HorizontalAlignment="Left"
                                 Margin="0,8,0,0"/>
@@ -92,7 +124,7 @@
 
                     <StackPanel Grid.Row="0" Margin="0,0,0,8">
                         <Button Content="Refresh" 
-                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Style="{StaticResource DiscordSecondaryButton}"
                                 Click="RefreshTraceFlagsButton_Click"
                                 HorizontalAlignment="Left"/>
                     </StackPanel>
@@ -113,7 +145,7 @@
                                     <DataTemplate>
                                         <Button Content="Delete" 
                                                 Tag="{Binding Id}"
-                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Style="{StaticResource DiscordSecondaryButton}"
                                                 Click="DeleteTraceFlagButton_Click"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -127,7 +159,7 @@
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center"
                                Visibility="Collapsed"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                               Foreground="#B5BAC1"/>
                 </Grid>
             </TabItem>
 
@@ -141,12 +173,12 @@
 
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                         <Button Content="Refresh Logs" 
-                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Style="{StaticResource DiscordPrimaryButton}"
                                 Click="RefreshLogsButton_Click"
                                 Margin="0,0,8,0"/>
                         <Button Content="Download Selected" 
                                 x:Name="DownloadLogButton"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Style="{StaticResource DiscordOutlinedButton}"
                                 Click="DownloadLogButton_Click"/>
                     </StackPanel>
 
@@ -191,7 +223,7 @@
 
             <Button Grid.Column="1" 
                     Content="Close" 
-                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Style="{StaticResource DiscordSecondaryButton}"
                     Click="CloseButton_Click"/>
         </Grid>
     </Grid>

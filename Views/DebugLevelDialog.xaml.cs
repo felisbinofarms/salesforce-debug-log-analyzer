@@ -8,6 +8,8 @@ namespace SalesforceDebugAnalyzer.Views;
 public partial class DebugLevelDialog : Window
 {
     private readonly SalesforceApiService _apiService;
+    
+    public string? CreatedDebugLevelId { get; private set; }
 
     public DebugLevelDialog(SalesforceApiService apiService)
     {
@@ -44,6 +46,7 @@ public partial class DebugLevelDialog : Window
             };
 
             var id = await _apiService.CreateDebugLevelAsync(debugLevel);
+            CreatedDebugLevelId = id;
 
             MessageBox.Show($"Debug level created successfully!\n\nID: {id}", 
                 "Success", MessageBoxButton.OK, MessageBoxImage.Information);

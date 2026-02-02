@@ -38,18 +38,41 @@ public partial class MainWindow : Window
 
     private void OnConnectionEstablished(object? sender, SalesforceApiService apiService)
     {
-        // Hide connections view, show main content
+        // Hide connections view
         ConnectionsViewContainer.Visibility = Visibility.Collapsed;
-        MainContentGrid.Visibility = Visibility.Visible;
         
-        // Update view model
-        _viewModel.OnConnected();
+        // Show Debug Setup Wizard in main content area
+        var wizard = new DebugSetupWizard(apiService);
+        wizard.WizardCompleted += (s, e) =>
+        {
+            // Show main dashboard after wizard completes
+            ConnectionsViewContainer.Content = null;
+            MainContentGrid.Visibility = Visibility.Visible;
+            _viewModel.OnConnected();
+        };
+        wizard.WizardCancelled += (s, e) =>
+        {
+            // Go back to connection view if cancelled
+            ConnectionsViewContainer.Content = _connectionsView;
+            ConnectionsViewContainer.Visibility = Visibility.Visible;
+        };
         
-        // Show success message
-        System.Windows.MessageBox.Show(
-            "Successfully connected! Click 'Manage Debug Logs' to set up trace flags and monitor logs in real-time.",
-            "Connected",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        ConnectionsViewContainer.Content = wizard;
+        ConnectionsViewContainer.Visibility = Visibility.Visible;
+    }
+    
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

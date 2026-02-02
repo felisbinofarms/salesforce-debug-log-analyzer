@@ -5,7 +5,7 @@ using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Views;
 
-public partial class DebugSetupWizard : Window
+public partial class DebugSetupWizard : UserControl
 {
     private readonly SalesforceApiService _apiService;
     private List<DebugLevel> _debugLevels = new();
@@ -13,6 +13,9 @@ public partial class DebugSetupWizard : Window
     private string? _currentUserId;
     private string? _selectedUserId;
     private string? _selectedDebugLevelId;
+    
+    public event EventHandler? WizardCompleted;
+    public event EventHandler? WizardCancelled;
 
     public bool LoggingEnabled { get; private set; }
     public string? TraceFlagId { get; private set; }
@@ -253,51 +256,29 @@ public partial class DebugSetupWizard : Window
 
     private void ViewLogs_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
-        Close();
+        WizardCompleted?.Invoke(this, EventArgs.Empty);
     }
 
-    private void CreateDebugLevel_Click(object sender, RoutedEventArgs e)
+    private async void CreateDebugLevel_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Create a simplified debug level creation dialog
-        MessageBox.Show(
-            "To create a custom debug level:\n\n" +
-            "1. Go to Setup in Salesforce\n" +
-            "2. Search for 'Debug Levels'\n" +
-            "3. Click 'New' and configure the settings\n" +
-            "4. Come back here and refresh\n\n" +
-            "For now, use 'Standard' or 'Detailed' presets.",
-            "Create Debug Level",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
-
-        /* Uncomment when CreateDebugLevelDialog is implemented
-        var createDialog = new CreateDebugLevelDialog(_apiService)
-        {
-            Owner = this
-        };
+        var createDialog = new DebugLevelDialog(_apiService);
 
         if (createDialog.ShowDialog() == true)
         {
             // Reload debug levels
-            Task.Run(async () =>
+            _debugLevels = await _apiService.QueryDebugLevelsAsync();
+            DebugLevelComboBox.ItemsSource = _debugLevels;
+            
+            // Select the newly created debug level
+            if (createDialog.CreatedDebugLevelId != null)
             {
-                _debugLevels = await _apiService.QueryDebugLevelsAsync();
-                Dispatcher.Invoke(() =>
+                var newLevel = _debugLevels.FirstOrDefault(l => l.Id == createDialog.CreatedDebugLevelId);
+                if (newLevel != null)
                 {
-                    DebugLevelComboBox.ItemsSource = _debugLevels;
-                    if (createDialog.CreatedDebugLevelId != null)
-                    {
-                        var newLevel = _debugLevels.FirstOrDefault(l => l.Id == createDialog.CreatedDebugLevelId);
-                        if (newLevel != null)
-                        {
-                            DebugLevelComboBox.SelectedItem = newLevel;
-                        }
-                    }
-                });
-            });
+                    DebugLevelComboBox.SelectedItem = newLevel;
+                }
+            }
         }
-        */
     }
 
     private void GoToStep(int step)
@@ -317,23 +298,24 @@ public partial class DebugSetupWizard : Window
         Step4Border.Background = System.Windows.Media.Brushes.Transparent;
 
         // Show current step
+        var activeColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0x65, 0xF2));
         switch (step)
         {
             case 1:
                 Step1Panel.Visibility = Visibility.Visible;
-                Step1Border.Background = (System.Windows.Media.Brush)FindResource("PrimaryHueMidBrush");
+                Step1Border.Background = activeColor;
                 break;
             case 2:
                 Step2Panel.Visibility = Visibility.Visible;
-                Step2Border.Background = (System.Windows.Media.Brush)FindResource("PrimaryHueMidBrush");
+                Step2Border.Background = activeColor;
                 break;
             case 3:
                 Step3Panel.Visibility = Visibility.Visible;
-                Step3Border.Background = (System.Windows.Media.Brush)FindResource("PrimaryHueMidBrush");
+                Step3Border.Background = activeColor;
                 break;
             case 4:
                 Step4Panel.Visibility = Visibility.Visible;
-                Step4Border.Background = (System.Windows.Media.Brush)FindResource("PrimaryHueMidBrush");
+                Step4Border.Background = activeColor;
                 break;
         }
     }

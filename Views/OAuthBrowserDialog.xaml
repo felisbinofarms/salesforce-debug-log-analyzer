@@ -7,7 +7,20 @@
         Height="700" 
         Width="900"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource MaterialDesignPaper}">
+        Background="#313338">
+    
+    <Window.Resources>
+        <Style x:Key="DiscordSecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,24 +29,24 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <materialDesign:ColorZone Mode="PrimaryMid" Padding="16" Grid.Row="0">
+        <Border Grid.Row="0" Background="#5865F2" Padding="16">
             <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Login" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBlock Text="Salesforce OAuth Login" FontSize="18" VerticalAlignment="Center" FontWeight="Medium"/>
+                <TextBlock Text="🔑" FontSize="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="Salesforce OAuth Login" FontSize="18" VerticalAlignment="Center" FontWeight="Medium" Foreground="White"/>
             </StackPanel>
-        </materialDesign:ColorZone>
+        </Border>
 
         <!-- WebView2 Browser -->
         <wv2:WebView2 x:Name="WebBrowser" Grid.Row="1"/>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource MaterialDesignDivider}" Padding="16,8">
+        <Border Grid.Row="2" Background="#2B2D31" Padding="16,8">
             <Grid>
-                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center" Foreground="#DBDEE1"/>
                 <Button Content="Cancel" 
                         Click="CancelButton_Click"
                         HorizontalAlignment="Right"
-                        Style="{StaticResource MaterialDesignFlatButton}"/>
+                        Style="{StaticResource DiscordSecondaryButton}"/>
             </Grid>
         </Border>
     </Grid>
