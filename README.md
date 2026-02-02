@@ -38,6 +38,17 @@ with a list of questions.
 
 ## Key Features
 
+### �️ Transaction Chain Analysis (NEW!)
+- **Automatic Log Grouping** - Detects multiple related logs from a single user action
+- **Phase Detection** - Separates Backend (triggers/flows) from Frontend (component loading)
+- **Recursion Detection** - Identifies when triggers fire multiple times in one transaction
+- **Sequential vs Parallel Loading** - Spots component waterfall patterns and calculates savings
+- **Real User Experience Metrics** - Shows total wait time from button click to page rendered
+- **Transaction Timeline** - Visual representation of the entire user journey
+- **Aggregate Metrics** - Combined SOQL, CPU, and DML usage across all related logs
+
+**Why This Matters:** In poorly-governed orgs, clicking "Save" on a Case might trigger 13 separate logs (triggers, flows, component reloads). Traditional tools show 13 disconnected logs. Black Widow groups them, shows the 11.9-second user wait time, and explains exactly why it's slow.
+
 ### 🗣️ Plain-English Translation
 - **Conversational summaries** that tell the story of your transaction
 - **Real-world analogies** for technical concepts (N+1 queries = "asking 'What's the weather?' 100 times")
@@ -48,6 +59,7 @@ with a list of questions.
 - **OAuth 2.0 Authentication** - Connect securely to any Salesforce org
 - **API Integration** - Query and retrieve debug logs via Tooling API
 - **Trace Flag Management** - Set debug levels and configure logging for users
+- **Batch Folder Import** - Load entire folders of logs for transaction analysis
 - **Respects Permissions** - Works within your Salesforce security model
 
 ### 📊 Intelligent Analysis
@@ -56,6 +68,8 @@ with a list of questions.
 - **Database Operations** - Dedicated view for SOQL queries and DML operations
 - **Performance Dashboard** - Governor limits, CPU time, heap usage metrics
 - **Smart Issue Detection** - Identifies N+1 queries, recursive triggers, slow operations
+- **Component Loading Patterns** - Detects sequential vs parallel Lightning component loading
+- **Bottleneck Identification** - Pinpoints the slowest operation across entire transaction chain
 
 ### 💡 Learning Tool
 - Perfect for **junior developers** learning Salesforce best practices
@@ -113,6 +127,35 @@ dotnet run
    - **Recommendations**: Suggestions for optimization
    - **Tabs**: Browse execution tree, timeline, database operations, and more
 
+### Quick Start - Analyzing Transaction Chains (NEW!)
+
+For investigating slow page loads or complex automation chains:
+
+1. **Download multiple logs** from the same user action (or use Salesforce Developer Console to export a series)
+2. **Save all logs to one folder** (e.g., `C:\Logs\CaseSaveIssue\`)
+3. **Click "Load Folder"** in Black Widow
+4. **View grouped analysis**:
+   - **Transaction Groups**: Logs automatically grouped by user and timing
+   - **Phase Breakdown**: Backend (triggers/flows) vs Frontend (components)
+   - **Total User Wait Time**: Complete duration from button click to page render
+   - **Re-entry Detection**: Which triggers/flows fired multiple times
+   - **Recommendations**: Specific fixes for performance bottlenecks
+
+**Example Use Case:**
+```
+User reports: "Saving a Case takes forever!"
+
+Your Investigation:
+1. Enable debug logs for that user
+2. Ask them to save a Case
+3. Download all logs from that time period (might be 8-15 logs)
+4. Load folder into Black Widow
+5. See: "CaseTrigger fired 3 times, Flow took 2.5s, 
+   Components loaded sequentially adding 3.7s - Total: 11.9 seconds"
+6. Follow recommendations to fix recursion and parallel loading
+7. Retest: Now takes 3.3 seconds! ✅
+```
+
 ### Sample Logs
 
 Sample logs are included in the `SampleLogs/` directory:
@@ -148,15 +191,21 @@ To retrieve logs directly from your Salesforce org:
 ```
 SalesforceDebugAnalyzer/
 ├── Models/              # Data models and entities
-│   ├── LogModels.cs     # Debug log structures
+│   ├── LogModels.cs     # Debug log structures (includes LogGroup, LogPhase)
 │   └── SalesforceModels.cs  # Salesforce API objects
 ├── ViewModels/          # MVVM ViewModels
-│   └── MainViewModel.cs
+│   └── MainViewModel.cs # Main app logic with grouping support
 ├── Views/               # WPF Views (XAML)
-│   └── MainWindow.xaml
+│   ├── MainWindow.xaml
+│   ├── ConnectionDialog.xaml
+│   ├── TraceFlagDialog.xaml
+│   └── DebugSetupWizard.xaml
 ├── Services/            # Business logic and API services
-│   ├── LogParserService.cs
-│   └── SalesforceApiService.cs
+│   ├── LogParserService.cs       # Parses individual logs
+│   ├── LogGroupService.cs        # Groups related logs (NEW!)
+│   ├── LogMetadataExtractor.cs   # Fast log scanning (NEW!)
+│   ├── SalesforceApiService.cs   # Salesforce API integration
+│   └── OAuthService.cs           # OAuth authentication
 └── Helpers/             # Utility classes
 ```
 
@@ -164,33 +213,46 @@ SalesforceDebugAnalyzer/
 
 ### Phase 1: Foundation ✅
 - [x] Project structure and dependencies
-- [x] Material Design UI implementation
+- [x] Material Design UI implementation (now Discord-themed!)
 - [x] Complete log parsing engine with all event types
 - [x] File upload and local log analysis
 - [x] Intelligent issue detection and recommendations
 - [x] ViewModel integration with services
 
-### Phase 2: Core Features (In Progress)
+### Phase 2: Transaction Analysis ✅ (COMPLETED!)
+- [x] Log metadata extraction for fast scanning
+- [x] Transaction grouping by user and timing
+- [x] Phase detection (Backend vs Frontend)
+- [x] Re-entry pattern detection (recursion)
+- [x] Sequential vs parallel component loading detection
+- [x] Aggregate metrics across log groups
+- [x] Smart recommendations for transaction-level optimization
+- [x] Folder-based batch import
+
+### Phase 3: Salesforce Integration (In Progress)
 - [x] Salesforce OAuth authentication framework
 - [x] Salesforce API service for log retrieval
-- [ ] Execution tree TreeView visualization
-- [ ] Database operations DataGrid
-- [ ] Performance dashboard with charts
-- [ ] Governor limits visualization
-
-### Phase 3: Advanced Analysis
-- [ ] Timeline/Gantt chart visualization
-- [ ] Flowchart generation with MSAGL
-- [ ] Raw log viewer with AvalonEdit
-- [ ] Enhanced error stack trace display
-- [ ] Export analysis to PDF/HTML
-
-### Phase 4: Power Features
+- [x] Trace flag management UI
+- [x] Debug level configuration wizard
 - [ ] Real-time log streaming from Salesforce
-- [ ] Batch log comparison
-- [ ] Custom rules engine
-- [ ] Trace flag management UI
-- [ ] Debug level configuration
+- [ ] Automated log download by date range
+
+### Phase 4: Visualizations
+- [ ] Execution tree TreeView visualization
+- [ ] Database operations DataGrid with filtering
+- [ ] Performance dashboard with charts
+- [ ] Governor limits progress bars and gauges
+- [ ] Timeline/Gantt chart for transaction phases
+- [ ] Flowchart generation with MSAGL
+- [ ] Raw log viewer with syntax highlighting (AvalonEdit)
+
+### Phase 5: Advanced Analysis
+- [ ] N+1 query pattern detection with code location
+- [ ] SOQL query optimization suggestions
+- [ ] Comparative analysis (before/after)
+- [ ] Batch log comparison across multiple transactions
+- [ ] Custom rules engine for org-specific patterns
+- [ ] Export analysis to PDF/HTML/JSON
 - [ ] Integration with CI/CD pipelines
 
 ## Contributing
