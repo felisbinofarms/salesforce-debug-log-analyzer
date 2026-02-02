@@ -17,6 +17,8 @@ public partial class MainViewModel : ObservableObject
     private readonly OAuthService _oauthService;
     private readonly SalesforceApiService _apiService;
     private readonly LogParserService _parserService;
+    private readonly LogMetadataExtractor _metadataExtractor;
+    private readonly LogGroupService _groupService;
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -32,6 +34,12 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<LogAnalysis> _logs = new();
+
+    [ObservableProperty]
+    private ObservableCollection<LogGroup> _logGroups = new();
+
+    [ObservableProperty]
+    private LogGroup? _selectedLogGroup;
 
     [ObservableProperty]
     private LogAnalysis? _selectedLog;
@@ -53,6 +61,8 @@ public partial class MainViewModel : ObservableObject
         _apiService = salesforceApi;
         _parserService = parserService;
         _oauthService = oauthService;
+        _metadataExtractor = new LogMetadataExtractor();
+        _groupService = new LogGroupService();
     }
 
     public void OnConnected()
@@ -148,6 +158,70 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = $"Upload failed: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadLogFolder()
+    {
+        StatusMessage = "Select folder containing debug logs...";
+
+        try
+        {
+            // Use FolderBrowserDialog for WPF compatibility
+            var folderDialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = "Select Folder with Debug Logs",
+                ShowNewFolderButton = false
+            };
+
+            if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                StatusMessage = "Scanning folder for logs...";
+                IsLoading = true;
+
+                var folderPath = folderDialog.SelectedPath;
+
+                // Extract metadata from all logs quickly
+                var metadata = await Task.Run(() => _metadataExtractor.ExtractMetadataFromDirectory(folderPath));
+
+                if (metadata.Count == 0)
+                {
+                    StatusMessage = "No log files found in folder";
+                    return;
+                }
+
+                StatusMessage = $"Found {metadata.Count} logs, grouping by transaction...";
+
+                // Group related logs
+                var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
+
+                LogGroups.Clear();
+                foreach (var group in groups)
+                {
+                    LogGroups.Add(group);
+                }
+
+                StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
+
+                // Auto-select first group
+                if (LogGroups.Any())
+                {
+                    SelectedLogGroup = LogGroups.First();
+                }
+            }
+            else
+            {
+                StatusMessage = "Folder selection cancelled";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading folder: {ex.Message}";
         }
         finally
         {

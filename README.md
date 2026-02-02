@@ -48,7 +48,33 @@ with a list of questions.
 - **Aggregate Metrics** - Combined SOQL, CPU, and DML usage across all related logs
 
 **Why This Matters:** In poorly-governed orgs, clicking "Save" on a Case might trigger 13 separate logs (triggers, flows, component reloads). Traditional tools show 13 disconnected logs. Black Widow groups them, shows the 11.9-second user wait time, and explains exactly why it's slow.
+### 🚨 Execution Context Detection (NEW!)
+- **Automatic Context Classification** - Distinguishes Interactive, Batch, Integration, Scheduled, and Async operations
+- **Mixed Context Warning** - Flags when one user account is doing multiple things (UI + Batch + Integration)
+- **Governance Recommendations** - Suggests creating dedicated users for each execution type
+- **Impact Analysis** - Shows if background jobs are interfering with interactive performance
 
+**Real-World Scenario:** Senior Architect with system admin credentials runs batch jobs, integrations, AND UI actions. When they click "Save Case", Black Widow shows:
+```
+🚨 GOVERNANCE ISSUE: 15 logs detected
+   • 3 logs from your Case save (Interactive)
+   • 5 logs from BatchApex job (Batch)
+   • 4 logs from SAP integration (Integration)
+   • 3 logs from Scheduled Flow (Scheduled)
+   
+💡 Recommendation: Only 3 of these 15 logs are YOUR action!
+   Create dedicated users:
+   - IntegrationUser-SAP for API calls
+   - BatchUser for scheduled jobs
+   - FlowUser for time-based automation
+```
+
+### 🔌 Salesforce CLI Integration (NEW!)
+- **Real-Time Log Streaming** - Watch logs appear as they happen using `sf apex tail log`
+- **CLI Auto-Detection** - Finds `sf` or legacy `sfdx` automatically
+- **User-Specific Streaming** - Monitor logs for specific users (like yourself!)
+- **Batch Download** - Download all logs for a user within a time range
+- **No API Limits** - Uses CLI, doesn't count against API limits
 ### 🗣️ Plain-English Translation
 - **Conversational summaries** that tell the story of your transaction
 - **Real-world analogies** for technical concepts (N+1 queries = "asking 'What's the weather?' 100 times")
@@ -82,7 +108,10 @@ with a list of questions.
 ✅ **Salesforce Administrators** - Understand workflow and Process Builder execution without coding knowledge  
 ✅ **Junior Developers** - Learn best practices through clear explanations  
 ✅ **Business Analysts** - Read what code is doing and communicate issues  
-✅ **Senior Developers** - Get quick plain-English summaries plus detailed technical data when needed
+✅ **Senior Developers** - Get quick plain-English summaries plus detailed technical data when needed  
+✅ **Architects** - Diagnose governance issues (mixed execution contexts, integration user patterns)  
+✅ **Consultants** - Quickly assess org health and identify performance bottlenecks  
+✅ **Technical Leads** - Prove the need for dedicated integration/batch users to management
 
 ## Technology Stack
 
@@ -139,6 +168,7 @@ For investigating slow page loads or complex automation chains:
    - **Phase Breakdown**: Backend (triggers/flows) vs Frontend (components)
    - **Total User Wait Time**: Complete duration from button click to page render
    - **Re-entry Detection**: Which triggers/flows fired multiple times
+   - **Context Detection**: Which logs are UI vs Batch vs Integration
    - **Recommendations**: Specific fixes for performance bottlenecks
 
 **Example Use Case:**
@@ -155,6 +185,49 @@ Your Investigation:
 6. Follow recommendations to fix recursion and parallel loading
 7. Retest: Now takes 3.3 seconds! ✅
 ```
+
+### Quick Start - Governance Analysis (NEW!)
+
+For Architects investigating mixed user contexts:
+
+1. **Load logs from your system admin account** (especially if you run integrations/batch jobs)
+2. **Black Widow detects execution contexts automatically**
+3. **Review Mixed Context Warning**:
+   ```
+   🚨 15 logs in 10 seconds:
+      • 3 Interactive (your button clicks)
+      • 5 Batch (scheduled apex)
+      • 4 Integration (SAP API calls)
+      • 3 Scheduled (time-based flows)
+   
+   💡 Recommendation: Create dedicated users:
+      - IntegrationUser-SAP (for external API calls)
+      - BatchUser (for all scheduled apex)
+      - FlowUser (for scheduled flows)
+   ```
+4. **Export governance report** to justify dedicated users to management
+5. **Follow Salesforce best practices** for user segmentation
+
+### Quick Start - Real-Time Monitoring with CLI (NEW!)
+
+For live debugging sessions:
+
+1. **Install Salesforce CLI** if not already installed:
+   ```powershell
+   winget install Salesforce.CLI
+   ```
+
+2. **Authenticate to your org**:
+   ```powershell
+   sf org login web
+   ```
+
+3. **In Black Widow, click "Stream Logs"**
+4. **Enter your username or org alias**
+5. **Watch logs appear in real-time** as you perform actions
+6. **Black Widow auto-groups** related logs as they come in
+
+**Pro Tip:** Stream logs for a specific user while they reproduce an issue, then immediately analyze the grouped transaction!
 
 ### Sample Logs
 
