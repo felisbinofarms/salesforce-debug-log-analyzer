@@ -1,5 +1,11 @@
 ## .gitignore for Visual Studio & .NET
 
+# Salesforce CLI
+.sfdx/
+
+# Vim Force.com plugin
+.vim-force.com/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
