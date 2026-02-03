@@ -16,6 +16,10 @@ public class SalesforceCliService
     private bool _isStreaming;
     private readonly StringBuilder _logBuffer = new();
     private bool _isBufferingLog = false;
+    private Timer? _pollingTimer;
+    private HashSet<string> _processedLogIds = new();
+    private string? _streamingUsername;
+    private string? _streamingOrgAlias;
 
     public event EventHandler<LogReceivedEventArgs>? LogReceived;
     public event EventHandler<string>? StatusChanged;
@@ -151,7 +155,7 @@ public class SalesforceCliService
     }
 
     /// <summary>
-    /// Start streaming logs for a specific user
+    /// Start streaming logs for a specific user by polling every 3 seconds
     /// </summary>
     public async Task<bool> StartStreamingAsync(string username, string orgAlias = "")
     {
@@ -171,49 +175,15 @@ public class SalesforceCliService
         {
             StatusChanged?.Invoke(this, $"Starting log stream for {username}...");
 
-            // Build CLI command based on which CLI version is available
-            string command;
-            if (_useLegacyCommands)
-            {
-                // Use sfdx force:apex:log commands
-                command = string.IsNullOrEmpty(orgAlias)
-                    ? $"{_cliPath} force:apex:log:get --number 1 --targetusername {username}"
-                    : $"{_cliPath} force:apex:log:get --number 1 -u {orgAlias}";
-            }
-            else
-            {
-                // Use sf apex commands (newer CLI)
-                command = string.IsNullOrEmpty(orgAlias)
-                    ? $"{_cliPath} apex get log --number 1 --target-org {username}"
-                    : $"{_cliPath} apex get log --number 1 -o {orgAlias}";
-            }
-            
-            // Note: Real streaming requires polling or using sf apex tail log (if available)
-            // For now, we'll poll for new logs periodically
-
-            _cliProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c {command}",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    StandardOutputEncoding = Encoding.UTF8
-                }
-            };
-
-            _cliProcess.OutputDataReceived += OnOutputDataReceived;
-            _cliProcess.ErrorDataReceived += OnErrorDataReceived;
-
-            _cliProcess.Start();
-            _cliProcess.BeginOutputReadLine();
-            _cliProcess.BeginErrorReadLine();
-
+            _streamingUsername = username;
+            _streamingOrgAlias = orgAlias;
+            _processedLogIds.Clear();
             _isStreaming = true;
-            StatusChanged?.Invoke(this, $"✓ Streaming logs from {username}");
+
+            // Start polling timer (check for new logs every 3 seconds)
+            _pollingTimer = new Timer(async _ => await PollForNewLogsAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(3));
+
+            StatusChanged?.Invoke(this, $"✓ Streaming logs from {username} (polling every 3 seconds)");
 
             return true;
         }
@@ -225,10 +195,108 @@ public class SalesforceCliService
     }
 
     /// <summary>
+    /// Poll for new logs using CLI
+    /// </summary>
+    private async Task PollForNewLogsAsync()
+    {
+        if (!_isStreaming) return;
+
+        try
+        {
+            // List logs using CLI
+            string listCommand;
+            if (_useLegacyCommands)
+            {
+                listCommand = string.IsNullOrEmpty(_streamingOrgAlias)
+                    ? $"{_cliPath} force:apex:log:list --targetusername {_streamingUsername} --json"
+                    : $"{_cliPath} force:apex:log:list -u {_streamingOrgAlias} --json";
+            }
+            else
+            {
+                listCommand = string.IsNullOrEmpty(_streamingOrgAlias)
+                    ? $"{_cliPath} apex list log --target-org {_streamingUsername} --json"
+                    : $"{_cliPath} apex list log -o {_streamingOrgAlias} --json";
+            }
+
+            var output = await ExecuteCliCommandAsync(listCommand);
+            var jsonOutput = string.Join("\n", output);
+
+            // Parse JSON to get log IDs (simplified - would need proper JSON parsing)
+            // For now, get the first 5 most recent logs
+            var logListMatch = System.Text.RegularExpressions.Regex.Matches(jsonOutput, @"""Id""\s*:\s*""([^""]+)""");
+            
+            foreach (System.Text.RegularExpressions.Match match in logListMatch.Take(5))
+            {
+                var logId = match.Groups[1].Value;
+                
+                // Skip if already processed
+                if (_processedLogIds.Contains(logId)) continue;
+                
+                // Download this log
+                await DownloadAndEmitLogAsync(logId);
+                _processedLogIds.Add(logId);
+                
+                // Keep only last 100 processed IDs in memory
+                if (_processedLogIds.Count > 100)
+                {
+                    _processedLogIds = new HashSet<string>(_processedLogIds.Skip(50));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusChanged?.Invoke(this, $"⚠️ Polling error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Download a specific log and emit it
+    /// </summary>
+    private async Task DownloadAndEmitLogAsync(string logId)
+    {
+        try
+        {
+            string getCommand;
+            if (_useLegacyCommands)
+            {
+                getCommand = string.IsNullOrEmpty(_streamingOrgAlias)
+                    ? $"{_cliPath} force:apex:log:get --logid {logId} --targetusername {_streamingUsername}"
+                    : $"{_cliPath} force:apex:log:get --logid {logId} -u {_streamingOrgAlias}";
+            }
+            else
+            {
+                getCommand = string.IsNullOrEmpty(_streamingOrgAlias)
+                    ? $"{_cliPath} apex get log --log-id {logId} --target-org {_streamingUsername}"
+                    : $"{_cliPath} apex get log --log-id {logId} -o {_streamingOrgAlias}";
+            }
+
+            var output = await ExecuteCliCommandAsync(getCommand);
+            var logContent = string.Join("\n", output);
+
+            // Only emit if we got actual log content (not just JSON metadata)
+            if (logContent.Length > 200 && (logContent.Contains("EXECUTION_STARTED") || logContent.Contains("CODE_UNIT_STARTED")))
+            {
+                LogReceived?.Invoke(this, new LogReceivedEventArgs
+                {
+                    LogContent = logContent,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            // Silently ignore individual log download errors
+        }
+    }
+
+    /// <summary>
     /// Stop streaming logs
     /// </summary>
     public void StopStreaming()
     {
+        _pollingTimer?.Dispose();
+        _pollingTimer = null;
+        
         if (_cliProcess != null && !_cliProcess.HasExited)
         {
             _cliProcess.Kill();
@@ -237,6 +305,7 @@ public class SalesforceCliService
         }
 
         _isStreaming = false;
+        _processedLogIds.Clear();
         StatusChanged?.Invoke(this, "Log streaming stopped");
     }
 
