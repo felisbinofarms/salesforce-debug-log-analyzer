@@ -203,6 +203,8 @@ public class SalesforceCliService
 
         try
         {
+            StatusChanged?.Invoke(this, "🔍 Polling for new logs...");
+            
             // List logs using CLI
             string listCommand;
             if (_useLegacyCommands)
@@ -218,19 +220,35 @@ public class SalesforceCliService
                     : $"{_cliPath} apex list log -o {_streamingOrgAlias} --json";
             }
 
+            StatusChanged?.Invoke(this, $"📡 Command: {listCommand}");
+            
             var output = await ExecuteCliCommandAsync(listCommand);
             var jsonOutput = string.Join("\n", output);
+            
+            StatusChanged?.Invoke(this, $"📋 Got {output.Count} lines of output");
+
+            if (string.IsNullOrWhiteSpace(jsonOutput))
+            {
+                StatusChanged?.Invoke(this, "⚠️ No output from CLI list command");
+                return;
+            }
 
             // Parse JSON to get log IDs (simplified - would need proper JSON parsing)
             // For now, get the first 5 most recent logs
             var logListMatch = System.Text.RegularExpressions.Regex.Matches(jsonOutput, @"""Id""\s*:\s*""([^""]+)""");
             
+            StatusChanged?.Invoke(this, $"🔎 Found {logListMatch.Count} log IDs");
+            
+            int newLogsFound = 0;
             foreach (System.Text.RegularExpressions.Match match in logListMatch.Take(5))
             {
                 var logId = match.Groups[1].Value;
                 
                 // Skip if already processed
                 if (_processedLogIds.Contains(logId)) continue;
+                
+                newLogsFound++;
+                StatusChanged?.Invoke(this, $"📥 Downloading new log: {logId}");
                 
                 // Download this log
                 await DownloadAndEmitLogAsync(logId);
@@ -241,6 +259,11 @@ public class SalesforceCliService
                 {
                     _processedLogIds = new HashSet<string>(_processedLogIds.Skip(50));
                 }
+            }
+            
+            if (newLogsFound == 0)
+            {
+                StatusChanged?.Invoke(this, "✓ No new logs (all already processed)");
             }
         }
         catch (Exception ex)
@@ -273,19 +296,27 @@ public class SalesforceCliService
             var output = await ExecuteCliCommandAsync(getCommand);
             var logContent = string.Join("\n", output);
 
+            StatusChanged?.Invoke(this, $"📄 Downloaded {logContent.Length} chars for log {logId.Substring(0, 8)}...");
+
             // Only emit if we got actual log content (not just JSON metadata)
             if (logContent.Length > 200 && (logContent.Contains("EXECUTION_STARTED") || logContent.Contains("CODE_UNIT_STARTED")))
             {
+                StatusChanged?.Invoke(this, $"✅ Emitting log {logId.Substring(0, 8)}... ({logContent.Length} chars)");
+                
                 LogReceived?.Invoke(this, new LogReceivedEventArgs
                 {
                     LogContent = logContent,
                     Timestamp = DateTime.UtcNow
                 });
             }
+            else
+            {
+                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... doesn't look like Apex log content (might be JSON metadata)");
+            }
         }
         catch (Exception ex)
         {
-            // Silently ignore individual log download errors
+            StatusChanged?.Invoke(this, $"❌ Error downloading log {logId.Substring(0, 8)}...: {ex.Message}");
         }
     }
 
