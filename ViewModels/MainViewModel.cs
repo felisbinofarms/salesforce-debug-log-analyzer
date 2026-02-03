@@ -690,6 +690,23 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
+    [RelayCommand]
+    private void StopStreaming()
+    {
+        _cliService.StopStreaming();
+        IsStreaming = false;
+        StreamingUsername = null;
+        
+        StreamingLogs.Insert(0, new StreamingLogEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = "⏸️ Streaming stopped",
+            IsError = false
+        });
+        
+        StatusMessage = "Streaming stopped";
+    }
+
     private async Task StartStreamingAsync()
     {
         if (!IsCliInstalled)
@@ -730,14 +747,6 @@ public partial class MainViewModel : ObservableObject
         {
             StreamingStatus = "Failed to start";
         }
-    }
-
-    private void StopStreaming()
-    {
-        _cliService.StopStreaming();
-        IsStreaming = false;
-        StreamingStatus = "Stopped";
-        StatusMessage = "Log streaming stopped";
     }
 
     private void OnCliStatusChanged(object? sender, string status)

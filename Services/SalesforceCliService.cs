@@ -12,7 +12,10 @@ public class SalesforceCliService
 {
     private Process? _cliProcess;
     private readonly string _cliPath;
+    private readonly bool _useLegacyCommands;
     private bool _isStreaming;
+    private readonly StringBuilder _logBuffer = new();
+    private bool _isBufferingLog = false;
 
     public event EventHandler<LogReceivedEventArgs>? LogReceived;
     public event EventHandler<string>? StatusChanged;
@@ -22,8 +25,8 @@ public class SalesforceCliService
 
     public SalesforceCliService()
     {
-        // Check common CLI installation paths
-        _cliPath = FindSalesforceCli();
+        // Check common CLI installation paths and determine command format
+        (_cliPath, _useLegacyCommands) = FindSalesforceCli();
     }
 
     /// <summary>
@@ -78,19 +81,50 @@ public class SalesforceCliService
     }
 
     /// <summary>
-    /// Find Salesforce CLI executable path
+    /// Find Salesforce CLI executable path and determine command format
     /// </summary>
-    private string FindSalesforceCli()
+    private (string cliPath, bool useLegacy) FindSalesforceCli()
     {
-        // Try new CLI (sf) first
-        if (CheckCommand("sf"))
-            return "sf";
+        // Check if sf has apex commands (newer CLI versions)
+        if (CheckCommand("sf") && CheckSfApexCommands())
+            return ("sf", false);
 
-        // Fall back to legacy CLI (sfdx)
+        // Fall back to legacy CLI (sfdx) with force:apex commands
         if (CheckCommand("sfdx"))
-            return "sfdx";
+            return ("sfdx", true);
+        
+        // If sf exists but no apex commands, still use sfdx for log operations
+        if (CheckCommand("sf") && CheckCommand("sfdx"))
+            return ("sfdx", true);
 
-        return string.Empty;
+        return (string.Empty, false);
+    }
+
+    /// <summary>
+    /// Check if sf CLI has the apex commands available
+    /// </summary>
+    private bool CheckSfApexCommands()
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c sf apex --help",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            process?.WaitForExit(3000);
+            return process?.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private bool CheckCommand(string command)
@@ -137,11 +171,22 @@ public class SalesforceCliService
         {
             StatusChanged?.Invoke(this, $"Starting log stream for {username}...");
 
-            // Build CLI command - sf apex get log --tail streams logs in real-time
-            // The user needs to have an active trace flag for this to work
-            var command = string.IsNullOrEmpty(orgAlias)
-                ? $"{_cliPath} apex get log --number 1 --target-org {username}"
-                : $"{_cliPath} apex get log --number 1 -o {orgAlias}";
+            // Build CLI command based on which CLI version is available
+            string command;
+            if (_useLegacyCommands)
+            {
+                // Use sfdx force:apex:log commands
+                command = string.IsNullOrEmpty(orgAlias)
+                    ? $"{_cliPath} force:apex:log:get --number 1 --targetusername {username}"
+                    : $"{_cliPath} force:apex:log:get --number 1 -u {orgAlias}";
+            }
+            else
+            {
+                // Use sf apex commands (newer CLI)
+                command = string.IsNullOrEmpty(orgAlias)
+                    ? $"{_cliPath} apex get log --number 1 --target-org {username}"
+                    : $"{_cliPath} apex get log --number 1 -o {orgAlias}";
+            }
             
             // Note: Real streaming requires polling or using sf apex tail log (if available)
             // For now, we'll poll for new logs periodically
@@ -210,7 +255,8 @@ public class SalesforceCliService
             Directory.CreateDirectory(outputFolder);
 
             // Build CLI command to list logs
-            var listCommand = $"{_cliPath} data query --query \"SELECT Id, LogUserId, LogLength, StartTime FROM ApexLog WHERE LogUserId IN (SELECT Id FROM User WHERE Username = '{username}') AND StartTime >= {startTime:yyyy-MM-ddTHH:mm:ss.fffZ} AND StartTime <= {endTime:yyyy-MM-ddTHH:mm:ss.fffZ} ORDER BY StartTime DESC\" --json";
+            var queryCommand = _useLegacyCommands ? "force:data:soql:query" : "data query";
+            var listCommand = $"{_cliPath} {queryCommand} --query \"SELECT Id, LogUserId, LogLength, StartTime FROM ApexLog WHERE LogUserId IN (SELECT Id FROM User WHERE Username = '{username}') AND StartTime >= {startTime:yyyy-MM-ddTHH:mm:ss.fffZ} AND StartTime <= {endTime:yyyy-MM-ddTHH:mm:ss.fffZ} ORDER BY StartTime DESC\" --json";
 
             var logIds = await ExecuteCliCommandAsync(listCommand);
 
@@ -219,7 +265,15 @@ public class SalesforceCliService
 
             foreach (var logId in logIds)
             {
-                var downloadCommand = $"{_cliPath} apex get log --log-id {logId} --output-dir {outputFolder}";
+                string downloadCommand;
+                if (_useLegacyCommands)
+                {
+                    downloadCommand = $"{_cliPath} force:apex:log:get --logid {logId} --outputdir {outputFolder}";
+                }
+                else
+                {
+                    downloadCommand = $"{_cliPath} apex get log --log-id {logId} --output-dir {outputFolder}";
+                }
                 await ExecuteCliCommandAsync(downloadCommand);
                 
                 var logFilePath = Path.Combine(outputFolder, $"apex-{logId}.log");
@@ -275,22 +329,60 @@ public class SalesforceCliService
     {
         if (string.IsNullOrEmpty(e.Data)) return;
 
-        // Parse log output from CLI
-        // CLI output format: timestamp | event_type | details
-        // We'll emit events when we detect a new log file is available
-
-        if (e.Data.Contains("EXECUTION_STARTED"))
+        // Buffer log lines until we have a complete log
+        // Start marker: EXECUTION_STARTED or timestamp pattern [HH:MM:SS.mmm]
+        // End marker: EXECUTION_FINISHED or next EXECUTION_STARTED
+        
+        var line = e.Data;
+        
+        // Detect start of a new log
+        if (line.Contains("EXECUTION_STARTED") || line.Contains("CODE_UNIT_STARTED"))
         {
-            // New log started
+            // If we were already buffering, emit the previous log
+            if (_isBufferingLog && _logBuffer.Length > 0)
+            {
+                EmitBufferedLog();
+            }
+            
+            _isBufferingLog = true;
+            _logBuffer.Clear();
+            _logBuffer.AppendLine(line);
+        }
+        else if (_isBufferingLog)
+        {
+            _logBuffer.AppendLine(line);
+            
+            // Detect end of log
+            if (line.Contains("EXECUTION_FINISHED") || line.Contains("CODE_UNIT_FINISHED"))
+            {
+                EmitBufferedLog();
+            }
+        }
+        else
+        {
+            // Forward non-log lines as status
+            StatusChanged?.Invoke(this, line);
+        }
+    }
+    
+    private void EmitBufferedLog()
+    {
+        if (_logBuffer.Length == 0) return;
+        
+        var logContent = _logBuffer.ToString();
+        
+        // Only emit if it looks like a complete log (has meaningful content)
+        if (logContent.Length > 100)
+        {
             LogReceived?.Invoke(this, new LogReceivedEventArgs
             {
-                LogContent = e.Data,
+                LogContent = logContent,
                 Timestamp = DateTime.UtcNow
             });
         }
-
-        // Forward all output as status updates
-        StatusChanged?.Invoke(this, e.Data);
+        
+        _logBuffer.Clear();
+        _isBufferingLog = false;
     }
 
     private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
