@@ -1,42 +1,58 @@
 ---
 name: Feature Request
-about: Propose a new feature for Black Widow
+about: Suggest a new feature for Black Widow
 title: '[FEATURE] '
-labels: 'feature, P2-medium'
+labels: 'enhancement, needs-triage'
 assignees: ''
 ---
 
-## User Story
-As a [user type], I want [goal] so that [benefit]
+## 💡 Feature Idea
+
+**As a** [type of user],  
+**I want** [feature],  
+**So that** [benefit/value].
 
 **Example:** As a Salesforce Admin, I want to filter logs by execution context so that I can focus on my UI actions only.
 
-## Problem Statement
-What problem does this solve? Why do users need this?
+## 📋 Acceptance Criteria
 
-## Proposed Solution
-How should this work? What should the user experience be?
+What does "done" look like?
 
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
+- [ ] [Criterion 3]
 
-## Design / Mockups
-Add screenshots, wireframes, or design links here
+## 🎯 Business Value
 
-## Implementation Notes (Optional)
-Technical details, dependencies, or considerations
+Why should we build this?
 
-## Estimated Effort
-- [ ] XS (1-2 hours)
-- [ ] S (2-4 hours)
-- [ ] M (1-2 days)
-- [ ] L (3-5 days)
-- [ ] XL (1+ week)
+- **Problem it solves:** [Description]
+- **Users affected:** [How many/which type]
+- **Workaround (if none):** [Current pain point]
 
-## Priority
-- [ ] P0 - Critical (drop everything)
-- [ ] P1 - High (this sprint)
-- [ ] P2 - Medium (next sprint)
-- [ ] P3 - Low (backlog)
+## 💭 Implementation Ideas (Optional)
+
+Any technical suggestions?
+
+```
+[Code, mockups, or technical approach]
+```
+
+## 🚦 Suggested Priority
+
+**Your opinion:** P0 (critical) | P1 (high) | P2 (medium) | P3 (low)  
+**Reasoning:** [Why this priority]
+
+**Suggested Milestone:** v1.0 | v1.1 | v2.0 | Future  
+**Reasoning:** [Why this timeline]
+
+## 🔗 Related Issues
+
+- Related to #X
+- Blocks #Y
+- Depends on #Z
+
+---
+
+**⚡ Quick Alternative:** Type `/pm idea` in Copilot Chat for instant triage!  
+Copilot PM will capture, prioritize, and add to backlog automatically.

@@ -1,48 +1,65 @@
 ---
 name: Bug Report
-about: Report a bug or issue in Black Widow
+about: Report a bug in Black Widow
 title: '[BUG] '
-labels: 'bug, P1-high'
+labels: 'bug, needs-triage'
 assignees: ''
 ---
 
-## Bug Description
-A clear description of what the bug is.
+## 🐛 Bug Description
 
-## Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
+**What happened?**
+[Clear description of the bug]
+
+**What did you expect?**
+[What should have happened instead]
+
+## 🔄 Steps to Reproduce
+
+1. [First step]
+2. [Second step]
+3. [Third step]
 4. See error
 
-## Expected Behavior
-What should happen?
+## 📸 Screenshots/Video
 
-## Actual Behavior
-What actually happens?
+[If applicable, add screenshots or screen recording]
 
-## Screenshots
-If applicable, add screenshots to help explain your problem.
+## 💻 Environment
 
-## Environment
-- **OS:** [e.g., Windows 11, Windows 10]
-- **App Version:** [e.g., v1.0.0]
-- **Salesforce Org Type:** [e.g., Production, Sandbox, Developer]
-- **Log Size:** [e.g., 66KB, 5MB]
+- **OS:** Windows 10 / Windows 11 / Other
+- **Black Widow Version:** [e.g., v1.0.0]
+- **.NET Version:** [Run `dotnet --version`]
+- **Salesforce Org Type:** Production / Sandbox / Developer
 
-## Error Messages
+## 📋 Log File
+
+**If app crashed:**
 ```
-Paste any error messages here
+[Paste error message or stack trace]
 ```
 
-## Log File (if applicable)
-Attach the problematic debug log file (or a sanitized version)
+**If log parsing failed:**
+- [ ] I can share the debug log (attach .log file)
+- [ ] The log contains sensitive data (describe pattern instead)
 
-## Additional Context
-Add any other context about the problem here.
+## ✅ Checklist
 
-## Impact
-- [ ] Blocker - Cannot use the app
-- [ ] Critical - Feature completely broken
-- [ ] Major - Feature partially broken
-- [ ] Minor - Cosmetic or minor inconvenience
+- [ ] I searched existing issues (this is not a duplicate)
+- [ ] I can reproduce this consistently
+- [ ] I'm using the latest version
+- [ ] I've included all required information above
+
+## 🔧 Workaround
+
+Is there a temporary workaround?
+
+[Description or "None"]
+
+---
+
+**Priority Assessment:**
+- **P0 (Critical):** App crashes, data loss, security issue
+- **P1 (High):** Major feature broken, impacts many users
+- **P2 (Medium):** Minor feature issue, has workaround
+- **P3 (Low):** Cosmetic issue, rare edge case
