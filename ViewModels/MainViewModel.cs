@@ -4,6 +4,7 @@ using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Views;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 
@@ -159,6 +160,29 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _streamingUsername = "";
+
+    // ===== INTERACTION RECORDING PROPERTIES =====
+    
+    [ObservableProperty]
+    private bool _isRecording = false;
+    
+    [ObservableProperty]
+    private DateTime _recordingStartTime;
+    
+    [ObservableProperty]
+    private string _recordingElapsedTime = "00:00";
+    
+    /// <summary>Buffer for logs captured during recording</summary>
+    private List<LogAnalysis> _recordingBuffer = new();
+    
+    /// <summary>Timer to update elapsed time display</summary>
+    private System.Windows.Threading.DispatcherTimer? _recordingTimer;
+    
+    [ObservableProperty]
+    private ObservableCollection<Interaction> _interactions = new();
+    
+    [ObservableProperty]
+    private Interaction? _selectedInteraction;
 
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
@@ -561,6 +585,110 @@ public partial class MainViewModel : ObservableObject
             await StartStreamingAsync();
         }
     }
+    
+    [RelayCommand]
+    private void StartRecording()
+    {
+        if (!IsStreaming)
+        {
+            StatusMessage = "⚠️ Start streaming first before recording an interaction";
+            return;
+        }
+        
+        IsRecording = true;
+        RecordingStartTime = DateTime.Now;
+        _recordingBuffer.Clear();
+        RecordingElapsedTime = "00:00";
+        
+        // Start timer to update elapsed time
+        _recordingTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _recordingTimer.Tick += (s, e) =>
+        {
+            var elapsed = DateTime.Now - RecordingStartTime;
+            RecordingElapsedTime = $"{(int)elapsed.TotalMinutes:D2}:{elapsed.Seconds:D2}";
+        };
+        _recordingTimer.Start();
+        
+        StatusMessage = "🔴 Recording interaction... Perform your action in Salesforce";
+        
+        StreamingLogs.Insert(0, new StreamingLogEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = "🔴 Recording started - Perform your action in Salesforce, then click Stop Recording",
+            IsError = false
+        });
+    }
+    
+    [RelayCommand]
+    private async Task StopRecordingAsync()
+    {
+        if (!IsRecording) return;
+        
+        _recordingTimer?.Stop();
+        _recordingTimer = null;
+        IsRecording = false;
+        
+        var endTime = DateTime.Now;
+        var interaction = new Interaction
+        {
+            StartTime = RecordingStartTime,
+            EndTime = endTime,
+            CapturedLogs = new List<LogAnalysis>(_recordingBuffer)
+        };
+        
+        // Group the captured logs into transactions
+        if (_recordingBuffer.Count > 1)
+        {
+            try
+            {
+                // Use consistent UserId for all logs so they can be grouped together
+                // The grouping algorithm matches by UserId + time window
+                var streamingUserId = StreamingUsername?.GetHashCode().ToString("X8") ?? "UNKNOWN";
+                
+                var metadata = _recordingBuffer.Select(log => new DebugLogMetadata
+                {
+                    LogId = log.LogId,
+                    Timestamp = log.ParsedAt,
+                    DurationMs = log.DurationMs,
+                    UserName = StreamingUsername,
+                    UserId = streamingUserId, // All logs get same UserId for grouping
+                    MethodName = log.EntryPoint,
+                    HasErrors = log.HasErrors,
+                    SoqlQueries = log.LimitSnapshots.FirstOrDefault()?.SoqlQueries ?? 0,
+                    DmlStatements = log.LimitSnapshots.FirstOrDefault()?.DmlStatements ?? 0,
+                    CpuTime = log.CpuTimeMs
+                }).ToList();
+                
+                interaction.LogGroups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to group interaction logs: {ex.Message}");
+            }
+        }
+        
+        // Add to interactions list
+        Interactions.Insert(0, interaction);
+        SelectedInteraction = interaction;
+        
+        _recordingBuffer.Clear();
+        
+        var durationStr = interaction.UserWaitTimeMs < 1000 
+            ? $"{interaction.UserWaitTimeMs:N0}ms" 
+            : $"{interaction.UserWaitTimeMs / 1000.0:N1}s";
+        
+        StatusMessage = $"✅ Interaction recorded: {interaction.CapturedLogs.Count} logs, {durationStr} total wait time";
+        
+        StreamingLogs.Insert(0, new StreamingLogEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = $"✅ Recording stopped - Captured {interaction.CapturedLogs.Count} logs ({durationStr})",
+            IsError = false
+        });
+    }
 
     private async Task StartStreamingAsync()
     {
@@ -647,17 +775,35 @@ public partial class MainViewModel : ObservableObject
                 // Add to logs list
                 Logs.Insert(0, analysis);
                 SelectedLog = analysis;
-
-                // Add notification to streaming log
-                StreamingLogs.Insert(0, new StreamingLogEntry
+                
+                // If recording, add to buffer
+                if (IsRecording)
                 {
-                    Timestamp = e.Timestamp,
-                    Message = $"✅ Log captured and parsed - {analysis.Summary}",
-                    IsError = false,
-                    Analysis = analysis
-                });
+                    _recordingBuffer.Add(analysis);
+                    
+                    StreamingLogs.Insert(0, new StreamingLogEntry
+                    {
+                        Timestamp = e.Timestamp,
+                        Message = $"🔴 [Recording #{_recordingBuffer.Count}] {analysis.Summary}",
+                        IsError = false,
+                        Analysis = analysis
+                    });
+                }
+                else
+                {
+                    // Add notification to streaming log
+                    StreamingLogs.Insert(0, new StreamingLogEntry
+                    {
+                        Timestamp = e.Timestamp,
+                        Message = $"✅ Log captured and parsed - {analysis.Summary}",
+                        IsError = false,
+                        Analysis = analysis
+                    });
+                }
 
-                StatusMessage = $"🕷️ Caught a log! {analysis.Summary}";
+                StatusMessage = IsRecording 
+                    ? $"🔴 Recording... Log #{_recordingBuffer.Count} captured" 
+                    : $"🕷️ Caught a log! {analysis.Summary}";
             }
             catch (Exception ex)
             {

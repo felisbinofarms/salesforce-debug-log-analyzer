@@ -373,3 +373,82 @@ public class CallChain
     public string Display => string.Join(" → ", Methods.Take(5)) + 
         (Methods.Count > 5 ? $" → ... ({Methods.Count - 5} more)" : "");
 }
+
+/// <summary>
+/// Represents a recorded user interaction - all logs captured from a single user action
+/// (e.g., clicking a button to page reload)
+/// </summary>
+public class Interaction
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    /// <summary>When the recording started</summary>
+    public DateTime StartTime { get; set; }
+    
+    /// <summary>When the recording ended</summary>
+    public DateTime EndTime { get; set; }
+    
+    /// <summary>Total wait time the user experienced (from action to page reload)</summary>
+    public double UserWaitTimeMs => (EndTime - StartTime).TotalMilliseconds;
+    
+    /// <summary>Raw logs captured during the recording</summary>
+    public List<LogAnalysis> CapturedLogs { get; set; } = new();
+    
+    /// <summary>Logs grouped into transactions</summary>
+    public List<LogGroup> LogGroups { get; set; } = new();
+    
+    /// <summary>User-editable display name</summary>
+    public string DisplayName { get; set; } = "";
+    
+    /// <summary>Auto-generated name from entry point</summary>
+    public string AutoName
+    {
+        get
+        {
+            if (CapturedLogs.Count == 0) return $"Recording at {StartTime:HH:mm:ss}";
+            var firstEntry = CapturedLogs.FirstOrDefault()?.EntryPoint ?? "";
+            // Extract meaningful name from entry point
+            if (firstEntry.Contains(".")) firstEntry = firstEntry.Split('.').Last();
+            if (firstEntry.Contains("(")) firstEntry = firstEntry.Split('(').First();
+            return string.IsNullOrEmpty(firstEntry) 
+                ? $"Recording at {StartTime:HH:mm:ss}"
+                : $"{firstEntry} ({StartTime:HH:mm:ss})";
+        }
+    }
+    
+    /// <summary>Name to display (user name or auto-generated)</summary>
+    public string Name => string.IsNullOrEmpty(DisplayName) ? AutoName : DisplayName;
+    
+    /// <summary>Brief summary of the interaction</summary>
+    public string Summary
+    {
+        get
+        {
+            var logCount = CapturedLogs.Count;
+            var duration = UserWaitTimeMs;
+            var issueCount = CapturedLogs.Sum(l => l.Issues?.Count ?? 0);
+            var durationStr = duration < 1000 ? $"{duration:N0}ms" : $"{duration / 1000.0:N1}s";
+            
+            if (issueCount > 0)
+                return $"{logCount} logs • {durationStr} • {issueCount} issues";
+            return $"{logCount} logs • {durationStr}";
+        }
+    }
+    
+    /// <summary>Total server-side processing time across all logs</summary>
+    public double TotalServerTimeMs => CapturedLogs.Sum(l => l.DurationMs);
+    
+    /// <summary>Time spent waiting (network, rendering) vs server processing</summary>
+    public double OverheadMs => UserWaitTimeMs - TotalServerTimeMs;
+    
+    /// <summary>Whether any captured log has errors</summary>
+    public bool HasErrors => CapturedLogs.Any(l => l.HasErrors);
+    
+    /// <summary>Total SOQL queries across all logs</summary>
+    public int TotalSoqlQueries => CapturedLogs.Sum(l => 
+        l.LimitSnapshots?.LastOrDefault()?.SoqlQueries ?? 0);
+    
+    /// <summary>Total DML statements across all logs</summary>
+    public int TotalDmlStatements => CapturedLogs.Sum(l => 
+        l.LimitSnapshots?.LastOrDefault()?.DmlStatements ?? 0);
+}

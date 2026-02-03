@@ -38,6 +38,7 @@
         <helpers:PercentToSeverityConverter x:Key="PercentToSeverityConverter"/>
         <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
         <helpers:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter"/>
+        <helpers:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
         
         <!-- Discord Card Style -->
         <Style x:Key="DiscordCard" TargetType="Border">
@@ -564,6 +565,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 
                                 <!-- Header -->
@@ -620,11 +622,119 @@
                                     </ItemsControl>
                                 </ScrollViewer>
                                 
-                                <!-- Stop Button -->
-                                <Button Grid.Row="2" Content="⏹ Stop Streaming" 
-                                        Command="{Binding ToggleStreamingCommand}"
-                                        Style="{StaticResource DiscordSecondaryButton}"
-                                        Background="#ED4245" Margin="0,12,0,0"/>
+                                <!-- Recording/Stop Buttons -->
+                                <Grid Grid.Row="2" Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Start Recording Button (when not recording) -->
+                                    <Button Grid.Column="0" Content="🔴 Record Interaction" 
+                                            Command="{Binding StartRecordingCommand}"
+                                            Style="{StaticResource DiscordPrimaryButton}"
+                                            Visibility="{Binding IsRecording, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                    
+                                    <!-- Stop Recording Button (when recording) -->
+                                    <Button Grid.Column="0" 
+                                            Command="{Binding StopRecordingAsyncCommand}"
+                                            Style="{StaticResource DiscordPrimaryButton}"
+                                            Background="#ED4245"
+                                            Visibility="{Binding IsRecording, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="White" Margin="0,0,8,0">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRecording}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                             From="1" To="0.3" Duration="0:0:0.5"
+                                                                                             AutoReverse="True"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock Text="⏹ Stop Recording"/>
+                                            <TextBlock Text="{Binding RecordingElapsedTime}" Margin="8,0,0,0" Opacity="0.8"/>
+                                        </StackPanel>
+                                    </Button>
+                                    
+                                    <!-- Stop Streaming Button -->
+                                    <Button Grid.Column="2" Content="⏹ Stop Streaming" 
+                                            Command="{Binding ToggleStreamingCommand}"
+                                            Style="{StaticResource DiscordSecondaryButton}"
+                                            IsEnabled="{Binding IsRecording, Converter={StaticResource InverseBooleanConverter}}"/>
+                                </Grid>
+                                
+                                <!-- Recorded Interactions List -->
+                                <Border Grid.Row="3" Background="#383A40" CornerRadius="6" 
+                                        Margin="0,12,0,0" Padding="8"
+                                        Visibility="{Binding Interactions.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="🎬 Recorded Interactions" FontSize="12" FontWeight="SemiBold" 
+                                                   Foreground="#B5BAC1" Margin="0,0,0,8"/>
+                                        <ScrollViewer Grid.Row="1" MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding Interactions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#2B2D31" CornerRadius="4" 
+                                                                Padding="8" Margin="0,0,0,4" Cursor="Hand">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel>
+                                                                    <TextBlock Text="{Binding Name}" FontSize="12" 
+                                                                               FontWeight="SemiBold" Foreground="White"/>
+                                                                    <TextBlock Text="{Binding Summary}" FontSize="10" 
+                                                                               Foreground="#72767D" Margin="0,2,0,0"/>
+                                                                </StackPanel>
+                                                                <Border Grid.Column="1" CornerRadius="3" Padding="6,2" 
+                                                                        VerticalAlignment="Center">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="#3BA55D"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                                                                                    <Setter Property="Background" Value="#ED4245"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock FontSize="9" FontWeight="Bold" Foreground="White">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Text" Value="OK"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                                                                                        <Setter Property="Text" Value="ERROR"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                </Border>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
                             </Grid>
                         </Border>
                     </Grid>
