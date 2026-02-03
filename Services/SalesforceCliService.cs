@@ -124,13 +124,13 @@ public class SalesforceCliService
         if (_isStreaming)
         {
             StatusChanged?.Invoke(this, "Already streaming logs");
-            return false;
+            return await Task.FromResult(false);
         }
 
         if (string.IsNullOrEmpty(_cliPath))
         {
             StatusChanged?.Invoke(this, "Salesforce CLI not installed. Install from: https://developer.salesforce.com/tools/salesforcecli");
-            return false;
+            return await Task.FromResult(false);
         }
 
         try

@@ -343,7 +343,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             // Show drag-and-drop dialog (no slow file browser)
-            var filePath = ShowDragDropDialog();
+            var filePath = await Task.Run(() => ShowDragDropDialog());
             
             if (string.IsNullOrEmpty(filePath))
             {

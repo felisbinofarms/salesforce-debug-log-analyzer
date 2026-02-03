@@ -15,7 +15,7 @@ public partial class DebugSetupWizard : UserControl
     private string? _selectedDebugLevelId;
     
     public event EventHandler? WizardCompleted;
-    public event EventHandler? WizardCancelled;
+    public event EventHandler? WizardCancelled; // Event for future cancellation handling
 
     public bool LoggingEnabled { get; private set; }
     public string? TraceFlagId { get; private set; }

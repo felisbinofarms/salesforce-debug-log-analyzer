@@ -14,7 +14,6 @@ public partial class OAuthBrowserDialog : Window
     private string? _codeVerifier;
     private string? _expectedState;
     private HttpListener? _httpListener;
-    private int _localPort;
 
     public OAuthBrowserDialog(bool useSandbox = false)
     {
@@ -68,7 +67,6 @@ public partial class OAuthBrowserDialog : Window
             await WebBrowser.EnsureCoreWebView2Async(null);
 
             // Use fixed port for PlatformCLI
-            _localPort = 1717;
             var redirectUri = "http://localhost:1717/OauthRedirect";
             
             try
@@ -233,7 +231,7 @@ public partial class OAuthBrowserDialog : Window
         }
     }
 
-    private async void CoreWebView2_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+    private void CoreWebView2_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
     {
         StatusText.Text = $"Navigating to: {e.Uri?.Substring(0, Math.Min(50, e.Uri?.Length ?? 0))}...";
         System.Diagnostics.Debug.WriteLine($"[OAuth] Navigation starting: {e.Uri}");
