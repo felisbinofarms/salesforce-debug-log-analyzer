@@ -1,8 +1,40 @@
-# Salesforce Debug Log Analyzer
+# Salesforce Debug Log Analyzer (Black Widow 🕷️)
 
 > **The only debug log tool that explains logs like a patient mentor, not a technical manual.**
 
 A revolutionary Windows desktop application that **translates** complex Salesforce debug logs into plain English that anyone can understand - whether you're a seasoned developer or an admin with little coding knowledge.
+
+## 🤖 For Contributors: Copilot PM Mode
+
+**This project uses GitHub Copilot as Project Manager** to keep the team focused and prevent scope creep.
+
+### Quick Start for Developers
+
+When working on this project, use these PM commands in Copilot Chat:
+
+```
+/pm standup           - Daily progress check + priority setting
+/pm scope-check       - "Should I build this feature?"
+/pm review           - Code review for over-engineering
+/pm timeline         - Sprint progress + deadline check
+/pm focus            - 2-hour deep work mode
+```
+
+**Auto-Intervention:** Copilot will automatically flag:
+- ⚠️ Scope creep (adding features not in current issue)
+- ⚠️ Over-engineering (unnecessary abstractions/patterns)
+- ⚠️ Rabbit holes (researching instead of shipping)
+- ⚠️ Analysis paralysis (comparing too many options)
+
+**Key Documents:**
+- [PROJECT_PLAN.md](./PROJECT_PLAN.md) - 6-week timeline, milestones, roles
+- [ISSUES_BACKLOG.md](./ISSUES_BACKLOG.md) - Detailed feature specs (22 issues)
+- [.github/copilot-pm-instructions.md](./.github/copilot-pm-instructions.md) - Full PM behavior guide
+
+**Launch Deadline:** March 15, 2026 (6 weeks)  
+**Current Sprint:** Monetization (License validation + Stripe integration)
+
+---
 
 ## What Makes This Different?
 
