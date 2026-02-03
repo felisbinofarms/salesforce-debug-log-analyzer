@@ -313,8 +313,13 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var connectionDialog = new ConnectionDialog(_oauthService, _apiService);
-            if (connectionDialog.ShowDialog() == true)
+            var result = await Task.Run(() =>
+            {
+                var connectionDialog = new ConnectionDialog(_oauthService, _apiService);
+                return connectionDialog.ShowDialog() == true;
+            });
+
+            if (result)
             {
                 IsConnected = true;
                 ConnectionStatus = $"Connected to {_apiService.Connection?.InstanceUrl}";
@@ -523,13 +528,18 @@ public partial class MainViewModel : ObservableObject
             // Open trace flag dialog to view/manage logs
             StatusMessage = "Opening logs view...";
             
-            var dialog = new TraceFlagDialog(_apiService, _parserService);
+            var result = await Task.Run(() =>
+            {
+                var dialog = new TraceFlagDialog(_apiService, _parserService);
+                var success = dialog.ShowDialog() == true;
+                return new { Success = success, Analysis = dialog.DownloadedLogAnalysis };
+            });
             
-            if (dialog.ShowDialog() == true && dialog.DownloadedLogAnalysis != null)
+            if (result.Success && result.Analysis != null)
             {
                 // Add the downloaded log to the list
-                Logs.Insert(0, dialog.DownloadedLogAnalysis);
-                SelectedLog = dialog.DownloadedLogAnalysis;
+                Logs.Insert(0, result.Analysis);
+                SelectedLog = result.Analysis;
                 StatusMessage = "✓ Log downloaded and analyzed";
             }
         }
