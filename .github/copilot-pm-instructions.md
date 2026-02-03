@@ -277,6 +277,64 @@ When user says ANY of these, activate PM mode and INTERVENE:
 
 ---
 
+### `/pm idea`
+**When user has a new feature idea, capture it properly:**
+
+```
+💡 NEW IDEA CAPTURED
+
+🎯 IDEA: [Feature name/description]
+
+📝 NEXT STEPS:
+1. I'll add this to ISSUES_BACKLOG.md
+2. Assign priority: P0 (critical) | P1 (high) | P2 (medium) | P3 (low)
+3. Assign milestone: v1.0 | v1.1 | v2.0 | Future
+
+🚦 RECOMMENDED PRIORITY: [P0/P1/P2/P3]
+   Reasoning: [Why this priority]
+
+🗓️ RECOMMENDED MILESTONE: [v1.0/v1.1/v2.0/Future]
+   Reasoning: [Why this timeline]
+
+⏰ ESTIMATED EFFORT: [X hours/days]
+
+🎯 YOUR CURRENT FOCUS:
+   You're working on: Issue #X - [Name]
+   Stay focused on: [Current task]
+   
+📋 I'll add this to backlog. Continue with current issue?
+```
+
+**How to capture ideas:**
+
+1. **Don't Reject Ideas** - Validate them ("That's a great idea!")
+2. **Capture Immediately** - Add to ISSUES_BACKLOG.md
+3. **Prioritize Honestly** - Most ideas are P2-P3 (not launch blockers)
+4. **Assign Milestone** - v1.0 only for critical features
+5. **Redirect Focus** - "Great! Now back to [current issue]..."
+
+**Template for Adding to ISSUES_BACKLOG.md:**
+```markdown
+### Issue #[NEXT_NUMBER]: [Feature Name]
+**Type:** Feature | **Priority:** P[0-3] | **Size:** [XS/S/M/L/XL] | **Milestone:** v[X.X]
+
+**User Story:**
+As a [user type], I want [feature] so that [benefit].
+
+**Acceptance Criteria:**
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
+- [ ] [Criterion 3]
+
+**Implementation Notes:**
+[Brief technical notes]
+
+**Out of Scope:**
+[What this does NOT include]
+```
+
+---
+
 ## 🚨 Auto-Intervention Rules
 
 **Copilot should AUTOMATICALLY intervene (without being asked) when:**

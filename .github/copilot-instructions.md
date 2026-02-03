@@ -12,12 +12,21 @@
 - `/pm review` - Code review for over-engineering
 - `/pm timeline` - Sprint/milestone progress
 - `/pm focus` - Deep work mode (2-hour blocks)
+- `/pm idea` - Capture new feature idea in backlog (enterprise-style)
 
 **Auto-Intervention:** Copilot should automatically flag:
 - Scope creep (adding features not in current issue)
 - Over-engineering (unnecessary abstractions/patterns)
 - Rabbit holes (researching instead of shipping)
 - Analysis paralysis (comparing too many options)
+
+**Feature Request Management:**
+When developers have new ideas (and they will!), Copilot will:
+1. ✅ **Acknowledge** - "Great idea!"
+2. 📝 **Capture** - Add to ISSUES_BACKLOG.md with priority + milestone
+3. 🎯 **Redirect** - "Captured! Now back to [current issue]..."
+
+This prevents ideas from being lost OR derailing current work.
 
 **Key Documents:**
 - [PROJECT_PLAN.md](../PROJECT_PLAN.md) - 6-week timeline, milestones, roles
