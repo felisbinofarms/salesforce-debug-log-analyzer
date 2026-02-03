@@ -180,7 +180,8 @@ public class SalesforceCliService
 
             _apiService = apiService;
             _streamingUsername = username;
-            _streamingStartTime = DateTime.UtcNow;
+            // Look back 10 minutes to catch recent logs that just happened
+            _streamingStartTime = DateTime.UtcNow.AddMinutes(-10);
             _processedLogIds.Clear();
             _isStreaming = true;
 
@@ -259,12 +260,21 @@ public class SalesforceCliService
         {
             StatusChanged?.Invoke(this, $"📥 Downloading log {logId.Substring(0, 8)}...");
 
-            // Download log body via API
+            // Download log body via API (returns null if log was deleted)
             var logContent = await _apiService.GetLogBodyAsync(logId);
+
+            if (logContent == null)
+            {
+                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... was deleted (24hr auto-cleanup)");
+                // Mark as processed so we don't try again
+                _processedLogIds.Add(logId);
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(logContent))
             {
                 StatusChanged?.Invoke(this, $"⚠️ Empty log content for {logId.Substring(0, 8)}...");
+                _processedLogIds.Add(logId);
                 return;
             }
 

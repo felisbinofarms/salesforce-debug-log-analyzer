@@ -103,17 +103,74 @@ public class SalesforceApiService
     /// <summary>
     /// Retrieve the body content of a specific ApexLog
     /// </summary>
-    public async Task<string> GetLogBodyAsync(string logId)
+    public async Task<string?> GetLogBodyAsync(string logId)
     {
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
 
         var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/ApexLog/{logId}/Body";
 
-        var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            
+            // If log was deleted, return null instead of throwing
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+            
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+        {
+            // Log was deleted (24 hour auto-delete)
+            return null;
+        }
+    }
 
-        return await response.Content.ReadAsStringAsync();
+    /// <summary>
+    /// Delete old debug logs (Salesforce keeps logs for 24 hours)
+    /// </summary>
+    public async Task<int> DeleteOldLogsAsync(int hoursOld = 1)
+    {
+        if (_connection == null || !_connection.IsConnected)
+            throw new InvalidOperationException("Not connected to Salesforce");
+
+        try
+        {
+            // Query logs older than specified hours
+            var cutoffTime = DateTime.UtcNow.AddHours(-hoursOld);
+            var query = $"SELECT Id FROM ApexLog WHERE StartTime < {cutoffTime:yyyy-MM-ddTHH:mm:ss.fffZ}";
+            var encodedQuery = Uri.EscapeDataString(query);
+            var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<QueryResult<ApexLog>>(content);
+
+            if (result?.Records == null || result.Records.Count == 0)
+                return 0;
+
+            // Delete logs in batches (max 200 per request)
+            int deleted = 0;
+            foreach (var log in result.Records)
+            {
+                var deleteUrl = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/ApexLog/{log.Id}";
+                var deleteResponse = await _httpClient.DeleteAsync(deleteUrl);
+                if (deleteResponse.IsSuccessStatusCode)
+                    deleted++;
+            }
+
+            return deleted;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
     /// <summary>
