@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Linq;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -20,6 +21,8 @@ public class SalesforceCliService
     private HashSet<string> _processedLogIds = new();
     private string? _streamingUsername;
     private string? _streamingOrgAlias;
+    private SalesforceApiService? _apiService;
+    private DateTime _streamingStartTime;
 
     public event EventHandler<LogReceivedEventArgs>? LogReceived;
     public event EventHandler<string>? StatusChanged;
@@ -155,9 +158,9 @@ public class SalesforceCliService
     }
 
     /// <summary>
-    /// Start streaming logs for a specific user by polling every 3 seconds
+    /// Start streaming logs using Salesforce Tooling API (no CLI dependency)
     /// </summary>
-    public async Task<bool> StartStreamingAsync(string username, string orgAlias = "")
+    public async Task<bool> StartStreamingAsync(SalesforceApiService apiService, string username)
     {
         if (_isStreaming)
         {
@@ -165,9 +168,9 @@ public class SalesforceCliService
             return await Task.FromResult(false);
         }
 
-        if (string.IsNullOrEmpty(_cliPath))
+        if (apiService == null || !apiService.IsConnected)
         {
-            StatusChanged?.Invoke(this, "Salesforce CLI not installed. Install from: https://developer.salesforce.com/tools/salesforcecli");
+            StatusChanged?.Invoke(this, "Not connected to Salesforce. Please connect first.");
             return await Task.FromResult(false);
         }
 
@@ -175,128 +178,106 @@ public class SalesforceCliService
         {
             StatusChanged?.Invoke(this, $"Starting log stream for {username}...");
 
+            _apiService = apiService;
             _streamingUsername = username;
-            _streamingOrgAlias = orgAlias;
+            _streamingStartTime = DateTime.UtcNow;
             _processedLogIds.Clear();
             _isStreaming = true;
 
             // Start polling timer (check for new logs every 3 seconds)
             _pollingTimer = new Timer(async _ => await PollForNewLogsAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(3));
 
-            StatusChanged?.Invoke(this, $"✓ Streaming logs from {username} (polling every 3 seconds)");
-
-            return true;
+            StatusChanged?.Invoke(this, $"✅ Streaming started for {username}");
+            return await Task.FromResult(true);
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, $"Failed to start streaming: {ex.Message}");
-            return false;
+            _isStreaming = false;
+            return await Task.FromResult(false);
         }
     }
 
     /// <summary>
-    /// Poll for new logs using CLI
+    /// Poll for new logs using Salesforce Tooling API
     /// </summary>
     private async Task PollForNewLogsAsync()
     {
-        if (!_isStreaming) return;
+        if (!_isStreaming || _apiService == null) return;
 
         try
         {
-            StatusChanged?.Invoke(this, "🔍 Polling for new logs...");
+            StatusChanged?.Invoke(this, "🔍 Polling for new logs via API...");
             
-            // List logs using CLI
-            string listCommand;
-            if (_useLegacyCommands)
-            {
-                listCommand = string.IsNullOrEmpty(_streamingOrgAlias)
-                    ? $"{_cliPath} force:apex:log:list --targetusername {_streamingUsername} --json"
-                    : $"{_cliPath} force:apex:log:list -u {_streamingOrgAlias} --json";
-            }
-            else
-            {
-                listCommand = string.IsNullOrEmpty(_streamingOrgAlias)
-                    ? $"{_cliPath} apex list log --target-org {_streamingUsername} --json"
-                    : $"{_cliPath} apex list log -o {_streamingOrgAlias} --json";
-            }
-
-            StatusChanged?.Invoke(this, $"📡 Command: {listCommand}");
+            // Query logs since streaming started
+            var logs = await _apiService.QueryLogsAsync(50); // Get last 50 logs
             
-            var output = await ExecuteCliCommandAsync(listCommand);
-            var jsonOutput = string.Join("\n", output);
-            
-            StatusChanged?.Invoke(this, $"📋 Got {output.Count} lines of output");
-
-            if (string.IsNullOrWhiteSpace(jsonOutput))
+            if (logs == null || logs.Count == 0)
             {
-                StatusChanged?.Invoke(this, "⚠️ No output from CLI list command");
+                StatusChanged?.Invoke(this, "📋 No logs found");
                 return;
             }
 
-            // Parse JSON to get log IDs (simplified - would need proper JSON parsing)
-            // For now, get the first 5 most recent logs
-            var logListMatch = System.Text.RegularExpressions.Regex.Matches(jsonOutput, @"""Id""\s*:\s*""([^""]+)""");
-            
-            StatusChanged?.Invoke(this, $"🔎 Found {logListMatch.Count} log IDs");
-            
-            int newLogsFound = 0;
-            foreach (System.Text.RegularExpressions.Match match in logListMatch.Take(5))
+            // Filter logs created after streaming started
+            var newLogs = logs
+                .Where(log => log.StartTime >= _streamingStartTime)
+                .Where(log => !_processedLogIds.Contains(log.Id))
+                .ToList();
+
+            if (newLogs.Count == 0)
             {
-                var logId = match.Groups[1].Value;
-                
-                // Skip if already processed
-                if (_processedLogIds.Contains(logId)) continue;
-                
-                newLogsFound++;
-                StatusChanged?.Invoke(this, $"📥 Downloading new log: {logId}");
-                
-                // Download this log
-                await DownloadAndEmitLogAsync(logId);
-                _processedLogIds.Add(logId);
-                
-                // Keep only last 100 processed IDs in memory
-                if (_processedLogIds.Count > 100)
-                {
-                    _processedLogIds = new HashSet<string>(_processedLogIds.Skip(50));
-                }
+                StatusChanged?.Invoke(this, "✅ No new logs");
+                return;
             }
-            
-            if (newLogsFound == 0)
+
+            StatusChanged?.Invoke(this, $"📦 Found {newLogs.Count} new logs");
+
+            // Download up to 5 new logs (to avoid overwhelming UI)
+            int downloaded = 0;
+            foreach (var log in newLogs.Take(5))
             {
-                StatusChanged?.Invoke(this, "✓ No new logs (all already processed)");
+                await DownloadAndEmitLogAsync(log.Id);
+                downloaded++;
             }
+
+            StatusChanged?.Invoke(this, $"✅ Downloaded {downloaded} logs");
         }
         catch (Exception ex)
         {
-            StatusChanged?.Invoke(this, $"⚠️ Polling error: {ex.Message}");
+            StatusChanged?.Invoke(this, $"⚠️ Error polling logs: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Download a specific log and emit it
+    /// Download a specific log and emit it using Salesforce API
     /// </summary>
     private async Task DownloadAndEmitLogAsync(string logId)
     {
+        if (_apiService == null) return;
+
         try
         {
-            string getCommand;
-            if (_useLegacyCommands)
-            {
-                getCommand = string.IsNullOrEmpty(_streamingOrgAlias)
-                    ? $"{_cliPath} force:apex:log:get --logid {logId} --targetusername {_streamingUsername}"
-                    : $"{_cliPath} force:apex:log:get --logid {logId} -u {_streamingOrgAlias}";
-            }
-            else
-            {
-                getCommand = string.IsNullOrEmpty(_streamingOrgAlias)
-                    ? $"{_cliPath} apex get log --log-id {logId} --target-org {_streamingUsername}"
-                    : $"{_cliPath} apex get log --log-id {logId} -o {_streamingOrgAlias}";
-            }
+            StatusChanged?.Invoke(this, $"📥 Downloading log {logId.Substring(0, 8)}...");
 
-            var output = await ExecuteCliCommandAsync(getCommand);
-            var logContent = string.Join("\n", output);
+            // Download log body via API
+            var logContent = await _apiService.GetLogBodyAsync(logId);
+
+            if (string.IsNullOrWhiteSpace(logContent))
+            {
+                StatusChanged?.Invoke(this, $"⚠️ Empty log content for {logId.Substring(0, 8)}...");
+                return;
+            }
 
             StatusChanged?.Invoke(this, $"📄 Downloaded {logContent.Length} chars for log {logId.Substring(0, 8)}...");
+
+            // Mark as processed
+            _processedLogIds.Add(logId);
+
+            // Keep only last 100 processed IDs in memory
+            if (_processedLogIds.Count > 100)
+            {
+                _processedLogIds = new HashSet<string>(_processedLogIds.Skip(50));
+            }
 
             // Only emit if we got actual log content (not just JSON metadata)
             if (logContent.Length > 200 && (logContent.Contains("EXECUTION_STARTED") || logContent.Contains("CODE_UNIT_STARTED")))
@@ -311,7 +292,7 @@ public class SalesforceCliService
             }
             else
             {
-                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... doesn't look like Apex log content (might be JSON metadata)");
+                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... doesn't look like Apex log content");
             }
         }
         catch (Exception ex)

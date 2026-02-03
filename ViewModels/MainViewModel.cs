@@ -709,13 +709,6 @@ public partial class MainViewModel : ObservableObject
 
     private async Task StartStreamingAsync()
     {
-        if (!IsCliInstalled)
-        {
-            StatusMessage = "⚠️ Salesforce CLI not installed. Install from: https://developer.salesforce.com/tools/salesforcecli";
-            StreamingStatus = "CLI not installed";
-            return;
-        }
-
         if (!_apiService.IsConnected || _apiService.Connection == null)
         {
             StatusMessage = "⚠️ Please connect to Salesforce first";
@@ -735,7 +728,8 @@ public partial class MainViewModel : ObservableObject
         StatusMessage = $"🕷️ Starting log stream for {username}...";
         StreamingStatus = "Connecting...";
 
-        var success = await _cliService.StartStreamingAsync(username);
+        // Pass the API service to CLI service (no CLI needed anymore!)
+        var success = await _cliService.StartStreamingAsync(_apiService, username);
         
         if (success)
         {
