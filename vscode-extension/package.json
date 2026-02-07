@@ -1,0 +1,76 @@
+{
+  "name": "black-widow-bridge",
+  "displayName": "Black Widow Bridge",
+  "description": "Connect Black Widow desktop app to VSCode for jump-to-source functionality",
+  "version": "1.0.0",
+  "publisher": "black-widow",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "salesforce",
+    "apex",
+    "debug",
+    "log analyzer",
+    "black widow"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "blackwidow.analyzeLog",
+        "title": "Analyze with Black Widow",
+        "category": "Black Widow"
+      },
+      {
+        "command": "blackwidow.reconnect",
+        "title": "Reconnect to Desktop App",
+        "category": "Black Widow"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .log",
+          "command": "blackwidow.analyzeLog",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceExtname == .log",
+          "command": "blackwidow.analyzeLog",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.80.0",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.x",
+    "@typescript-eslint/parser": "^6.x",
+    "eslint": "^8.x",
+    "typescript": "^5.x"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

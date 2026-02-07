@@ -180,10 +180,12 @@ public class SalesforceCliService
 
             _apiService = apiService;
             _streamingUsername = username;
-            // Look back 10 minutes to catch recent logs that just happened
-            _streamingStartTime = DateTime.UtcNow.AddMinutes(-10);
+            // Look back 24 hours to capture all logs from today
+            _streamingStartTime = DateTime.UtcNow.AddHours(-24);
             _processedLogIds.Clear();
             _isStreaming = true;
+            
+            StatusChanged?.Invoke(this, $"📅 Looking for logs since {_streamingStartTime:HH:mm:ss} UTC ({_streamingStartTime.ToLocalTime():g} local)");
 
             // Start polling timer (check for new logs every 3 seconds)
             _pollingTimer = new Timer(async _ => await PollForNewLogsAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(3));
@@ -213,6 +215,8 @@ public class SalesforceCliService
             // Query logs since streaming started
             var logs = await _apiService.QueryLogsAsync(50); // Get last 50 logs
             
+            StatusChanged?.Invoke(this, $"📋 API returned {logs?.Count ?? 0} total logs");
+            
             if (logs == null || logs.Count == 0)
             {
                 StatusChanged?.Invoke(this, "📋 No logs found");
@@ -224,6 +228,8 @@ public class SalesforceCliService
                 .Where(log => log.StartTime >= _streamingStartTime)
                 .Where(log => !_processedLogIds.Contains(log.Id))
                 .ToList();
+                
+            StatusChanged?.Invoke(this, $"🔍 {newLogs.Count} logs match time filter (after {_streamingStartTime:HH:mm:ss} UTC)");
 
             if (newLogs.Count == 0)
             {
@@ -233,9 +239,9 @@ public class SalesforceCliService
 
             StatusChanged?.Invoke(this, $"📦 Found {newLogs.Count} new logs");
 
-            // Download up to 5 new logs (to avoid overwhelming UI)
+            // Download max 2 logs per poll (prevents UI freeze)
             int downloaded = 0;
-            foreach (var log in newLogs.Take(5))
+            foreach (var log in newLogs.Take(2))
             {
                 await DownloadAndEmitLogAsync(log.Id);
                 downloaded++;
@@ -297,7 +303,10 @@ public class SalesforceCliService
                 LogReceived?.Invoke(this, new LogReceivedEventArgs
                 {
                     LogContent = logContent,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.UtcNow,
+                    LogId = logId,
+                    Username = _streamingUsername ?? "Unknown",
+                    LogLength = logContent.Length
                 });
             }
             else
@@ -492,4 +501,7 @@ public class LogReceivedEventArgs : EventArgs
 {
     public string LogContent { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
+    public string LogId { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public int LogLength { get; set; }
 }

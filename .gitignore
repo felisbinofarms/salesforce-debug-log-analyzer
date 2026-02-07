@@ -109,3 +109,18 @@ appsettings.Development.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# VSCode extension artifacts
+vscode-extension/node_modules/
+vscode-extension/out/
+vscode-extension/.vscode-test/
+
+# Local analysis scratch
+.analysis/
+
+# Azure local state
+.azure/
+
+# OS noise
+.DS_Store
+Thumbs.db

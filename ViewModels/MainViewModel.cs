@@ -21,6 +21,7 @@ public partial class MainViewModel : ObservableObject
     private readonly LogMetadataExtractor _metadataExtractor;
     private readonly LogGroupService _groupService;
     private readonly SalesforceCliService _cliService;
+    private readonly EditorBridgeService _editorBridge;
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -183,6 +184,45 @@ public partial class MainViewModel : ObservableObject
     
     [ObservableProperty]
     private Interaction? _selectedInteraction;
+    
+    // ===== HEALTH SCORE & ACTIONABLE ISSUES =====
+    
+    [ObservableProperty]
+    private int _healthScore = 0;
+    
+    [ObservableProperty]
+    private string _healthGrade = "";
+    
+    [ObservableProperty]
+    private string _healthStatus = "";
+    
+    [ObservableProperty]
+    private string _healthStatusIcon = "";
+    
+    [ObservableProperty]
+    private string _healthReasoning = "";
+    
+    [ObservableProperty]
+    private ObservableCollection<ActionableIssue> _criticalIssues = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<ActionableIssue> _highPriorityIssues = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<ActionableIssue> _quickWins = new();
+    
+    [ObservableProperty]
+    private int _totalEstimatedMinutes = 0;
+    
+    [ObservableProperty]
+    private bool _hasHealthData = false;
+    
+    // Editor Bridge (VSCode Integration)
+    [ObservableProperty]
+    private bool _isEditorConnected = false;
+    
+    [ObservableProperty]
+    private string _editorConnectionStatus = "VSCode: Not Connected";
 
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
@@ -192,12 +232,20 @@ public partial class MainViewModel : ObservableObject
         _metadataExtractor = new LogMetadataExtractor();
         _groupService = new LogGroupService();
         _cliService = new SalesforceCliService();
+        _editorBridge = new EditorBridgeService();
         
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
         
         // Subscribe to CLI events
         _cliService.StatusChanged += OnCliStatusChanged;
+        
+        // Subscribe to Editor Bridge events
+        _editorBridge.ConnectionStatusChanged += OnEditorConnectionChanged;
+        _editorBridge.WorkspacePathReceived += OnWorkspacePathReceived;
+        
+        // Start Editor Bridge server
+        _ = StartEditorBridgeAsync();
         _cliService.LogReceived += OnLogReceived;
     }
 
@@ -212,9 +260,151 @@ public partial class MainViewModel : ObservableObject
     {
         if (value != null)
         {
-            SummaryText = value.Summary ?? "No summary available";
-            Issues = new ObservableCollection<string>(value.Issues ?? new List<string>());
-            Recommendations = new ObservableCollection<string>(value.Recommendations ?? new List<string>());
+            // Test execution context banner
+            if (value.IsTestExecution)
+            {
+                SummaryText = $"🧪 TEST EXECUTION: {value.TestClassName}\n\n" + (value.Summary ?? "No summary available");
+            }
+            else
+            {
+                SummaryText = value.Summary ?? "No summary available";
+            }
+            
+            // Enhanced Issues with governor limit usage at the top
+            var enhancedIssues = new List<string>();
+            
+            // Add governor limit snapshot first
+            var lastLimitSnapshot = value.LimitSnapshots?.LastOrDefault();
+            if (lastLimitSnapshot != null)
+            {
+                var soqlPct = lastLimitSnapshot.SoqlQueriesLimit > 0 ? (lastLimitSnapshot.SoqlQueries * 100.0) / lastLimitSnapshot.SoqlQueriesLimit : 0;
+                var dmlPct = lastLimitSnapshot.DmlStatementsLimit > 0 ? (lastLimitSnapshot.DmlStatements * 100.0) / lastLimitSnapshot.DmlStatementsLimit : 0;
+                var cpuPct = lastLimitSnapshot.CpuTimeLimit > 0 ? (lastLimitSnapshot.CpuTime * 100.0) / lastLimitSnapshot.CpuTimeLimit : 0;
+                
+                var limitIcon = soqlPct > 80 || dmlPct > 80 || cpuPct > 80 ? "🔥" : soqlPct > 50 || dmlPct > 50 || cpuPct > 50 ? "⚠️" : "✅";
+                enhancedIssues.Add($"{limitIcon} **LIMITS**: SOQL {lastLimitSnapshot.SoqlQueries}/{lastLimitSnapshot.SoqlQueriesLimit} ({soqlPct:F0}%) | DML {lastLimitSnapshot.DmlStatements}/{lastLimitSnapshot.DmlStatementsLimit} ({dmlPct:F0}%) | CPU {lastLimitSnapshot.CpuTime}/{lastLimitSnapshot.CpuTimeLimit}ms ({cpuPct:F0}%)");
+            }
+            
+            // Add original issues
+            if (value.Issues != null)
+            {
+                enhancedIssues.AddRange(value.Issues);
+            }
+            
+            Issues = new ObservableCollection<string>(enhancedIssues);
+            
+            // Enhanced Recommendations with specific method call counts
+            var enhancedRecs = new List<string>();
+            
+            // Add top methods by call count
+            if (value.MethodStats?.Any() == true)
+            {
+                var topMethods = value.MethodStats.OrderByDescending(m => m.Value.CallCount).Take(5);
+                enhancedRecs.Add("🎯 **TOP METHODS (by call count)**:");
+                foreach (var method in topMethods)
+                {
+                    var className = ExtractClassName(method.Key);
+                    enhancedRecs.Add($"   • {className}: {method.Value.CallCount} calls, {method.Value.TotalDurationMs}ms total ({method.Value.AverageDurationMs}ms avg)");
+                }
+                enhancedRecs.Add(""); // Spacing
+            }
+            
+            // Add slow methods
+            if (value.MethodStats?.Any() == true)
+            {
+                var slowMethods = value.MethodStats.Where(m => m.Value.MaxDurationMs > 1000).OrderByDescending(m => m.Value.MaxDurationMs).Take(3);
+                if (slowMethods.Any())
+                {
+                    enhancedRecs.Add("🐌 **SLOWEST METHODS**:");
+                    foreach (var method in slowMethods)
+                    {
+                        var className = ExtractClassName(method.Key);
+                        enhancedRecs.Add($"   • {className}: {method.Value.MaxDurationMs}ms max, {method.Value.AverageDurationMs}ms avg");
+                    }
+                    enhancedRecs.Add(""); // Spacing
+                }
+            }
+            
+            // Add Order of Execution Timeline
+            if (value.Timeline != null && value.Timeline.Phases.Any())
+            {
+                enhancedRecs.Add("📋 **ORDER OF EXECUTION**:");
+                enhancedRecs.Add(value.Timeline.Summary);
+                enhancedRecs.Add("");
+                
+                // Show top-level phases only (no deep nesting)
+                foreach (var phase in value.Timeline.Phases.Take(10))
+                {
+                    var recursionFlag = phase.IsRecursive ? " ⚠️ RECURSIVE" : "";
+                    enhancedRecs.Add($"{phase.Icon} {phase.Type}: {phase.Name} ({phase.DurationMs}ms){recursionFlag}");
+                    
+                    // Show important children (triggers, flows)
+                    foreach (var child in phase.Children.Where(c => c.Type == "Trigger" || c.Type == "Flow").Take(3))
+                    {
+                        var childRecursion = child.IsRecursive ? " ⚠️ RECURSIVE" : "";
+                        enhancedRecs.Add($"   └─ {child.Icon} {child.Name} ({child.DurationMs}ms){childRecursion}");
+                    }
+                }
+                
+                if (value.Timeline.Phases.Count > 10)
+                {
+                    enhancedRecs.Add($"   ... and {value.Timeline.Phases.Count - 10} more phases");
+                }
+                
+                enhancedRecs.Add("");
+            }
+            
+            // Add cumulative profiling insights
+            if (value.CumulativeProfiling != null)
+            {
+                var prof = value.CumulativeProfiling;
+                
+                // Top Queries section
+                if (prof.TopQueries.Any())
+                {
+                    enhancedRecs.Add("🔍 **TOP QUERIES (by execution count)**:");
+                    foreach (var query in prof.TopQueries.Take(5))
+                    {
+                        var icon = query.ExecutionCount > 10000 ? "🔥" : query.ExecutionCount > 1000 ? "⚠️" : "📊";
+                        enhancedRecs.Add($"   {icon} {query.Location}: {query.ExecutionCount:N0}x in {query.TotalDurationMs}ms");
+                        enhancedRecs.Add($"      {TruncateString(query.Query, 80)}");
+                    }
+                    enhancedRecs.Add("");
+                }
+                
+                // Slowest DML section
+                if (prof.TopDmlOperations.Any())
+                {
+                    enhancedRecs.Add("🐌 **SLOWEST DML OPERATIONS**:");
+                    foreach (var dml in prof.TopDmlOperations.Take(5))
+                    {
+                        var icon = dml.TotalDurationMs > 3000 ? "🔥" : dml.TotalDurationMs > 1000 ? "⚠️" : "📊";
+                        enhancedRecs.Add($"   {icon} {dml.OperationDescription} at {dml.Location}");
+                        enhancedRecs.Add($"      {dml.ExecutionCount}x in {dml.TotalDurationMs}ms (avg {dml.TotalDurationMs / dml.ExecutionCount}ms)");
+                    }
+                    enhancedRecs.Add("");
+                }
+                
+                // Top Methods section
+                if (prof.TopMethods.Any())
+                {
+                    enhancedRecs.Add("⚡ **SLOWEST METHODS (by total time)**:");
+                    foreach (var method in prof.TopMethods.Take(5))
+                    {
+                        var icon = method.TotalDurationMs > 5000 ? "🔥" : method.TotalDurationMs > 2000 ? "⚠️" : "📊";
+                        enhancedRecs.Add($"   {icon} {method.Location}: {method.TotalDurationMs}ms total ({method.ExecutionCount}x, avg {method.AverageDurationMs}ms)");
+                    }
+                    enhancedRecs.Add("");
+                }
+            }
+            
+            // Add original recommendations
+            if (value.Recommendations != null)
+            {
+                enhancedRecs.AddRange(value.Recommendations);
+            }
+            
+            Recommendations = new ObservableCollection<string>(enhancedRecs);
             DatabaseOperations = new ObservableCollection<DatabaseOperation>(value.DatabaseOperations ?? new List<DatabaseOperation>());
             
             // Stack analysis display
@@ -237,6 +427,8 @@ public partial class MainViewModel : ObservableObject
             
             if (value.TransactionFailed)
                 HeroStatus = "FAILED";
+            else if (value.IsTestExecution)
+                HeroStatus = "TEST"; // NEW: Show test badge
             else if (value.HandledExceptions?.Count > 0 || value.HasErrors)
                 HeroStatus = "WARNING";
             else
@@ -281,6 +473,35 @@ public partial class MainViewModel : ObservableObject
             CpuTimeMs = value.CpuTimeMs;
             OverheadMs = WallClockMs - CpuTimeMs;
             ShowTimingBreakdown = OverheadMs > 1000 && WallClockMs > 2000;
+            
+            // ===== POPULATE HEALTH SCORE & ACTIONABLE ISSUES =====
+            if (value.Health != null)
+            {
+                HasHealthData = true;
+                HealthScore = value.Health.Score;
+                HealthGrade = value.Health.Grade;
+                HealthStatus = value.Health.Status;
+                HealthStatusIcon = value.Health.StatusIcon;
+                HealthReasoning = value.Health.Reasoning;
+                
+                CriticalIssues = new ObservableCollection<ActionableIssue>(value.Health.CriticalIssues);
+                HighPriorityIssues = new ObservableCollection<ActionableIssue>(value.Health.HighPriorityIssues);
+                QuickWins = new ObservableCollection<ActionableIssue>(value.Health.QuickWins);
+                TotalEstimatedMinutes = value.Health.TotalEstimatedMinutes;
+            }
+            else
+            {
+                HasHealthData = false;
+                HealthScore = 0;
+                HealthGrade = "";
+                HealthStatus = "";
+                HealthStatusIcon = "";
+                HealthReasoning = "";
+                CriticalIssues.Clear();
+                HighPriorityIssues.Clear();
+                QuickWins.Clear();
+                TotalEstimatedMinutes = 0;
+            }
         }
         else
         {
@@ -304,6 +525,18 @@ public partial class MainViewModel : ObservableObject
             DmlPercent = 0;
             CpuPercent = 0;
             ShowTimingBreakdown = false;
+            
+            // Reset health score
+            HasHealthData = false;
+            HealthScore = 0;
+            HealthGrade = "";
+            HealthStatus = "";
+            HealthStatusIcon = "";
+            HealthReasoning = "";
+            CriticalIssues.Clear();
+            HighPriorityIssues.Clear();
+            QuickWins.Clear();
+            TotalEstimatedMinutes = 0;
         }
     }
     
@@ -312,6 +545,36 @@ public partial class MainViewModel : ObservableObject
         if (ms < 1000) return $"{ms:N0}ms";
         if (ms < 60000) return $"{ms / 1000.0:N1}s";
         return $"{ms / 60000.0:N1}m";
+    }
+    
+    /// <summary>
+    /// Extract clean class name from method signature
+    /// Example: "MyClass.myMethod" -> "MyClass.myMethod"
+    /// Example: "Trigger.CaseTrigger on Case (before insert)" -> "CaseTrigger (trigger)"
+    /// </summary>
+    private string ExtractClassName(string methodName)
+    {
+        if (methodName.Contains("Trigger."))
+        {
+            var parts = methodName.Split('.');
+            if (parts.Length > 1)
+            {
+                var triggerName = parts[1].Split(' ')[0];
+                return $"{triggerName} (trigger)";
+            }
+        }
+        
+        // Return as-is if already clean
+        return methodName;
+    }
+    
+    /// <summary>
+    /// Truncate string to max length with ellipsis
+    /// </summary>
+    private string TruncateString(string str, int maxLength)
+    {
+        if (string.IsNullOrEmpty(str) || str.Length <= maxLength) return str;
+        return str.Substring(0, maxLength - 3) + "...";
     }
 
     [RelayCommand]
@@ -328,6 +591,156 @@ public partial class MainViewModel : ObservableObject
     private void SelectTab(int tabIndex)
     {
         SelectedTabIndex = tabIndex;
+    }
+    
+    /// <summary>
+    /// Open file in VSCode at specific line (from actionable issue location)
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenInEditor(string location)
+    {
+        if (string.IsNullOrEmpty(location))
+        {
+            StatusMessage = "No location specified";
+            return;
+        }
+        
+        if (!_editorBridge.IsConnected)
+        {
+            StatusMessage = "⚠️ VSCode not connected. Install Black Widow VSCode extension.";
+            return;
+        }
+        
+        try
+        {
+            // Parse location: "MyClass.myMethod:154" or "MyClass:42"
+            var parts = location.Split(':');
+            if (parts.Length < 2)
+            {
+                StatusMessage = "Invalid location format";
+                return;
+            }
+            
+            var classAndMethod = parts[0];
+            var lineNumber = int.Parse(parts[1]);
+            
+            // Extract class name (remove method if present)
+            var className = classAndMethod.Split('.')[0];
+            
+            // Find file in workspace
+            var filePath = _editorBridge.FindApexFile(className);
+            
+            if (string.IsNullOrEmpty(filePath))
+            {
+                StatusMessage = $"⚠️ Could not find {className}.cls in workspace";
+                return;
+            }
+            
+            // Send command to VSCode
+            var success = await _editorBridge.OpenFileInEditorAsync(filePath, lineNumber);
+            
+            if (success)
+            {
+                StatusMessage = $"✓ Opened {Path.GetFileName(filePath)}:{lineNumber} in VSCode";
+            }
+            else
+            {
+                StatusMessage = "✗ Failed to open file in VSCode";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"✗ Error: {ex.Message}";
+        }
+    }
+    
+    /// <summary>
+    /// Start Editor Bridge server on app startup
+    /// </summary>
+    private async Task StartEditorBridgeAsync()
+    {
+        try
+        {
+            await _editorBridge.StartAsync();
+            StatusMessage = "✓ Editor Bridge ready (waiting for VSCode connection)";
+            
+            // Request workspace path after connection
+            await Task.Delay(1000);
+            if (_editorBridge.IsConnected)
+            {
+                await _editorBridge.RequestWorkspacePathAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"⚠️ Editor Bridge failed: {ex.Message}";
+        }
+    }
+    
+    /// <summary>
+    /// Handle Editor Bridge connection status changes
+    /// </summary>
+    private void OnEditorConnectionChanged(object? sender, bool isConnected)
+    {
+        IsEditorConnected = isConnected;
+        EditorConnectionStatus = isConnected ? "VSCode: ✓ Connected" : "VSCode: Not Connected";
+        
+        if (isConnected)
+        {
+            StatusMessage = "✓ VSCode extension connected";
+            _ = _editorBridge.RequestWorkspacePathAsync();
+        }
+        else
+        {
+            StatusMessage = "VSCode extension disconnected";
+        }
+    }
+    
+    /// <summary>
+    /// Handle workspace path received from VSCode
+    /// </summary>
+    private void OnWorkspacePathReceived(object? sender, string path)
+    {
+        StatusMessage = $"✓ Workspace: {path}";
+    }
+    
+    [RelayCommand]
+    private void ViewInteraction(Interaction interaction)
+    {
+        if (interaction == null) return;
+        
+        SelectedInteraction = interaction;
+        
+        // Show all captured logs in the main list
+        Logs.Clear();
+        foreach (var log in interaction.CapturedLogs)
+        {
+            Logs.Add(log);
+        }
+        
+        // Select the first log for detailed view
+        if (interaction.CapturedLogs.Count > 0)
+        {
+            SelectedLog = interaction.CapturedLogs[0];
+            StatusMessage = $"Viewing interaction with {interaction.CapturedLogs.Count} log(s)";
+        }
+        else
+        {
+            StatusMessage = "⚠️ This interaction has no captured logs";
+        }
+        
+        // Show grouped analysis if available
+        if (interaction.LogGroups?.Count > 0)
+        {
+            LogGroups.Clear();
+            foreach (var group in interaction.LogGroups)
+            {
+                LogGroups.Add(group);
+            }
+            SelectedLogGroup = interaction.LogGroups[0];
+        }
+        
+        StatusMessage = $"🎬 Viewing interaction: {interaction.Name} ({interaction.CapturedLogs.Count} logs)";
     }
 
     [RelayCommand]
@@ -600,6 +1013,8 @@ public partial class MainViewModel : ObservableObject
         _recordingBuffer.Clear();
         RecordingElapsedTime = "00:00";
         
+        StatusMessage = "🔴 RECORDING - Perform your Salesforce action now...";
+        
         // Start timer to update elapsed time
         _recordingTimer = new System.Windows.Threading.DispatcherTimer
         {
@@ -675,6 +1090,8 @@ public partial class MainViewModel : ObservableObject
         SelectedInteraction = interaction;
         
         _recordingBuffer.Clear();
+        
+        StatusMessage = $"✅ Recording stopped - Captured {interaction.CapturedLogs.Count} logs";
         
         var durationStr = interaction.UserWaitTimeMs < 1000 
             ? $"{interaction.UserWaitTimeMs:N0}ms" 
@@ -764,6 +1181,66 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
+    /// <summary>
+    /// Generate a plain English insight from log analysis for non-experts
+    /// </summary>
+    private (string insight, string icon) GenerateLogInsight(LogAnalysis? analysis)
+    {
+        if (analysis == null) return ("No analysis available", "❓");
+        
+        // Priority 1: Errors (most important)
+        if (analysis.Errors?.Count > 0)
+        {
+            var firstError = analysis.Errors[0].Name;
+            return (firstError, "❌");
+        }
+        
+        // Priority 2: Issues detected
+        if (analysis.Issues?.Count > 0)
+        {
+            var firstIssue = analysis.Issues[0];
+            
+            // Simplify technical jargon
+            if (firstIssue.Contains("SOQL", StringComparison.OrdinalIgnoreCase))
+                return ("⚠️ Database query issue detected", "⚠️");
+            if (firstIssue.Contains("DML", StringComparison.OrdinalIgnoreCase))
+                return ("⚠️ Database update issue detected", "⚠️");
+            if (firstIssue.Contains("CPU", StringComparison.OrdinalIgnoreCase))
+                return ("⚠️ Slow processing detected", "⚠️");
+            if (firstIssue.Contains("recursion", StringComparison.OrdinalIgnoreCase))
+                return ("⚠️ Code ran multiple times (recursion)", "⚠️");
+            
+            return (firstIssue, "⚠️");
+        }
+        
+        // Priority 3: Recommendations (potential improvements)
+        if (analysis.Recommendations?.Count > 0)
+        {
+            var firstRec = analysis.Recommendations[0];
+            return ($"💡 {firstRec}", "💡");
+        }
+        
+        // Priority 4: Show database activity if significant
+        var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
+        if (lastSnapshot != null)
+        {
+            if (lastSnapshot.SoqlQueries > 50)
+                return ($"Ran {lastSnapshot.SoqlQueries} database queries", "📊");
+            if (lastSnapshot.DmlStatements > 50)
+                return ($"Modified {lastSnapshot.DmlStatements} records", "📊");
+            if (analysis.CpuTimeMs > 5000)
+                return ($"Heavy processing: {analysis.CpuTimeMs}ms CPU time", "🔥");
+        }
+        
+        // Priority 5: All good!
+        if (analysis.DurationMs < 1000)
+            return ("Executed successfully, no issues", "✓");
+        else if (analysis.DurationMs < 5000)
+            return ($"Completed in {analysis.DurationMs}ms", "✓");
+        else
+            return ($"⏱️ Slow execution: {analysis.DurationMs}ms", "⏱️");
+    }
+    
     private void OnLogReceived(object? sender, LogReceivedEventArgs e)
     {
         Application.Current?.Dispatcher.Invoke(async () =>
@@ -773,35 +1250,67 @@ public partial class MainViewModel : ObservableObject
                 StatusMessage = "🕷️ New log detected! Parsing...";
 
                 // Parse the log content
-                var analysis = await Task.Run(() => _parserService.ParseLog(e.LogContent, $"Stream_{e.Timestamp:HHmmss}"));
+                var logId = !string.IsNullOrEmpty(e.LogId) ? e.LogId.Substring(0, 8) : $"Stream_{e.Timestamp:HHmmss}";
+                var analysis = await Task.Run(() => _parserService.ParseLog(e.LogContent, logId));
+                
+                // Extract operation type from entry point or root node
+                var operationType = "Unknown";
+                if (!string.IsNullOrEmpty(analysis.EntryPoint))
+                {
+                    operationType = analysis.EntryPoint;
+                }
+                else if (analysis.RootNode != null)
+                {
+                    operationType = analysis.RootNode.Type switch
+                    {
+                        ExecutionNodeType.CodeUnit => analysis.RootNode.Name,
+                        ExecutionNodeType.Flow => "Flow Execution",
+                        ExecutionNodeType.Validation => "Validation Rule",
+                        ExecutionNodeType.Method => "Apex Method",
+                        _ => analysis.RootNode.Type.ToString()
+                    };
+                    
+                    // Check if it's Execute Anonymous
+                    if (analysis.Summary?.Contains("Execute Anonymous", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        operationType = "Execute Anonymous";
+                    }
+                }
                 
                 // Add to logs list
                 Logs.Insert(0, analysis);
                 SelectedLog = analysis;
                 
+                // Generate plain English insight for non-experts
+                var (insight, icon) = GenerateLogInsight(analysis);
+                
+                // Create rich streaming log entry
+                var streamingEntry = new StreamingLogEntry
+                {
+                    Timestamp = e.Timestamp,
+                    IsError = analysis.Errors?.Count > 0 || analysis.TransactionFailed,
+                    Analysis = analysis,
+                    LogId = logId,
+                    User = e.Username,
+                    OperationType = operationType,
+                    Duration = analysis.DurationMs > 0 ? $"{analysis.DurationMs}ms" : "0ms",
+                    LineCount = e.LogContent.Split('\n').Length,
+                    Status = (analysis.Errors?.Count > 0 || analysis.TransactionFailed) ? "ERROR" : "SUCCESS",
+                    Message = $"{operationType} by {e.Username}",
+                    Insight = insight,
+                    InsightIcon = icon
+                };
+                
                 // If recording, add to buffer
                 if (IsRecording)
                 {
                     _recordingBuffer.Add(analysis);
-                    
-                    StreamingLogs.Insert(0, new StreamingLogEntry
-                    {
-                        Timestamp = e.Timestamp,
-                        Message = $"🔴 [Recording #{_recordingBuffer.Count}] {analysis.Summary}",
-                        IsError = false,
-                        Analysis = analysis
-                    });
+                    streamingEntry.Message = $"🔴 [Recording #{_recordingBuffer.Count}] {operationType}";
+                    StreamingLogs.Insert(0, streamingEntry);
                 }
                 else
                 {
-                    // Add notification to streaming log
-                    StreamingLogs.Insert(0, new StreamingLogEntry
-                    {
-                        Timestamp = e.Timestamp,
-                        Message = $"✅ Log captured and parsed - {analysis.Summary}",
-                        IsError = false,
-                        Analysis = analysis
-                    });
+                    StreamingLogs.Insert(0, streamingEntry);
                 }
 
                 StatusMessage = IsRecording 
@@ -923,4 +1432,14 @@ public class StreamingLogEntry
     public string Message { get; set; } = "";
     public bool IsError { get; set; }
     public LogAnalysis? Analysis { get; set; }
+    
+    // Enhanced details for better UX
+    public string LogId { get; set; } = "";
+    public string User { get; set; } = "";
+    public string OperationType { get; set; } = "";
+    public string Duration { get; set; } = "";
+    public int LineCount { get; set; }
+    public string Status { get; set; } = "";
+    public string Insight { get; set; } = ""; // Plain English summary for non-experts
+    public string InsightIcon { get; set; } = "✓"; // Icon representing the insight type
 }

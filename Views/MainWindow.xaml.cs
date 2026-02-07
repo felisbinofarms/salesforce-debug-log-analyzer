@@ -2,6 +2,7 @@
 using System.IO;
 using SalesforceDebugAnalyzer.ViewModels;
 using SalesforceDebugAnalyzer.Services;
+using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -99,24 +100,11 @@ public partial class MainWindow : Window
         // Hide connections view
         ConnectionsViewContainer.Visibility = Visibility.Collapsed;
         
-        // Show Debug Setup Wizard in main content area
-        var wizard = new DebugSetupWizard(apiService);
-        wizard.WizardCompleted += (s, e) =>
-        {
-            // Show main dashboard after wizard completes
-            ConnectionsViewContainer.Content = null;
-            MainContentGrid.Visibility = Visibility.Visible;
-            _viewModel.OnConnected();
-        };
-        wizard.WizardCancelled += (s, e) =>
-        {
-            // Go back to connection view if cancelled
-            ConnectionsViewContainer.Content = _connectionsView;
-            ConnectionsViewContainer.Visibility = Visibility.Visible;
-        };
-        
-        ConnectionsViewContainer.Content = wizard;
-        ConnectionsViewContainer.Visibility = Visibility.Visible;
+        // Skip wizard - go straight to main dashboard
+        // (User can manually open wizard from menu if needed)
+        ConnectionsViewContainer.Content = null;
+        MainContentGrid.Visibility = Visibility.Visible;
+        _viewModel.OnConnected();
     }
     
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
@@ -187,5 +175,13 @@ public partial class MainWindow : Window
         button.Content = originalContent;
         button.Background = new System.Windows.Media.SolidColorBrush(
             System.Windows.Media.Color.FromRgb(0x4E, 0x50, 0x58)); // Original gray
+    }
+    
+    private void InteractionCard_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Border border && border.DataContext is Interaction interaction)
+        {
+            _viewModel.ViewInteractionCommand.Execute(interaction);
+        }
     }
 }

@@ -44,6 +44,15 @@
             <!-- Converters -->
             <helpers:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <helpers:IntEqualsToVisibilityConverter x:Key="IntEqualsToVisibilityConverter"/>
+            <helpers:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+            <helpers:PercentToWidthConverter x:Key="PercentToWidthConverter"/>
+            <helpers:PercentToSeverityConverter x:Key="PercentToSeverityConverter"/>
+            <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
+            <helpers:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter"/>
+            <helpers:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+            <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <helpers:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

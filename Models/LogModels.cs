@@ -145,6 +145,201 @@ public class LogAnalysis
     public string Summary { get; set; } = string.Empty;
     public List<string> Issues { get; set; } = new();
     public List<string> Recommendations { get; set; } = new();
+    
+    /// <summary>
+    /// Cumulative profiling data (from CUMULATIVE_PROFILING section at end of log)
+    /// </summary>
+    public CumulativeProfiling? CumulativeProfiling { get; set; }
+    
+    /// <summary>
+    /// Log user name from USER_INFO line
+    /// </summary>
+    public string LogUser { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Log file length in lines
+    /// </summary>
+    public int LogLength { get; set; }
+    
+    /// <summary>
+    /// Is this a test class execution?
+    /// </summary>
+    public bool IsTestExecution { get; set; }
+    
+    /// <summary>
+    /// Test class name if IsTestExecution is true
+    /// </summary>
+    public string TestClassName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Order of execution timeline showing major phases
+    /// </summary>
+    public ExecutionTimeline? Timeline { get; set; }
+    
+    /// <summary>
+    /// Health score (0-100) and actionable issues prioritized for fixing
+    /// </summary>
+    public HealthScore? Health { get; set; }
+}
+
+/// <summary>
+/// Health score and prioritized actionable issues
+/// </summary>
+public class HealthScore
+{
+    public int Score { get; set; } // 0-100
+    public string Grade { get; set; } = string.Empty; // A, B, C, D, F
+    public string Status { get; set; } = string.Empty; // Excellent, Good, Needs Work, Poor, Critical
+    public string StatusIcon { get; set; } = string.Empty; // 🎯, ⚡, ⚠️, 🔥
+    public string Reasoning { get; set; } = string.Empty;
+    
+    public List<ActionableIssue> CriticalIssues { get; set; } = new();
+    public List<ActionableIssue> HighPriorityIssues { get; set; } = new();
+    public List<ActionableIssue> QuickWins { get; set; } = new(); // Easy fixes
+    
+    public int TotalIssues => CriticalIssues.Count + HighPriorityIssues.Count + QuickWins.Count;
+    public int TotalEstimatedMinutes => CriticalIssues.Sum(i => i.EstimatedFixTimeMinutes) + 
+                                          HighPriorityIssues.Sum(i => i.EstimatedFixTimeMinutes) + 
+                                          QuickWins.Sum(i => i.EstimatedFixTimeMinutes);
+}
+
+/// <summary>
+/// An actionable issue with clear steps to fix
+/// </summary>
+public class ActionableIssue
+{
+    public string Title { get; set; } = string.Empty;
+    public string Problem { get; set; } = string.Empty; // Plain English description
+    public string Impact { get; set; } = string.Empty; // "Saves 2.4 seconds", "Reduces SOQL by 90%"
+    public string Location { get; set; } = string.Empty; // "Case_Util.externalEscalationEmail:154"
+    public IssueSeverity Severity { get; set; }
+    public IssueDifficulty Difficulty { get; set; }
+    public string Fix { get; set; } = string.Empty; // Specific recommendation
+    public string CodeExample { get; set; } = string.Empty; // Optional code snippet
+    public int EstimatedFixTimeMinutes { get; set; }
+    public int Priority { get; set; } // 1 = highest
+    
+    public string SeverityIcon => Severity switch
+    {
+        IssueSeverity.Critical => "🔴",
+        IssueSeverity.High => "🟠",
+        IssueSeverity.Medium => "🟡",
+        IssueSeverity.Low => "🟢",
+        _ => "⚪"
+    };
+    
+    public string DifficultyBadge => Difficulty switch
+    {
+        IssueDifficulty.Easy => "✅ Easy",
+        IssueDifficulty.Medium => "⚡ Medium",
+        IssueDifficulty.Hard => "🔥 Hard",
+        _ => "Unknown"
+    };
+}
+
+public enum IssueSeverity
+{
+    Critical,
+    High,
+    Medium,
+    Low
+}
+
+public enum IssueDifficulty
+{
+    Easy,
+    Medium,
+    Hard
+}
+
+/// <summary>
+/// Order of execution timeline showing what executed when
+/// </summary>
+public class ExecutionTimeline
+{
+    public List<TimelinePhase> Phases { get; set; } = new();
+    public string Summary { get; set; } = string.Empty;
+    public int TotalPhases => Phases.Count;
+    public int RecursionCount { get; set; }
+}
+
+/// <summary>
+/// A phase in the execution timeline (e.g., Trigger, Flow, Validation)
+/// </summary>
+public class TimelinePhase
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty; // Trigger, Flow, Validation, DML, etc.
+    public DateTime StartTime { get; set; } // DateTime, not nanoseconds
+    public long DurationMs { get; set; }
+    public int LineNumber { get; set; }
+    public string Icon { get; set; } = string.Empty; // 🔧, 🌊, ✅, 💾
+    public List<TimelinePhase> Children { get; set; } = new(); // Nested calls
+    public int Depth { get; set; }
+    public bool IsRecursive { get; set; }
+}
+
+/// <summary>
+/// Cumulative profiling data aggregated across all executions
+/// </summary>
+public class CumulativeProfiling
+{
+    public List<CumulativeQuery> TopQueries { get; set; } = new();
+    public List<CumulativeDml> TopDmlOperations { get; set; } = new();
+    public List<CumulativeMethod> TopMethods { get; set; } = new();
+}
+
+/// <summary>
+/// Cumulative query statistics (SOQL)
+/// </summary>
+public class CumulativeQuery
+{
+    public string ClassName { get; set; } = string.Empty;
+    public string MethodName { get; set; } = string.Empty;
+    public int LineNumber { get; set; }
+    public string Query { get; set; } = string.Empty;
+    public int ExecutionCount { get; set; }
+    public int TotalDurationMs { get; set; }
+    
+    /// <summary>Display format: "Class.Method:Line"</summary>
+    public string Location => $"{ClassName}.{MethodName}:{LineNumber}";
+}
+
+/// <summary>
+/// Cumulative DML statistics
+/// </summary>
+public class CumulativeDml
+{
+    public string ClassName { get; set; } = string.Empty;
+    public string MethodName { get; set; } = string.Empty;
+    public int LineNumber { get; set; }
+    public string Operation { get; set; } = string.Empty; // Insert, Update, etc.
+    public string ObjectType { get; set; } = string.Empty;
+    public int ExecutionCount { get; set; }
+    public int TotalDurationMs { get; set; }
+    
+    /// <summary>Display format: "Operation ObjectType"</summary>
+    public string OperationDescription => $"{Operation}: {ObjectType}";
+    
+    /// <summary>Display format: "Class.Method:Line"</summary>
+    public string Location => $"{ClassName}.{MethodName}:{LineNumber}";
+}
+
+/// <summary>
+/// Cumulative method invocation statistics
+/// </summary>
+public class CumulativeMethod
+{
+    public string ClassName { get; set; } = string.Empty;
+    public string MethodName { get; set; } = string.Empty;
+    public int LineNumber { get; set; }
+    public string Signature { get; set; } = string.Empty;
+    public int ExecutionCount { get; set; }
+    public int TotalDurationMs { get; set; }
+    public int AverageDurationMs => ExecutionCount > 0 ? TotalDurationMs / ExecutionCount : 0;
+    
+    /// <summary>Display format: "Class.Method:Line"</summary>
+    public string Location => LineNumber > 0 ? $"{ClassName}.{MethodName}:{LineNumber}" : $"{ClassName}.{MethodName}";
 }
 
 /// <summary>

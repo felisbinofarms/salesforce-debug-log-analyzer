@@ -101,6 +101,29 @@ public class LogParserService
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
         analysis.Recommendations = GenerateRecommendations(analysis);
+        
+        // Phase 9: Parse cumulative profiling
+        analysis.CumulativeProfiling = ParseCumulativeProfiling(lines);
+        
+        // Phase 10: Parse CUMULATIVE_LIMIT_USAGE for accurate CPU/Heap (fixes 0ms bug)
+        ParseCumulativeLimitUsage(lines, analysis);
+        
+        // Phase 11: Detect test class execution
+        DetectTestExecution(logLines, analysis);
+        
+        // Phase 12: Build order of execution timeline
+        analysis.Timeline = BuildExecutionTimeline(logLines, analysis);
+        
+        // Phase 13: Calculate health score and generate actionable issues
+        analysis.Health = CalculateHealthScore(analysis);
+        
+        // Extract user info
+        var userInfoLine = logLines.FirstOrDefault(l => l.EventType == "USER_INFO");
+        if (userInfoLine != null && userInfoLine.Details.Length > 1)
+        {
+            analysis.LogUser = userInfoLine.Details[1];
+        }
+        analysis.LogLength = lines.Length;
 
         return analysis;
     }
@@ -716,8 +739,12 @@ public class LogParserService
                 case "SYSTEM_METHOD_ENTRY":
                 case "CODE_UNIT_STARTED":
                     currentDepth++;
-                    var methodName = line.Details.Length > 1 ? line.Details[1] : 
-                                    (line.Details.Length > 0 ? line.Details[0] : "Unknown");
+                    // Extract human-readable name (field 3) instead of ID (field 2)
+                    // Format: CODE_UNIT_STARTED|[EXTERNAL]|{ID}|{ClassName.MethodName}
+                    var methodName = line.Details.Length >= 3 && !string.IsNullOrEmpty(line.Details[2]) 
+                        ? line.Details[2]  // Use ClassName.MethodName
+                        : line.Details.Length > 1 ? line.Details[1] 
+                        : (line.Details.Length > 0 ? line.Details[0] : "Unknown");
                     currentStack.Push(methodName);
                     
                     // Track method call counts
@@ -973,8 +1000,53 @@ public class LogParserService
     private List<string> DetectIssues(LogAnalysis analysis)
     {
         var issues = new List<string>();
+        
+        // 🚨 NEW: Use cumulative profiling for specific N+1 patterns FIRST
+        if (analysis.CumulativeProfiling != null)
+        {
+            var excessiveQueries = analysis.CumulativeProfiling.TopQueries
+                .Where(q => q.ExecutionCount > 1000)
+                .OrderByDescending(q => q.ExecutionCount)
+                .ToList();
+            
+            foreach (var query in excessiveQueries.Take(3))
+            {
+                issues.Add($"🚨 **N+1 QUERY PATTERN**: {query.Location} - Query executed {query.ExecutionCount:N0} times in {query.TotalDurationMs}ms");
+                issues.Add($"   📍 Location: {query.ClassName}.{query.MethodName} line {query.LineNumber}");
+                issues.Add($"   🔍 Query: {(query.Query.Length > 80 ? query.Query.Substring(0, 80) + "..." : query.Query)}");
+                issues.Add($"   💡 Fix: Move query outside loop, cache results, or batch using Map/Set");
+                issues.Add("");
+            }
+            
+            // Check for slow DML operations
+            var slowDml = analysis.CumulativeProfiling.TopDmlOperations
+                .Where(d => d.TotalDurationMs > 2000)
+                .OrderByDescending(d => d.TotalDurationMs)
+                .ToList();
+            
+            foreach (var dml in slowDml.Take(2))
+            {
+                issues.Add($"🐌 **SLOW DML OPERATION**: {dml.OperationDescription} taking {dml.TotalDurationMs}ms");
+                issues.Add($"   📍 Location: {dml.Location}");
+                issues.Add($"   💡 Fix: Check validation rules, workflow rules, or bulk operations");
+                issues.Add("");
+            }
+            
+            // Check for slow methods
+            var slowMethods = analysis.CumulativeProfiling.TopMethods
+                .Where(m => m.TotalDurationMs > 3000)
+                .OrderByDescending(m => m.TotalDurationMs)
+                .ToList();
+            
+            foreach (var method in slowMethods.Take(2))
+            {
+                issues.Add($"⏱️ **SLOW METHOD**: {method.Location} taking {method.TotalDurationMs}ms total ({method.ExecutionCount}x calls, avg {method.AverageDurationMs}ms)");
+                issues.Add($"   💡 Fix: Profile this method for optimization opportunities");
+                issues.Add("");
+            }
+        }
 
-        // 🚨 NEW: Check for stack overflow risk FIRST - this is often the real issue!
+        // 🚨 Check for stack overflow risk
         if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical)
         {
             issues.Add($"🚨 **CRITICAL: Stack Overflow Risk!** Your code is using an estimated {analysis.StackAnalysis.EstimatedTotalFrames} stack frames " +
@@ -995,6 +1067,24 @@ public class LogParserService
             issues.Add($"📊 **FINEST Debug Logging Active**: This log was captured with maximum debug verbosity, " +
                 $"which adds ~{analysis.StackAnalysis.DebugLoggingOverhead} extra stack frames. " +
                 $"Production may work where QA fails, but the underlying code is still risky!");
+        }
+        
+        // Check for trigger recursion from timeline
+        if (analysis.Timeline != null && analysis.Timeline.RecursionCount > 0)
+        {
+            var recursiveTriggers = analysis.Timeline.Phases
+                .Where(p => p.IsRecursive && p.Type == "Trigger")
+                .Select(p => p.Name.Split('.')[0])
+                .Distinct()
+                .ToList();
+            
+            if (recursiveTriggers.Any())
+            {
+                var triggerList = string.Join(", ", recursiveTriggers.Take(3));
+                issues.Add($"🔄 **Trigger Recursion Detected**: {triggerList} fired multiple times in same transaction. " +
+                    $"Total recursive calls: {analysis.Timeline.RecursionCount}. " +
+                    $"This causes performance degradation and may indicate missing recursion control.");
+            }
         }
 
         // Check for loop patterns contributing to stack depth
@@ -1354,5 +1444,591 @@ public class LogParserService
         }
 
         return recommendations;
+    }
+    
+    /// <summary>
+    /// Parse CUMULATIVE_PROFILING section at end of log
+    /// </summary>
+    private CumulativeProfiling? ParseCumulativeProfiling(string[] lines)
+    {
+        var profiling = new CumulativeProfiling();
+        bool inProfilingSection = false;
+        bool inSoqlSection = false;
+        bool inDmlSection = false;
+        bool inMethodSection = false;
+        
+        var soqlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
+        var dmlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(\w+):\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
+        var methodPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
+        
+        for (int i = lines.Length - 1; i >= 0; i--)
+        {
+            var line = lines[i].Trim();
+            
+            if (line.Contains("CUMULATIVE_PROFILING_BEGIN"))
+            {
+                inProfilingSection = true;
+                continue;
+            }
+            
+            if (line.Contains("CUMULATIVE_PROFILING_END"))
+            {
+                break;
+            }
+            
+            if (!inProfilingSection) continue;
+            
+            // Section headers
+            if (line.Contains("CUMULATIVE_PROFILING|SOQL operations|"))
+            {
+                inSoqlSection = true;
+                inDmlSection = false;
+                inMethodSection = false;
+                continue;
+            }
+            else if (line.Contains("CUMULATIVE_PROFILING|DML operations|"))
+            {
+                inSoqlSection = false;
+                inDmlSection = true;
+                inMethodSection = false;
+                continue;
+            }
+            else if (line.Contains("CUMULATIVE_PROFILING|method invocations|"))
+            {
+                inSoqlSection = false;
+                inDmlSection = false;
+                inMethodSection = true;
+                continue;
+            }
+            
+            // Parse SOQL operations
+            if (inSoqlSection)
+            {
+                var match = soqlPattern.Match(line);
+                if (match.Success)
+                {
+                    var location = match.Groups[1].Value;
+                    var parts = ParseLocation(location);
+                    
+                    profiling.TopQueries.Add(new CumulativeQuery
+                    {
+                        ClassName = parts.className,
+                        MethodName = parts.methodName,
+                        LineNumber = int.Parse(match.Groups[2].Value),
+                        Query = match.Groups[3].Value,
+                        ExecutionCount = int.Parse(match.Groups[4].Value),
+                        TotalDurationMs = int.Parse(match.Groups[5].Value)
+                    });
+                }
+            }
+            
+            // Parse DML operations
+            if (inDmlSection)
+            {
+                var match = dmlPattern.Match(line);
+                if (match.Success)
+                {
+                    var location = match.Groups[1].Value;
+                    var parts = ParseLocation(location);
+                    
+                    profiling.TopDmlOperations.Add(new CumulativeDml
+                    {
+                        ClassName = parts.className,
+                        MethodName = parts.methodName,
+                        LineNumber = int.Parse(match.Groups[2].Value),
+                        Operation = match.Groups[3].Value,
+                        ObjectType = match.Groups[4].Value,
+                        ExecutionCount = int.Parse(match.Groups[5].Value),
+                        TotalDurationMs = int.Parse(match.Groups[6].Value)
+                    });
+                }
+            }
+            
+            // Parse method invocations
+            if (inMethodSection)
+            {
+                var match = methodPattern.Match(line);
+                if (match.Success)
+                {
+                    var location = match.Groups[1].Value;
+                    var parts = ParseLocation(location);
+                    
+                    profiling.TopMethods.Add(new CumulativeMethod
+                    {
+                        ClassName = parts.className,
+                        MethodName = parts.methodName,
+                        LineNumber = int.Parse(match.Groups[2].Value),
+                        Signature = match.Groups[3].Value,
+                        ExecutionCount = int.Parse(match.Groups[4].Value),
+                        TotalDurationMs = int.Parse(match.Groups[5].Value)
+                    });
+                }
+            }
+        }
+        
+        // Sort by execution count (descending)
+        profiling.TopQueries = profiling.TopQueries.OrderByDescending(q => q.ExecutionCount).Take(10).ToList();
+        profiling.TopDmlOperations = profiling.TopDmlOperations.OrderByDescending(d => d.TotalDurationMs).Take(10).ToList();
+        profiling.TopMethods = profiling.TopMethods.OrderByDescending(m => m.TotalDurationMs).Take(10).ToList();
+        
+        return profiling.TopQueries.Any() || profiling.TopDmlOperations.Any() || profiling.TopMethods.Any() 
+            ? profiling 
+            : null;
+    }
+    
+    private (string className, string methodName) ParseLocation(string location)
+    {
+        // Handles: "Class.MyClass.myMethod", "Trigger.MyTrigger", "(System Code)"
+        if (location.StartsWith("Class."))
+        {
+            var parts = location.Substring(6).Split('.');
+            if (parts.Length >= 2)
+                return (parts[0], parts[1]);
+            return (parts[0], "unknown");
+        }
+        else if (location.StartsWith("Trigger."))
+        {
+            var triggerName = location.Substring(8).Split(':')[0];
+            return (triggerName, "trigger");
+        }
+        else if (location.StartsWith("("))
+        {
+            return ("System", location.Trim('(', ')'));
+        }
+        
+        return ("Unknown", location);
+    }
+    
+    /// <summary>
+    /// Parse CUMULATIVE_LIMIT_USAGE section for accurate final CPU/Heap values
+    /// Fixes the "0ms CPU time" bug by reading the actual totals at end of log
+    /// </summary>
+    private void ParseCumulativeLimitUsage(string[] lines, LogAnalysis analysis)
+    {
+        // Search backwards from end of file for CUMULATIVE_LIMIT_USAGE section
+        for (int i = lines.Length - 1; i >= Math.Max(0, lines.Length - 200); i--)
+        {
+            var line = lines[i];
+            
+            // Example: "Number of SOQL queries: 91 out of 100"
+            if (line.Contains("|CUMULATIVE_LIMIT_USAGE|"))
+            {
+                if (line.Contains("Maximum CPU time:"))
+                {
+                    // Format: "Maximum CPU time: 9272 out of 10000"
+                    var match = System.Text.RegularExpressions.Regex.Match(line, @"Maximum CPU time:\s+(\d+)\s+out of\s+(\d+)");
+                    if (match.Success)
+                    {
+                        var cpuMs = int.Parse(match.Groups[1].Value);
+                        analysis.CpuTimeMs = cpuMs;
+                        
+                        // Update the last limit snapshot too
+                        if (analysis.LimitSnapshots.Any())
+                        {
+                            var lastSnapshot = analysis.LimitSnapshots.Last();
+                            lastSnapshot.CpuTime = cpuMs;
+                        }
+                    }
+                }
+                else if (line.Contains("Maximum heap size:"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(line, @"Maximum heap size:\s+(\d+)\s+out of\s+(\d+)");
+                    if (match.Success && analysis.LimitSnapshots.Any())
+                    {
+                        var heapSize = int.Parse(match.Groups[1].Value);
+                        var lastSnapshot = analysis.LimitSnapshots.Last();
+                        lastSnapshot.HeapSize = heapSize;
+                    }
+                }
+                else if (line.Contains("Number of SOQL queries:"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(line, @"Number of SOQL queries:\s+(\d+)\s+out of\s+(\d+)");
+                    if (match.Success && analysis.LimitSnapshots.Any())
+                    {
+                        var soqlCount = int.Parse(match.Groups[1].Value);
+                        var lastSnapshot = analysis.LimitSnapshots.Last();
+                        lastSnapshot.SoqlQueries = soqlCount;
+                    }
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Detect if this is a test class execution (vs production)
+    /// </summary>
+    private void DetectTestExecution(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        // Look for CODE_UNIT_STARTED with class names ending in "_Test" or "Test"
+        var testUnits = logLines
+            .Where(l => l.EventType == "CODE_UNIT_STARTED" && l.Details.Length >= 3)
+            .Where(l => 
+            {
+                var className = l.Details.Length >= 3 ? l.Details[2] : "";
+                return className.EndsWith("_Test") || 
+                       (className.EndsWith("Test") && !className.Contains("."));
+            })
+            .ToList();
+        
+        if (testUnits.Any())
+        {
+            analysis.IsTestExecution = true;
+            var firstTest = testUnits.First();
+            if (firstTest.Details.Length >= 3)
+            {
+                // Extract class name (remove method signature)
+                var fullName = firstTest.Details[2];
+                var className = fullName.Split('.')[0];
+                analysis.TestClassName = className;
+                
+                // Update entry point to show test method
+                analysis.EntryPoint = $"Test: {fullName}";
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Build order of execution timeline showing major phases
+    /// </summary>
+    private ExecutionTimeline BuildExecutionTimeline(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        var timeline = new ExecutionTimeline();
+        var phaseStack = new Stack<TimelinePhase>();
+        var allPhases = new List<TimelinePhase>();
+        var triggerCounts = new Dictionary<string, int>();
+        
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "CODE_UNIT_STARTED")
+            {
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Depth = phaseStack.Count
+                };
+                
+                // Parse the name and type from details
+                // Details format: [EXTERNAL]|{ID}|{ClassName.MethodName}|{OptionalPath}
+                if (line.Details.Length >= 3 && !string.IsNullOrEmpty(line.Details[2]))
+                {
+                    var fullName = line.Details[2];  // Human-readable name, not ID
+                    phase.Name = fullName;
+                    
+                    // Determine type and icon
+                    if (fullName.Contains("Trigger"))
+                    {
+                        phase.Type = "Trigger";
+                        phase.Icon = "🔧";
+                        
+                        // Track trigger recursion
+                        var triggerName = fullName.Split('.')[0];
+                        if (!triggerCounts.ContainsKey(triggerName))
+                            triggerCounts[triggerName] = 0;
+                        triggerCounts[triggerName]++;
+                        
+                        if (triggerCounts[triggerName] > 1)
+                        {
+                            phase.IsRecursive = true;
+                            timeline.RecursionCount++;
+                        }
+                    }
+                    else if (fullName.Contains("Flow:"))
+                    {
+                        phase.Type = "Flow";
+                        phase.Icon = "🌊";
+                    }
+                    else if (fullName.Contains("Validation:"))
+                    {
+                        phase.Type = "Validation";
+                        phase.Icon = "✅";
+                    }
+                    else if (fullName.Contains("Workflow:"))
+                    {
+                        phase.Type = "Workflow";
+                        phase.Icon = "⚙️";
+                    }
+                    else if (fullName.EndsWith("_Test") || fullName.EndsWith("Test"))
+                    {
+                        phase.Type = "Test";
+                        phase.Icon = "🧪";
+                    }
+                    else
+                    {
+                        phase.Type = "Class";
+                        phase.Icon = "📦";
+                    }
+                }
+                
+                // Add as child of current phase or root
+                if (phaseStack.Any())
+                {
+                    phaseStack.Peek().Children.Add(phase);
+                }
+                else
+                {
+                    timeline.Phases.Add(phase);
+                }
+                
+                phaseStack.Push(phase);
+                allPhases.Add(phase);
+            }
+            else if (line.EventType == "CODE_UNIT_FINISHED")
+            {
+                if (phaseStack.Any())
+                {
+                    var phase = phaseStack.Pop();
+                    // Calculate duration in milliseconds
+                    phase.DurationMs = (long)(line.Timestamp - phase.StartTime).TotalMilliseconds;
+                }
+            }
+            else if (line.EventType == "DML_BEGIN")
+            {
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Type = "DML",
+                    Icon = "💾",
+                    Depth = phaseStack.Count
+                };
+                
+                if (line.Details.Length >= 3)
+                {
+                    phase.Name = $"{line.Details[1]}: {line.Details[2]}";
+                }
+                
+                if (phaseStack.Any())
+                {
+                    phaseStack.Peek().Children.Add(phase);
+                }
+                
+                allPhases.Add(phase);
+            }
+        }
+        
+        // Generate summary
+        var triggerCount = allPhases.Count(p => p.Type == "Trigger");
+        var flowCount = allPhases.Count(p => p.Type == "Flow");
+        var validationCount = allPhases.Count(p => p.Type == "Validation");
+        var dmlCount = allPhases.Count(p => p.Type == "DML");
+        
+        timeline.Summary = $"{triggerCount} triggers, {flowCount} flows, {validationCount} validations, {dmlCount} DML operations";
+        
+        if (timeline.RecursionCount > 0)
+        {
+            timeline.Summary += $" ⚠️ {timeline.RecursionCount} recursive calls";
+        }
+        
+        return timeline;
+    }
+    
+    /// <summary>
+    /// Calculate health score (0-100) and generate prioritized actionable issues
+    /// </summary>
+    private HealthScore CalculateHealthScore(LogAnalysis analysis)
+    {
+        var health = new HealthScore();
+        var score = 100.0;
+        var reasons = new List<string>();
+        
+        // Factor 1: Governor Limits (40 points)
+        var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
+        if (lastSnapshot != null)
+        {
+            var soqlPct = (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit;
+            var cpuPct = (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit;
+            var heapPct = (lastSnapshot.HeapSize * 100.0) / lastSnapshot.HeapSizeLimit;
+            var rowsPct = (lastSnapshot.QueryRows * 100.0) / lastSnapshot.QueryRowsLimit;
+            
+            // Deduct points based on usage
+            if (soqlPct > 90) { score -= 15; reasons.Add("SOQL usage critical (>90%)"); }
+            else if (soqlPct > 80) { score -= 10; reasons.Add("SOQL usage high (>80%)"); }
+            else if (soqlPct > 50) { score -= 5; }
+            
+            if (cpuPct > 90) { score -= 15; reasons.Add("CPU time critical (>90%)"); }
+            else if (cpuPct > 80) { score -= 10; reasons.Add("CPU time high (>80%)"); }
+            else if (cpuPct > 50) { score -= 5; }
+            
+            if (rowsPct > 90) { score -= 10; reasons.Add("Query rows critical (>90%)"); }
+            else if (rowsPct > 80) { score -= 5; }
+        }
+        
+        // Factor 2: Performance (30 points)
+        var durationSec = analysis.DurationMs / 1000.0;
+        if (durationSec > 20) { score -= 15; reasons.Add("Execution time >20 seconds"); }
+        else if (durationSec > 10) { score -= 10; reasons.Add("Execution time >10 seconds"); }
+        else if (durationSec > 5) { score -= 5; }
+        
+        // Factor 3: Code Quality (30 points)
+        if (analysis.Timeline?.RecursionCount > 0)
+        {
+            score -= Math.Min(15, analysis.Timeline.RecursionCount * 3);
+            reasons.Add($"{analysis.Timeline.RecursionCount} recursive trigger calls");
+        }
+        
+        if (analysis.CumulativeProfiling != null)
+        {
+            var excessiveQueries = analysis.CumulativeProfiling.TopQueries.Count(q => q.ExecutionCount > 1000);
+            if (excessiveQueries > 0)
+            {
+                score -= Math.Min(15, excessiveQueries * 5);
+                reasons.Add($"{excessiveQueries} queries executed >1000 times (N+1 pattern)");
+            }
+        }
+        
+        health.Score = Math.Max(0, (int)score);
+        health.Reasoning = reasons.Any() ? string.Join(", ", reasons) : "No major issues detected";
+        
+        // Assign grade and status
+        health.Grade = health.Score switch
+        {
+            >= 90 => "A",
+            >= 80 => "B",
+            >= 70 => "C",
+            >= 60 => "D",
+            _ => "F"
+        };
+        
+        health.Status = health.Score switch
+        {
+            >= 90 => "Excellent",
+            >= 80 => "Good",
+            >= 60 => "Needs Work",
+            >= 40 => "Poor",
+            _ => "Critical"
+        };
+        
+        health.StatusIcon = health.Score switch
+        {
+            >= 80 => "🎯",
+            >= 60 => "⚡",
+            >= 40 => "⚠️",
+            _ => "🔥"
+        };
+        
+        // Generate actionable issues
+        GenerateActionableIssues(analysis, health, lastSnapshot);
+        
+        return health;
+    }
+    
+    /// <summary>
+    /// Generate prioritized, actionable issues with specific fixes
+    /// </summary>
+    private void GenerateActionableIssues(LogAnalysis analysis, HealthScore health, GovernorLimitSnapshot? limits)
+    {
+        var priority = 1;
+        
+        // CRITICAL: N+1 Query Patterns
+        if (analysis.CumulativeProfiling != null)
+        {
+            var worstQuery = analysis.CumulativeProfiling.TopQueries
+                .Where(q => q.ExecutionCount > 1000)
+                .OrderByDescending(q => q.ExecutionCount)
+                .FirstOrDefault();
+            
+            if (worstQuery != null)
+            {
+                var objType = ExtractObjectType(worstQuery.Query);
+                health.CriticalIssues.Add(new ActionableIssue
+                {
+                    Title = "N+1 Query Pattern Detected",
+                    Problem = $"Query executed {worstQuery.ExecutionCount:N0} times in a loop",
+                    Impact = $"Wastes {worstQuery.TotalDurationMs}ms and {worstQuery.ExecutionCount:N0} query rows",
+                    Location = worstQuery.Location,
+                    Severity = IssueSeverity.Critical,
+                    Difficulty = IssueDifficulty.Easy,
+                    Fix = "Move query OUTSIDE the loop. Query once, store in a Map, then reference inside loop.",
+                    CodeExample = $"Map<String,{objType}> cache = new Map<String,{objType}>();\n" +
+                                  $"// Query once before loop\nfor({objType} obj : cache.values()) {{\n    // Use obj here\n}}",
+                    EstimatedFixTimeMinutes = 30,
+                    Priority = priority++
+                });
+            }
+        }
+        
+        // CRITICAL: Trigger Recursion
+        if (analysis.Timeline?.RecursionCount > 0)
+        {
+            var recursiveTriggers = analysis.Timeline.Phases
+                .Where(p => p.IsRecursive && p.Type == "Trigger")
+                .OrderByDescending(p => p.DurationMs)
+                .Take(2)
+                .ToList();
+            
+            foreach (var trigger in recursiveTriggers)
+            {
+                health.CriticalIssues.Add(new ActionableIssue
+                {
+                    Title = "Trigger Recursion Detected",
+                    Problem = $"{trigger.Name} fired multiple times in same transaction",
+                    Impact = $"Wastes {trigger.DurationMs}ms and risks governor limits",
+                    Location = trigger.Name,
+                    Severity = IssueSeverity.Critical,
+                    Difficulty = IssueDifficulty.Medium,
+                    Fix = "Add static Set<Id> to prevent re-processing same records",
+                    CodeExample = "private static Set<Id> processedIds = new Set<Id>();\nif(processedIds.contains(record.Id)) continue;\nprocessedIds.add(record.Id);",
+                    EstimatedFixTimeMinutes = 60,
+                    Priority = priority++
+                });
+            }
+        }
+        
+        // HIGH PRIORITY: Governor Limit Warnings
+        if (limits != null)
+        {
+            var soqlPct = (limits.SoqlQueries * 100.0) / limits.SoqlQueriesLimit;
+            if (soqlPct > 80)
+            {
+                health.HighPriorityIssues.Add(new ActionableIssue
+                {
+                    Title = "SOQL Queries Near Limit",
+                    Problem = $"Used {limits.SoqlQueries} of {limits.SoqlQueriesLimit} SOQL queries ({soqlPct:F0}%)",
+                    Impact = "Risk of hitting governor limit and transaction failure",
+                    Location = "Multiple locations",
+                    Severity = IssueSeverity.High,
+                    Difficulty = IssueDifficulty.Medium,
+                    Fix = "Bulkify queries by combining multiple queries into one with WHERE IN clause",
+                    EstimatedFixTimeMinutes = 45,
+                    Priority = priority++
+                });
+            }
+        }
+        
+        // QUICK WINS: Slow DML operations
+        if (analysis.CumulativeProfiling != null)
+        {
+            var slowDml = analysis.CumulativeProfiling.TopDmlOperations
+                .Where(d => d.TotalDurationMs > 2000)
+                .OrderByDescending(d => d.TotalDurationMs)
+                .Take(2)
+                .ToList();
+            
+            foreach (var dml in slowDml)
+            {
+                health.QuickWins.Add(new ActionableIssue
+                {
+                    Title = "Slow DML Operation",
+                    Problem = $"{dml.OperationDescription} taking {dml.TotalDurationMs}ms",
+                    Impact = $"Reduces transaction time by {dml.TotalDurationMs}ms",
+                    Location = dml.Location,
+                    Severity = IssueSeverity.Medium,
+                    Difficulty = IssueDifficulty.Easy,
+                    Fix = "Check for validation rules, workflow rules, or process builders slowing this down",
+                    EstimatedFixTimeMinutes = 15,
+                    Priority = priority++
+                });
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Extract object type from SOQL query (e.g., "SELECT Id FROM Account" => "Account")
+    /// </summary>
+    private string ExtractObjectType(string query)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(query, @"FROM\s+(\w+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : "SObject";
     }
 }
