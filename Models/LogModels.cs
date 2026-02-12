@@ -275,6 +275,24 @@ public class LogAnalysis
     /// Total heap allocated during execution (sum of HEAP_ALLOCATE events in bytes)
     /// </summary>
     public long TotalHeapAllocated { get; set; }
+    
+    /// <summary>
+    /// True if the log was truncated by Salesforce (exceeded max log size).
+    /// Detected when CODE_UNIT_STARTED has no matching CODE_UNIT_ENDED or LIMIT_USAGE_FOR_NS is missing.
+    /// </summary>
+    public bool IsLogTruncated { get; set; }
+    
+    /// <summary>
+    /// Duplicate SOQL queries detected (same normalized query text executed multiple times).
+    /// Key = normalized query, Value = (count, total rows, locations)
+    /// </summary>
+    public List<DuplicateQueryInfo> DuplicateQueries { get; set; } = new();
+    
+    /// <summary>
+    /// Flow element errors (FLOW_ELEMENT_ERROR) — distinct from FLOW_ELEMENT_FAULT.
+    /// These represent DML failures, validation errors, etc. within Flow execution.
+    /// </summary>
+    public List<FlowError> FlowErrors { get; set; } = new();
 }
 
 /// <summary>
@@ -300,6 +318,49 @@ public class ExecutionUnit
     
     /// <summary>Duration in milliseconds</summary>
     public long DurationMs => EndTime > StartTime ? (long)(EndTime - StartTime).TotalMilliseconds : 0;
+}
+
+/// <summary>
+/// Represents a FLOW_ELEMENT_ERROR event — a runtime error within a Flow execution.
+/// These are DML failures, validation errors, or other issues that cause a Flow element to fail.
+/// </summary>
+public class FlowError
+{
+    /// <summary>The Flow element that failed (e.g., "Update_Case_Owner")</summary>
+    public string ElementName { get; set; } = string.Empty;
+    
+    /// <summary>The error type/code (e.g., "INVALID_CROSS_REFERENCE_KEY")</summary>
+    public string ErrorCode { get; set; } = string.Empty;
+    
+    /// <summary>Full error message</summary>
+    public string ErrorMessage { get; set; } = string.Empty;
+    
+    /// <summary>Line number in the debug log</summary>
+    public int LineNumber { get; set; }
+    
+    /// <summary>The Flow name this error belongs to (if determinable)</summary>
+    public string FlowName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Information about a duplicate SOQL query (same query text executed multiple times)
+/// </summary>
+public class DuplicateQueryInfo
+{
+    /// <summary>The normalized query text (with literal values replaced)</summary>
+    public string NormalizedQuery { get; set; } = string.Empty;
+    
+    /// <summary>One example of the actual query text</summary>
+    public string ExampleQuery { get; set; } = string.Empty;
+    
+    /// <summary>Number of times this query was executed</summary>
+    public int ExecutionCount { get; set; }
+    
+    /// <summary>Total rows returned across all executions</summary>
+    public int TotalRows { get; set; }
+    
+    /// <summary>Line numbers where this query appeared</summary>
+    public List<int> LineNumbers { get; set; } = new();
 }
 
 /// <summary>

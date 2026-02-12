@@ -522,6 +522,44 @@ public class LogParserTests
                         _output.WriteLine($"  🏗️ Constructors tracked: {ctorCount}");
                 }
 
+                // Log truncation (new in R5)
+                if (a.IsLogTruncated)
+                    _output.WriteLine($"  ⚠️ LOG TRUNCATED - metrics may be incomplete");
+
+                // Flow errors (new in R5)
+                if (a.FlowErrors != null && a.FlowErrors.Count > 0)
+                {
+                    _output.WriteLine($"  🚨 Flow Errors: {a.FlowErrors.Count}");
+                    foreach (var fe in a.FlowErrors.Take(3))
+                        _output.WriteLine($"     [{fe.ErrorCode}] {fe.ErrorMessage.Substring(0, Math.Min(fe.ErrorMessage.Length, 100))}");
+                }
+
+                // Duplicate queries (new in R5)
+                if (a.DuplicateQueries != null && a.DuplicateQueries.Count > 0)
+                {
+                    var significantDupes = a.DuplicateQueries.Where(d => d.ExecutionCount >= 2).ToList();
+                    if (significantDupes.Count > 0)
+                    {
+                        _output.WriteLine($"  🔁 Duplicate Queries: {significantDupes.Count} patterns");
+                        foreach (var dq in significantDupes.Take(3))
+                            _output.WriteLine($"     [{dq.ExecutionCount}x, {dq.TotalRows} rows] {dq.ExampleQuery?.Substring(0, Math.Min(dq.ExampleQuery.Length, 80))}");
+                    }
+                }
+
+                // Stack depth with FINEST correction (updated in R5)
+                if (a.StackAnalysis != null && a.StackAnalysis.EstimatedTotalFrames > 0)
+                {
+                    var riskIcon = a.StackAnalysis.RiskLevel switch
+                    {
+                        StackRiskLevel.Critical => "🚨",
+                        StackRiskLevel.Warning => "⚠️",
+                        StackRiskLevel.Moderate => "📊",
+                        _ => "✅"
+                    };
+                    _output.WriteLine($"  {riskIcon} Stack: {a.StackAnalysis.EstimatedTotalFrames} frames ({a.StackAnalysis.RiskLevel})" +
+                        (a.StackAnalysis.HasFinestLogging ? $" [FINEST raw: {a.StackAnalysis.DebugLoggingOverhead}]" : ""));
+                }
+
                 // Summary text (first 200 chars)
                 _output.WriteLine($"  📋 Summary: {a.Summary?.Substring(0, Math.Min(a.Summary.Length, 200))}...");
 

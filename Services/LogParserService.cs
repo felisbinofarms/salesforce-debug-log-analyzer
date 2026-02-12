@@ -138,6 +138,15 @@ public class LogParserService
         
         // Phase 10d: Detect async execution context from governor limits
         DetectAsyncContext(analysis);
+        
+        // Phase 10e: Detect FLOW_ELEMENT_ERROR events (DML failures inside Flows)
+        DetectFlowErrors(logLines, analysis);
+        
+        // Phase 10f: Detect log truncation (missing CODE_UNIT_ENDED for opened units)
+        DetectLogTruncation(logLines, lines, analysis);
+        
+        // Phase 10g: Detect duplicate SOQL queries
+        DetectDuplicateQueries(analysis);
 
         // Phase 11: Generate summary and recommendations (AFTER all data is extracted)
         analysis.Summary = GenerateSummary(analysis);
@@ -694,6 +703,9 @@ public class LogParserService
         // Track flow names from FLOW_CREATE_INTERVIEW_END events
         // Format: FLOW_CREATE_INTERVIEW_END|{interviewGuid}|{Flow Name}
         var flowNames = new Dictionary<string, FlowExecution>();
+        
+        // Also track flows from FLOW_START_INTERVIEWS_BEGIN for scheduled/auto-launched flows
+        // that may not have FLOW_CREATE_INTERVIEW_END
 
         foreach (var line in logLines)
         {
@@ -711,8 +723,25 @@ public class LogParserService
                     };
                 }
             }
+            else if (line.EventType == "FLOW_START_INTERVIEWS_BEGIN" && flowNames.Count == 0)
+            {
+                // For scheduled flows that don't have FLOW_CREATE_INTERVIEW_END,
+                // create a flow entry from the start event
+                var flowName = line.Details.Length > 0 ? line.Details[0] : "Scheduled Flow";
+                var syntheticId = $"scheduled_{line.LineNumber}";
+                if (!flowNames.ContainsKey(syntheticId))
+                {
+                    flowNames[syntheticId] = new FlowExecution
+                    {
+                        FlowName = flowName,
+                        InterviewId = syntheticId,
+                        LineNumber = line.LineNumber
+                    };
+                }
+            }
             else if (line.EventType == "FLOW_ELEMENT_BEGIN" || line.EventType == "FLOW_ELEMENT_DEACTIVATION" ||
-                     line.EventType == "FLOW_VALUE_ASSIGNMENT" || line.EventType == "FLOW_ASSIGNMENT_DETAIL")
+                     line.EventType == "FLOW_VALUE_ASSIGNMENT" || line.EventType == "FLOW_ASSIGNMENT_DETAIL" ||
+                     line.EventType == "FLOW_BULK_ELEMENT_BEGIN")
             {
                 // Count flow elements for the most recent interview
                 var lastFlow = flowNames.Values.LastOrDefault();
@@ -726,6 +755,16 @@ public class LogParserService
                 {
                     lastFlow.HasFault = true;
                     lastFlow.FaultMessage = line.Details.Length > 1 ? line.Details[1] : "Unknown fault";
+                }
+            }
+            else if (line.EventType == "FLOW_ELEMENT_ERROR")
+            {
+                // FLOW_ELEMENT_ERROR is a runtime DML/validation error in a Flow
+                var lastFlow = flowNames.Values.LastOrDefault();
+                if (lastFlow != null)
+                {
+                    lastFlow.HasFault = true;
+                    lastFlow.FaultMessage = line.Details.Length > 0 ? string.Join("|", line.Details) : "Flow element error";
                 }
             }
         }
@@ -1038,12 +1077,19 @@ public class LogParserService
     /// <summary>
     /// Extract debug level settings from the first line of the log
     /// </summary>
+    /// <summary>
+    /// Extract debug level settings from the first line(s) of the log.
+    /// Salesforce logs always start with a header line containing the API version and debug level settings.
+    /// Format: "66.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,FINEST;..."
+    /// This is more reliable than scanning for FINEST events in the body (which may not exist in Flow-only logs).
+    /// </summary>
     private string ExtractDebugLevelSettings(string[] lines)
     {
         foreach (var line in lines.Take(5))
         {
             // Look for pattern like: 66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;...
-            if (line.Contains("APEX_CODE,") || line.Contains("DB,") || line.Contains("SYSTEM,"))
+            // Also match lines with just the debug level categories
+            if (line.Contains("APEX_CODE,") || line.Contains("DB,") || line.Contains("SYSTEM,") || line.Contains("WAVE,"))
             {
                 return line.Trim();
             }
@@ -1150,9 +1196,49 @@ public class LogParserService
         analysis.LoopPatterns = loopPatterns;
 
         // Calculate estimated total frames
-        // Formula: (max depth) + (loop patterns contribution) + (debug overhead)
-        int loopFrameContribution = loopPatterns.Sum(p => p.TotalFrames);
-        analysis.EstimatedTotalFrames = maxDepth + loopFrameContribution + analysis.DebugLoggingOverhead;
+        // CRITICAL FIX (Round 5): When FINEST logging is active, the raw maxDepth and 
+        // loop call counts are MASSIVELY inflated because FINEST traces every System method
+        // entry/exit, constructor, and collection operation. The real stack depth might be 
+        // 5-15 frames while FINEST makes it look like 2,000+.
+        // Solution: When FINEST is active, use a discount factor and focus on unique method depth.
+        if (analysis.HasFinestLogging)
+        {
+            // With FINEST, the vast majority of "stack frames" are system method traces
+            // not real stack frames. Calculate unique call depth instead.
+            // The real stack depth is the max nesting of CODE_UNIT + METHOD_ENTRY only,
+            // excluding SYSTEM_METHOD_ENTRY and SYSTEM_CONSTRUCTOR_ENTRY.
+            int realDepth = 0;
+            int currentRealDepth = 0;
+            foreach (var line in logLines)
+            {
+                switch (line.EventType)
+                {
+                    case "CODE_UNIT_STARTED":
+                    case "METHOD_ENTRY":
+                    case "CONSTRUCTOR_ENTRY":
+                        currentRealDepth++;
+                        if (currentRealDepth > realDepth)
+                            realDepth = currentRealDepth;
+                        break;
+                    case "CODE_UNIT_FINISHED":
+                    case "METHOD_EXIT":
+                    case "CONSTRUCTOR_EXIT":
+                        if (currentRealDepth > 0) currentRealDepth--;
+                        break;
+                }
+            }
+            
+            // Use the real depth (user code only, no system methods)
+            analysis.EstimatedTotalFrames = realDepth;
+            // Store original inflated count for reference
+            analysis.DebugLoggingOverhead = maxDepth; // The FINEST-inflated raw count
+        }
+        else
+        {
+            // Without FINEST, the raw count is accurate
+            int loopFrameContribution = loopPatterns.Sum(p => p.TotalFrames);
+            analysis.EstimatedTotalFrames = maxDepth + loopFrameContribution + analysis.DebugLoggingOverhead;
+        }
 
         // Determine risk level
         analysis.RiskLevel = analysis.EstimatedTotalFrames switch
@@ -1311,6 +1397,154 @@ public class LogParserService
         }
     }
 
+    /// <summary>
+    /// Detect FLOW_ELEMENT_ERROR events — runtime errors within Flow execution.
+    /// These are NOT the same as FLOW_ELEMENT_FAULT (which is a Flow fault connector).
+    /// FLOW_ELEMENT_ERROR represents actual DML failures, validation errors, etc.
+    /// Format: FLOW_ELEMENT_ERROR|{FlowInterviewDetails}
+    /// Error details appear in the message text, e.g., "INVALID_CROSS_REFERENCE_KEY: Owner ID: owner cannot be blank"
+    /// </summary>
+    private void DetectFlowErrors(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        string currentFlowName = "";
+        string currentElementName = "";
+        
+        foreach (var line in logLines)
+        {
+            // Track current Flow name
+            if (line.EventType == "FLOW_CREATE_INTERVIEW_END" && line.Details.Length > 1)
+            {
+                currentFlowName = line.Details[1];
+            }
+            
+            // Track current Flow element
+            if ((line.EventType == "FLOW_ELEMENT_BEGIN" || line.EventType == "FLOW_BULK_ELEMENT_BEGIN") 
+                && line.Details.Length > 1)
+            {
+                // Details format: FlowRecordUpdate|Update_Case_Owner or similar
+                currentElementName = line.Details.Length > 2 ? line.Details[2] : 
+                                     line.Details.Length > 1 ? line.Details[1] : "";
+            }
+            
+            // Detect FLOW_ELEMENT_ERROR
+            if (line.EventType == "FLOW_ELEMENT_ERROR")
+            {
+                var errorMessage = line.Details.Length > 0 ? string.Join("|", line.Details) : "Unknown Flow error";
+                var errorCode = "";
+                
+                // Extract error code from message (e.g., "INVALID_CROSS_REFERENCE_KEY: Owner ID: owner cannot be blank")
+                var colonIdx = errorMessage.IndexOf(':');
+                if (colonIdx > 0)
+                {
+                    var possibleCode = errorMessage.Substring(0, colonIdx).Trim();
+                    // Error codes are ALL_CAPS_WITH_UNDERSCORES
+                    if (possibleCode.All(c => char.IsUpper(c) || c == '_') && possibleCode.Length > 3)
+                    {
+                        errorCode = possibleCode;
+                    }
+                }
+                
+                analysis.FlowErrors.Add(new FlowError
+                {
+                    ElementName = currentElementName,
+                    ErrorCode = errorCode,
+                    ErrorMessage = errorMessage,
+                    LineNumber = line.LineNumber,
+                    FlowName = currentFlowName
+                });
+                
+                // Also add as an error node for the existing error tracking
+                var errorNode = new ExecutionNode
+                {
+                    Name = $"Flow Error: {(string.IsNullOrEmpty(errorCode) ? errorMessage : $"{errorCode}: {errorMessage}")}",
+                    Type = ExecutionNodeType.Exception,
+                    StartTime = line.Timestamp,
+                    EndTime = line.Timestamp,
+                    StartLineNumber = line.LineNumber,
+                    Severity = ExceptionSeverity.Unhandled
+                };
+                errorNode.Metadata["FlowName"] = currentFlowName;
+                errorNode.Metadata["ElementName"] = currentElementName;
+                errorNode.Metadata["Message"] = errorMessage;
+                
+                analysis.Errors.Add(errorNode);
+                analysis.HasErrors = true;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Detect if the log was truncated by Salesforce (exceeded max log size).
+    /// Truncation indicators:
+    /// 1. CODE_UNIT_STARTED without matching CODE_UNIT_ENDED
+    /// 2. Missing LIMIT_USAGE_FOR_NS section (always present in complete logs)
+    /// 3. Log doesn't end with CUMULATIVE_PROFILING section
+    /// </summary>
+    private void DetectLogTruncation(List<LogLine> logLines, string[] rawLines, LogAnalysis analysis)
+    {
+        // Check 1: Look for CODE_UNIT_STARTED without CODE_UNIT_ENDED
+        int codeUnitStarts = logLines.Count(l => l.EventType == "CODE_UNIT_STARTED");
+        int codeUnitEnds = logLines.Count(l => l.EventType == "CODE_UNIT_FINISHED");
+        
+        if (codeUnitStarts > 0 && codeUnitEnds == 0)
+        {
+            analysis.IsLogTruncated = true;
+            return;
+        }
+        
+        // Check 2: For non-trivial logs (>100 lines), check for LIMIT_USAGE_FOR_NS
+        if (rawLines.Length > 100)
+        {
+            bool hasLimitUsage = false;
+            // Check last 500 lines for limit usage section
+            for (int i = Math.Max(0, rawLines.Length - 500); i < rawLines.Length; i++)
+            {
+                if (rawLines[i].Contains("LIMIT_USAGE_FOR_NS") || rawLines[i].Contains("CUMULATIVE_LIMIT_USAGE"))
+                {
+                    hasLimitUsage = true;
+                    break;
+                }
+            }
+            
+            // Only flag truncation if there are code units but no limit section
+            if (!hasLimitUsage && codeUnitStarts > 0)
+            {
+                analysis.IsLogTruncated = true;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Detect duplicate SOQL queries — same normalized query text executed multiple times.
+    /// This catches "almost identical" queries where only bind variable values differ.
+    /// </summary>
+    private void DetectDuplicateQueries(LogAnalysis analysis)
+    {
+        var soqlOps = analysis.DatabaseOperations
+            .Where(d => d.OperationType == "SOQL" && !string.IsNullOrEmpty(d.Query))
+            .ToList();
+        
+        if (soqlOps.Count < 2) return;
+        
+        var grouped = soqlOps
+            .GroupBy(d => SimplifyQuery(d.Query))
+            .Where(g => g.Count() >= 2) // 2+ executions of same query
+            .OrderByDescending(g => g.Count())
+            .ToList();
+        
+        foreach (var group in grouped)
+        {
+            analysis.DuplicateQueries.Add(new DuplicateQueryInfo
+            {
+                NormalizedQuery = group.Key,
+                ExampleQuery = group.First().Query,
+                ExecutionCount = group.Count(),
+                TotalRows = group.Sum(d => d.RowsAffected),
+                LineNumbers = group.Select(d => d.LineNumber).ToList()
+            });
+        }
+    }
+
     private string GenerateSummary(LogAnalysis analysis)
     {
         var totalDuration = (long)analysis.DurationMs; // Use corrected nanosecond-based duration
@@ -1393,6 +1627,31 @@ public class LogParserService
             summary += $"• Triggered {analysis.Flows.Count} Flow{(analysis.Flows.Count > 1 ? "s" : "")}/Process Builder{(analysis.Flows.Count > 1 ? "s" : "")}\n";
             if (faultedFlows > 0)
                 summary += $"  - ⚠️ {faultedFlows} flow{(faultedFlows > 1 ? "s" : "")} had faults\n";
+        }
+        
+        // Flow element errors
+        if (analysis.FlowErrors.Count > 0)
+        {
+            summary += $"• ❌ {analysis.FlowErrors.Count} Flow element error{(analysis.FlowErrors.Count > 1 ? "s" : "")} — " +
+                "data was NOT saved by the failing Flow action\n";
+        }
+        
+        // Log truncation warning
+        if (analysis.IsLogTruncated)
+        {
+            summary += "• ⚠️ **Log was truncated** — Salesforce cut off this log (exceeded size limit). Some metrics may be incomplete.\n";
+        }
+        
+        // Duplicate queries
+        if (analysis.DuplicateQueries.Count > 0)
+        {
+            var significantDupes = analysis.DuplicateQueries.Where(d => d.ExecutionCount >= 3).ToList();
+            if (significantDupes.Count > 0)
+            {
+                var totalDupeQueries = significantDupes.Sum(d => d.ExecutionCount);
+                summary += $"• 🔁 {significantDupes.Count} duplicate query pattern{(significantDupes.Count > 1 ? "s" : "")} " +
+                    $"({totalDupeQueries} total redundant executions)\n";
+            }
         }
 
         summary += "\n";
@@ -1754,6 +2013,48 @@ public class LogParserService
                         (string.IsNullOrEmpty(f.FaultMessage) ? "." : $": {f.FaultMessage}") +
                         " Check the flow's fault connectors and error handling paths.");
                 }
+            }
+        }
+
+        // 🆕 Check for Flow element errors (FLOW_ELEMENT_ERROR — DML failures inside Flows)
+        if (analysis.FlowErrors != null && analysis.FlowErrors.Count > 0)
+        {
+            foreach (var fe in analysis.FlowErrors.Take(5))
+            {
+                var flowCtx = !string.IsNullOrEmpty(fe.FlowName) ? $" in Flow '{fe.FlowName}'" : "";
+                var elementCtx = !string.IsNullOrEmpty(fe.ElementName) ? $" at element '{fe.ElementName}'" : "";
+                issues.Add($"🚨 **Flow Error{flowCtx}**: {fe.ErrorMessage}{elementCtx}. " +
+                    "This is a runtime failure — the Flow action failed and data was NOT saved. " +
+                    "Check the Flow's error handling (add a Fault connector) and validate input data.");
+            }
+        }
+
+        // 🆕 Check for log truncation
+        if (analysis.IsLogTruncated)
+        {
+            issues.Add($"⚠️ **Log Truncated**: This log was cut off by Salesforce before it completed. " +
+                "The log exceeded Salesforce's maximum log size limit. " +
+                "Duration, CPU time, and DML counts may be inaccurate. " +
+                "To get a complete log, reduce the debug level (use FINE instead of FINEST) or analyze a simpler operation.");
+        }
+
+        // 🆕 Check for duplicate queries
+        if (analysis.DuplicateQueries != null && analysis.DuplicateQueries.Count > 0)
+        {
+            var significantDupes = analysis.DuplicateQueries
+                .Where(d => d.ExecutionCount >= 3) // Only flag 3+ duplicates
+                .OrderByDescending(d => d.ExecutionCount)
+                .Take(3)
+                .ToList();
+            
+            foreach (var dupe in significantDupes)
+            {
+                var queryPreview = dupe.ExampleQuery.Length > 80 
+                    ? dupe.ExampleQuery.Substring(0, 80) + "..." 
+                    : dupe.ExampleQuery;
+                issues.Add($"🔁 **Duplicate Query**: `{queryPreview}` executed {dupe.ExecutionCount} times " +
+                    $"returning {dupe.TotalRows} total rows. " +
+                    "Cache the results or combine into a single query with a collection bind variable.");
             }
         }
 
