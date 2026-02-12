@@ -1,0 +1,140 @@
+66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+21:56:02.0 (239379)|USER_INFO|[EXTERNAL]|005360000036OeQ|victor.felisbino@loves.com.dev2|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+21:56:02.0 (309425)|EXECUTION_STARTED
+21:56:02.0 (329713)|CODE_UNIT_STARTED|[EXTERNAL]|apex://com_Alert/ACTION$getAlertAndCreatedInformation
+21:56:02.0 (3357750)|CODE_UNIT_STARTED|[EXTERNAL]|01p3600000JX5eT|com_Alert.getAlertAndCreatedInformation(String)
+21:56:02.0 (3702917)|HEAP_ALLOCATE|[95]|Bytes:3
+21:56:02.0 (3778990)|HEAP_ALLOCATE|[100]|Bytes:152
+21:56:02.0 (3794335)|HEAP_ALLOCATE|[417]|Bytes:408
+21:56:02.0 (3806984)|HEAP_ALLOCATE|[430]|Bytes:408
+21:56:02.0 (3833172)|HEAP_ALLOCATE|[317]|Bytes:6
+21:56:02.0 (3845330)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:02.0 (3849515)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:02.0 (3852190)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+21:56:02.0 (3873752)|METHOD_ENTRY|[12]|01p3600000JX5eT|com_Alert.com_Alert()
+21:56:02.0 (3880145)|STATEMENT_EXECUTE|[12]
+21:56:02.0 (3884485)|STATEMENT_EXECUTE|[12]
+21:56:02.0 (3885849)|STATEMENT_EXECUTE|[156]
+21:56:02.0 (3886835)|STATEMENT_EXECUTE|[167]
+21:56:02.0 (3893337)|METHOD_EXIT|[12]|com_Alert
+21:56:02.0 (3896460)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:18
+21:56:02.0 (3927241)|VARIABLE_SCOPE_BEGIN|[59]|recordId|String|false|false
+21:56:02.0 (3970805)|VARIABLE_ASSIGNMENT|[59]|recordId|"003WH00000cc230YAA"
+21:56:02.0 (3978686)|STATEMENT_EXECUTE|[59]
+21:56:02.0 (3979764)|STATEMENT_EXECUTE|[60]
+21:56:02.0 (3998329)|HEAP_ALLOCATE|[68]|Bytes:5
+21:56:02.0 (4042750)|HEAP_ALLOCATE|[74]|Bytes:5
+21:56:02.0 (4053338)|HEAP_ALLOCATE|[82]|Bytes:7
+21:56:02.0 (4081859)|SYSTEM_METHOD_ENTRY|[60]|System.now()
+21:56:02.0 (4117669)|HEAP_ALLOCATE|[60]|Bytes:56
+21:56:02.0 (4123146)|SYSTEM_METHOD_EXIT|[60]|System.now()
+21:56:02.0 (4142728)|VARIABLE_SCOPE_BEGIN|[60]|timeNow|Datetime|false|false
+21:56:02.0 (4191806)|VARIABLE_ASSIGNMENT|[60]|timeNow|"2026-02-12T03:56:02.569Z"
+21:56:02.0 (4195292)|STATEMENT_EXECUTE|[63]
+21:56:02.0 (4197463)|HEAP_ALLOCATE|[63]|Bytes:440
+21:56:02.0 (4222707)|HEAP_ALLOCATE|[63]|Bytes:4
+21:56:02.0 (4233740)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:02.0 (4245970)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:02.0 (4250202)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:02.0 (4254672)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:02.0 (8694671)|SOQL_EXECUTE_BEGIN|[63]|Aggregations:0|SELECT id, recordId__c, color__c, message__c, type__c, relatedalert__c, relatedalert__r.message__c, relatedalert__r.color__c, relatedalert__r.type__c, relatedalert__r.StartDate__c, relatedalert__r.EndDate__c, CreatedBy.Name, CreatedDate FROM com_Object_Alert__c WHERE ((recordid__c = :tmpVar1 OR facility__c = :tmpVar2) AND (StartDate__c = NULL OR (StartDate__c <= :tmpVar3 AND EndDate__c > :tmpVar4))) ORDER BY createddate DESC NULLS FIRST
+21:56:02.0 (8733313)|LIMIT_USAGE|[63]|SOQL|1|100
+21:56:02.0 (8743458)|LIMIT_USAGE|[63]|AGGS|0|300
+21:56:02.0 (30291553)|SOQL_EXECUTE_EXPLAIN|[63]|Other on com_Object_Alert__c : [], cardinality: 0, sobjectCardinality: 4, relativeCost 0
+21:56:02.0 (30327365)|SOQL_EXECUTE_END|[63]|Rows:0
+21:56:02.0 (30351983)|LIMIT_USAGE|[63]|SOQL_ROWS|0|50000
+21:56:02.0 (30370752)|HEAP_ALLOCATE|[63]|Bytes:4
+21:56:02.0 (30390739)|HEAP_ALLOCATE|[63]|Bytes:0
+21:56:02.0 (30541137)|HEAP_ALLOCATE|[63]|Bytes:4
+21:56:02.0 (30590448)|VARIABLE_SCOPE_BEGIN|[63]|alerts|List<com_Object_Alert__c>|true|false
+21:56:02.0 (30651278)|VARIABLE_ASSIGNMENT|[63]|alerts|[]|0x95acf7e
+21:56:02.0 (30657584)|STATEMENT_EXECUTE|[69]
+21:56:02.0 (30908898)|HEAP_ALLOCATE|[69]|Bytes:4
+21:56:02.0 (30974202)|SYSTEM_CONSTRUCTOR_ENTRY|[69]|<init>()
+21:56:02.0 (31028852)|SYSTEM_CONSTRUCTOR_EXIT|[69]|<init>()
+21:56:02.0 (31035280)|VARIABLE_SCOPE_BEGIN|[69]|alertWrappers|List<com_Alert.AlertWrapper>|true|false
+21:56:02.0 (31058650)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+21:56:02.0 (31073089)|VARIABLE_ASSIGNMENT|[69]|alertWrappers|[]|0x592f1737
+21:56:02.0 (31115024)|SYSTEM_METHOD_ENTRY|[71]|List<com_Object_Alert__c>.iterator()
+21:56:02.0 (31260787)|SYSTEM_METHOD_EXIT|[71]|List<com_Object_Alert__c>.iterator()
+21:56:02.0 (31281416)|SYSTEM_METHOD_ENTRY|[71]|system.ListIterator.hasNext()
+21:56:02.0 (31453133)|HEAP_ALLOCATE|[71]|Bytes:5
+21:56:02.0 (31466939)|SYSTEM_METHOD_EXIT|[71]|system.ListIterator.hasNext()
+21:56:02.0 (31496587)|VARIABLE_ASSIGNMENT|[71]|a|null|
+21:56:02.0 (31502341)|STATEMENT_EXECUTE|[71]
+21:56:02.0 (31503855)|STATEMENT_EXECUTE|[94]
+21:56:02.0 (31551725)|HEAP_ALLOCATE|[94]|Bytes:24
+21:56:02.0 (31591509)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+21:56:02.0 (31595105)|STATEMENT_EXECUTE|[1]
+21:56:02.0 (31608541)|SYSTEM_METHOD_EXIT|[1]|JSON
+21:56:02.0 (31680015)|METHOD_ENTRY|[94]||System.JSON.serialize(Object)
+21:56:02.0 (33697149)|METHOD_EXIT|[94]||System.JSON.serialize(Object)
+21:56:02.33 (33777883)|CUMULATIVE_LIMIT_USAGE
+21:56:02.33 (33777883)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 0 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+21:56:02.33 (33777883)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+21:56:02.33 (33777883)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+21:56:02.33 (33777883)|CUMULATIVE_LIMIT_USAGE_END
+
+21:56:02.0 (33964186)|CODE_UNIT_FINISHED|com_Alert.getAlertAndCreatedInformation(String)
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING_BEGIN
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING|SOQL operations|
+Class.com_Alert.getAlertAndCreatedInformation: line 63, column 1: [SELECT id, recordId__c, color__c, message__c, type__c, 
+                relatedalert__c, relatedalert__r.message__c, relatedalert__r.color__c,
+                relatedalert__r.type__c, relatedalert__r.StartDate__c, relatedalert__r.EndDate__c, 
+                CreatedBy.Name, CreatedDate FROM com_Object_Alert__c  WHERE (recordid__c = :recordId OR facility__c =: recordId) AND 
+                ((StartDate__c = NULL) OR (StartDate__c <= :timeNow AND EndDate__c > :timeNow)) ORDER BY createddate DESC]: executed 1 time in 26 ms
+
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING|No profiling information for DML operations
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static String getAlertAndCreatedInformation(String): executed 1 time in 30 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 94, column 1: global static String serialize(Object): executed 1 time in 2 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 69, column 1: global public List<com_Alert.AlertWrapper>(): executed 1 time in 0 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 71, column 1: global public System.Iterator iterator(): executed 2 times in 0 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 60, column 1: global public static Datetime now(): executed 1 time in 0 ms
+
+21:56:02.34 (34018781)|CUMULATIVE_PROFILING_END
+21:56:02.0 (34707921)|CODE_UNIT_FINISHED|apex://com_Alert/ACTION$getAlertAndCreatedInformation
+21:56:02.0 (34727864)|EXECUTION_FINISHED

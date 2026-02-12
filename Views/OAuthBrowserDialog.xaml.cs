@@ -339,13 +339,28 @@ public partial class OAuthBrowserDialog : Window
         return port;
     }
 
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        _completionSource.SetResult(new OAuthResult
+        base.OnClosing(e);
+        
+        // Clean up HttpListener to free port 1717
+        try
+        {
+            _httpListener?.Stop();
+            _httpListener?.Close();
+        }
+        catch { }
+        
+        // Ensure the TaskCompletionSource is always completed so callers don't hang
+        _completionSource.TrySetResult(new OAuthResult
         {
             Success = false,
             Error = "Login cancelled by user"
         });
+    }
+
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    {
         Close();
     }
 

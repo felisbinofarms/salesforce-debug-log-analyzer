@@ -9,10 +9,11 @@ namespace SalesforceDebugAnalyzer.Services;
 /// <summary>
 /// Service for interacting with Salesforce APIs
 /// </summary>
-public class SalesforceApiService
+public class SalesforceApiService : IDisposable
 {
     private readonly HttpClient _httpClient;
     private SalesforceConnection? _connection;
+    private bool _disposed;
 
     public SalesforceApiService()
     {
@@ -247,7 +248,9 @@ public class SalesforceApiService
 
         try
         {
-            var query = $"SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag WHERE TracedEntityId = '{userId}' AND LogType = 'USER_DEBUG'";
+            // Sanitize userId to prevent SOQL injection (only allow alphanumeric Salesforce IDs)
+            var safeUserId = new string(userId.Where(c => char.IsLetterOrDigit(c)).ToArray());
+            var query = $"SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag WHERE TracedEntityId = '{safeUserId}' AND LogType = 'USER_DEBUG'";
             var encodedQuery = Uri.EscapeDataString(query);
             var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
 
@@ -376,6 +379,15 @@ public class SalesforceApiService
     {
         _connection = null;
         _httpClient.DefaultRequestHeaders.Authorization = null;
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _httpClient.Dispose();
+            _disposed = true;
+        }
     }
 
     private class QueryResult<T>

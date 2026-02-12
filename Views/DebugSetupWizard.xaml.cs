@@ -15,7 +15,6 @@ public partial class DebugSetupWizard : UserControl
     private string? _selectedDebugLevelId;
     
     public event EventHandler? WizardCompleted;
-    public event EventHandler? WizardCancelled; // Event for future cancellation handling
 
     public bool LoggingEnabled { get; private set; }
     public string? TraceFlagId { get; private set; }
@@ -95,13 +94,14 @@ public partial class DebugSetupWizard : UserControl
         // Validate user selection
         if (AnotherUserRadio.IsChecked == true)
         {
-            if (string.IsNullOrWhiteSpace(UserIdTextBox.Text) || UserIdTextBox.Text.Length != 18)
+            var userId = UserIdTextBox.Text?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(userId) || (userId.Length != 15 && userId.Length != 18))
             {
-                MessageBox.Show("Please enter a valid 18-character User ID", "Invalid User ID", 
+                MessageBox.Show("Please enter a valid 15 or 18-character Salesforce User ID", "Invalid User ID", 
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            _selectedUserId = UserIdTextBox.Text;
+            _selectedUserId = userId;
         }
         else
         {
@@ -211,15 +211,23 @@ public partial class DebugSetupWizard : UserControl
                 // Find or create preset debug level
                 var levelName = StandardLevelRadio.IsChecked == true ? "SFDC_DevConsole" : "DB_APEX_CODE";
                 var level = _debugLevels.FirstOrDefault(l => l.MasterLabel == levelName);
-                debugLevelId = level?.Id ?? _debugLevels.First().Id; // Fallback to first available
+                var fallback = _debugLevels.FirstOrDefault();
+                debugLevelId = level?.Id ?? fallback?.Id ?? throw new InvalidOperationException(
+                    "No debug levels found in your org. Please create one first using Setup > Debug Levels.");
             }
 
             // Create trace flag
             var duration = (int)DurationSlider.Value;
             var expirationDate = DateTime.UtcNow.AddHours(duration);
 
+            if (string.IsNullOrEmpty(_selectedUserId))
+            {
+                throw new InvalidOperationException(
+                    "No user selected. Please go back to Step 1 and select a user.");
+            }
+
             TraceFlagId = await _apiService.CreateTraceFlagAsync(
-                _selectedUserId!, 
+                _selectedUserId, 
                 debugLevelId, 
                 expirationDate);
 
@@ -262,6 +270,7 @@ public partial class DebugSetupWizard : UserControl
     private async void CreateDebugLevel_Click(object sender, RoutedEventArgs e)
     {
         var createDialog = new DebugLevelDialog(_apiService);
+        createDialog.Owner = Window.GetWindow(this);
 
         if (createDialog.ShowDialog() == true)
         {

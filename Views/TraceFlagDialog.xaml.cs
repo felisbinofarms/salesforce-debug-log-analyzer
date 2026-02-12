@@ -217,6 +217,15 @@ public partial class TraceFlagDialog : Window
         try
         {
             var logBody = await _apiService.GetLogBodyAsync(selectedLog.Id);
+
+            if (string.IsNullOrEmpty(logBody))
+            {
+                SetLoading(false, "Download returned empty log body");
+                MessageBox.Show("The log body was empty. The log may have expired or been deleted.",
+                    "Empty Log", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DownloadLogButton.IsEnabled = true;
+                return;
+            }
             
             SetLoading(true, "Parsing log...");
             var analysis = await Task.Run(() => _parserService.ParseLog(logBody, selectedLog.Id));

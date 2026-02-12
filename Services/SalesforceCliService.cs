@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -18,9 +19,8 @@ public class SalesforceCliService
     private readonly StringBuilder _logBuffer = new();
     private bool _isBufferingLog = false;
     private Timer? _pollingTimer;
-    private HashSet<string> _processedLogIds = new();
+    private readonly ConcurrentDictionary<string, byte> _processedLogIds = new();
     private string? _streamingUsername;
-    private string? _streamingOrgAlias;
     private SalesforceApiService? _apiService;
     private DateTime _streamingStartTime;
 
@@ -226,7 +226,7 @@ public class SalesforceCliService
             // Filter logs created after streaming started
             var newLogs = logs
                 .Where(log => log.StartTime >= _streamingStartTime)
-                .Where(log => !_processedLogIds.Contains(log.Id))
+                .Where(log => !_processedLogIds.ContainsKey(log.Id))
                 .ToList();
                 
             StatusChanged?.Invoke(this, $"🔍 {newLogs.Count} logs match time filter (after {_streamingStartTime:HH:mm:ss} UTC)");
@@ -264,35 +264,40 @@ public class SalesforceCliService
 
         try
         {
-            StatusChanged?.Invoke(this, $"📥 Downloading log {logId.Substring(0, 8)}...");
+            var logIdShort = logId.Length >= 8 ? logId[..8] : logId;
+            StatusChanged?.Invoke(this, $"📥 Downloading log {logIdShort}...");
 
             // Download log body via API (returns null if log was deleted)
             var logContent = await _apiService.GetLogBodyAsync(logId);
 
             if (logContent == null)
             {
-                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... was deleted (24hr auto-cleanup)");
+                StatusChanged?.Invoke(this, $"⚠️ Log {logIdShort}... was deleted (24hr auto-cleanup)");
                 // Mark as processed so we don't try again
-                _processedLogIds.Add(logId);
+                _processedLogIds.TryAdd(logId, 0);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(logContent))
             {
-                StatusChanged?.Invoke(this, $"⚠️ Empty log content for {logId.Substring(0, 8)}...");
-                _processedLogIds.Add(logId);
+                StatusChanged?.Invoke(this, $"⚠️ Empty log content for {logIdShort}...");
+                _processedLogIds.TryAdd(logId, 0);
                 return;
             }
 
-            StatusChanged?.Invoke(this, $"📄 Downloaded {logContent.Length} chars for log {logId.Substring(0, 8)}...");
+            StatusChanged?.Invoke(this, $"📄 Downloaded {logContent.Length} chars for log {logIdShort}...");
 
             // Mark as processed
-            _processedLogIds.Add(logId);
+            _processedLogIds.TryAdd(logId, 0);
 
             // Keep only last 100 processed IDs in memory
             if (_processedLogIds.Count > 100)
             {
-                _processedLogIds = new HashSet<string>(_processedLogIds.Skip(50));
+                // Remove oldest entries (first 50 keys)
+                foreach (var key in _processedLogIds.Keys.Take(50))
+                {
+                    _processedLogIds.TryRemove(key, out _);
+                }
             }
 
             // Only emit if we got actual log content (not just JSON metadata)
@@ -397,7 +402,7 @@ public class SalesforceCliService
     {
         var output = new List<string>();
 
-        var process = new Process
+        using var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {

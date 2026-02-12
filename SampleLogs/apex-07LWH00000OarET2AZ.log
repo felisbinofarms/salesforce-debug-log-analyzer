@@ -1,0 +1,177 @@
+66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+21:56:01.1 (1378621)|USER_INFO|[EXTERNAL]|005360000036OeQ|victor.felisbino@loves.com.dev2|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+21:56:01.1 (1463496)|EXECUTION_STARTED
+21:56:01.1 (1485922)|CODE_UNIT_STARTED|[EXTERNAL]|apex://com_Alert/ACTION$getAlertAndCreatedInformation
+21:56:01.1 (5898958)|CODE_UNIT_STARTED|[EXTERNAL]|01p3600000JX5eT|com_Alert.getAlertAndCreatedInformation(String)
+21:56:01.1 (8122851)|HEAP_ALLOCATE|[95]|Bytes:3
+21:56:01.1 (8231975)|HEAP_ALLOCATE|[100]|Bytes:152
+21:56:01.1 (8245480)|HEAP_ALLOCATE|[417]|Bytes:408
+21:56:01.1 (8255713)|HEAP_ALLOCATE|[430]|Bytes:408
+21:56:01.1 (8274747)|HEAP_ALLOCATE|[317]|Bytes:6
+21:56:01.1 (8284322)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:01.1 (8287565)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:01.1 (8289492)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+21:56:01.1 (8302999)|METHOD_ENTRY|[12]|01p3600000JX5eT|com_Alert.com_Alert()
+21:56:01.1 (8308325)|STATEMENT_EXECUTE|[12]
+21:56:01.1 (8313671)|STATEMENT_EXECUTE|[12]
+21:56:01.1 (8315239)|STATEMENT_EXECUTE|[156]
+21:56:01.1 (8316134)|STATEMENT_EXECUTE|[167]
+21:56:01.1 (8321096)|METHOD_EXIT|[12]|com_Alert
+21:56:01.1 (8331548)|VARIABLE_SCOPE_BEGIN|[59]|recordId|String|false|false
+21:56:01.1 (8418709)|VARIABLE_ASSIGNMENT|[59]|recordId|null
+21:56:01.1 (8426892)|STATEMENT_EXECUTE|[59]
+21:56:01.1 (8427819)|STATEMENT_EXECUTE|[60]
+21:56:01.1 (8447374)|HEAP_ALLOCATE|[68]|Bytes:5
+21:56:01.1 (8470590)|HEAP_ALLOCATE|[74]|Bytes:5
+21:56:01.1 (8474717)|HEAP_ALLOCATE|[82]|Bytes:7
+21:56:01.1 (8503894)|SYSTEM_METHOD_ENTRY|[60]|System.now()
+21:56:01.1 (8543486)|HEAP_ALLOCATE|[60]|Bytes:56
+21:56:01.1 (8547927)|SYSTEM_METHOD_EXIT|[60]|System.now()
+21:56:01.1 (8563692)|VARIABLE_SCOPE_BEGIN|[60]|timeNow|Datetime|false|false
+21:56:01.1 (8597067)|VARIABLE_ASSIGNMENT|[60]|timeNow|"2026-02-12T03:56:01.881Z"
+21:56:01.1 (8600226)|STATEMENT_EXECUTE|[63]
+21:56:01.1 (8602005)|HEAP_ALLOCATE|[63]|Bytes:440
+21:56:01.1 (8621048)|HEAP_ALLOCATE|[63]|Bytes:4
+21:56:01.1 (8629055)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:01.1 (8640973)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:01.1 (8643792)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:01.1 (8647843)|HEAP_ALLOCATE|[63]|Bytes:7
+21:56:01.1 (16605404)|SOQL_EXECUTE_BEGIN|[63]|Aggregations:0|SELECT id, recordId__c, color__c, message__c, type__c, relatedalert__c, relatedalert__r.message__c, relatedalert__r.color__c, relatedalert__r.type__c, relatedalert__r.StartDate__c, relatedalert__r.EndDate__c, CreatedBy.Name, CreatedDate FROM com_Object_Alert__c WHERE ((recordid__c = :tmpVar1 OR facility__c = :tmpVar2) AND (StartDate__c = NULL OR (StartDate__c <= :tmpVar3 AND EndDate__c > :tmpVar4))) ORDER BY createddate DESC NULLS FIRST
+21:56:01.1 (16642005)|LIMIT_USAGE|[63]|SOQL|1|100
+21:56:01.1 (16647885)|LIMIT_USAGE|[63]|AGGS|0|300
+21:56:01.1 (42976685)|SOQL_EXECUTE_EXPLAIN|[63]|TableScan on com_Object_Alert__c : [], cardinality: 0, sobjectCardinality: 4, relativeCost 1
+21:56:01.1 (43002440)|SOQL_EXECUTE_END|[63]|Rows:2
+21:56:01.1 (43022848)|LIMIT_USAGE|[63]|SOQL_ROWS|2|50000
+21:56:01.1 (43034630)|HEAP_ALLOCATE|[63]|Bytes:12
+21:56:01.1 (43052710)|HEAP_ALLOCATE|[63]|Bytes:424
+21:56:01.1 (43206617)|HEAP_ALLOCATE|[63]|Bytes:12
+21:56:01.1 (43226674)|VARIABLE_SCOPE_BEGIN|[63]|alerts|List<com_Object_Alert__c>|true|false
+21:56:01.1 (43837942)|VARIABLE_ASSIGNMENT|[63]|alerts|[{"CreatedBy":{"Name":"Aaron Diment","Id":"005Hq00000Lha3VIAR"},"CreatedById":"005Hq00000Lha3VIAR","RecordId__c":"003WH00000apYpbYAE","Type__c":"Points Investigation (18 more) ...","CreatedDate":"2025-12-09T21:40:03.000Z","Id":"a5VWH000000FISr2AO","Color__c":"Red"},{"CreatedBy":{"Name":"Aaron Diment","Id":"005Hq00000Lha3VIAR"},"CreatedById":"005Hq00000Lha3VIAR","RecordId__c":"003WH00000apYpbYAE","Type__c":"MLR--Do Not Reactiva (12 more) ...","CreatedDate":"2025-12-09T21:39:36.000Z","Id":"a5VWH000000FIRF2A4","Color__c":"Red"}]|0x713f385b
+21:56:01.1 (43849038)|STATEMENT_EXECUTE|[69]
+21:56:01.1 (44124614)|HEAP_ALLOCATE|[69]|Bytes:4
+21:56:01.1 (44180639)|SYSTEM_CONSTRUCTOR_ENTRY|[69]|<init>()
+21:56:01.1 (44216812)|SYSTEM_CONSTRUCTOR_EXIT|[69]|<init>()
+21:56:01.1 (44220480)|VARIABLE_SCOPE_BEGIN|[69]|alertWrappers|List<com_Alert.AlertWrapper>|true|false
+21:56:01.1 (44242775)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+21:56:01.1 (44253227)|VARIABLE_ASSIGNMENT|[69]|alertWrappers|[]|0x683f9aed
+21:56:01.1 (44281355)|SYSTEM_METHOD_ENTRY|[71]|List<com_Object_Alert__c>.iterator()
+21:56:01.1 (44386392)|SYSTEM_METHOD_EXIT|[71]|List<com_Object_Alert__c>.iterator()
+21:56:01.1 (44403239)|SYSTEM_METHOD_ENTRY|[71]|system.ListIterator.hasNext()
+21:56:01.1 (44588446)|HEAP_ALLOCATE|[71]|Bytes:5
+21:56:01.1 (44595047)|SYSTEM_METHOD_EXIT|[71]|system.ListIterator.hasNext()
+21:56:01.1 (44617808)|HEAP_ALLOCATE|[71]|Bytes:32
+21:56:01.1 (44625079)|VARIABLE_SCOPE_BEGIN|[71]|a|com_Object_Alert__c|true|false
+21:56:01.1 (44718671)|VARIABLE_ASSIGNMENT|[71]|a|{"CreatedBy":{"Name":"Aaron Diment","Id":"005Hq00000Lha3VIAR"},"CreatedById":"005Hq00000Lha3VIAR","RecordId__c":"003WH00000apYpbYAE","Type__c":"Points Investigation (18 more) ...","CreatedDate":"2025-12-09T21:40:03.000Z","Id":"a5VWH000000FISr2AO","Color__c":"Red"}|0x2a4e561d
+21:56:01.1 (44725765)|STATEMENT_EXECUTE|[71]
+21:56:01.1 (44726699)|STATEMENT_EXECUTE|[72]
+21:56:01.1 (44764364)|HEAP_ALLOCATE|[72]|Bytes:19
+21:56:01.1 (44795721)|SYSTEM_METHOD_ENTRY|[72]|com.salesforce.api.interop.apex.bcl.DatetimeMethods.format(String)
+21:56:01.1 (44850250)|HEAP_ALLOCATE|[72]|Bytes:19
+21:56:01.1 (44854915)|SYSTEM_METHOD_EXIT|[72]|com.salesforce.api.interop.apex.bcl.DatetimeMethods.format(String)
+21:56:01.1 (44858690)|VARIABLE_SCOPE_BEGIN|[72]|formattedDate|String|false|false
+21:56:01.1 (44864895)|VARIABLE_ASSIGNMENT|[72]|formattedDate|"12/09/2025 15:40:03"
+21:56:01.1 (44867378)|STATEMENT_EXECUTE|[73]
+21:56:01.1 (44909325)|HEAP_ALLOCATE|[73]|Bytes:4
+21:56:01.1 (44920111)|HEAP_ALLOCATE|[73]|Bytes:35
+21:56:01.1 (44922426)|VARIABLE_SCOPE_BEGIN|[73]|createdInfo|String|false|false
+21:56:01.1 (44928179)|VARIABLE_ASSIGNMENT|[73]|createdInfo|"Aaron Diment on 12/0 (15 more) ..."
+21:56:01.1 (44941648)|STATEMENT_EXECUTE|[75]
+21:56:01.1 (44945501)|SYSTEM_METHOD_ENTRY|[71]|system.ListIterator.hasNext()
+21:56:01.1 (44950824)|HEAP_ALLOCATE|[71]|Bytes:5
+21:56:01.1 (44954010)|SYSTEM_METHOD_EXIT|[71]|system.ListIterator.hasNext()
+21:56:01.1 (44958479)|HEAP_ALLOCATE|[71]|Bytes:32
+21:56:01.1 (44961934)|VARIABLE_SCOPE_BEGIN|[71]|a|com_Object_Alert__c|true|false
+21:56:01.1 (45000901)|VARIABLE_ASSIGNMENT|[71]|a|{"CreatedBy":{"Name":"Aaron Diment","Id":"005Hq00000Lha3VIAR"},"CreatedById":"005Hq00000Lha3VIAR","RecordId__c":"003WH00000apYpbYAE","Type__c":"MLR--Do Not Reactiva (12 more) ...","CreatedDate":"2025-12-09T21:39:36.000Z","Id":"a5VWH000000FIRF2A4","Color__c":"Red"}|0x762a36f2
+21:56:01.1 (45005799)|STATEMENT_EXECUTE|[71]
+21:56:01.1 (45006603)|STATEMENT_EXECUTE|[72]
+21:56:01.1 (45016973)|SYSTEM_METHOD_ENTRY|[72]|com.salesforce.api.interop.apex.bcl.DatetimeMethods.format(String)
+21:56:01.1 (45025426)|HEAP_ALLOCATE|[72]|Bytes:19
+21:56:01.1 (45028796)|SYSTEM_METHOD_EXIT|[72]|com.salesforce.api.interop.apex.bcl.DatetimeMethods.format(String)
+21:56:01.1 (45031140)|VARIABLE_SCOPE_BEGIN|[72]|formattedDate|String|false|false
+21:56:01.1 (45035785)|VARIABLE_ASSIGNMENT|[72]|formattedDate|"12/09/2025 15:39:36"
+21:56:01.1 (45037750)|STATEMENT_EXECUTE|[73]
+21:56:01.1 (45042085)|HEAP_ALLOCATE|[73]|Bytes:35
+21:56:01.1 (45044095)|VARIABLE_SCOPE_BEGIN|[73]|createdInfo|String|false|false
+21:56:01.1 (45048404)|VARIABLE_ASSIGNMENT|[73]|createdInfo|"Aaron Diment on 12/0 (15 more) ..."
+21:56:01.1 (45052229)|STATEMENT_EXECUTE|[75]
+21:56:01.1 (45054144)|SYSTEM_METHOD_ENTRY|[71]|system.ListIterator.hasNext()
+21:56:01.1 (45057048)|HEAP_ALLOCATE|[71]|Bytes:5
+21:56:01.1 (45059434)|SYSTEM_METHOD_EXIT|[71]|system.ListIterator.hasNext()
+21:56:01.1 (45064970)|VARIABLE_ASSIGNMENT|[71]|a|null|
+21:56:01.1 (45068871)|STATEMENT_EXECUTE|[94]
+21:56:01.1 (45100809)|HEAP_ALLOCATE|[94]|Bytes:24
+21:56:01.1 (45116374)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+21:56:01.1 (45118942)|STATEMENT_EXECUTE|[1]
+21:56:01.1 (45127215)|SYSTEM_METHOD_EXIT|[1]|JSON
+21:56:01.1 (45139641)|METHOD_ENTRY|[94]||System.JSON.serialize(Object)
+21:56:01.1 (47843862)|METHOD_EXIT|[94]||System.JSON.serialize(Object)
+21:56:01.47 (47913842)|CUMULATIVE_LIMIT_USAGE
+21:56:01.47 (47913842)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 2 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+21:56:01.47 (47913842)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+21:56:01.47 (47913842)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+21:56:01.47 (47913842)|CUMULATIVE_LIMIT_USAGE_END
+
+21:56:01.1 (48058619)|CODE_UNIT_FINISHED|com_Alert.getAlertAndCreatedInformation(String)
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING_BEGIN
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING|SOQL operations|
+Class.com_Alert.getAlertAndCreatedInformation: line 63, column 1: [SELECT id, recordId__c, color__c, message__c, type__c, 
+                relatedalert__c, relatedalert__r.message__c, relatedalert__r.color__c,
+                relatedalert__r.type__c, relatedalert__r.StartDate__c, relatedalert__r.EndDate__c, 
+                CreatedBy.Name, CreatedDate FROM com_Object_Alert__c  WHERE (recordid__c = :recordId OR facility__c =: recordId) AND 
+                ((StartDate__c = NULL) OR (StartDate__c <= :timeNow AND EndDate__c > :timeNow)) ORDER BY createddate DESC]: executed 1 time in 35 ms
+
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING|No profiling information for DML operations
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static String getAlertAndCreatedInformation(String): executed 1 time in 40 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 94, column 1: global static String serialize(Object): executed 1 time in 3 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 69, column 1: global public List<com_Alert.AlertWrapper>(): executed 1 time in 0 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 71, column 1: global public System.Iterator iterator(): executed 4 times in 0 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 72, column 1: public String format(String): executed 2 times in 0 ms
+Class.com_Alert.getAlertAndCreatedInformation: line 60, column 1: global public static Datetime now(): executed 1 time in 0 ms
+
+21:56:01.48 (48089575)|CUMULATIVE_PROFILING_END
+21:56:01.1 (48744400)|CODE_UNIT_FINISHED|apex://com_Alert/ACTION$getAlertAndCreatedInformation
+21:56:01.1 (48761403)|EXECUTION_FINISHED

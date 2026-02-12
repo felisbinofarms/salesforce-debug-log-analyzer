@@ -51,10 +51,12 @@ public partial class ConnectionsView : UserControl
                     );
                     RecentConnectionsList.ItemsSource = _recentConnections;
                     NoRecentConnectionsText.Visibility = Visibility.Collapsed;
+                    RecentConnectionsPanel.Visibility = Visibility.Visible;
                 }
                 else
                 {
                     NoRecentConnectionsText.Visibility = Visibility.Visible;
+                    RecentConnectionsPanel.Visibility = Visibility.Collapsed;
                 }
             }
             else

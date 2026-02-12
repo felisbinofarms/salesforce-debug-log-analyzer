@@ -53,7 +53,7 @@ public class OAuthService
                      $"state={state}";
 
         // Start local HTTP server to receive callback
-        var authCode = await StartLocalServerAndWaitForCallback(authUrl, state);
+        var (authCode, actualRedirectUri) = await StartLocalServerAndWaitForCallback(authUrl, state);
 
         if (string.IsNullOrEmpty(authCode))
         {
@@ -61,7 +61,7 @@ public class OAuthService
         }
 
         // Exchange authorization code for access token with PKCE
-        return await ExchangeCodeForTokenAsync(authCode, codeVerifier, tokenEndpoint);
+        return await ExchangeCodeForTokenAsync(authCode, codeVerifier, tokenEndpoint, actualRedirectUri);
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public class OAuthService
         };
     }
 
-    private async Task<string?> StartLocalServerAndWaitForCallback(string authUrl, string expectedState)
+    private async Task<(string? code, string redirectUri)> StartLocalServerAndWaitForCallback(string authUrl, string expectedState)
     {
         // Find available port
         var port = FindAvailablePort();
@@ -149,10 +149,10 @@ public class OAuthService
 
             if (completedTask == timeoutTask)
             {
-                return null; // Timeout
+                return (null, redirectUri); // Timeout
             }
 
-            return await tcs.Task;
+            return (await tcs.Task, redirectUri);
         }
         finally
         {
@@ -161,7 +161,7 @@ public class OAuthService
         }
     }
 
-    private async Task<OAuthResult> ExchangeCodeForTokenAsync(string authCode, string codeVerifier, string tokenEndpoint)
+    private async Task<OAuthResult> ExchangeCodeForTokenAsync(string authCode, string codeVerifier, string tokenEndpoint, string actualRedirectUri)
     {
         using var httpClient = new HttpClient();
         
@@ -171,7 +171,7 @@ public class OAuthService
             { "code", authCode },
             { "client_id", ClientId },
             { "code_verifier", codeVerifier },
-            { "redirect_uri", RedirectUri }
+            { "redirect_uri", actualRedirectUri }
         };
 
         try

@@ -41,6 +41,20 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("Application shutting down");
+
+        // Clean up long-lived services 
+        try
+        {
+            if (MainWindow?.DataContext is IDisposable disposableVm)
+            {
+                disposableVm.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Error during service cleanup");
+        }
+
         Log.CloseAndFlush();
         base.OnExit(e);
     }

@@ -32,9 +32,9 @@ public class EditorBridgeService : IDisposable
     /// <summary>
     /// Start the bridge server on port 7777
     /// </summary>
-    public async Task StartAsync()
+    public Task StartAsync()
     {
-        if (_isRunning) return;
+        if (_isRunning) return Task.CompletedTask;
 
         try
         {
@@ -54,6 +54,8 @@ public class EditorBridgeService : IDisposable
             Console.WriteLine($"✗ Failed to start Editor Bridge Service: {ex.Message}");
             throw;
         }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -104,6 +106,7 @@ public class EditorBridgeService : IDisposable
     private async Task ReceiveMessagesAsync(WebSocket webSocket, CancellationToken cancellationToken)
     {
         var buffer = new byte[1024 * 4];
+        var messageBuffer = new MemoryStream();
 
         try
         {
@@ -120,8 +123,14 @@ public class EditorBridgeService : IDisposable
                 }
                 else if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    HandleMessageFromVSCode(message);
+                    messageBuffer.Write(buffer, 0, result.Count);
+
+                    if (result.EndOfMessage)
+                    {
+                        var message = Encoding.UTF8.GetString(messageBuffer.ToArray());
+                        messageBuffer.SetLength(0);
+                        HandleMessageFromVSCode(message);
+                    }
                 }
             }
         }
@@ -130,6 +139,10 @@ public class EditorBridgeService : IDisposable
             Console.WriteLine($"Error receiving message: {ex.Message}");
             _connectedClient = null;
             ConnectionStatusChanged?.Invoke(this, false);
+        }
+        finally
+        {
+            messageBuffer.Dispose();
         }
     }
 
@@ -332,14 +345,21 @@ public class EditorBridgeService : IDisposable
         try
         {
             _cancellationTokenSource?.Cancel();
-            _httpListener?.Stop();
-            _httpListener?.Close();
             _isRunning = false;
 
+            // Close WebSocket gracefully without blocking (avoid UI deadlock)
             if (_connectedClient?.State == WebSocketState.Open)
             {
-                _connectedClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait(1000);
+                try
+                {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+                    _ = _connectedClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
+                }
+                catch { /* Best-effort close */ }
             }
+
+            _httpListener?.Stop();
+            _httpListener?.Close();
 
             Console.WriteLine("✓ Editor Bridge Service stopped");
         }

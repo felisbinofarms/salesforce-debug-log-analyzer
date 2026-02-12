@@ -1,0 +1,111 @@
+66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+21:56:03.0 (210062)|USER_INFO|[EXTERNAL]|005360000036OeQ|victor.felisbino@loves.com.dev2|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+21:56:03.0 (284031)|EXECUTION_STARTED
+21:56:03.0 (307112)|CODE_UNIT_STARTED|[EXTERNAL]|apex://svc_CaseActions/ACTION$isFollowed
+21:56:03.0 (1884521)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JXU9B|svc_CaseActions.isFollowed(String)
+21:56:03.0 (2029127)|VARIABLE_SCOPE_BEGIN|[16]|svc_CaseActions.STATUS_ETAPROVIDED|String|false|true
+21:56:03.0 (2199822)|HEAP_ALLOCATE|[95]|Bytes:3
+21:56:03.0 (2244125)|HEAP_ALLOCATE|[100]|Bytes:152
+21:56:03.0 (2257650)|HEAP_ALLOCATE|[417]|Bytes:408
+21:56:03.0 (2268874)|HEAP_ALLOCATE|[430]|Bytes:408
+21:56:03.0 (2288527)|HEAP_ALLOCATE|[317]|Bytes:6
+21:56:03.0 (2299117)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:63
+21:56:03.0 (2302572)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:43
+21:56:03.0 (2304294)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+21:56:03.0 (2359407)|VARIABLE_ASSIGNMENT|[EXTERNAL]|svc_CaseActions.STATUS_ETAPROVIDED|"ETA Provided"
+21:56:03.0 (2375605)|METHOD_ENTRY|[15]|01p1R00000JXU9B|svc_CaseActions.svc_CaseActions()
+21:56:03.0 (2383437)|STATEMENT_EXECUTE|[15]
+21:56:03.0 (2387757)|STATEMENT_EXECUTE|[15]
+21:56:03.0 (2392795)|METHOD_EXIT|[15]|svc_CaseActions
+21:56:03.0 (2396697)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:18
+21:56:03.0 (2414827)|VARIABLE_SCOPE_BEGIN|[20]|recordId|String|false|false
+21:56:03.0 (2423560)|VARIABLE_ASSIGNMENT|[20]|recordId|"500WH00000R4iULYAZ"
+21:56:03.0 (2431453)|STATEMENT_EXECUTE|[20]
+21:56:03.0 (2432416)|STATEMENT_EXECUTE|[21]
+21:56:03.0 (2433155)|STATEMENT_EXECUTE|[21]
+21:56:03.0 (2434345)|STATEMENT_EXECUTE|[22]
+21:56:03.0 (2436547)|HEAP_ALLOCATE|[22]|Bytes:89
+21:56:03.0 (2456724)|HEAP_ALLOCATE|[22]|Bytes:4
+21:56:03.0 (2467690)|HEAP_ALLOCATE|[22]|Bytes:7
+21:56:03.0 (2479443)|HEAP_ALLOCATE|[22]|Bytes:7
+21:56:03.0 (2504037)|HEAP_ALLOCATE|[22]|Bytes:105
+21:56:03.0 (2516195)|SYSTEM_METHOD_ENTRY|[1]|UserInfo.UserInfo()
+21:56:03.0 (2518397)|STATEMENT_EXECUTE|[1]
+21:56:03.0 (2523987)|SYSTEM_METHOD_EXIT|[1]|UserInfo
+21:56:03.0 (2530651)|METHOD_ENTRY|[22]||System.UserInfo.getUserId()
+21:56:03.0 (5620734)|METHOD_EXIT|[22]||System.UserInfo.getUserId()
+21:56:03.0 (16711056)|SOQL_EXECUTE_BEGIN|[22]|Aggregations:0|SELECT id FROM EntitySubscription WHERE (parentId = :tmpVar1 AND subscriberId = :tmpVar2)
+21:56:03.0 (16752676)|LIMIT_USAGE|[22]|SOQL|1|100
+21:56:03.0 (16765162)|LIMIT_USAGE|[22]|AGGS|0|300
+21:56:03.0 (28045790)|SOQL_EXECUTE_EXPLAIN|[22]|Index on EntitySubscription : [SubscriberId], cardinality: 1, sobjectCardinality: 86, relativeCost 0.037
+21:56:03.0 (28070682)|SOQL_EXECUTE_END|[22]|Rows:1
+21:56:03.0 (28099126)|LIMIT_USAGE|[22]|SOQL_ROWS|1|50000
+21:56:03.0 (28114411)|HEAP_ALLOCATE|[22]|Bytes:8
+21:56:03.0 (28134356)|HEAP_ALLOCATE|[22]|Bytes:29
+21:56:03.0 (28292076)|HEAP_ALLOCATE|[22]|Bytes:8
+21:56:03.0 (28312419)|HEAP_ALLOCATE|[22]|Bytes:44
+21:56:03.0 (28386192)|HEAP_ALLOCATE|[22]|Bytes:8
+21:56:03.0 (28396308)|VARIABLE_SCOPE_BEGIN|[22]|entitysubscription|EntitySubscription|true|false
+21:56:03.0 (28456256)|VARIABLE_ASSIGNMENT|[22]|entitysubscription|{"Id":"0E8WH000000O4Gz0AK"}|0x2a5c5e4c
+21:56:03.0 (28463473)|STATEMENT_EXECUTE|[23]
+21:56:03.0 (28482511)|HEAP_ALLOCATE|[23]|Bytes:5
+21:56:03.28 (28546533)|CUMULATIVE_LIMIT_USAGE
+21:56:03.28 (28546533)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 1 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+21:56:03.28 (28546533)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+21:56:03.28 (28546533)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_static_STATUS_ETAPROVIDED:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+21:56:03.28 (28546533)|CUMULATIVE_LIMIT_USAGE_END
+
+21:56:03.0 (28691842)|CODE_UNIT_FINISHED|svc_CaseActions.isFollowed(String)
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING_BEGIN
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING|No profiling information for SOQL operations
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING|No profiling information for DML operations
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static Boolean isFollowed(String): executed 1 time in 27 ms
+Class.svc_CaseActions.isFollowed: line 22, column 1: global static String getUserId(): executed 2 times in 25 ms
+
+21:56:03.28 (28723017)|CUMULATIVE_PROFILING_END
+21:56:03.0 (28952507)|CODE_UNIT_FINISHED|apex://svc_CaseActions/ACTION$isFollowed
+21:56:03.0 (28961809)|EXECUTION_FINISHED

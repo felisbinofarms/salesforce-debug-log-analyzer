@@ -1,0 +1,234 @@
+66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+21:56:01.0 (284547)|USER_INFO|[EXTERNAL]|005360000036OeQ|victor.felisbino@loves.com.dev2|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+21:56:01.0 (359174)|EXECUTION_STARTED
+21:56:01.0 (387405)|CODE_UNIT_STARTED|[EXTERNAL]|apex://com_Alert/ACTION$getRecordType
+21:56:01.0 (4822062)|CODE_UNIT_STARTED|[EXTERNAL]|01p3600000JX5eT|com_Alert.getRecordType(String)
+21:56:01.0 (5051388)|HEAP_ALLOCATE|[95]|Bytes:3
+21:56:01.0 (5113214)|HEAP_ALLOCATE|[100]|Bytes:152
+21:56:01.0 (5125085)|HEAP_ALLOCATE|[417]|Bytes:408
+21:56:01.0 (5134943)|HEAP_ALLOCATE|[430]|Bytes:408
+21:56:01.0 (5155074)|HEAP_ALLOCATE|[317]|Bytes:6
+21:56:01.0 (5196078)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:01.0 (5204272)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+21:56:01.0 (5206201)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+21:56:01.0 (5229703)|METHOD_ENTRY|[12]|01p3600000JX5eT|com_Alert.com_Alert()
+21:56:01.0 (5242063)|STATEMENT_EXECUTE|[12]
+21:56:01.0 (5253621)|STATEMENT_EXECUTE|[12]
+21:56:01.0 (5254976)|STATEMENT_EXECUTE|[156]
+21:56:01.0 (5255735)|STATEMENT_EXECUTE|[167]
+21:56:01.0 (5260854)|METHOD_EXIT|[12]|com_Alert
+21:56:01.0 (5264207)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+21:56:01.0 (5273558)|VARIABLE_SCOPE_BEGIN|[49]|recordTypeName|String|false|false
+21:56:01.0 (5357072)|VARIABLE_ASSIGNMENT|[49]|recordTypeName|"flag"
+21:56:01.0 (5362843)|STATEMENT_EXECUTE|[49]
+21:56:01.0 (5363926)|STATEMENT_EXECUTE|[50]
+21:56:01.0 (5364654)|STATEMENT_EXECUTE|[50]
+21:56:01.0 (5365539)|STATEMENT_EXECUTE|[51]
+21:56:01.0 (5367453)|HEAP_ALLOCATE|[51]|Bytes:19
+21:56:01.0 (15589464)|VARIABLE_SCOPE_BEGIN|[35]|Global_Util.ERROR_RECTYPE_NOT_FOUND|String|false|true
+21:56:01.0 (15619529)|VARIABLE_SCOPE_BEGIN|[36]|Global_Util.RESPONSE_NO_AVAILABLE_RECORDTYPE|String|false|true
+21:56:01.0 (15627224)|VARIABLE_SCOPE_BEGIN|[29]|Global_Util.profileMap|Map<String,Profile>|true|true
+21:56:01.0 (15633531)|VARIABLE_SCOPE_BEGIN|[27]|Global_Util.recordTypeMap|Map<String,Map<String,RecordType>>|true|true
+21:56:01.0 (15640722)|VARIABLE_SCOPE_BEGIN|[31]|Global_Util.skipFieldsForTesting|List<String>|true|true
+21:56:01.0 (15647112)|VARIABLE_SCOPE_BEGIN|[28]|Global_Util.workTypeIDMap|Map<String,Id>|true|true
+21:56:01.0 (15666150)|HEAP_ALLOCATE|[51]|Bytes:34
+21:56:01.0 (15691156)|HEAP_ALLOCATE|[51]|Bytes:50
+21:56:01.0 (15693528)|HEAP_ALLOCATE|[51]|Bytes:11
+21:56:01.0 (15695447)|HEAP_ALLOCATE|[51]|Bytes:39
+21:56:01.0 (15767292)|VARIABLE_ASSIGNMENT|[51]|Global_Util.ERROR_RECTYPE_NOT_FOUND|"The requested record (19 more) ..."
+21:56:01.0 (15770529)|HEAP_ALLOCATE|[51]|Bytes:36
+21:56:01.0 (15777677)|VARIABLE_ASSIGNMENT|[51]|Global_Util.RESPONSE_NO_AVAILABLE_RECORDTYPE|"There are no record  (16 more) ..."
+21:56:01.0 (15945997)|METHOD_ENTRY|[25]|01p3600000IwGeu|Global_Util.Global_Util()
+21:56:01.0 (15952325)|STATEMENT_EXECUTE|[25]
+21:56:01.0 (15956764)|STATEMENT_EXECUTE|[25]
+21:56:01.0 (15957611)|STATEMENT_EXECUTE|[26]
+21:56:01.0 (15958328)|STATEMENT_EXECUTE|[31]
+21:56:01.0 (15965723)|HEAP_ALLOCATE|[31]|Bytes:4
+21:56:01.0 (15981438)|SYSTEM_CONSTRUCTOR_ENTRY|[31]|<init>()
+21:56:01.0 (16005995)|SYSTEM_CONSTRUCTOR_EXIT|[31]|<init>()
+21:56:01.0 (16009859)|HEAP_ALLOCATE|[32]|Bytes:15
+21:56:01.0 (16017417)|HEAP_ALLOCATE|[32]|Bytes:17
+21:56:01.0 (16037565)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+21:56:01.0 (16060432)|VARIABLE_ASSIGNMENT|[31]|Global_Util.skipFieldsForTesting|["AssetWarrantyId","ServiceContractId"]|0x4c5868c2
+21:56:01.0 (16064004)|STATEMENT_EXECUTE|[225]
+21:56:01.0 (16071472)|METHOD_EXIT|[25]|Global_Util
+21:56:01.0 (16095077)|METHOD_ENTRY|[51]|01p3600000IwGeu|Global_Util.getObjectRecordType(String, String)
+21:56:01.0 (16299237)|VARIABLE_SCOPE_BEGIN|[221]|recordType|String|false|false
+21:56:01.0 (16310348)|VARIABLE_ASSIGNMENT|[221]|recordType|"flag"
+21:56:01.0 (16313224)|VARIABLE_SCOPE_BEGIN|[221]|objectTypeName|String|false|false
+21:56:01.0 (16322118)|VARIABLE_ASSIGNMENT|[221]|objectTypeName|"com_Object_Alert__c"
+21:56:01.0 (16326380)|STATEMENT_EXECUTE|[221]
+21:56:01.0 (16327141)|STATEMENT_EXECUTE|[222]
+21:56:01.0 (16333847)|METHOD_ENTRY|[222]|01p3600000IwGeu|Global_Util.getRecordType(String, String)
+21:56:01.0 (16340515)|VARIABLE_SCOPE_BEGIN|[47]|sObjectName|String|false|false
+21:56:01.0 (16345167)|VARIABLE_ASSIGNMENT|[47]|sObjectName|"com_Object_Alert__c"
+21:56:01.0 (16347170)|VARIABLE_SCOPE_BEGIN|[47]|name|String|false|false
+21:56:01.0 (16350832)|VARIABLE_ASSIGNMENT|[47]|name|"flag"
+21:56:01.0 (16353501)|STATEMENT_EXECUTE|[47]
+21:56:01.0 (16354244)|STATEMENT_EXECUTE|[48]
+21:56:01.0 (16357317)|METHOD_ENTRY|[48]|01p3600000IwGeu|Global_Util.getRecordTypeFromMap(String, String)
+21:56:01.0 (16362313)|VARIABLE_SCOPE_BEGIN|[53]|sObjectName|String|false|false
+21:56:01.0 (16366612)|VARIABLE_ASSIGNMENT|[53]|sObjectName|"com_Object_Alert__c"
+21:56:01.0 (16368553)|VARIABLE_SCOPE_BEGIN|[53]|nameOrId|String|false|false
+21:56:01.0 (16372205)|VARIABLE_ASSIGNMENT|[53]|nameOrId|"flag"
+21:56:01.0 (16374955)|STATEMENT_EXECUTE|[53]
+21:56:01.0 (16375702)|STATEMENT_EXECUTE|[54]
+21:56:01.0 (16377673)|VARIABLE_SCOPE_BEGIN|[54]|returnValue|RecordType|true|false
+21:56:01.0 (16384632)|VARIABLE_ASSIGNMENT|[54]|returnValue|null|
+21:56:01.0 (16388358)|STATEMENT_EXECUTE|[56]
+21:56:01.0 (16397673)|HEAP_ALLOCATE|[56]|Bytes:4
+21:56:01.0 (16435719)|VARIABLE_ASSIGNMENT|[56]|Global_Util.recordTypeMap|{}|0x6393cdfa
+21:56:01.0 (16439441)|STATEMENT_EXECUTE|[58]
+21:56:01.0 (16457834)|SYSTEM_METHOD_ENTRY|[58]|Map<String,Map<String,RecordType>>.get(Object)
+21:56:01.0 (16472093)|SYSTEM_METHOD_EXIT|[58]|Map<String,Map<String,RecordType>>.get(Object)
+21:56:01.0 (16477504)|VARIABLE_SCOPE_BEGIN|[58]|recordTypeInnerMap|Map<String,RecordType>|true|false
+21:56:01.0 (16482713)|VARIABLE_ASSIGNMENT|[58]|recordTypeInnerMap|null|
+21:56:01.0 (16485042)|STATEMENT_EXECUTE|[60]
+21:56:01.0 (16485911)|STATEMENT_EXECUTE|[61]
+21:56:01.0 (16489741)|HEAP_ALLOCATE|[61]|Bytes:4
+21:56:01.0 (16500396)|VARIABLE_ASSIGNMENT|[61]|recordTypeInnerMap|{}|0x547965fa
+21:56:01.0 (16502786)|STATEMENT_EXECUTE|[63]
+21:56:01.0 (16508333)|METHOD_ENTRY|[63]|01p3600000IwGeu|Global_Util.putRecordTypeInMap(String, String, Map<String,RecordType>)
+21:56:01.0 (16513485)|VARIABLE_SCOPE_BEGIN|[76]|sObjectName|String|false|false
+21:56:01.0 (16517646)|VARIABLE_ASSIGNMENT|[76]|sObjectName|"com_Object_Alert__c"
+21:56:01.0 (16519493)|VARIABLE_SCOPE_BEGIN|[76]|nameOrId|String|false|false
+21:56:01.0 (16522998)|VARIABLE_ASSIGNMENT|[76]|nameOrId|"flag"
+21:56:01.0 (16524959)|VARIABLE_SCOPE_BEGIN|[76]|recordTypeInnerMap|Map<String,RecordType>|true|false
+21:56:01.0 (16528954)|VARIABLE_ASSIGNMENT|[76]|recordTypeInnerMap|{}|0x547965fa
+21:56:01.0 (16532213)|STATEMENT_EXECUTE|[76]
+21:56:01.0 (16532968)|STATEMENT_EXECUTE|[78]
+21:56:01.0 (16549800)|HEAP_ALLOCATE|[78]|Bytes:4
+21:56:01.0 (16613887)|VARIABLE_SCOPE_BEGIN|[78]|returnValue|RecordType|true|false
+21:56:01.0 (16624344)|VARIABLE_ASSIGNMENT|[78]|returnValue|{}|0x1949679
+21:56:01.0 (16627173)|STATEMENT_EXECUTE|[80]
+21:56:01.0 (16639577)|VARIABLE_SCOPE_BEGIN|[80]|recordTypeInfo|Schema.RecordTypeInfo|true|false
+21:56:01.0 (16644488)|VARIABLE_ASSIGNMENT|[80]|recordTypeInfo|null|
+21:56:01.0 (16647840)|HEAP_ALLOCATE|[82]|Bytes:3
+21:56:01.0 (16666375)|SYSTEM_METHOD_ENTRY|[82]|String.startsWith(String)
+21:56:01.0 (16683582)|SYSTEM_METHOD_EXIT|[82]|String.startsWith(String)
+21:56:01.0 (16695514)|HEAP_ALLOCATE|[68]|Bytes:5
+21:56:01.0 (16709903)|HEAP_ALLOCATE|[74]|Bytes:5
+21:56:01.0 (16714824)|HEAP_ALLOCATE|[82]|Bytes:7
+21:56:01.0 (16723717)|STATEMENT_EXECUTE|[83]
+21:56:01.0 (16736575)|SYSTEM_METHOD_ENTRY|[83]|Schema.getGlobalDescribe()
+21:56:01.0 (109071217)|HEAP_ALLOCATE|[83]|Bytes:14076
+21:56:01.0 (109100313)|SYSTEM_METHOD_EXIT|[83]|Schema.getGlobalDescribe()
+21:56:01.0 (109134764)|SYSTEM_METHOD_ENTRY|[83]|Map<String,Schema.SObjectType>.get(Object)
+21:56:01.0 (109283879)|SYSTEM_METHOD_EXIT|[83]|Map<String,Schema.SObjectType>.get(Object)
+21:56:01.0 (109302519)|SYSTEM_METHOD_ENTRY|[83]|Schema.SObjectType.getDescribe()
+21:56:01.0 (109941236)|HEAP_ALLOCATE|[83]|Bytes:4
+21:56:01.0 (109951635)|SYSTEM_METHOD_EXIT|[83]|Schema.SObjectType.getDescribe()
+21:56:01.0 (111694679)|HEAP_ALLOCATE|[83]|Bytes:28
+21:56:01.0 (111749745)|SYSTEM_METHOD_ENTRY|[83]|Map<String,Schema.RecordTypeInfo>.get(Object)
+21:56:01.0 (111764454)|SYSTEM_METHOD_EXIT|[83]|Map<String,Schema.RecordTypeInfo>.get(Object)
+21:56:01.0 (111956561)|VARIABLE_ASSIGNMENT|[83]|recordTypeInfo|"common.api.soap.wsdl.RecordTypeInfo@899380cc"|0x62609822
+21:56:01.0 (111964681)|STATEMENT_EXECUTE|[85]
+21:56:01.0 (111966375)|STATEMENT_EXECUTE|[87]
+21:56:01.0 (111983292)|HEAP_ALLOCATE|[87]|Bytes:4
+21:56:01.0 (112136722)|VARIABLE_ASSIGNMENT|[87]|this.Id|"01236000001A0gcAAC"|0x1949679
+21:56:01.0 (112144183)|STATEMENT_EXECUTE|[88]
+21:56:01.0 (112155936)|HEAP_ALLOCATE|[88]|Bytes:4
+21:56:01.0 (112219278)|VARIABLE_ASSIGNMENT|[88]|this.Name|"flag"|0x1949679
+21:56:01.0 (112224381)|STATEMENT_EXECUTE|[89]
+21:56:01.0 (112233571)|HEAP_ALLOCATE|[89]|Bytes:4
+21:56:01.0 (112263333)|VARIABLE_ASSIGNMENT|[89]|this.DeveloperName|"flag"|0x1949679
+21:56:01.0 (112267891)|STATEMENT_EXECUTE|[90]
+21:56:01.0 (112299548)|VARIABLE_ASSIGNMENT|[90]|this.IsActive|true|0x1949679
+21:56:01.0 (112304439)|STATEMENT_EXECUTE|[92]
+21:56:01.0 (112330316)|SYSTEM_METHOD_ENTRY|[92]|Map<String,RecordType>.put(Object, Object)
+21:56:01.0 (112358038)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+21:56:01.0 (112368171)|SYSTEM_METHOD_EXIT|[92]|Map<String,RecordType>.put(Object, Object)
+21:56:01.0 (112371864)|STATEMENT_EXECUTE|[94]
+21:56:01.0 (112383931)|SYSTEM_METHOD_ENTRY|[94]|Map<String,Map<String,RecordType>>.put(Object, Object)
+21:56:01.0 (112392721)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+21:56:01.0 (112399477)|SYSTEM_METHOD_EXIT|[94]|Map<String,Map<String,RecordType>>.put(Object, Object)
+21:56:01.0 (112402281)|STATEMENT_EXECUTE|[96]
+21:56:01.0 (112409962)|METHOD_EXIT|[63]|01p3600000IwGeu|Global_Util.putRecordTypeInMap(String, String, Map<String,RecordType>)
+21:56:01.0 (112429553)|VARIABLE_ASSIGNMENT|[63]|returnValue|{"Id":"01236000001A0gcAAC","Name":"flag","DeveloperName":"flag","IsActive":true}|0x1949679
+21:56:01.0 (112434521)|STATEMENT_EXECUTE|[73]
+21:56:01.0 (112438362)|METHOD_EXIT|[48]|01p3600000IwGeu|Global_Util.getRecordTypeFromMap(String, String)
+21:56:01.0 (112443338)|VARIABLE_SCOPE_BEGIN|[48]|returnValue|RecordType|true|false
+21:56:01.0 (112453696)|VARIABLE_ASSIGNMENT|[48]|returnValue|{"Id":"01236000001A0gcAAC","Name":"flag","DeveloperName":"flag","IsActive":true}|0x1949679
+21:56:01.0 (112458410)|STATEMENT_EXECUTE|[49]
+21:56:01.0 (112618786)|STATEMENT_EXECUTE|[50]
+21:56:01.0 (112623869)|METHOD_EXIT|[222]|01p3600000IwGeu|Global_Util.getRecordType(String, String)
+21:56:01.0 (112631912)|METHOD_EXIT|[51]|01p3600000IwGeu|Global_Util.getObjectRecordType(String, String)
+21:56:01.0 (112636495)|VARIABLE_SCOPE_BEGIN|[51]|rType|RecordType|true|false
+21:56:01.0 (112647752)|VARIABLE_ASSIGNMENT|[51]|rType|{"Id":"01236000001A0gcAAC","Name":"flag","DeveloperName":"flag","IsActive":true}|0x1949679
+21:56:01.0 (112652094)|STATEMENT_EXECUTE|[52]
+21:56:01.0 (112692502)|HEAP_ALLOCATE|[52]|Bytes:18
+21:56:01.112 (112767612)|CUMULATIVE_LIMIT_USAGE
+21:56:01.112 (112767612)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 0 out of 100
+  Number of query rows: 0 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+21:56:01.112 (112767612)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+21:56:01.112 (112767612)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:__sfdcInnerTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_static_ERROR_RECTYPE_NOT_FOUND:0
+  String:_static_RESPONSE_NO_AVAILABLE_RECORDTYPE:0
+  Map<String,Map<String,RecordType>>:_static_recordTypeMap:0
+  List<String>:_static_skipFieldsForTesting:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+21:56:01.112 (112767612)|CUMULATIVE_LIMIT_USAGE_END
+
+21:56:01.0 (115136617)|CODE_UNIT_FINISHED|com_Alert.getRecordType(String)
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING_BEGIN
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING|No profiling information for SOQL operations
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING|No profiling information for DML operations
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static String getRecordType(String): executed 1 time in 107 ms
+Class.Global_Util.getRecordType: line 48, column 1: private static RecordType getRecordTypeFromMap(String, String): executed 1 time in 96 ms
+Class.Global_Util.getObjectRecordType: line 222, column 1: public static RecordType getRecordType(String, String): executed 1 time in 96 ms
+Class.Global_Util.getRecordTypeFromMap: line 63, column 1: private static RecordType putRecordTypeInMap(String, String, Map<String,RecordType>): executed 1 time in 96 ms
+Class.com_Alert.getRecordType: line 51, column 1: public static RecordType getObjectRecordType(String, String): executed 1 time in 96 ms
+Class.Global_Util.putRecordTypeInMap: line 83, column 1: global public static Map<String,Schema.SObjectType> getGlobalDescribe(): executed 4 times in 93 ms
+Class.Global_Util.putRecordTypeInMap: line 82, column 1: public Boolean startsWith(String): executed 1 time in 0 ms
+Class.Global_Util.getRecordTypeFromMap: line 58, column 1: global public Object get(Object): executed 1 time in 0 ms
+Class.Global_Util.putRecordTypeInMap: line 92, column 1: global public Object put(Object, Object): executed 1 time in 0 ms
+Class.Global_Util.putRecordTypeInMap: line 94, column 1: global public Object put(Object, Object): executed 1 time in 0 ms
+Class.Global_Util: line 31, column 1: global public List<String>(): executed 1 time in 0 ms
+
+21:56:01.115 (115168006)|CUMULATIVE_PROFILING_END
+21:56:01.0 (115654776)|CODE_UNIT_FINISHED|apex://com_Alert/ACTION$getRecordType
+21:56:01.0 (115667189)|EXECUTION_FINISHED

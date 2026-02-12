@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using System.IO;
+using System.Windows.Controls;
+using System.Windows.Data;
 using SalesforceDebugAnalyzer.ViewModels;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
@@ -69,6 +71,11 @@ public partial class MainWindow : Window
                                                filePath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)))
                 {
                     await _viewModel.LoadLogFromPath(filePath);
+                }
+                else
+                {
+                    var ext = Path.GetExtension(filePath);
+                    _viewModel.StatusMessage = $"⚠️ Can't open '{ext}' files — drop a .log or .txt debug log file";
                 }
             }
         }
@@ -170,11 +177,15 @@ public partial class MainWindow : Window
         button.Background = new System.Windows.Media.SolidColorBrush(
             System.Windows.Media.Color.FromRgb(0x3B, 0xA5, 0x5D)); // Green
         
-        await Task.Delay(1500);
-        
-        button.Content = originalContent;
-        button.Background = new System.Windows.Media.SolidColorBrush(
-            System.Windows.Media.Color.FromRgb(0x4E, 0x50, 0x58)); // Original gray
+        try
+        {
+            await Task.Delay(1500);
+            button.Content = originalContent;
+            button.Background = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x4E, 0x50, 0x58)); // Original gray
+        }
+        catch (TaskCanceledException) { }
+        catch (InvalidOperationException) { /* Window may have closed */ }
     }
     
     private void InteractionCard_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -182,6 +193,31 @@ public partial class MainWindow : Window
         if (sender is System.Windows.Controls.Border border && border.DataContext is Interaction interaction)
         {
             _viewModel.ViewInteractionCommand.Execute(interaction);
+        }
+    }
+
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var searchText = (sender as TextBox)?.Text?.Trim() ?? "";
+        var view = CollectionViewSource.GetDefaultView(_viewModel.Logs);
+        if (view == null) return;
+
+        if (string.IsNullOrEmpty(searchText))
+        {
+            view.Filter = null;
+        }
+        else
+        {
+            view.Filter = item =>
+            {
+                if (item is LogAnalysis log)
+                {
+                    return (log.LogName?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                           (log.Summary?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                           (log.EntryPoint?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false);
+                }
+                return false;
+            };
         }
     }
 }

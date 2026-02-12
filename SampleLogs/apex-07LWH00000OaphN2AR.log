@@ -1,0 +1,153 @@
+66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+21:56:03.0 (260914)|USER_INFO|[EXTERNAL]|005360000036OeQ|victor.felisbino@loves.com.dev2|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+21:56:03.0 (393562)|EXECUTION_STARTED
+21:56:03.0 (421252)|CODE_UNIT_STARTED|[EXTERNAL]|apex://svc_CaseActions/ACTION$enableReOpen
+21:56:03.0 (2370288)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JXU9B|svc_CaseActions.enableReOpen(String, String)
+21:56:03.0 (2586930)|VARIABLE_SCOPE_BEGIN|[16]|svc_CaseActions.STATUS_ETAPROVIDED|String|false|true
+21:56:03.0 (2865125)|HEAP_ALLOCATE|[95]|Bytes:3
+21:56:03.0 (2918256)|HEAP_ALLOCATE|[100]|Bytes:152
+21:56:03.0 (2948130)|HEAP_ALLOCATE|[417]|Bytes:408
+21:56:03.0 (2967131)|HEAP_ALLOCATE|[430]|Bytes:408
+21:56:03.0 (3000115)|HEAP_ALLOCATE|[317]|Bytes:6
+21:56:03.0 (3019324)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:63
+21:56:03.0 (3025362)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:43
+21:56:03.0 (3028548)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+21:56:03.0 (3151757)|VARIABLE_ASSIGNMENT|[EXTERNAL]|svc_CaseActions.STATUS_ETAPROVIDED|"ETA Provided"
+21:56:03.0 (3190946)|METHOD_ENTRY|[15]|01p1R00000JXU9B|svc_CaseActions.svc_CaseActions()
+21:56:03.0 (3199664)|STATEMENT_EXECUTE|[15]
+21:56:03.0 (3212435)|STATEMENT_EXECUTE|[15]
+21:56:03.0 (3221575)|METHOD_EXIT|[15]|svc_CaseActions
+21:56:03.0 (3228931)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:15
+21:56:03.0 (3262351)|VARIABLE_SCOPE_BEGIN|[71]|recordid|String|false|false
+21:56:03.0 (3295105)|VARIABLE_ASSIGNMENT|[71]|recordid|null
+21:56:03.0 (3303426)|VARIABLE_SCOPE_BEGIN|[71]|fromRecordTypeId|String|false|false
+21:56:03.0 (3323267)|VARIABLE_ASSIGNMENT|[71]|fromRecordTypeId|"01236000001A1Qd"
+21:56:03.0 (3334879)|STATEMENT_EXECUTE|[71]
+21:56:03.0 (3336287)|STATEMENT_EXECUTE|[73]
+21:56:03.0 (3337434)|STATEMENT_EXECUTE|[73]
+21:56:03.0 (3338706)|STATEMENT_EXECUTE|[74]
+21:56:03.0 (3445409)|VARIABLE_SCOPE_BEGIN|[74]|settings|Case_reopen_Settings__c|true|false
+21:56:03.0 (3473955)|VARIABLE_ASSIGNMENT|[74]|settings|null|
+21:56:03.0 (3478843)|STATEMENT_EXECUTE|[75]
+21:56:03.0 (3496041)|VARIABLE_SCOPE_BEGIN|[75]|rtName|String|false|false
+21:56:03.0 (3521681)|VARIABLE_ASSIGNMENT|[75]|rtName|""
+21:56:03.0 (3525869)|STATEMENT_EXECUTE|[76]
+21:56:03.0 (3527201)|STATEMENT_EXECUTE|[76]
+21:56:03.0 (3528664)|STATEMENT_EXECUTE|[78]
+21:56:03.0 (3532069)|HEAP_ALLOCATE|[78]|Bytes:78
+21:56:03.0 (3607391)|HEAP_ALLOCATE|[78]|Bytes:4
+21:56:03.0 (3628409)|HEAP_ALLOCATE|[78]|Bytes:7
+21:56:03.0 (3673923)|HEAP_ALLOCATE|[68]|Bytes:5
+21:56:03.0 (3705542)|HEAP_ALLOCATE|[74]|Bytes:5
+21:56:03.0 (3713745)|HEAP_ALLOCATE|[82]|Bytes:7
+21:56:03.0 (4523523)|SOQL_EXECUTE_BEGIN|[78]|Aggregations:0|SELECT Name, id FROM RecordType WHERE (SobjectType = 'Case' AND id = :tmpVar1)
+21:56:03.0 (4560594)|LIMIT_USAGE|[78]|SOQL|1|100
+21:56:03.0 (4583478)|LIMIT_USAGE|[78]|AGGS|0|300
+21:56:03.0 (84473987)|SOQL_EXECUTE_EXPLAIN|[78]|Index on RecordType : [Id], cardinality: 1, sobjectCardinality: 10, relativeCost 0.333
+21:56:03.0 (84506616)|SOQL_EXECUTE_END|[78]|Rows:1
+21:56:03.0 (84541134)|LIMIT_USAGE|[78]|SOQL_ROWS|1|50000
+21:56:03.0 (84729571)|HEAP_ALLOCATE|[78]|Bytes:8
+21:56:03.0 (84763243)|HEAP_ALLOCATE|[78]|Bytes:51
+21:56:03.0 (85019467)|HEAP_ALLOCATE|[78]|Bytes:8
+21:56:03.0 (85061561)|HEAP_ALLOCATE|[78]|Bytes:36
+21:56:03.0 (85163143)|HEAP_ALLOCATE|[78]|Bytes:12
+21:56:03.0 (85183023)|VARIABLE_SCOPE_BEGIN|[78]|rt|RecordType|true|false
+21:56:03.0 (85308327)|VARIABLE_ASSIGNMENT|[78]|rt|{"Name":"Incident Basic","Id":"01236000001A1QdAAK"}|0x4d34da29
+21:56:03.0 (85323698)|STATEMENT_EXECUTE|[80]
+21:56:03.0 (85325516)|STATEMENT_EXECUTE|[81]
+21:56:03.0 (85421446)|VARIABLE_ASSIGNMENT|[81]|rtName|"Incident Basic"
+21:56:03.0 (85448974)|STATEMENT_EXECUTE|[83]
+21:56:03.0 (85522605)|HEAP_ALLOCATE|[83]|Bytes:105
+21:56:03.0 (85562637)|SYSTEM_METHOD_ENTRY|[1]|UserInfo.UserInfo()
+21:56:03.0 (85570734)|STATEMENT_EXECUTE|[1]
+21:56:03.0 (85588961)|SYSTEM_METHOD_EXIT|[1]|UserInfo
+21:56:03.0 (85604872)|METHOD_ENTRY|[83]||System.UserInfo.getProfileId()
+21:56:03.0 (87395375)|METHOD_EXIT|[83]||System.UserInfo.getProfileId()
+21:56:03.0 (87760566)|SYSTEM_METHOD_ENTRY|[83]|Case_reopen_Settings__c.getInstance(String)
+21:56:03.0 (89990809)|HEAP_ALLOCATE|[83]|Bytes:24
+21:56:03.0 (90136702)|SYSTEM_METHOD_EXIT|[83]|Case_reopen_Settings__c.getInstance(String)
+21:56:03.0 (90486001)|VARIABLE_ASSIGNMENT|[83]|settings|{"IsDeleted":false,"SetupOwnerId":"00e36000000qub5AAA","Name":"a3A36000001uNdi","Active__c":true,"BlockReOpenAfterDays__c":7.0}|0x103b2587
+21:56:03.0 (90501882)|STATEMENT_EXECUTE|[84]
+21:56:03.0 (90563087)|SYSTEM_METHOD_ENTRY|[84]|System.debug(ANY)
+21:56:03.0 (90693017)|USER_DEBUG|[84]|DEBUG|Case_reopen_Settings__c:{IsDeleted=false, Name=a3A36000001uNdi, SetupOwnerId=00e36000000qub5AAA, Active__c=true, BlockReOpenAfterDays__c=7.0}
+21:56:03.0 (90711825)|SYSTEM_METHOD_EXIT|[84]|System.debug(ANY)
+21:56:03.0 (90720430)|STATEMENT_EXECUTE|[89]
+21:56:03.0 (90722190)|STATEMENT_EXECUTE|[90]
+21:56:03.0 (90730425)|SYSTEM_METHOD_ENTRY|[90]|System.debug(ANY)
+21:56:03.0 (90782373)|USER_DEBUG|[90]|DEBUG|Case_reopen_Settings__c:{IsDeleted=false, Name=a3A36000001uNdi, SetupOwnerId=00e36000000qub5AAA, Active__c=true, BlockReOpenAfterDays__c=7.0}
+21:56:03.0 (90790907)|SYSTEM_METHOD_EXIT|[90]|System.debug(ANY)
+21:56:03.0 (90856276)|SYSTEM_METHOD_ENTRY|[91]|String.isBlank(String)
+21:56:03.0 (90884981)|SYSTEM_METHOD_EXIT|[91]|String.isBlank(String)
+21:56:03.0 (90896696)|STATEMENT_EXECUTE|[91]
+21:56:03.0 (90941232)|STATEMENT_EXECUTE|[92]
+21:56:03.0 (90942866)|STATEMENT_EXECUTE|[94]
+21:56:03.0 (91007504)|SYSTEM_METHOD_ENTRY|[94]|Integer.valueOf(Object)
+21:56:03.0 (91032659)|SYSTEM_METHOD_EXIT|[94]|Integer.valueOf(Object)
+21:56:03.0 (91038219)|HEAP_ALLOCATE|[94]|Bytes:4
+21:56:03.91 (91122679)|CUMULATIVE_LIMIT_USAGE
+21:56:03.91 (91122679)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 1 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+21:56:03.91 (91122679)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+21:56:03.91 (91122679)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_static_STATUS_ETAPROVIDED:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+21:56:03.91 (91122679)|CUMULATIVE_LIMIT_USAGE_END
+
+21:56:03.0 (91450222)|CODE_UNIT_FINISHED|svc_CaseActions.enableReOpen(String, String)
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING_BEGIN
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING|SOQL operations|
+Class.svc_CaseActions.enableReOpen: line 78, column 1: [SELECT Name,id FROM RecordType
+                                 where SobjectType = 'Case' and id =: fromRecordTypeId]: executed 1 time in 82 ms
+
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING|No profiling information for DML operations
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static Integer enableReOpen(String, String): executed 1 time in 88 ms
+Class.svc_CaseActions.enableReOpen: line 83, column 1: global static String getProfileId(): executed 2 times in 4 ms
+Class.svc_CaseActions.enableReOpen: line 90, column 1: global public static void debug(ANY): executed 1 time in 1 ms
+Class.svc_CaseActions.enableReOpen: line 84, column 1: global public static void debug(ANY): executed 1 time in 0 ms
+Class.svc_CaseActions.enableReOpen: line 91, column 1: public static Boolean isBlank(String): executed 1 time in 0 ms
+Class.svc_CaseActions.enableReOpen: line 94, column 1: public static Integer valueOf(Object): executed 1 time in 0 ms
+
+21:56:03.91 (91493926)|CUMULATIVE_PROFILING_END
+21:56:03.0 (91902731)|CODE_UNIT_FINISHED|apex://svc_CaseActions/ACTION$enableReOpen
+21:56:03.0 (91922500)|EXECUTION_FINISHED

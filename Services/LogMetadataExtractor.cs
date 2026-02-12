@@ -77,7 +77,10 @@ public class LogMetadataExtractor
 
             if (startTime.HasValue && endTime.HasValue)
             {
-                metadata.DurationMs = (endTime.Value - startTime.Value).TotalMilliseconds;
+                var duration = (endTime.Value - startTime.Value).TotalMilliseconds;
+                // Guard against midnight-crossing logs where end timestamp wraps to next day
+                if (duration < 0) duration += TimeSpan.FromDays(1).TotalMilliseconds;
+                metadata.DurationMs = duration;
             }
 
             // Extract code unit (method/class name)

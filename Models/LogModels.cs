@@ -66,17 +66,54 @@ public enum ExceptionSeverity
 }
 
 /// <summary>
-/// Represents a database operation (SOQL or DML)
+/// Represents a database operation (SOQL, SOSL, or DML)
 /// </summary>
 public class DatabaseOperation
 {
-    public string OperationType { get; set; } = string.Empty; // SOQL, DML
+    public string OperationType { get; set; } = string.Empty; // SOQL, SOSL, DML
     public string Query { get; set; } = string.Empty;
     public string DmlOperation { get; set; } = string.Empty; // Insert, Update, Delete, Undelete
     public string ObjectType { get; set; } = string.Empty;
     public int RowsAffected { get; set; }
     public int AggregationCount { get; set; }
     public long DurationMs { get; set; }
+    public int LineNumber { get; set; }
+    
+    /// <summary>
+    /// Query execution plan from SOQL_EXECUTE_EXPLAIN (index usage, cardinality, cost)
+    /// </summary>
+    public string? ExecutionPlan { get; set; }
+    
+    /// <summary>
+    /// Relative cost from execution plan (higher = worse, >1.0 often means table scan)
+    /// </summary>
+    public double RelativeCost { get; set; }
+}
+
+/// <summary>
+/// Represents an HTTP callout to an external service
+/// </summary>
+public class CalloutOperation
+{
+    public string Endpoint { get; set; } = string.Empty;
+    public string HttpMethod { get; set; } = string.Empty;
+    public int StatusCode { get; set; }
+    public string StatusMessage { get; set; } = string.Empty;
+    public long DurationMs { get; set; }
+    public int LineNumber { get; set; }
+    public bool IsError => StatusCode >= 400;
+}
+
+/// <summary>
+/// Represents a Flow/Process Builder interview execution
+/// </summary>
+public class FlowExecution
+{
+    public string FlowName { get; set; } = string.Empty;
+    public string InterviewId { get; set; } = string.Empty;
+    public int ElementCount { get; set; }
+    public bool HasFault { get; set; }
+    public string? FaultMessage { get; set; }
     public int LineNumber { get; set; }
 }
 
@@ -87,6 +124,8 @@ public class GovernorLimitSnapshot
 {
     public int SoqlQueries { get; set; }
     public int SoqlQueriesLimit { get; set; }
+    public int SoslQueries { get; set; }
+    public int SoslQueriesLimit { get; set; }
     public int QueryRows { get; set; }
     public int QueryRowsLimit { get; set; }
     public int CpuTime { get; set; }
@@ -97,7 +136,16 @@ public class GovernorLimitSnapshot
     public int DmlStatementsLimit { get; set; }
     public int DmlRows { get; set; }
     public int DmlRowsLimit { get; set; }
+    public int FutureCalls { get; set; }
+    public int FutureCallsLimit { get; set; }
+    public int Callouts { get; set; }
+    public int CalloutsLimit { get; set; }
     public int LineNumber { get; set; }
+    
+    /// <summary>
+    /// Namespace this snapshot belongs to (e.g., "(default)", "CloudingoAgent", "et4ae5")
+    /// </summary>
+    public string Namespace { get; set; } = "(default)";
 }
 
 /// <summary>
@@ -114,6 +162,19 @@ public class LogAnalysis
     public ExecutionNode RootNode { get; set; } = new();
     public List<DatabaseOperation> DatabaseOperations { get; set; } = new();
     public List<GovernorLimitSnapshot> LimitSnapshots { get; set; } = new();
+    
+    /// <summary>
+    /// Governor limits broken down by namespace (managed packages).
+    /// Excludes the (default) namespace which is in LimitSnapshots.
+    /// </summary>
+    public List<GovernorLimitSnapshot> NamespaceLimitSnapshots { get; set; } = new();
+    
+    /// <summary>
+    /// Governor limits consumed only by test code (from TESTING_LIMITS section).
+    /// Helps distinguish test overhead from actual code performance.
+    /// </summary>
+    public GovernorLimitSnapshot? TestingLimits { get; set; }
+    
     public List<ExecutionNode> Errors { get; set; } = new();
     
     /// <summary>
@@ -177,6 +238,16 @@ public class LogAnalysis
     public ExecutionTimeline? Timeline { get; set; }
     
     /// <summary>
+    /// HTTP callouts to external services (CALLOUT_REQUEST/CALLOUT_RESPONSE events)
+    /// </summary>
+    public List<CalloutOperation> Callouts { get; set; } = new();
+    
+    /// <summary>
+    /// Flow/Process Builder interviews that executed during this transaction
+    /// </summary>
+    public List<FlowExecution> Flows { get; set; } = new();
+    
+    /// <summary>
     /// Health score (0-100) and actionable issues prioritized for fixing
     /// </summary>
     public HealthScore? Health { get; set; }
@@ -218,6 +289,17 @@ public class ActionableIssue
     public string CodeExample { get; set; } = string.Empty; // Optional code snippet
     public int EstimatedFixTimeMinutes { get; set; }
     public int Priority { get; set; } // 1 = highest
+    
+    /// <summary>
+    /// True if this fix requires a developer (Apex code changes).
+    /// False if a Salesforce admin can fix it (Setup changes, validation rules, flows).
+    /// </summary>
+    public bool RequiresDeveloper { get; set; } = true;
+    
+    /// <summary>
+    /// Human-readable role label: "👩‍💻 Developer Fix" or "🔧 Admin Can Fix"
+    /// </summary>
+    public string RoleBadge => RequiresDeveloper ? "👩‍💻 Developer Fix" : "🔧 Admin Can Fix";
     
     public string SeverityIcon => Severity switch
     {

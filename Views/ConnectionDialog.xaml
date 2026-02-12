@@ -63,25 +63,25 @@
                               IsChecked="True"
                               Margin="0,0,0,16"/>
                     
-                    <Expander Header="Setup Instructions" Margin="0,0,0,16">
+                    <Expander Header="ℹ️ How does this work?" Margin="0,0,0,16">
                         <StackPanel Margin="16,8">
                             <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                                <Bold>To use OAuth, create a Connected App in Salesforce:</Bold>
+                                <Bold>Black Widow connects securely to your Salesforce org:</Bold>
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Margin="8,0,0,4">
-                                1. Setup → App Manager → New Connected App
+                                1. Click "Login with Browser" below
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Margin="8,0,0,4">
-                                2. Enable OAuth Settings
+                                2. Your browser will open Salesforce's login page
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Margin="8,0,0,4">
-                                3. Callback URL: http://localhost:8080/callback
-                            </TextBlock>
-                            <TextBlock TextWrapping="Wrap" Margin="8,0,0,4">
-                                4. Scopes: api, refresh_token
+                                3. Log in and approve access for Black Widow
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Margin="8,0,0,8">
-                                5. Copy Consumer Key/Secret to Services/OAuthService.cs
+                                4. You'll be redirected back — that's it!
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,0" FontSize="11" Foreground="#72767D">
+                                Your credentials are never stored by Black Widow. We use Salesforce's secure OAuth 2.0 flow.
                             </TextBlock>
                         </StackPanel>
                     </Expander>

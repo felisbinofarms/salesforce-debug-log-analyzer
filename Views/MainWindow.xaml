@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:SalesforceDebugAnalyzer.Helpers"
+        xmlns:viewmodels="clr-namespace:SalesforceDebugAnalyzer.ViewModels"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="Salesforce Debug Log Analyzer" 
@@ -39,6 +40,11 @@
         <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
         <helpers:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter"/>
         <helpers:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <helpers:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
+        <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <helpers:ArcPathConverter x:Key="ArcPathConverter"/>
+        <helpers:HealthScoreToColorConverter x:Key="HealthScoreToColorConverter"/>
         
         <!-- Discord Card Style -->
         <Style x:Key="DiscordCard" TargetType="Border">
@@ -424,22 +430,62 @@
                     </Button>
                 </StackPanel>
                 
-                <!-- Disconnect Button (Bottom) -->
-                <Button Grid.Row="1" Width="56" Height="56" 
-                        Background="Transparent" 
-                        BorderThickness="0"
-                        Margin="8"
-                        Cursor="Hand"
-                        Command="{Binding DisconnectCommand}"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="16"/>
-                        </Style>
-                    </Button.Resources>
-                    <materialDesign:PackIcon Kind="Power" 
-                                             Foreground="#ED4245" Width="24" Height="24"/>
-                </Button>
+                <!-- Bottom Actions -->
+                <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                    <!-- Export Report -->
+                    <Button Width="56" Height="56" 
+                            Background="#404249" 
+                            BorderThickness="0"
+                            Margin="8,4"
+                            Cursor="Hand"
+                            Command="{Binding ExportReportCommand}"
+                            ToolTip="Export Report (PDF/JSON)"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="FileExport" 
+                                                 Foreground="#B5BAC1" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Settings -->
+                    <Button Width="56" Height="56" 
+                            Background="#404249" 
+                            BorderThickness="0"
+                            Margin="8,4"
+                            Cursor="Hand"
+                            Command="{Binding OpenSettingsCommand}"
+                            ToolTip="Settings"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="Cog" 
+                                                 Foreground="#B5BAC1" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Disconnect -->
+                    <Button Width="56" Height="56" 
+                            Background="Transparent" 
+                            BorderThickness="0"
+                            Margin="8,4"
+                            Cursor="Hand"
+                            Command="{Binding DisconnectCommand}"
+                            ToolTip="Disconnect"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="16"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="Power" 
+                                                 Foreground="#ED4245" Width="24" Height="24"/>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -527,83 +573,126 @@
                         
                         <!-- Search Box -->
                         <Border Background="#383A40" CornerRadius="6" Grid.Row="2" Margin="0,0,0,12">
-                            <TextBox Background="Transparent" BorderThickness="0" 
-                                     Foreground="#B5BAC1" Padding="10,8"
-                                     FontSize="13" Text="🔍 Search logs..."/>
+                            <Grid>
+                                <TextBox x:Name="SearchBox" Background="Transparent" BorderThickness="0" 
+                                         Foreground="#DBDEE1" Padding="10,8"
+                                         FontSize="13"
+                                         TextChanged="SearchBox_TextChanged"/>
+                                <TextBlock Text="🔍 Search logs..." 
+                                           Foreground="#72767D" Padding="10,8" FontSize="13"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </Border>
                         
-                        <!-- Log List - Data Bound -->
-                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
-                            <ItemsControl ItemsSource="{Binding Logs}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.SelectLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                                Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
-                                            <Border CornerRadius="6" 
-                                                    Padding="12" Margin="0,0,0,8" Cursor="Hand">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#383A40"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                                                <Setter Property="Background" Value="#5865F2"/>
-                                                            </DataTrigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#404249"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Text="{Binding LogName}" FontSize="13" 
-                                                               FontWeight="SemiBold" Foreground="White"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Row="1" FontSize="11" 
-                                                               Foreground="#72767D" Margin="0,4,0,0">
-                                                        <Run Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"/>
-                                                        <Run Text=" • "/>
-                                                        <Run Text="{Binding LineCount}"/>
-                                                        <Run Text=" lines"/>
-                                                    </TextBlock>
-                                                    <Border Grid.Row="2" CornerRadius="3" Padding="6,2" 
-                                                            HorizontalAlignment="Left" Margin="0,6,0,0">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="#3BA55D"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding HasErrors}" Value="True">
-                                                                        <Setter Property="Background" Value="#ED4245"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
-                                                        <TextBlock FontSize="9" FontWeight="Bold" Foreground="White">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="SUCCESS"/>
+                        <!-- Log List - Virtualized ListBox for performance -->
+                        <ListBox Grid.Row="3" ItemsSource="{Binding Logs}" 
+                                 SelectedItem="{Binding SelectedLog}"
+                                 Background="Transparent" BorderThickness="0" Margin="0,0,0,8"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="ItemBorder" CornerRadius="6" 
+                                                        Padding="12" Margin="0,0,0,8" Cursor="Hand"
+                                                        Background="#383A40">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="{Binding LogName}" FontSize="13" 
+                                                                   FontWeight="SemiBold" Foreground="White"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Row="1" FontSize="11" 
+                                                                   Foreground="#72767D" Margin="0,4,0,0">
+                                                            <Run Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"/>
+                                                            <Run Text=" • "/>
+                                                            <Run Text="{Binding LineCount}"/>
+                                                            <Run Text=" lines"/>
+                                                        </TextBlock>
+                                                        <Border Grid.Row="2" CornerRadius="3" Padding="6,2" 
+                                                                HorizontalAlignment="Left" Margin="0,6,0,0">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#3BA55D"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding HasErrors}" Value="True">
-                                                                            <Setter Property="Text" Value="ERROR"/>
+                                                                            <Setter Property="Background" Value="#ED4245"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                                                            </Border.Style>
+                                                            <TextBlock FontSize="9" FontWeight="Bold" Foreground="White">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Text" Value="SUCCESS"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                                                                                <Setter Property="Text" Value="ERROR"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#5865F2"/>
+                                                    </Trigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="IsMouseOver" Value="True"/>
+                                                            <Condition Property="IsSelected" Value="False"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#404249"/>
+                                                    </MultiTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        
+                        <!-- Empty state when no logs loaded -->
+                        <Border Grid.Row="3" Background="#383A40" CornerRadius="8" Padding="20" Margin="0,0,0,8"
+                                Visibility="{Binding Logs.Count, Converter={StaticResource ZeroToVisibilityConverter}}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="📂" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock Text="No logs yet" FontSize="14" FontWeight="SemiBold" 
+                                           Foreground="#B5BAC1" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Upload a .log file, load a folder, or stream live from your org" 
+                                           FontSize="11" Foreground="#72767D" HorizontalAlignment="Center" 
+                                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,12"/>
+                                <Button Content="📄 Upload Log File" Command="{Binding UploadLogCommand}"
+                                        Background="#5865F2" Foreground="White" BorderThickness="0"
+                                        Padding="16,8" FontSize="12" HorizontalAlignment="Center" Cursor="Hand"/>
+                            </StackPanel>
+                        </Border>
 
                         <Border Background="#383A40" CornerRadius="8" 
                                 Grid.Row="4" Padding="12" Margin="0,8,0,0"
@@ -612,8 +701,8 @@
                                 <TextBlock Text="🎯 Filters" FontSize="13" FontWeight="SemiBold" 
                                            Foreground="White" Margin="0,0,0,8"/>
                                 <WrapPanel>
-                                    <CheckBox Content="SOQL" IsChecked="{Binding ShowSoqlOperations}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11"/>
-                                    <CheckBox Content="DML" IsChecked="{Binding ShowDmlOperations}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11"/>
+                                    <CheckBox Content="Reads (SOQL)" IsChecked="{Binding ShowSoqlOperations}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11" ToolTip="Database read operations (SOQL queries)"/>
+                                    <CheckBox Content="Writes (DML)" IsChecked="{Binding ShowDmlOperations}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11" ToolTip="Database write operations (inserts, updates, deletes)"/>
                                     <CheckBox Content="Errors" IsChecked="{Binding ShowErrorsOnly}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11"/>
                                     <CheckBox Content="Debug" IsChecked="{Binding ShowDebugStatements}" Foreground="#B5BAC1" Margin="0,2,12,2" FontSize="11"/>
                                 </WrapPanel>
@@ -984,6 +1073,32 @@
                         
                         <!-- Tab Content -->
                         <Grid Grid.Row="1">
+                            <!-- "No log selected" empty state overlay -->
+                            <Border Background="#2B2D31" 
+                                    Visibility="{Binding SelectedLog, Converter={StaticResource InverseNullToVisibilityConverter}}"
+                                    Panel.ZIndex="10">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="400">
+                                    <TextBlock Text="🕷️" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                    <TextBlock Text="Select a log to analyze" FontSize="18" FontWeight="Bold" 
+                                               Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock TextWrapping="Wrap" TextAlignment="Center" FontSize="13" 
+                                               Foreground="#72767D" Margin="0,0,0,20">
+                                        Upload a debug log file, load from a folder, or download from your Salesforce org. 
+                                        Then click a log from the list to see the full analysis.
+                                    </TextBlock>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="📄 Upload File" Command="{Binding UploadLogCommand}"
+                                                Background="#5865F2" Foreground="White" BorderThickness="0"
+                                                Padding="16,8" FontSize="12" Cursor="Hand" Margin="0,0,8,0"/>
+                                        <Button Content="📁 Load Folder" Command="{Binding LoadLogFolderCommand}"
+                                                Background="#404249" Foreground="#B5BAC1" BorderThickness="0"
+                                                Padding="16,8" FontSize="12" Cursor="Hand"/>
+                                    </StackPanel>
+                                    <TextBlock Text="or drag &amp; drop a .log file anywhere" FontSize="11" 
+                                               Foreground="#4E5058" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            
                             <!-- Summary Tab (Index 0) - VISUAL DASHBOARD -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=0}">
@@ -991,13 +1106,54 @@
                                     
                                     <!-- ===== HERO STATUS BANNER (Modern) ===== -->
                                     <Border CornerRadius="12" Margin="0,0,0,16" Padding="20">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                <GradientStop Color="#6E5AE6" Offset="0"/>
-                                                <GradientStop Color="#EA3C7E" Offset="0.6"/>
-                                                <GradientStop Color="#F59E0B" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background">
+                                                    <Setter.Value>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#6E5AE6" Offset="0"/>
+                                                            <GradientStop Color="#EA3C7E" Offset="0.6"/>
+                                                            <GradientStop Color="#F59E0B" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HeroStatus}" Value="FAILED">
+                                                        <Setter Property="Background">
+                                                            <Setter.Value>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                    <GradientStop Color="#DC2626" Offset="0"/>
+                                                                    <GradientStop Color="#991B1B" Offset="0.6"/>
+                                                                    <GradientStop Color="#7F1D1D" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding HeroStatus}" Value="SUCCESS">
+                                                        <Setter Property="Background">
+                                                            <Setter.Value>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                    <GradientStop Color="#059669" Offset="0"/>
+                                                                    <GradientStop Color="#047857" Offset="0.5"/>
+                                                                    <GradientStop Color="#065F46" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding HeroStatus}" Value="WARNING">
+                                                        <Setter Property="Background">
+                                                            <Setter.Value>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                    <GradientStop Color="#D97706" Offset="0"/>
+                                                                    <GradientStop Color="#B45309" Offset="0.6"/>
+                                                                    <GradientStop Color="#92400E" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -1080,7 +1236,85 @@
                                         </Grid>
                                     </Border>
                                     
-                                    <!-- ===== HEALTH SCORE DASHBOARD ===== -->
+                                    <!-- ===== TIMELINE STRIP ===== -->
+                                    <StackPanel Margin="0,0,0,16"
+                                                Visibility="{Binding HasTimelineData, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Order of Execution" FontSize="18" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1" FontSize="12" Foreground="#80848E" VerticalAlignment="Center">
+                                                <Run Text="Total "/>
+                                                <Run Text="{Binding TimelineTotalDurationMs, StringFormat={}{0:N0}ms}"/>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <Border Background="#2B2D31" CornerRadius="10" Padding="8" BorderBrush="#3F4147" BorderThickness="1">
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+                                                <ItemsControl ItemsSource="{Binding TimelineSegments}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Margin="4,4,4,4" Padding="10,6" CornerRadius="8"
+                                                                    Width="{Binding Percent, Converter={StaticResource PercentToWidthConverter}}"
+                                                                    ToolTip="{Binding Name}" BorderThickness="1">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="#5865F2"/>
+                                                                        <Setter Property="BorderBrush" Value="#3F4147"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Type}" Value="Trigger">
+                                                                                <Setter Property="Background" Value="#8B5CF6"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Type}" Value="Flow">
+                                                                                <Setter Property="Background" Value="#22D3EE"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Type}" Value="Validation">
+                                                                                <Setter Property="Background" Value="#F59E0B"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Type}" Value="DML">
+                                                                                <Setter Property="Background" Value="#F97316"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Type}" Value="Async">
+                                                                                <Setter Property="Background" Value="#10B981"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding IsSlowest}" Value="True">
+                                                                                <Setter Property="BorderBrush" Value="#FBBF24"/>
+                                                                                <Setter Property="BorderThickness" Value="2"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding Icon}" Margin="0,0,6,0"/>
+                                                                        <TextBlock Text="{Binding Type}" FontWeight="SemiBold" FontSize="12"/>
+                                                                        <TextBlock Text="{Binding DurationMs, StringFormat={}{0:N0}ms}" FontSize="12" Foreground="#DBDEE1" Margin="6,0,0,0"/>
+                                                                    </StackPanel>
+                                                                    <TextBlock Text="{Binding Name}" FontSize="11" Foreground="#B5BAC1" TextTrimming="CharacterEllipsis"/>
+                                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsRecursive, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                        <TextBlock Text="⚠️ Recursive" FontSize="10" Foreground="#FEE75C"/>
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding TimelineSummary}" FontSize="12" Foreground="#80848E" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                        <TextBlock Text="{Binding TimelineSlowestLabel}" FontSize="12" Foreground="#FBBF24" Margin="0,2,0,0"
+                                                   Visibility="{Binding TimelineSlowestLabel, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                    
+                                    <!-- ===== HEALTH SCORE DASHBOARD (Conic-like Arc) ===== -->
                                     <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
                                             Visibility="{Binding HasHealthData, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Grid>
@@ -1088,43 +1322,38 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            
-                                            <!-- Health Score Circle -->
-                                            <Grid Grid.Column="0" Width="120" Height="120" Margin="0,0,24,0">
-                                                <!-- Background circle -->
-                                                <Ellipse Stroke="#3F4147" StrokeThickness="8" Width="120" Height="120"/>
-                                                <!-- Score arc -->
-                                                <Ellipse Width="120" Height="120" StrokeDashArray="377" StrokeThickness="8">
-                                                    <Ellipse.Style>
-                                                        <Style TargetType="Ellipse">
-                                                            <Setter Property="Stroke" Value="#ED4245"/> <!-- Red for low scores -->
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding HealthScore}" Value="*">
-                                                                    <Setter Property="Stroke" Value="#ED4245"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Ellipse.Style>
-                                                </Ellipse>
+
+                                            <!-- Health Score Arc -->
+                                            <Grid Grid.Column="0" Width="140" Height="140" Margin="0,0,24,0">
+                                                <!-- Background ring -->
+                                                <Ellipse Width="140" Height="140" Stroke="#3F4147" StrokeThickness="10"/>
+
+                                                <!-- Foreground arc -->
+                                                <Path StrokeThickness="10" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Data="{Binding HealthScore, Converter={StaticResource ArcPathConverter}}"
+                                                      Stroke="{Binding HealthScore, Converter={StaticResource HealthScoreToColorConverter}}">
+                                                    <Path.Triggers>
+                                                        <EventTrigger RoutedEvent="Loaded">
+                                                            <BeginStoryboard>
+                                                                <Storyboard RepeatBehavior="1x">
+                                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </EventTrigger>
+                                                    </Path.Triggers>
+                                                </Path>
+
                                                 <!-- Score text -->
                                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <TextBlock FontSize="36" FontWeight="Bold" HorizontalAlignment="Center">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="#ED4245"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding HealthScore}" Value="*">
-                                                                        <Setter Property="Foreground" Value="#ED4245"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                        <Run Text="{Binding HealthScore, Mode=OneWay}"/><Run Text="/100" FontSize="18"/>
+                                                    <TextBlock FontSize="34" FontWeight="Bold" HorizontalAlignment="Center"
+                                                             Foreground="{Binding HealthScore, Converter={StaticResource HealthScoreToColorConverter}}">
+                                                        <Run Text="{Binding HealthScore, Mode=OneWay}"/><Run Text="/100" FontSize="16"/>
                                                     </TextBlock>
-                                                    <TextBlock Text="{Binding HealthGrade}" FontSize="18" FontWeight="Bold" Foreground="#B5BAC1" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding HealthGrade}" FontSize="17" FontWeight="Bold" Foreground="#B5BAC1" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding HealthStatus}" FontSize="12" Foreground="#80848E" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Grid>
-                                            
+
                                             <!-- Health Info -->
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock FontSize="20" FontWeight="SemiBold" Margin="0,0,0,8">
@@ -1165,6 +1394,18 @@
                                         </Grid>
                                     </Border>
                                     
+                                    <!-- ===== FULL ANALYSIS SUMMARY ===== -->
+                                    <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
+                                            Visibility="{Binding FullSummaryText, Converter={StaticResource StringToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Analysis Summary" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding FullSummaryText}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1" LineHeight="22"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
                                     <!-- ===== ACTIONABLE ISSUES ===== -->
                                     <StackPanel Visibility="{Binding HasHealthData, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         
@@ -1188,12 +1429,16 @@
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*"/>
                                                                         <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
                                                                         <Run Text="{Binding SeverityIcon}"/>
                                                                         <Run Text=" "/><Run Text="{Binding Title}"/>
                                                                     </TextBlock>
-                                                                    <Border Grid.Column="1" Background="#3F414730" CornerRadius="4" Padding="8,4">
+                                                                    <Border Grid.Column="1" Background="#3F414730" CornerRadius="4" Padding="8,4" Margin="0,0,6,0">
+                                                                        <TextBlock Text="{Binding RoleBadge}" FontSize="11" Foreground="#B5BAC1"/>
+                                                                    </Border>
+                                                                    <Border Grid.Column="2" Background="#3F414730" CornerRadius="4" Padding="8,4">
                                                                         <TextBlock Text="{Binding DifficultyBadge}" FontSize="11" Foreground="#B5BAC1"/>
                                                                     </Border>
                                                                 </Grid>
@@ -1268,12 +1513,16 @@
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*"/>
                                                                         <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
                                                                         <Run Text="{Binding SeverityIcon}"/>
                                                                         <Run Text=" "/><Run Text="{Binding Title}"/>
                                                                     </TextBlock>
-                                                                    <Border Grid.Column="1" Background="#3F414730" CornerRadius="4" Padding="8,4">
+                                                                    <Border Grid.Column="1" Background="#3F414730" CornerRadius="4" Padding="8,4" Margin="0,0,6,0">
+                                                                        <TextBlock Text="{Binding RoleBadge}" FontSize="11" Foreground="#B5BAC1"/>
+                                                                    </Border>
+                                                                    <Border Grid.Column="2" Background="#3F414730" CornerRadius="4" Padding="8,4">
                                                                         <TextBlock Text="{Binding DifficultyBadge}" FontSize="11" Foreground="#B5BAC1"/>
                                                                     </Border>
                                                                 </Grid>
@@ -1338,12 +1587,14 @@
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*"/>
                                                                         <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
                                                                         <Run Text="{Binding SeverityIcon}"/>
                                                                         <Run Text=" "/><Run Text="{Binding Title}"/>
                                                                     </TextBlock>
-                                                                    <TextBlock Grid.Column="1" FontSize="11" Foreground="#57F287">
+                                                                    <TextBlock Grid.Column="1" Text="{Binding RoleBadge}" FontSize="11" Foreground="#B5BAC1" Margin="8,0,4,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="2" FontSize="11" Foreground="#57F287">
                                                                         <Run Text="⏱️ "/><Run Text="{Binding EstimatedFixTimeMinutes}"/><Run Text=" min"/>
                                                                     </TextBlock>
                                                                 </Grid>
@@ -1374,6 +1625,21 @@
                                         </StackPanel>
                                     </StackPanel>
                                     
+                                    <!-- ===== CLEAN BILL OF HEALTH (Congratulations Card) ===== -->
+                                    <Border Background="#1E3A29" CornerRadius="12" Padding="20" Margin="0,0,0,16" BorderBrush="#3BA55D" BorderThickness="1"
+                                            Visibility="{Binding IsCleanBillOfHealth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="🎉" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Clean Bill of Health!" FontSize="18" FontWeight="Bold" 
+                                                       Foreground="#57F287" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                            <TextBlock Text="No critical or high-priority issues found. This transaction looks great!" 
+                                                       FontSize="13" Foreground="#B5BAC1" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,4"/>
+                                            <TextBlock FontSize="12" Foreground="#72767D" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center">
+                                                <Run Text="Health Score: "/><Run Text="{Binding HealthScore}" Foreground="#57F287" FontWeight="Bold"/><Run Text="/100"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                    
                                     <!-- ===== QUICK STATS ROW ===== -->
                                     <Grid Margin="0,0,0,16">
                                         <Grid.ColumnDefinitions>
@@ -1390,7 +1656,8 @@
                                                 <TextBlock FontSize="24" FontWeight="Bold" Foreground="#7B83FF" HorizontalAlignment="Center" Margin="0,2,0,0">
                                                     <Run Text="{Binding StatSoqlCount, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <TextBlock Text="SOQL" FontSize="11" Foreground="#B5BAC1" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Reads (SOQL)" FontSize="11" Foreground="#B5BAC1" HorizontalAlignment="Center" Margin="0,2,0,0"
+                                                           ToolTip="SOQL = Salesforce Object Query Language. These are database read operations."/>
                                             </StackPanel>
                                         </Border>
                                         
@@ -1401,7 +1668,8 @@
                                                 <TextBlock FontSize="24" FontWeight="Bold" Foreground="#FBBF24" HorizontalAlignment="Center" Margin="0,2,0,0">
                                                     <Run Text="{Binding StatDmlCount, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <TextBlock Text="DML" FontSize="11" Foreground="#B5BAC1" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Writes (DML)" FontSize="11" Foreground="#B5BAC1" HorizontalAlignment="Center" Margin="0,2,0,0"
+                                                           ToolTip="DML = Data Manipulation Language. These are database write operations (insert, update, delete)."/>
                                             </StackPanel>
                                         </Border>
                                         
@@ -1451,7 +1719,8 @@
                                     <!-- ===== GOVERNOR LIMITS PROGRESS BARS ===== -->
                                     <Border Background="#383A40" CornerRadius="6" Padding="16" Margin="0,0,0,16">
                                         <StackPanel>
-                                            <TextBlock Text="Governor Limits" FontSize="14" FontWeight="SemiBold" Foreground="#DBDEE1" Margin="0,0,0,12"/>
+                                            <TextBlock Text="Resource Usage" FontSize="14" FontWeight="SemiBold" Foreground="#DBDEE1" Margin="0,0,0,12"
+                                                       ToolTip="Salesforce limits how much each transaction can do (called 'Governor Limits'). These bars show how close you are to those limits."/>
                                             
                                             <!-- SOQL Progress -->
                                             <Grid Margin="0,0,0,10">
@@ -1460,7 +1729,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="60"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="SOQL" FontSize="12" Foreground="#B5BAC1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Reads" FontSize="12" Foreground="#B5BAC1" VerticalAlignment="Center" ToolTip="Database read operations (SOQL queries)"/>
                                                 <Border Grid.Column="1" Background="#2B2D31" CornerRadius="4" Height="20">
                                                     <Border CornerRadius="4" HorizontalAlignment="Left" 
                                                             Width="{Binding SoqlPercent, Converter={StaticResource PercentToWidthConverter}}">
@@ -1491,7 +1760,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="60"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="DML" FontSize="12" Foreground="#B5BAC1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Writes" FontSize="12" Foreground="#B5BAC1" VerticalAlignment="Center" ToolTip="Database write operations (DML - inserts, updates, deletes)"/>
                                                 <Border Grid.Column="1" Background="#2B2D31" CornerRadius="4" Height="20">
                                                     <Border CornerRadius="4" HorizontalAlignment="Left"
                                                             Width="{Binding DmlPercent, Converter={StaticResource PercentToWidthConverter}}">
@@ -1548,6 +1817,140 @@
                                         </StackPanel>
                                     </Border>
                                     
+                                    <!-- ===== TOP METHODS (always useful) ===== -->
+                                    <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
+                                            Visibility="{Binding HasTopMethods, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <TextBlock Text="⚡" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Where Time Was Spent" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="  (Top Methods)" FontSize="12" Foreground="#72767D" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <ItemsControl ItemsSource="{Binding TopMethods}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#2B2D31" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                
+                                                                <!-- Method name -->
+                                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="13" FontFamily="Consolas" 
+                                                                           Foreground="#DBDEE1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                                
+                                                                <!-- Call count badge -->
+                                                                <Border Grid.Column="1" Background="#4E505830" CornerRadius="4" Padding="8,3" Margin="8,0">
+                                                                    <TextBlock FontSize="11" Foreground="#B5BAC1" VerticalAlignment="Center">
+                                                                        <Run Text="{Binding CallCount, Mode=OneWay}"/><Run Text="x calls"/>
+                                                                    </TextBlock>
+                                                                </Border>
+                                                                
+                                                                <!-- Avg time -->
+                                                                <TextBlock Grid.Column="2" FontSize="11" Foreground="#72767D" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                                    <Run Text="avg "/><Run Text="{Binding AvgDisplay, Mode=OneWay}"/>
+                                                                </TextBlock>
+                                                                
+                                                                <!-- Total time -->
+                                                                <Border Grid.Column="3" CornerRadius="4" Padding="8,3" MinWidth="60" HorizontalAlignment="Right">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="#5865F230"/>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock Text="{Binding TimeDisplay}" FontSize="12" FontWeight="SemiBold" 
+                                                                               Foreground="#7B83FF" HorizontalAlignment="Center"/>
+                                                                </Border>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- ===== TOP QUERIES (always useful) ===== -->
+                                    <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
+                                            Visibility="{Binding HasTopQueries, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <TextBlock Text="💾" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Query Hotspots" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="  (Most Frequent Queries)" FontSize="12" Foreground="#72767D" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <ItemsControl ItemsSource="{Binding TopQueries}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#2B2D31" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+                                                                
+                                                                <!-- Header row: count + time + location -->
+                                                                <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    
+                                                                    <!-- Execution count badge -->
+                                                                    <Border Grid.Column="0" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                                                                        <Border.Style>
+                                                                            <Style TargetType="Border">
+                                                                                <Setter Property="Background" Value="#5865F230"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsNPlusOne}" Value="True">
+                                                                                        <Setter Property="Background" Value="#ED424530"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                        <TextBlock FontSize="12" FontWeight="SemiBold">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Setter Property="Foreground" Value="#7B83FF"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsNPlusOne}" Value="True">
+                                                                                            <Setter Property="Foreground" Value="#F87171"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                            <Run Text="{Binding CountBadge, Mode=OneWay}"/>
+                                                                        </TextBlock>
+                                                                    </Border>
+                                                                    
+                                                                    <!-- N+1 warning -->
+                                                                    <TextBlock Grid.Column="1" Text="{Binding NPlusOneBadge}" FontSize="11" 
+                                                                               Foreground="#F87171" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                    
+                                                                    <!-- Location -->
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Location}" FontSize="11" 
+                                                                               Foreground="#72767D" VerticalAlignment="Center" FontFamily="Consolas"/>
+                                                                    
+                                                                    <!-- Duration -->
+                                                                    <TextBlock Grid.Column="3" Text="{Binding TimeDisplay}" FontSize="12" 
+                                                                               Foreground="#FBBF24" VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                                
+                                                                <!-- Query text -->
+                                                                <TextBlock Grid.Row="1" Text="{Binding Query}" FontSize="11" FontFamily="Consolas" 
+                                                                           Foreground="#80848E" TextWrapping="Wrap" MaxHeight="40" TextTrimming="CharacterEllipsis"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                    
                                     <!-- ===== TIMING BREAKDOWN (when overhead is significant) ===== -->
                                     <Border Background="#383A40" CornerRadius="6" Padding="16" Margin="0,0,0,16"
                                             Visibility="{Binding ShowTimingBreakdown, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -1578,80 +1981,92 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <!-- ===== ISSUES SECTION (Visual Cards) ===== -->
-                                    <Border Background="#383A40" CornerRadius="6" Padding="16" Margin="0,0,0,16"
-                                            Visibility="{Binding Issues.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                                <TextBlock Text="🔍" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Issues Detected" FontSize="14" FontWeight="SemiBold" Foreground="#ED4245" VerticalAlignment="Center"/>
-                                                <Border Background="#ED4245" CornerRadius="10" Padding="8,2" Margin="8,0,0,0">
-                                                    <TextBlock Text="{Binding Issues.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
-                                                </Border>
-                                                <Button Content="📋 Copy" 
-                                                        HorizontalAlignment="Right" 
-                                                        Click="CopyIssues_Click"
-                                                        Background="#4E5058" 
-                                                        Foreground="#B5BAC1" 
-                                                        BorderThickness="0" 
-                                                        Padding="10,4" 
-                                                        FontSize="12"
-                                                        Cursor="Hand"
-                                                        Margin="12,0,0,0"
-                                                        ToolTip="Copy to clipboard"/>
+                                    <!-- ===== RAW DETAILS (Collapsed by default - for advanced users) ===== -->
+                                    <Expander IsExpanded="False" Margin="0,0,0,16"
+                                              Visibility="{Binding Issues.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="📋" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Raw Technical Details" FontSize="14" FontWeight="SemiBold" Foreground="#B5BAC1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="(for developers)" FontSize="11" Foreground="#72767D" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                             </StackPanel>
-                                            <ItemsControl ItemsSource="{Binding Issues}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border CornerRadius="4" Padding="12" Margin="0,0,0,8">
-                                                            <Border.Style>
-                                                                <Style TargetType="Border">
-                                                                    <Setter Property="Background" Value="#2B2D31"/>
-                                                                    <Setter Property="BorderBrush" Value="#4E5058"/>
-                                                                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                                                </Style>
-                                                            </Border.Style>
-                                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1"/>
+                                        </Expander.Header>
+                                        <StackPanel Margin="0,12,0,0">
+                                            <!-- Issues -->
+                                            <Border Background="#383A40" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                        <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Issues Detected" FontSize="13" FontWeight="SemiBold" Foreground="#ED4245" VerticalAlignment="Center"/>
+                                                        <Border Background="#ED4245" CornerRadius="10" Padding="8,2" Margin="8,0,0,0">
+                                                            <TextBlock Text="{Binding Issues.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
                                                         </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Border>
+                                                        <Button Content="📋 Copy" 
+                                                                HorizontalAlignment="Right" 
+                                                                Click="CopyIssues_Click"
+                                                                Background="#4E5058" 
+                                                                Foreground="#B5BAC1" 
+                                                                BorderThickness="0" 
+                                                                Padding="10,4" 
+                                                                FontSize="12"
+                                                                Cursor="Hand"
+                                                                Margin="12,0,0,0"
+                                                                ToolTip="Copy to clipboard"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Issues}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="#2B2D31"/>
+                                                                            <Setter Property="BorderBrush" Value="#4E5058"/>
+                                                                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1"/>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
 
-                                    <!-- ===== RECOMMENDATIONS (Collapsible) ===== -->
-                                    <Border Background="#383A40" CornerRadius="6" Padding="16"
-                                            Visibility="{Binding Recommendations.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                                <TextBlock Text="💡" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Recommendations" FontSize="14" FontWeight="SemiBold" Foreground="#3BA55D" VerticalAlignment="Center"/>
-                                                <Border Background="#3BA55D" CornerRadius="10" Padding="8,2" Margin="8,0,0,0">
-                                                    <TextBlock Text="{Binding Recommendations.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
-                                                </Border>
-                                                <Button Content="📋 Copy" 
-                                                        Click="CopyRecommendations_Click"
-                                                        Background="#4E5058" 
-                                                        Foreground="#B5BAC1" 
-                                                        BorderThickness="0" 
-                                                        Padding="10,4" 
-                                                        FontSize="12"
-                                                        Cursor="Hand"
-                                                        Margin="12,0,0,0"
-                                                        ToolTip="Copy to clipboard"/>
-                                            </StackPanel>
-                                            <ItemsControl ItemsSource="{Binding Recommendations}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border Background="#2B2D31" CornerRadius="4" Padding="12" Margin="0,0,0,8"
-                                                                BorderBrush="#3BA55D33" BorderThickness="1">
-                                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1"/>
+                                            <!-- Recommendations -->
+                                            <Border Background="#383A40" CornerRadius="6" Padding="16"
+                                                    Visibility="{Binding Recommendations.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                        <TextBlock Text="💡" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Recommendations" FontSize="13" FontWeight="SemiBold" Foreground="#3BA55D" VerticalAlignment="Center"/>
+                                                        <Border Background="#3BA55D" CornerRadius="10" Padding="8,2" Margin="8,0,0,0">
+                                                            <TextBlock Text="{Binding Recommendations.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
                                                         </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
+                                                        <Button Content="📋 Copy" 
+                                                                Click="CopyRecommendations_Click"
+                                                                Background="#4E5058" 
+                                                                Foreground="#B5BAC1" 
+                                                                BorderThickness="0" 
+                                                                Padding="10,4" 
+                                                                FontSize="12"
+                                                                Cursor="Hand"
+                                                                Margin="12,0,0,0"
+                                                                ToolTip="Copy to clipboard"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Recommendations}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="#2B2D31" CornerRadius="4" Padding="12" Margin="0,0,0,8"
+                                                                        BorderBrush="#3BA55D33" BorderThickness="1">
+                                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1"/>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
                                         </StackPanel>
-                                    </Border>
+                                    </Expander>
                                     
                                 </StackPanel>
                             </ScrollViewer>
@@ -1659,14 +2074,104 @@
                             <!-- Tree Tab (Index 1) -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=1}">
-                                <StackPanel MaxWidth="800">
-                                    <Border Background="#383A40" BorderBrush="#5865F2" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16">
+                                <StackPanel MaxWidth="900">
+                                    <!-- Header -->
+                                    <Border Background="#383A40" BorderBrush="#5865F2" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                                 <TextBlock Text="🌳" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                                 <TextBlock Text="Execution Tree" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <TextBlock Text="Execution tree visualization coming in Phase 2..." TextWrapping="Wrap" FontSize="14" FontStyle="Italic" Foreground="#72767D"/>
+                                            <TextBlock Text="Shows the hierarchy of code execution — what called what, and how long each piece took." 
+                                                       FontSize="12" Foreground="#80848E" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- Tree Content -->
+                                    <Border Visibility="{Binding HasExecutionTree, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TreeView ItemsSource="{Binding ExecutionTreeNodes}" Background="Transparent" BorderThickness="0"
+                                                  Foreground="#DBDEE1">
+                                            <TreeView.Resources>
+                                                <HierarchicalDataTemplate DataType="{x:Type viewmodels:TreeNodeViewModel}" 
+                                                                          ItemsSource="{Binding Children}">
+                                                    <Border Background="#2B2D31" CornerRadius="4" Padding="10,6" Margin="0,2">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            
+                                                            <!-- Type icon -->
+                                                            <TextBlock Grid.Column="0" Text="{Binding TypeIcon}" FontSize="14" 
+                                                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                            
+                                                            <!-- Name -->
+                                                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" 
+                                                                       Foreground="#DBDEE1" TextTrimming="CharacterEllipsis" 
+                                                                       VerticalAlignment="Center" FontFamily="Consolas"/>
+                                                            
+                                                            <!-- Type badge -->
+                                                            <Border Grid.Column="2" CornerRadius="3" Padding="6,2" Margin="8,0">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="#4E505830"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding TypeName}" Value="Soql">
+                                                                                <Setter Property="Background" Value="#5865F230"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding TypeName}" Value="Dml">
+                                                                                <Setter Property="Background" Value="#F9731630"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding TypeName}" Value="Exception">
+                                                                                <Setter Property="Background" Value="#ED424530"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding TypeName}" FontSize="10" Foreground="#B5BAC1"/>
+                                                            </Border>
+                                                            
+                                                            <!-- Duration -->
+                                                            <TextBlock Grid.Column="3" Text="{Binding DurationDisplay}" FontSize="12" 
+                                                                       FontWeight="SemiBold" VerticalAlignment="Center" MinWidth="50" TextAlignment="Right">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#72767D"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding TypeName}" Value="Soql">
+                                                                                <Setter Property="Foreground" Value="#7B83FF"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding TypeName}" Value="Dml">
+                                                                                <Setter Property="Foreground" Value="#FBBF24"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Grid>
+                                                    </Border>
+                                                </HierarchicalDataTemplate>
+                                            </TreeView.Resources>
+                                            <TreeView.ItemContainerStyle>
+                                                <Style TargetType="TreeViewItem">
+                                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
+                                                    <Setter Property="Foreground" Value="#DBDEE1"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                </Style>
+                                            </TreeView.ItemContainerStyle>
+                                        </TreeView>
+                                    </Border>
+                                    
+                                    <!-- Empty state -->
+                                    <Border Background="#383A40" CornerRadius="6" Padding="20" 
+                                            Visibility="{Binding HasExecutionTree, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="🌳" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="No execution tree data" FontSize="14" Foreground="#72767D" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="The log may be too short or didn't contain code unit events." 
+                                                       FontSize="12" Foreground="#4E5058" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -1675,14 +2180,159 @@
                             <!-- Timeline Tab (Index 2) -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=2}">
-                                <StackPanel MaxWidth="800">
-                                    <Border Background="#383A40" BorderBrush="#FAA61A" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16">
+                                <StackPanel MaxWidth="900">
+                                    <!-- Header -->
+                                    <Border Background="#383A40" BorderBrush="#FAA61A" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                                 <TextBlock Text="⏱️" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Timeline" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Execution Timeline" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <TextBlock Text="Timeline visualization coming in Phase 2..." TextWrapping="Wrap" FontSize="14" FontStyle="Italic" Foreground="#72767D"/>
+                                            <TextBlock Text="Every phase of execution in chronological order — triggers, flows, validations, DML, and async operations." 
+                                                       FontSize="12" Foreground="#80848E" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- Timeline Content -->
+                                    <Border Visibility="{Binding HasTimelineDetails, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ItemsControl ItemsSource="{Binding TimelineDetails}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="{Binding IndentMargin}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        
+                                                        <!-- Colored timeline bar -->
+                                                        <Border Grid.Column="0" CornerRadius="2" Margin="0,2">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#5865F2"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Trigger">
+                                                                            <Setter Property="Background" Value="#8B5CF6"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Flow">
+                                                                            <Setter Property="Background" Value="#22D3EE"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Validation">
+                                                                            <Setter Property="Background" Value="#F59E0B"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="DML">
+                                                                            <Setter Property="Background" Value="#F97316"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Async">
+                                                                            <Setter Property="Background" Value="#10B981"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                        </Border>
+                                                        
+                                                        <!-- Phase content -->
+                                                        <Border Grid.Column="1" Background="#2B2D31" CornerRadius="6" Padding="12,8" Margin="8,2,0,2">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                
+                                                                <!-- Icon -->
+                                                                <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" 
+                                                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                
+                                                                <!-- Type badge -->
+                                                                <Border Grid.Column="1" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="#4E505830"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Type}" Value="Trigger">
+                                                                                    <Setter Property="Background" Value="#8B5CF630"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Type}" Value="Flow">
+                                                                                    <Setter Property="Background" Value="#22D3EE30"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Type}" Value="Validation">
+                                                                                    <Setter Property="Background" Value="#F59E0B30"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Type}" Value="DML">
+                                                                                    <Setter Property="Background" Value="#F9731630"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock Text="{Binding Type}" FontSize="10" FontWeight="SemiBold" Foreground="#B5BAC1"/>
+                                                                </Border>
+                                                                
+                                                                <!-- Name -->
+                                                                <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="12" 
+                                                                           Foreground="#DBDEE1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                                
+                                                                <!-- Recursive flag -->
+                                                                <TextBlock Grid.Column="3" Text="⚠️ Recursive" FontSize="10" Foreground="#FEE75C" 
+                                                                           VerticalAlignment="Center" Margin="8,0"
+                                                                           Visibility="{Binding IsRecursive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                
+                                                                <!-- Duration + percent -->
+                                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding PercentDisplay}" FontSize="11" Foreground="#72767D" Margin="0,0,8,0"/>
+                                                                    <Border Background="#5865F230" CornerRadius="4" Padding="8,3" MinWidth="55">
+                                                                        <TextBlock Text="{Binding DurationDisplay}" FontSize="12" FontWeight="SemiBold" 
+                                                                                   Foreground="#7B83FF" HorizontalAlignment="Center"/>
+                                                                    </Border>
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+                                    
+                                    <!-- Timeline legend -->
+                                    <Border Background="#383A40" CornerRadius="6" Padding="12" Margin="0,12,0,0"
+                                            Visibility="{Binding HasTimelineDetails, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <WrapPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#8B5CF6" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Trigger" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#22D3EE" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Flow" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#F59E0B" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Validation" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#F97316" Margin="0,0,6,0"/>
+                                                <TextBlock Text="DML" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#10B981" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Async" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Width="12" Height="12" CornerRadius="2" Background="#5865F2" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Other" FontSize="11" Foreground="#B5BAC1"/>
+                                            </StackPanel>
+                                        </WrapPanel>
+                                    </Border>
+                                    
+                                    <!-- Empty state -->
+                                    <Border Background="#383A40" CornerRadius="6" Padding="20" 
+                                            Visibility="{Binding HasTimelineDetails, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="⏱️" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="No timeline data" FontSize="14" Foreground="#72767D" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="The log didn't contain enough execution phases to build a timeline." 
+                                                       FontSize="12" Foreground="#4E5058" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -1692,7 +2342,22 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=3}">
                                 <StackPanel MaxWidth="800">
-                                    <Border Background="#383A40" BorderBrush="#3BA55D" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                    <!-- Empty state when no database operations -->
+                                    <Border Background="#383A40" CornerRadius="6" Padding="20" Margin="0,0,0,12"
+                                            Visibility="{Binding DatabaseOperations.Count, Converter={StaticResource ZeroToVisibilityConverter}}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="💾" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="No database operations" FontSize="14" FontWeight="SemiBold" Foreground="#B5BAC1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="This log didn't contain any database reads (SOQL) or writes (DML)." 
+                                                       FontSize="12" Foreground="#72767D" HorizontalAlignment="Center" Margin="0,4,0,0"
+                                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                                            <TextBlock Text="That's actually great — it means this transaction is lightweight!" 
+                                                       FontSize="11" Foreground="#3BA55D" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <Border Background="#383A40" BorderBrush="#3BA55D" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12"
+                                            Visibility="{Binding DatabaseOperations.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                                 <TextBlock Text="💾" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -1723,17 +2388,17 @@
                                                                         <Style TargetType="Border">
                                                                             <Setter Property="Background" Value="#5865F2"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Type}" Value="DML">
+                                                                                <DataTrigger Binding="{Binding OperationType}" Value="DML">
                                                                                     <Setter Property="Background" Value="#FAA61A"/>
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
                                                                         </Style>
                                                                     </Border.Style>
-                                                                    <TextBlock Text="{Binding Type}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                                                    <TextBlock Text="{Binding OperationType}" FontSize="10" FontWeight="Bold" Foreground="White"/>
                                                                 </Border>
                                                                 
                                                                 <!-- Object name -->
-                                                                <TextBlock Grid.Column="1" Text="{Binding ObjectName}" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding ObjectType}" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
                                                                 
                                                                 <!-- Duration -->
                                                                 <TextBlock Grid.Column="2" FontSize="11" Foreground="#72767D">
@@ -1741,14 +2406,14 @@
                                                                 </TextBlock>
                                                                 
                                                                 <!-- Query/Statement -->
-                                                                <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Statement}" 
+                                                                <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Query}" 
                                                                            TextWrapping="Wrap" FontSize="11" Foreground="#B5BAC1" 
                                                                            FontFamily="Consolas" Margin="0,6,0,0"
                                                                            MaxHeight="60" TextTrimming="CharacterEllipsis"/>
                                                                 
                                                                 <!-- Row count -->
                                                                 <TextBlock Grid.Row="2" Grid.ColumnSpan="3" FontSize="10" Foreground="#72767D" Margin="0,4,0,0">
-                                                                    <Run Text="{Binding RowCount}"/><Run Text=" rows"/>
+                                                                    <Run Text="{Binding RowsAffected}"/><Run Text=" rows"/>
                                                                 </TextBlock>
                                                             </Grid>
                                                         </Border>
@@ -1767,6 +2432,3 @@
         </Grid>
     </Grid>
 </Window>
-
-
-
