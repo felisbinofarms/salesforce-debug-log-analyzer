@@ -47,7 +47,8 @@ public enum ExecutionNodeType
     Exception,
     UserDebug,
     Validation,
-    Flow
+    Flow,
+    Constructor
 }
 
 /// <summary>
@@ -101,6 +102,12 @@ public class CalloutOperation
     public string StatusMessage { get; set; } = string.Empty;
     public long DurationMs { get; set; }
     public int LineNumber { get; set; }
+    public Dictionary<string, string> Metadata { get; set; } = new();
+    
+    /// <summary>
+    /// True if the callout returned an HTTP error (4xx or 5xx).
+    /// StatusCode 0 means status was not captured — not an error.
+    /// </summary>
     public bool IsError => StatusCode >= 400;
 }
 
@@ -251,6 +258,48 @@ public class LogAnalysis
     /// Health score (0-100) and actionable issues prioritized for fixing
     /// </summary>
     public HealthScore? Health { get; set; }
+    
+    /// <summary>
+    /// Execution units found in the log (from EXECUTION_STARTED/FINISHED pairs).
+    /// Async logs (e.g., @future, Queueable) can have multiple execution units.
+    /// </summary>
+    public List<ExecutionUnit> ExecutionUnits { get; set; } = new();
+    
+    /// <summary>
+    /// True if this log contains async-level governor limits (200 SOQL, 60000ms CPU).
+    /// Detected from the governor limit values themselves.
+    /// </summary>
+    public bool IsAsyncExecution { get; set; }
+    
+    /// <summary>
+    /// Total heap allocated during execution (sum of HEAP_ALLOCATE events in bytes)
+    /// </summary>
+    public long TotalHeapAllocated { get; set; }
+}
+
+/// <summary>
+/// Represents an EXECUTION_STARTED/FINISHED boundary in the log.
+/// A single log can contain multiple execution units (e.g., @future methods, Queueable).
+/// </summary>
+public class ExecutionUnit
+{
+    /// <summary>The operation name (e.g., "execute_anonymous_apex", "FutureHandler")</summary>
+    public string OperationName { get; set; } = string.Empty;
+    
+    /// <summary>Line number where EXECUTION_STARTED appeared</summary>
+    public int StartLine { get; set; }
+    
+    /// <summary>Line number where EXECUTION_FINISHED appeared</summary>
+    public int EndLine { get; set; }
+    
+    /// <summary>Timestamp of EXECUTION_STARTED</summary>
+    public DateTime StartTime { get; set; }
+    
+    /// <summary>Timestamp of EXECUTION_FINISHED</summary>
+    public DateTime EndTime { get; set; }
+    
+    /// <summary>Duration in milliseconds</summary>
+    public long DurationMs => EndTime > StartTime ? (long)(EndTime - StartTime).TotalMilliseconds : 0;
 }
 
 /// <summary>

@@ -1,4 +1,5 @@
 using SalesforceDebugAnalyzer.Services;
+using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.ViewModels;
 using System.Diagnostics;
 using System.IO;
@@ -497,6 +498,30 @@ public class LogParserTests
                 if (a.CumulativeProfiling != null)
                     _output.WriteLine($"  📊 Profiling: {a.CumulativeProfiling.TopQueries.Count} queries, {a.CumulativeProfiling.TopDmlOperations.Count} DML, {a.CumulativeProfiling.TopMethods.Count} methods");
 
+                // Execution units (EXECUTION_STARTED/FINISHED)
+                if (a.ExecutionUnits != null && a.ExecutionUnits.Count > 0)
+                {
+                    _output.WriteLine($"  🔄 Execution Units: {a.ExecutionUnits.Count}");
+                    foreach (var eu in a.ExecutionUnits)
+                        _output.WriteLine($"     {eu.OperationName} (lines {eu.StartLine}-{eu.EndLine}, {eu.DurationMs}ms)");
+                }
+
+                // Async detection
+                if (a.IsAsyncExecution)
+                    _output.WriteLine($"  ⚡ ASYNC execution detected (elevated governor limits)");
+
+                // Heap allocation
+                if (a.TotalHeapAllocated > 0)
+                    _output.WriteLine($"  🧠 Heap allocated: {a.TotalHeapAllocated:N0} bytes ({a.TotalHeapAllocated / 1024.0 / 1024.0:F1} MB)");
+
+                // Constructor tracking (new in R4)
+                if (a.RootNode?.Children != null)
+                {
+                    int ctorCount = CountNodesByType(a.RootNode, ExecutionNodeType.Constructor);
+                    if (ctorCount > 0)
+                        _output.WriteLine($"  🏗️ Constructors tracked: {ctorCount}");
+                }
+
                 // Summary text (first 200 chars)
                 _output.WriteLine($"  📋 Summary: {a.Summary?.Substring(0, Math.Min(a.Summary.Length, 200))}...");
 
@@ -567,5 +592,16 @@ public class LogParserTests
         _output.WriteLine($"Summary Text: {viewModel.SummaryText}");
         _output.WriteLine($"Status Message: {viewModel.StatusMessage}");
         _output.WriteLine($"Selected Log Lines: {viewModel.SelectedLog?.LineCount:N0}");
+    }
+
+    /// <summary>
+    /// Recursively count execution tree nodes of a given type
+    /// </summary>
+    private int CountNodesByType(ExecutionNode node, ExecutionNodeType type)
+    {
+        int count = node.Type == type ? 1 : 0;
+        foreach (var child in node.Children)
+            count += CountNodesByType(child, type);
+        return count;
     }
 }

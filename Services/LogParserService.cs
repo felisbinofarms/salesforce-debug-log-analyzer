@@ -129,6 +129,15 @@ public class LogParserService
         
         // Phase 10: Detect test class execution (before summary so test info is available)
         DetectTestExecution(logLines, analysis);
+        
+        // Phase 10b: Extract execution unit boundaries (EXECUTION_STARTED/FINISHED)
+        ExtractExecutionUnits(logLines, analysis);
+        
+        // Phase 10c: Track heap allocations (HEAP_ALLOCATE)
+        TrackHeapAllocations(logLines, analysis);
+        
+        // Phase 10d: Detect async execution context from governor limits
+        DetectAsyncContext(analysis);
 
         // Phase 11: Generate summary and recommendations (AFTER all data is extracted)
         analysis.Summary = GenerateSummary(analysis);
@@ -314,6 +323,48 @@ public class LogParserService
                             fatalNode.Metadata["Message"] = string.Join("|", line.Details);
                         }
                         stack.Peek().Children.Add(fatalNode);
+                        break;
+
+                    case "CONSTRUCTOR_ENTRY":
+                        var ctorNode = new ExecutionNode
+                        {
+                            Name = GetMethodName(line.Details),
+                            Type = ExecutionNodeType.Constructor,
+                            StartTime = line.Timestamp,
+                            StartLineNumber = line.LineNumber
+                        };
+                        stack.Peek().Children.Add(ctorNode);
+                        stack.Push(ctorNode);
+                        break;
+
+                    case "CONSTRUCTOR_EXIT":
+                        if (stack.Count > 1 && stack.Peek().Type == ExecutionNodeType.Constructor)
+                        {
+                            var node = stack.Pop();
+                            node.EndTime = line.Timestamp;
+                            node.EndLineNumber = line.LineNumber;
+                        }
+                        break;
+
+                    case "SYSTEM_CONSTRUCTOR_ENTRY":
+                        var sysCtorNode = new ExecutionNode
+                        {
+                            Name = line.Details.Length > 1 ? line.Details[1] : "System Constructor",
+                            Type = ExecutionNodeType.Constructor,
+                            StartTime = line.Timestamp,
+                            StartLineNumber = line.LineNumber
+                        };
+                        stack.Peek().Children.Add(sysCtorNode);
+                        stack.Push(sysCtorNode);
+                        break;
+
+                    case "SYSTEM_CONSTRUCTOR_EXIT":
+                        if (stack.Count > 1 && stack.Peek().Type == ExecutionNodeType.Constructor)
+                        {
+                            var node = stack.Pop();
+                            node.EndTime = line.Timestamp;
+                            node.EndLineNumber = line.LineNumber;
+                        }
                         break;
                 }
             }
@@ -538,6 +589,14 @@ public class LogParserService
         {
             if (line.EventType == "CALLOUT_REQUEST")
             {
+                // If there's a dangling callout from a previous request without response, save it
+                if (currentCallout != null)
+                {
+                    if (startTime.HasValue)
+                        currentCallout.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
+                    callouts.Add(currentCallout);
+                }
+                
                 startTime = line.Timestamp;
                 currentCallout = new CalloutOperation
                 {
@@ -565,6 +624,62 @@ public class LogParserService
                 currentCallout = null;
                 startTime = null;
             }
+            else if (line.EventType == "NAMED_CREDENTIAL_REQUEST")
+            {
+                // Named Credential events occur between CALLOUT_REQUEST and CALLOUT_RESPONSE
+                // They contain the resolved URL (after Named Credential alias resolution)
+                // Format: System.HttpRequest[Endpoint=https://actual-url.com, Method=POST]
+                if (currentCallout != null)
+                {
+                    var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
+                    var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
+                    if (endpointMatch.Success)
+                    {
+                        // Store the resolved URL - this is the actual URL after credential resolution
+                        currentCallout.Metadata["ResolvedEndpoint"] = endpointMatch.Groups[1].Value;
+                        // If the original endpoint was a callout: alias, replace with resolved URL
+                        if (currentCallout.Endpoint.StartsWith("callout:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                        }
+                    }
+                }
+                else
+                {
+                    // Standalone Named Credential callout (no preceding CALLOUT_REQUEST)
+                    startTime = line.Timestamp;
+                    currentCallout = new CalloutOperation
+                    {
+                        LineNumber = line.LineNumber
+                    };
+                    var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
+                    var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
+                    if (endpointMatch.Success) currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                    var methodMatch = Regex.Match(rawDetail, @"Method=([A-Z]+)");
+                    if (methodMatch.Success) currentCallout.HttpMethod = methodMatch.Groups[1].Value;
+                }
+            }
+            else if (line.EventType == "NAMED_CREDENTIAL_RESPONSE")
+            {
+                // Named Credential response - may come before or instead of CALLOUT_RESPONSE
+                // If we have a current callout that hasn't been closed yet, this provides status info
+                if (currentCallout != null && currentCallout.StatusCode == 0)
+                {
+                    var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
+                    var statusMatch = Regex.Match(rawDetail, @"Status=([^,\]]+)");
+                    if (statusMatch.Success) currentCallout.StatusMessage = statusMatch.Groups[1].Value;
+                    var codeMatch = Regex.Match(rawDetail, @"StatusCode=(\d+)");
+                    if (codeMatch.Success && int.TryParse(codeMatch.Groups[1].Value, out var code))
+                        currentCallout.StatusCode = code;
+                    // Don't close the callout yet - wait for CALLOUT_RESPONSE
+                }
+            }
+        }
+
+        // Handle any dangling callout that never got a response (e.g., log truncated)
+        if (currentCallout != null)
+        {
+            callouts.Add(currentCallout);
         }
 
         return callouts;
@@ -895,7 +1010,7 @@ public class LogParserService
 
     private void CalculateStatsRecursive(ExecutionNode node, Dictionary<string, MethodStatistics> stats)
     {
-        if ((node.Type == ExecutionNodeType.Method || node.Type == ExecutionNodeType.CodeUnit) 
+        if ((node.Type == ExecutionNodeType.Method || node.Type == ExecutionNodeType.CodeUnit || node.Type == ExecutionNodeType.Constructor) 
             && node.EndTime.HasValue)
         {
             if (!stats.ContainsKey(node.Name))
@@ -975,6 +1090,8 @@ public class LogParserService
                 case "METHOD_ENTRY":
                 case "SYSTEM_METHOD_ENTRY":
                 case "CODE_UNIT_STARTED":
+                case "CONSTRUCTOR_ENTRY":
+                case "SYSTEM_CONSTRUCTOR_ENTRY":
                     currentDepth++;
                     // Extract human-readable name (field 3) instead of ID (field 2)
                     // Format: CODE_UNIT_STARTED|[EXTERNAL]|{ID}|{ClassName.MethodName}
@@ -1000,6 +1117,8 @@ public class LogParserService
                 case "METHOD_EXIT":
                 case "SYSTEM_METHOD_EXIT":
                 case "CODE_UNIT_FINISHED":
+                case "CONSTRUCTOR_EXIT":
+                case "SYSTEM_CONSTRUCTOR_EXIT":
                     if (currentDepth > 0)
                     {
                         currentDepth--;
@@ -1103,6 +1222,93 @@ public class LogParserService
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Extract EXECUTION_STARTED/FINISHED boundaries from the log.
+    /// Async logs (e.g., @future, Queueable) can have multiple execution units.
+    /// Format: EXECUTION_STARTED|{operationName}
+    /// </summary>
+    private void ExtractExecutionUnits(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        ExecutionUnit? currentUnit = null;
+        
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "EXECUTION_STARTED")
+            {
+                // Save any unclosed previous unit
+                if (currentUnit != null)
+                {
+                    analysis.ExecutionUnits.Add(currentUnit);
+                }
+                
+                currentUnit = new ExecutionUnit
+                {
+                    OperationName = line.Details.Length > 0 ? line.Details[0] : "Unknown",
+                    StartLine = line.LineNumber,
+                    StartTime = line.Timestamp
+                };
+            }
+            else if (line.EventType == "EXECUTION_FINISHED" && currentUnit != null)
+            {
+                currentUnit.EndLine = line.LineNumber;
+                currentUnit.EndTime = line.Timestamp;
+                analysis.ExecutionUnits.Add(currentUnit);
+                currentUnit = null;
+            }
+        }
+        
+        // Save any dangling unit (log truncated before EXECUTION_FINISHED)
+        if (currentUnit != null)
+        {
+            analysis.ExecutionUnits.Add(currentUnit);
+        }
+    }
+
+    /// <summary>
+    /// Track HEAP_ALLOCATE events to calculate total memory allocation.
+    /// Format: HEAP_ALLOCATE|[LINE]|Bytes:N
+    /// </summary>
+    private void TrackHeapAllocations(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        long totalBytes = 0;
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "HEAP_ALLOCATE")
+            {
+                // Format: Details[0] = "[LINE:N]", Details[1] = "Bytes:N"
+                for (int i = 0; i < line.Details.Length; i++)
+                {
+                    if (line.Details[i].StartsWith("Bytes:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (long.TryParse(line.Details[i].Substring(6), out var bytes))
+                        {
+                            totalBytes += bytes;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        analysis.TotalHeapAllocated = totalBytes;
+    }
+
+    /// <summary>
+    /// Detect if this is an async execution context based on governor limits.
+    /// Async limits: 200 SOQL, 60000ms CPU, 12000000 heap
+    /// Sync limits:  100 SOQL, 10000ms CPU, 6000000 heap
+    /// </summary>
+    private void DetectAsyncContext(LogAnalysis analysis)
+    {
+        var lastSnapshot = analysis.LimitSnapshots.LastOrDefault();
+        if (lastSnapshot != null)
+        {
+            // Async execution uses higher governor limits
+            analysis.IsAsyncExecution = lastSnapshot.SoqlQueriesLimit >= 200 
+                                     || lastSnapshot.CpuTimeLimit >= 60000
+                                     || lastSnapshot.HeapSizeLimit >= 12000000;
+        }
     }
 
     private string GenerateSummary(LogAnalysis analysis)
