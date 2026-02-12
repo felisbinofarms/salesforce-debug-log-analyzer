@@ -147,6 +147,18 @@ public class LogParserService
         
         // Phase 10g: Detect duplicate SOQL queries
         DetectDuplicateQueries(analysis);
+        
+        // Phase 10h: Parse workflow rule evaluations (WF_RULE_EVAL events)
+        ExtractWorkflowRules(logLines, analysis);
+        
+        // Phase 10i: Detect trigger re-entry patterns (same trigger firing multiple times)
+        DetectTriggerReEntries(logLines, analysis);
+        
+        // Phase 10j: Calculate CMDT vs regular SOQL split
+        CalculateCmdtSplit(analysis);
+        
+        // Phase 10k: Grade bulk safety (will this code work when processing 200 records?)
+        GradeBulkSafety(analysis);
 
         // Phase 11: Generate summary and recommendations (AFTER all data is extracted)
         analysis.Summary = GenerateSummary(analysis);
@@ -453,6 +465,8 @@ public class LogParserService
     private List<DatabaseOperation> ExtractDatabaseOperations(List<LogLine> logLines)
     {
         var operations = new List<DatabaseOperation>();
+        // Use a stack to handle nested operations (e.g., DML_BEGIN → triggers fire → SOQL inside trigger → DML_END)
+        var opStack = new Stack<(DatabaseOperation op, DateTime? startTime)>();
         DatabaseOperation? currentOp = null;
         DateTime? startTime = null;
 
@@ -460,12 +474,21 @@ public class LogParserService
         {
             if (line.EventType == "SOQL_EXECUTE_BEGIN")
             {
+                // Push any in-progress operation onto the stack (e.g., we're inside a DML that triggered this SOQL)
+                if (currentOp != null)
+                {
+                    opStack.Push((currentOp, startTime));
+                }
+                
                 startTime = line.Timestamp;
+                var query = line.Details.Length > 2 ? line.Details[2] : "";
                 currentOp = new DatabaseOperation
                 {
                     OperationType = "SOQL",
                     LineNumber = line.LineNumber,
-                    Query = line.Details.Length > 2 ? line.Details[2] : ""
+                    Query = query,
+                    // Detect Custom Metadata Type queries (__mdt) — these don't count against SOQL limits
+                    IsCustomMetadataQuery = query.Contains("__mdt", StringComparison.OrdinalIgnoreCase)
                 };
                 
                 if (line.Details.Length > 1 && line.Details[1].StartsWith("Aggregations:"))
@@ -477,7 +500,7 @@ public class LogParserService
                     }
                 }
             }
-            else if (line.EventType == "SOQL_EXECUTE_END" && currentOp != null)
+            else if (line.EventType == "SOQL_EXECUTE_END" && currentOp != null && currentOp.OperationType == "SOQL")
             {
                 if (line.Details.Length > 1 && line.Details[1].StartsWith("Rows:"))
                 {
@@ -492,8 +515,19 @@ public class LogParserService
                     currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
                 }
                 operations.Add(currentOp);
-                currentOp = null;
-                startTime = null;
+                
+                // Pop the parent operation from the stack (e.g., restore the DML we were inside of)
+                if (opStack.Count > 0)
+                {
+                    var parent = opStack.Pop();
+                    currentOp = parent.op;
+                    startTime = parent.startTime;
+                }
+                else
+                {
+                    currentOp = null;
+                    startTime = null;
+                }
             }
             else if (line.EventType == "SOQL_EXECUTE_EXPLAIN" && currentOp != null)
             {
@@ -511,6 +545,12 @@ public class LogParserService
             }
             else if (line.EventType == "DML_BEGIN")
             {
+                // Push any in-progress operation onto the stack
+                if (currentOp != null)
+                {
+                    opStack.Push((currentOp, startTime));
+                }
+                
                 startTime = line.Timestamp;
                 currentOp = new DatabaseOperation
                 {
@@ -540,18 +580,33 @@ public class LogParserService
                     }
                 }
             }
-            else if (line.EventType == "DML_END" && currentOp != null)
+            else if (line.EventType == "DML_END" && currentOp != null && currentOp.OperationType == "DML")
             {
                 if (startTime.HasValue)
                 {
                     currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
                 }
                 operations.Add(currentOp);
-                currentOp = null;
-                startTime = null;
+                
+                // Pop the parent operation from the stack
+                if (opStack.Count > 0)
+                {
+                    var parent = opStack.Pop();
+                    currentOp = parent.op;
+                    startTime = parent.startTime;
+                }
+                else
+                {
+                    currentOp = null;
+                    startTime = null;
+                }
             }
             else if (line.EventType == "SOSL_EXECUTE_BEGIN")
             {
+                if (currentOp != null)
+                {
+                    opStack.Push((currentOp, startTime));
+                }
                 startTime = line.Timestamp;
                 currentOp = new DatabaseOperation
                 {
@@ -575,8 +630,17 @@ public class LogParserService
                     currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
                 }
                 operations.Add(currentOp);
-                currentOp = null;
-                startTime = null;
+                if (opStack.Count > 0)
+                {
+                    var parent = opStack.Pop();
+                    currentOp = parent.op;
+                    startTime = parent.startTime;
+                }
+                else
+                {
+                    currentOp = null;
+                    startTime = null;
+                }
             }
         }
 
@@ -614,7 +678,16 @@ public class LogParserService
                 // Parse: System.HttpRequest[Endpoint=..., Method=POST]
                 var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                 var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
-                if (endpointMatch.Success) currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                if (endpointMatch.Success) 
+                {
+                    currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                    // Extract Named Credential name from callout:// alias (e.g., "callout:RabbitMQ/api/messages")
+                    var ncMatch = Regex.Match(currentCallout.Endpoint, @"^callout:/?/?([^/]+)");
+                    if (ncMatch.Success)
+                    {
+                        currentCallout.NamedCredentialName = ncMatch.Groups[1].Value;
+                    }
+                }
                 var methodMatch = Regex.Match(rawDetail, @"Method=([A-Z]+)");
                 if (methodMatch.Success) currentCallout.HttpMethod = methodMatch.Groups[1].Value;
             }
@@ -1545,6 +1618,234 @@ public class LogParserService
         }
     }
 
+    /// <summary>
+    /// Extract workflow rule evaluations from WF_RULE_EVAL_BEGIN/WF_RULE_FILTER/WF_RULE_EVAL_END events.
+    /// Workflow rules are legacy automations that are being phased out in favor of Flows.
+    /// </summary>
+    private void ExtractWorkflowRules(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        bool inEvalBlock = false;
+        string currentObjectType = "";
+        
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "WF_RULE_EVAL_BEGIN")
+            {
+                inEvalBlock = true;
+                // Details[0] = "Workflow" (or object type context)
+                currentObjectType = line.Details.Length > 0 ? line.Details[0] : "";
+            }
+            else if (line.EventType == "WF_RULE_FILTER" && inEvalBlock)
+            {
+                // Format: [Object : Filter Criteria]
+                var filterText = line.Details.Length > 0 ? line.Details[0] : "";
+                // Clean up bracket formatting
+                filterText = filterText.Trim('[', ']', ' ');
+                
+                analysis.WorkflowRules.Add(new WorkflowRuleEvaluation
+                {
+                    RuleName = filterText,
+                    ObjectType = currentObjectType,
+                    Matched = false, // Will be updated by WF_RULE_EVAL_VALUE
+                    LineNumber = line.LineNumber
+                });
+            }
+            else if (line.EventType == "WF_RULE_EVAL_VALUE" && inEvalBlock)
+            {
+                // WF_RULE_EVAL_VALUE follows WF_RULE_FILTER — value of 0 = not matched
+                var lastRule = analysis.WorkflowRules.LastOrDefault();
+                if (lastRule != null)
+                {
+                    // Non-zero value means the rule criteria was met
+                    if (line.Details.Length > 0 && int.TryParse(line.Details[0], out var value))
+                    {
+                        lastRule.Matched = value != 0;
+                    }
+                }
+            }
+            else if (line.EventType == "WF_RULE_EVAL_END")
+            {
+                inEvalBlock = false;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Detect trigger re-entry patterns — when a trigger fires more times than expected.
+    /// Normal: BeforeInsert + AfterInsert = 2 fires (or BeforeUpdate + AfterUpdate = 2 fires)
+    /// Re-entry: If a trigger's DML causes the same trigger to fire again (e.g., 6 fires for 1 record)
+    /// </summary>
+    private void DetectTriggerReEntries(List<LogLine> logLines, LogAnalysis analysis)
+    {
+        // Track trigger fires: key = "TriggerName on Object", value = list of events
+        var triggerFires = new Dictionary<string, List<string>>();
+        
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "CODE_UNIT_STARTED")
+            {
+                // Look for trigger patterns in details
+                // Format: [EXTERNAL]|01q36000001d9eH|ContactTrigger on Contact trigger event BeforeInsert|__sfdc_trigger/ContactTrigger
+                foreach (var detail in line.Details)
+                {
+                    var triggerMatch = Regex.Match(detail, @"(\w+)\s+on\s+(\w+)\s+trigger\s+event\s+(\w+)");
+                    if (triggerMatch.Success)
+                    {
+                        var triggerName = triggerMatch.Groups[1].Value;
+                        var objectType = triggerMatch.Groups[2].Value;
+                        var eventType = triggerMatch.Groups[3].Value;
+                        var key = $"{triggerName} on {objectType}";
+                        
+                        if (!triggerFires.ContainsKey(key))
+                            triggerFires[key] = new List<string>();
+                        triggerFires[key].Add(eventType);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        foreach (var kvp in triggerFires)
+        {
+            var parts = kvp.Key.Split(" on ");
+            var triggerName = parts[0];
+            var objectType = parts.Length > 1 ? parts[1] : "";
+            var events = kvp.Value;
+            var totalFires = events.Count;
+            
+            // Expected fires: 2 per DML operation (Before + After)
+            // Count unique DML types (Insert vs Update are separate operations)
+            var distinctOperations = events.Select(e => e.Replace("Before", "").Replace("After", "")).Distinct().Count();
+            var expectedFires = distinctOperations * 2; // Before + After for each operation type
+            var reEntryCount = Math.Max(0, totalFires - expectedFires);
+            
+            analysis.TriggerReEntries.Add(new TriggerReEntry
+            {
+                TriggerName = triggerName,
+                ObjectType = objectType,
+                Events = events,
+                TotalFireCount = totalFires,
+                ReEntryCount = reEntryCount
+            });
+        }
+    }
+    
+    /// <summary>
+    /// Calculate the split between Custom Metadata Type (CMDT) queries and regular SOQL.
+    /// CMDT queries (__mdt objects) are free — they don't count against the SOQL governor limit.
+    /// This distinction helps users understand their true governor limit consumption.
+    /// </summary>
+    private void CalculateCmdtSplit(LogAnalysis analysis)
+    {
+        var soqlOps = analysis.DatabaseOperations.Where(d => d.OperationType == "SOQL").ToList();
+        analysis.CustomMetadataQueryCount = soqlOps.Count(d => d.IsCustomMetadataQuery);
+        analysis.RegularSoqlCount = soqlOps.Count - analysis.CustomMetadataQueryCount;
+    }
+    
+    /// <summary>
+    /// Grade the bulk safety of the code in this transaction.
+    /// Salesforce processes up to 200 records per trigger invocation.
+    /// Code that works for 1 record may fail at 200 (SOQL in loops, DML in loops, etc.)
+    /// </summary>
+    private void GradeBulkSafety(LogAnalysis analysis)
+    {
+        var score = 100;
+        var reasons = new List<string>();
+        var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
+        
+        if (lastSnapshot == null)
+        {
+            analysis.BulkSafetyGrade = "?";
+            analysis.BulkSafetyReason = "No governor limit data available";
+            return;
+        }
+        
+        // Factor 1: SOQL queries per trigger invocation
+        // If processing 1 record uses 20+ SOQL, 200 records would use 4000+ (limit is 100)
+        var soqlCount = lastSnapshot.SoqlQueries;
+        var soqlLimit = lastSnapshot.SoqlQueriesLimit;
+        if (soqlLimit > 0)
+        {
+            var soqlPerRecord = soqlCount; // Assume this was for ~1 record (conservative)
+            var projectedAt200 = soqlPerRecord; // Would it scale linearly?
+            
+            // Check for N+1 patterns (strong indicator of non-bulkified code)
+            var hasN1Pattern = analysis.DuplicateQueries.Any(d => d.ExecutionCount >= 5);
+            if (hasN1Pattern)
+            {
+                var worstDupe = analysis.DuplicateQueries.OrderByDescending(d => d.ExecutionCount).First();
+                score -= 30;
+                reasons.Add($"N+1 pattern: same query runs {worstDupe.ExecutionCount}x — at 200 records this hits limits");
+            }
+            
+            // High SOQL usage even for single record = risky at scale
+            var soqlPct = (soqlCount * 100.0) / soqlLimit;
+            if (soqlPct > 50)
+            {
+                score -= 25;
+                reasons.Add($"SOQL at {soqlPct:F0}% for this batch — leaves no room for bulk operations");
+            }
+            else if (soqlPct > 30)
+            {
+                score -= 10;
+                reasons.Add($"SOQL at {soqlPct:F0}% — moderate risk at higher volumes");
+            }
+        }
+        
+        // Factor 2: DML usage
+        var dmlCount = lastSnapshot.DmlStatements;
+        if (dmlCount > 0)
+        {
+            var dmlPct = (dmlCount * 100.0) / lastSnapshot.DmlStatementsLimit;
+            if (dmlPct > 50)
+            {
+                score -= 20;
+                reasons.Add($"DML at {dmlPct:F0}% — may fail with larger batches");
+            }
+        }
+        
+        // Factor 3: CPU time
+        var cpuPct = lastSnapshot.CpuTimeLimit > 0 ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit : 0;
+        if (cpuPct > 50)
+        {
+            score -= 15;
+            reasons.Add($"CPU at {cpuPct:F0}% — heavy processing may time out at scale");
+        }
+        
+        // Factor 4: Trigger re-entry (multiplies resource usage)
+        var reEntries = analysis.TriggerReEntries.Where(t => t.HasReEntry).ToList();
+        if (reEntries.Any())
+        {
+            var worstReEntry = reEntries.OrderByDescending(t => t.ReEntryCount).First();
+            score -= 15;
+            reasons.Add($"{worstReEntry.TriggerName} re-enters {worstReEntry.ReEntryCount}x — multiplies all limits");
+        }
+        
+        // Factor 5: Table scans (get slower with more data)
+        var tableScans = analysis.DatabaseOperations
+            .Count(d => d.ExecutionPlan != null && d.ExecutionPlan.Contains("TableScan"));
+        if (tableScans > 0)
+        {
+            score -= Math.Min(15, tableScans * 5);
+            reasons.Add($"{tableScans} table scan{(tableScans > 1 ? "s" : "")} — performance degrades as data grows");
+        }
+        
+        score = Math.Max(0, score);
+        
+        analysis.BulkSafetyGrade = score switch
+        {
+            >= 90 => "A",
+            >= 75 => "B",
+            >= 60 => "C",
+            >= 40 => "D",
+            _ => "F"
+        };
+        
+        analysis.BulkSafetyReason = reasons.Any() 
+            ? string.Join("; ", reasons) 
+            : "Code appears well-bulkified — should handle 200 records safely";
+    }
+
     private string GenerateSummary(LogAnalysis analysis)
     {
         var totalDuration = (long)analysis.DurationMs; // Use corrected nanosecond-based duration
@@ -1595,7 +1896,15 @@ public class LogParserService
         {
             summary += $"• Talked to the database {totalDbOps} time{(totalDbOps > 1 ? "s" : "")}\n";
             if (soqlCount > 0)
+            {
                 summary += $"  - Read data {soqlCount} time{(soqlCount > 1 ? "s" : "")} (SOQL queries)\n";
+                // Show CMDT vs regular SOQL split if there are CMDT queries
+                if (analysis.CustomMetadataQueryCount > 0)
+                {
+                    summary += $"    ({analysis.RegularSoqlCount} count against limits, " +
+                        $"{analysis.CustomMetadataQueryCount} are free Custom Metadata queries)\n";
+                }
+            }
             if (soslCount > 0)
                 summary += $"  - Searched data {soslCount} time{(soslCount > 1 ? "s" : "")} (SOSL searches)\n";
             if (dmlCount > 0)
@@ -1615,7 +1924,17 @@ public class LogParserService
         if (analysis.Callouts.Count > 0)
         {
             var failedCallouts = analysis.Callouts.Count(c => c.IsError);
+            var ncCallouts = analysis.Callouts.Count(c => c.UsesNamedCredential);
             summary += $"• Made {analysis.Callouts.Count} HTTP callout{(analysis.Callouts.Count > 1 ? "s" : "")} to external services\n";
+            if (ncCallouts > 0)
+            {
+                var ncNames = analysis.Callouts.Where(c => c.UsesNamedCredential)
+                    .Select(c => c.NamedCredentialName).Distinct().ToList();
+                summary += $"  - ✅ {ncCallouts} via Named Credential{(ncCallouts > 1 ? "s" : "")}: {string.Join(", ", ncNames)}\n";
+            }
+            var hardcodedCallouts = analysis.Callouts.Count - ncCallouts;
+            if (hardcodedCallouts > 0 && ncCallouts > 0)
+                summary += $"  - ℹ️ {hardcodedCallouts} with direct URL{(hardcodedCallouts > 1 ? "s" : "")}\n";
             if (failedCallouts > 0)
                 summary += $"  - ⚠️ {failedCallouts} callout{(failedCallouts > 1 ? "s" : "")} returned errors\n";
         }
@@ -1652,6 +1971,40 @@ public class LogParserService
                 summary += $"• 🔁 {significantDupes.Count} duplicate query pattern{(significantDupes.Count > 1 ? "s" : "")} " +
                     $"({totalDupeQueries} total redundant executions)\n";
             }
+        }
+        
+        // Workflow rules
+        if (analysis.WorkflowRules.Count > 0)
+        {
+            var matchedRules = analysis.WorkflowRules.Count(w => w.Matched);
+            summary += $"• ⚙️ {analysis.WorkflowRules.Count} workflow rule{(analysis.WorkflowRules.Count > 1 ? "s" : "")} evaluated" +
+                $" ({matchedRules} matched, {analysis.WorkflowRules.Count - matchedRules} skipped)\n";
+        }
+        
+        // Trigger re-entries
+        var reEntries = analysis.TriggerReEntries.Where(t => t.HasReEntry).ToList();
+        if (reEntries.Any())
+        {
+            foreach (var re in reEntries)
+            {
+                summary += $"• 🔄 **Trigger re-entry**: {re.TriggerName} on {re.ObjectType} fired {re.TotalFireCount}x " +
+                    $"(expected {re.TotalFireCount - re.ReEntryCount}, re-entered {re.ReEntryCount}x)\n";
+            }
+        }
+        
+        // Bulk safety grade
+        if (!string.IsNullOrEmpty(analysis.BulkSafetyGrade) && analysis.BulkSafetyGrade != "?")
+        {
+            var bulkIcon = analysis.BulkSafetyGrade switch
+            {
+                "A" => "✅",
+                "B" => "👍",
+                "C" => "⚡",
+                "D" => "⚠️",
+                "F" => "🚨",
+                _ => "❓"
+            };
+            summary += $"• {bulkIcon} **Bulk Safety: Grade {analysis.BulkSafetyGrade}** — {analysis.BulkSafetyReason}\n";
         }
 
         summary += "\n";

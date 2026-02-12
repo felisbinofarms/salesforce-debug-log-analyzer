@@ -1,0 +1,155 @@
+﻿51.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+10:48:50.0 (282307)|USER_INFO|[EXTERNAL]|0051R00000JeE4n|truck.care.process@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+10:48:50.0 (353702)|EXECUTION_STARTED
+10:48:50.0 (376236)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+10:48:50.0 (2810909)|CODE_UNIT_FINISHED|FutureHandler - state load
+10:48:50.0 (2837271)|EXECUTION_FINISHED
+10:48:50.38 (38001330)|USER_INFO|[EXTERNAL]|0051R00000JeE4n|truck.care.process@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+10:48:50.38 (38028551)|EXECUTION_STARTED
+10:48:50.38 (38060057)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JmIcY|Log.insertLogAsync(String)
+10:48:50.38 (38405303)|VARIABLE_SCOPE_BEGIN|[25]|Log.Error_Message_MAX_SIZE|Integer|false|true
+10:48:50.38 (38522111)|VARIABLE_SCOPE_BEGIN|[26]|Log.Message_MAX_SIZE|Integer|false|true
+10:48:50.38 (38606930)|VARIABLE_SCOPE_BEGIN|[24]|Log.STACKTRACE_PATTERN|System.Pattern|true|true
+10:48:50.38 (38766787)|HEAP_ALLOCATE|[95]|Bytes:3
+10:48:50.38 (38855860)|HEAP_ALLOCATE|[100]|Bytes:152
+10:48:50.38 (38874073)|HEAP_ALLOCATE|[417]|Bytes:408
+10:48:50.38 (38896209)|HEAP_ALLOCATE|[430]|Bytes:408
+10:48:50.38 (38997076)|HEAP_ALLOCATE|[317]|Bytes:6
+10:48:50.38 (39018113)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:50.38 (39024506)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:118
+10:48:50.38 (39026965)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:31
+10:48:50.38 (39068805)|METHOD_ENTRY|[23]|01p1R00000JmIcY|Log.Log()
+10:48:50.38 (39073961)|STATEMENT_EXECUTE|[23]
+10:48:50.38 (39078408)|STATEMENT_EXECUTE|[23]
+10:48:50.38 (39079294)|STATEMENT_EXECUTE|[24]
+10:48:50.38 (39080994)|HEAP_ALLOCATE|[24]|Bytes:82
+10:48:50.38 (39097698)|HEAP_ALLOCATE|[24]|Bytes:24
+10:48:50.38 (39111849)|SYSTEM_METHOD_ENTRY|[1]|Pattern.Pattern()
+10:48:50.38 (39114236)|STATEMENT_EXECUTE|[1]
+10:48:50.38 (39122532)|SYSTEM_METHOD_EXIT|[1]|Pattern
+10:48:50.38 (39143780)|METHOD_ENTRY|[24]||System.Pattern.compile(String)
+10:48:50.38 (42264058)|METHOD_EXIT|[24]||System.Pattern.compile(String)
+10:48:50.38 (42403974)|VARIABLE_ASSIGNMENT|[24]|Log.STACKTRACE_PATTERN|{"delegate":"0x3f53d404"}|0x79a81303
+10:48:50.38 (42415428)|STATEMENT_EXECUTE|[25]
+10:48:50.38 (42418727)|HEAP_ALLOCATE|[24]|Bytes:6
+10:48:50.38 (42424568)|HEAP_ALLOCATE|[24]|Bytes:20
+10:48:50.38 (42638526)|SYSTEM_METHOD_ENTRY|[25]|Schema.SObjectField.getDescribe()
+10:48:50.38 (46409807)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:48:50.38 (46541779)|HEAP_ALLOCATE|[25]|Bytes:8
+10:48:50.38 (46560759)|SYSTEM_METHOD_EXIT|[25]|Schema.SObjectField.getDescribe()
+10:48:50.38 (46593370)|HEAP_ALLOCATE|[25]|Bytes:4
+10:48:50.38 (46639145)|VARIABLE_ASSIGNMENT|[25]|Log.Error_Message_MAX_SIZE|131072
+10:48:50.38 (46644274)|STATEMENT_EXECUTE|[26]
+10:48:50.38 (46648831)|HEAP_ALLOCATE|[25]|Bytes:10
+10:48:50.38 (46705649)|SYSTEM_METHOD_ENTRY|[26]|Schema.SObjectField.getDescribe()
+10:48:50.38 (47015352)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:48:50.38 (47059583)|HEAP_ALLOCATE|[26]|Bytes:8
+10:48:50.38 (47067049)|SYSTEM_METHOD_EXIT|[26]|Schema.SObjectField.getDescribe()
+10:48:50.38 (47079510)|HEAP_ALLOCATE|[26]|Bytes:4
+10:48:50.38 (47101761)|VARIABLE_ASSIGNMENT|[26]|Log.Message_MAX_SIZE|131072
+10:48:50.38 (47105746)|STATEMENT_EXECUTE|[300]
+10:48:50.38 (47106780)|STATEMENT_EXECUTE|[312]
+10:48:50.38 (47127779)|METHOD_EXIT|[23]|Log
+10:48:50.38 (47133898)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:2386
+10:48:50.38 (47145658)|VARIABLE_SCOPE_BEGIN|[253]|stringyLog|String|false|false
+10:48:50.38 (47182252)|VARIABLE_ASSIGNMENT|[253]|stringyLog|"{\"attributes\":{\"type (2366 more) ..."
+10:48:50.38 (47189512)|STATEMENT_EXECUTE|[253]
+10:48:50.38 (47190339)|STATEMENT_EXECUTE|[254]
+10:48:50.38 (47193200)|HEAP_ALLOCATE|[254]|Bytes:32
+10:48:50.38 (47327867)|HEAP_ALLOCATE|[254]|Bytes:33
+10:48:50.38 (47346384)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+10:48:50.38 (47350448)|STATEMENT_EXECUTE|[1]
+10:48:50.38 (47359343)|SYSTEM_METHOD_EXIT|[1]|Type
+10:48:50.38 (47366814)|HEAP_ALLOCATE|[254]|Bytes:8
+10:48:50.38 (47383610)|HEAP_ALLOCATE|[254]|Bytes:8
+10:48:50.38 (47387123)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+10:48:50.38 (47469132)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x6180086e
+10:48:50.38 (47475240)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+10:48:50.38 (47884081)|VARIABLE_ASSIGNMENT|[4]|apextype|"Log__c"|0x128fbdc1
+10:48:50.38 (47975720)|HEAP_ALLOCATE|[254]|Bytes:8
+10:48:50.38 (48021246)|HEAP_ALLOCATE|[254]|Bytes:24
+10:48:50.38 (48035168)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+10:48:50.38 (48038290)|STATEMENT_EXECUTE|[1]
+10:48:50.38 (48042907)|SYSTEM_METHOD_EXIT|[1]|JSON
+10:48:50.38 (48068047)|METHOD_ENTRY|[254]||System.JSON.deserializeStrict(String, System.Type)
+10:48:50.38 (48858895)|METHOD_EXIT|[254]||System.JSON.deserializeStrict(String, System.Type)
+10:48:50.38 (48873890)|VARIABLE_SCOPE_BEGIN|[254]|log|Log__c|true|false
+10:48:50.38 (49000185)|VARIABLE_ASSIGNMENT|[254]|log|{"RecordTypeId":"0121R000001YdL2QAK","Component_Name__c":"EmailMessage_CaseRou (4 more) ...","attributes":{"type":"Log__c"},"Source__c":"ApexClass","Message__c":"::Route Case Logic S (2146 more) ..."}|0x63fc8f02
+10:48:50.38 (49007908)|STATEMENT_EXECUTE|[255]
+10:48:50.38 (49050085)|HEAP_ALLOCATE|[255]|Bytes:8
+10:48:50.38 (49106562)|DML_BEGIN|[255]|Op:Insert|Type:Log__c|Rows:1
+10:48:50.38 (49135978)|LIMIT_USAGE|[255]|DML|1|150
+10:48:50.38 (49144617)|LIMIT_USAGE|[255]|DML_ROWS|1|10000
+10:48:50.38 (49159773)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:48:50.38 (106240783)|DML_END|[255]
+10:48:50.38 (106274676)|HEAP_ALLOCATE|[255]|Bytes:-4
+10:48:50.107 (107455834)|CUMULATIVE_LIMIT_USAGE
+10:48:50.107 (107455834)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 0 out of 200
+  Number of query rows: 0 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 1 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 1 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+10:48:50.107 (107455834)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+10:48:50.107 (107455834)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  Integer:_static_Error_Message_MAX_SIZE:0
+  Integer:_static_Message_MAX_SIZE:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+10:48:50.107 (107455834)|CUMULATIVE_LIMIT_USAGE_END
+
+10:48:50.38 (107785775)|CODE_UNIT_FINISHED|Log.insertLogAsync(String)
+10:48:50.38 (107810227)|EXECUTION_FINISHED
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING_BEGIN
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING|No profiling information for SOQL operations
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING|DML operations|
+Class.Log.insertLogAsync: line 255, column 1: Insert: Log__c: executed 1 time in 58 ms
+
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING|method invocations|
+External entry point: private static void insertLogAsync(String): executed 1 time in 68 ms
+Class.Log: line 25, column 1: global Schema.DescribeFieldResult getDescribe(): executed 1 time in 4 ms
+Class.Log: line 24, column 1: global static System.Pattern compile(String): executed 1 time in 3 ms
+Class.Log.insertLogAsync: line 254, column 1: global static Object deserializeStrict(String, System.Type): executed 1 time in 1 ms
+Class.Log: line 26, column 1: global Schema.DescribeFieldResult getDescribe(): executed 1 time in 0 ms
+
+10:48:50.200 (200802859)|CUMULATIVE_PROFILING_END
+

@@ -1,0 +1,351 @@
+﻿54.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+10:49:39.0 (270221)|USER_INFO|[EXTERNAL]|0051R00000JeE4n|truck.care.process@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+10:49:39.0 (349561)|EXECUTION_STARTED
+10:49:39.0 (372461)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+10:49:39.0 (1651512)|CODE_UNIT_FINISHED|FutureHandler - state load
+10:49:39.0 (1668912)|EXECUTION_FINISHED
+10:49:39.19 (19133304)|USER_INFO|[EXTERNAL]|0051R00000JeE4n|truck.care.process@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+10:49:39.19 (19150026)|EXECUTION_STARTED
+10:49:39.19 (19176748)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JU2Nx|EmailOnStatus.sendEmailMessageForCoreShopsAtFuture(Set<Id>, String)
+10:49:39.19 (19257960)|VARIABLE_SCOPE_BEGIN|[14]|EmailOnStatus.DISPATCH_EMAIL_TYPE|String|false|true
+10:49:39.19 (19306010)|VARIABLE_SCOPE_BEGIN|[15]|EmailOnStatus.DISPATCH_ORG_WIDE_EMAIL|String|false|true
+10:49:39.19 (19309936)|VARIABLE_SCOPE_BEGIN|[16]|EmailOnStatus.SOURCE_SYSTEM_CHECK|String|false|true
+10:49:39.19 (19313473)|VARIABLE_SCOPE_BEGIN|[13]|EmailOnStatus.STORE_DATA_NOT_FOUND|String|false|true
+10:49:39.19 (19316988)|VARIABLE_SCOPE_BEGIN|[12]|EmailOnStatus.TEMPLATE_NOT_FOUND|String|false|true
+10:49:39.19 (19521988)|HEAP_ALLOCATE|[95]|Bytes:3
+10:49:39.19 (19552517)|HEAP_ALLOCATE|[100]|Bytes:152
+10:49:39.19 (19571772)|HEAP_ALLOCATE|[417]|Bytes:408
+10:49:39.19 (19587657)|HEAP_ALLOCATE|[430]|Bytes:408
+10:49:39.19 (19605395)|HEAP_ALLOCATE|[317]|Bytes:6
+10:49:39.19 (19614367)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:13
+10:49:39.19 (19617552)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:49:39.19 (19717063)|VARIABLE_ASSIGNMENT|[EXTERNAL]|EmailOnStatus.DISPATCH_EMAIL_TYPE|"Dispatch"
+10:49:39.19 (19720650)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:18
+10:49:39.19 (19726631)|VARIABLE_ASSIGNMENT|[EXTERNAL]|EmailOnStatus.DISPATCH_ORG_WIDE_EMAIL|"comments@loves.com"
+10:49:39.19 (19729120)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:19
+10:49:39.19 (19733737)|VARIABLE_ASSIGNMENT|[EXTERNAL]|EmailOnStatus.SOURCE_SYSTEM_CHECK|"Shop Connect - CORE"
+10:49:39.19 (19736007)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:31
+10:49:39.19 (19741481)|VARIABLE_ASSIGNMENT|[EXTERNAL]|EmailOnStatus.STORE_DATA_NOT_FOUND|"No store or store em (11 more) ..."
+10:49:39.19 (19743814)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+10:49:39.19 (19753925)|VARIABLE_ASSIGNMENT|[EXTERNAL]|EmailOnStatus.TEMPLATE_NOT_FOUND|"Email template not f (4 more) ..."
+10:49:39.19 (19770772)|METHOD_ENTRY|[11]|01p1R00000JU2Nx|EmailOnStatus.EmailOnStatus()
+10:49:39.19 (19775132)|STATEMENT_EXECUTE|[11]
+10:49:39.19 (19779867)|STATEMENT_EXECUTE|[11]
+10:49:39.19 (19805115)|HEAP_ALLOCATE|[68]|Bytes:5
+10:49:39.19 (19823972)|HEAP_ALLOCATE|[74]|Bytes:5
+10:49:39.19 (19829580)|HEAP_ALLOCATE|[82]|Bytes:7
+10:49:39.19 (20540193)|SYSTEM_MODE_ENTER|false
+10:49:39.19 (20668816)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:49:39.19 (20676377)|SYSTEM_MODE_EXIT|false
+10:49:39.19 (20694870)|METHOD_EXIT|[11]|EmailOnStatus
+10:49:39.19 (20711399)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:49:39.19 (20713829)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:423
+10:49:39.19 (20721854)|VARIABLE_SCOPE_BEGIN|[119]|caseIds|Set<Id>|true|false
+10:49:39.19 (20738381)|VARIABLE_ASSIGNMENT|[119]|caseIds|["500bV00000XwbAhQAJ"]|0x4ae90b7b
+10:49:39.19 (20742446)|VARIABLE_SCOPE_BEGIN|[119]|cases|String|false|false
+10:49:39.19 (20749140)|VARIABLE_ASSIGNMENT|[119]|cases|"[{\"attributes\":{\"typ (403 more) ..."
+10:49:39.19 (20759605)|SYSTEM_MODE_ENTER|false
+10:49:39.19 (20762735)|HEAP_ALLOCATE|[120]|Bytes:5
+10:49:39.19 (20765502)|STATEMENT_EXECUTE|[119]
+10:49:39.19 (20766393)|STATEMENT_EXECUTE|[120]
+10:49:39.19 (20781116)|METHOD_ENTRY|[120]|01p1R00000JU2Nx|EmailOnStatus.sendEmailMessageForCoreShops(Set<Id>, String)
+10:49:39.19 (20812744)|VARIABLE_SCOPE_BEGIN|[122]|caseIds|Set<Id>|true|false
+10:49:39.19 (20818846)|VARIABLE_ASSIGNMENT|[122]|caseIds|["500bV00000XwbAhQAJ"]|0x4ae90b7b
+10:49:39.19 (20822371)|VARIABLE_SCOPE_BEGIN|[122]|cases|String|false|false
+10:49:39.19 (20827407)|VARIABLE_ASSIGNMENT|[122]|cases|"[{\"attributes\":{\"typ (403 more) ..."
+10:49:39.19 (20832616)|HEAP_ALLOCATE|[123]|Bytes:5
+10:49:39.19 (20835213)|STATEMENT_EXECUTE|[122]
+10:49:39.19 (20836006)|STATEMENT_EXECUTE|[123]
+10:49:39.19 (20838049)|HEAP_ALLOCATE|[123]|Bytes:64
+10:49:39.19 (20981189)|HEAP_ALLOCATE|[123]|Bytes:33
+10:49:39.19 (20993771)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+10:49:39.19 (20995948)|STATEMENT_EXECUTE|[1]
+10:49:39.19 (21002832)|SYSTEM_METHOD_EXIT|[1]|Type
+10:49:39.19 (21007893)|HEAP_ALLOCATE|[123]|Bytes:8
+10:49:39.19 (21018046)|HEAP_ALLOCATE|[123]|Bytes:8
+10:49:39.19 (21020748)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+10:49:39.19 (21041416)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x1bc7c008
+10:49:39.19 (21044817)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+10:49:39.19 (21171021)|VARIABLE_ASSIGNMENT|[4]|apextype|"List<Case>"|0x3318da88
+10:49:39.19 (23237280)|HEAP_ALLOCATE|[123]|Bytes:8
+10:49:39.19 (23290895)|HEAP_ALLOCATE|[123]|Bytes:24
+10:49:39.19 (23315433)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+10:49:39.19 (23320497)|STATEMENT_EXECUTE|[1]
+10:49:39.19 (23330195)|SYSTEM_METHOD_EXIT|[1]|JSON
+10:49:39.19 (23356298)|METHOD_ENTRY|[123]||System.JSON.deserialize(String, System.Type)
+10:49:39.19 (25998058)|METHOD_EXIT|[123]||System.JSON.deserialize(String, System.Type)
+10:49:39.19 (26012984)|VARIABLE_SCOPE_BEGIN|[123]|caseRecords|List<Case>|true|false
+10:49:39.19 (26021628)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:49:39.19 (26338415)|VARIABLE_ASSIGNMENT|[123]|caseRecords|[{"Status":"Assigned","attributes":{"type":"Case","url":"/services/data/v65.0 (33 more) ..."},"Id":"500bV00000XwbAhQAJ","CreatedById":"0051R00000JeE4nQAF","CS_TCD_Store__c":"00136000019WhTOAA0","CS_TCD_Store__r":{"IsonNOMAD__c":true,"SMA_ContactEmail__c":"tireshop291@loves.co (1 more) ...","attributes":{"type":"Account","url":"/services/data/v65.0 (36 more) ..."},"Id":"00136000019WhTOAA0"}}]|0x4a55f272
+10:49:39.19 (26347407)|STATEMENT_EXECUTE|[124]
+10:49:39.19 (28050376)|HEAP_ALLOCATE|[124]|Bytes:4
+10:49:39.19 (28126299)|SYSTEM_CONSTRUCTOR_ENTRY|[124]|<init>()
+10:49:39.19 (28171246)|SYSTEM_CONSTRUCTOR_EXIT|[124]|<init>()
+10:49:39.19 (28174746)|VARIABLE_SCOPE_BEGIN|[124]|emailList|List<EmailMessage_Handler.EmailConfiguration>|true|false
+10:49:39.19 (28196709)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:49:39.19 (28208103)|VARIABLE_ASSIGNMENT|[124]|emailList|[]|0x19d83872
+10:49:39.19 (28211946)|STATEMENT_EXECUTE|[125]
+10:49:39.19 (28215280)|VARIABLE_SCOPE_BEGIN|[125]|templateDeveloperName|String|false|false
+10:49:39.19 (28221340)|VARIABLE_ASSIGNMENT|[125]|templateDeveloperName|null
+10:49:39.19 (28223408)|STATEMENT_EXECUTE|[126]
+10:49:39.19 (28226766)|HEAP_ALLOCATE|[126]|Bytes:33
+10:49:39.19 (28347258)|SYSTEM_METHOD_ENTRY|[126]|Env_Variable__c.getInstance(String)
+10:49:39.19 (29294535)|HEAP_ALLOCATE|[126]|Bytes:52
+10:49:39.19 (29312297)|SYSTEM_METHOD_EXIT|[126]|Env_Variable__c.getInstance(String)
+10:49:39.19 (29319324)|VARIABLE_SCOPE_BEGIN|[126]|messageTemplateName|Env_Variable__c|true|false
+10:49:39.19 (29489593)|VARIABLE_ASSIGNMENT|[126]|messageTemplateName|{"LastModifiedDate":"2020-10-21T19:23:50.000Z","IsDeleted":false,"User_Switch_Active__c":false,"CreatedById":"0051R00000D6u2rQAB","CreatedDate":"2020-09-10T16:50:09.000Z","Id":"a4l1R000000F5ncQAC","LastModifiedById":"005360000036OeQAAU","SetupOwnerId":"00D36000000Kq3uEAC","Name":"EmailMessage_TireDis (13 more) ...","SystemModstamp":"2020-10-21T19:23:50.000Z","Value__c":"CS_TireCare_Case_Tem (8 more) ...","Active__c":true}|0x51df37ed
+10:49:39.19 (29545057)|HEAP_ALLOCATE|[127]|Bytes:114
+10:49:39.19 (29571092)|SYSTEM_METHOD_ENTRY|[1]|Test.Test()
+10:49:39.19 (29574192)|STATEMENT_EXECUTE|[1]
+10:49:39.19 (29584870)|SYSTEM_METHOD_EXIT|[1]|Test
+10:49:39.19 (29603967)|METHOD_ENTRY|[127]||System.Test.isRunningTest()
+10:49:39.19 (29646897)|METHOD_EXIT|[127]||System.Test.isRunningTest()
+10:49:39.19 (29651599)|STATEMENT_EXECUTE|[128]
+10:49:39.19 (29673006)|VARIABLE_ASSIGNMENT|[128]|templateDeveloperName|"CS_TireCare_Case_Tem (8 more) ..."
+10:49:39.19 (29675783)|STATEMENT_EXECUTE|[129]
+10:49:39.19 (29732243)|HEAP_ALLOCATE|[129]|Bytes:4
+10:49:39.19 (29736324)|HEAP_ALLOCATE|[129]|Bytes:73
+10:49:39.19 (29743185)|HEAP_ALLOCATE|[129]|Bytes:4
+10:49:39.19 (29750567)|HEAP_ALLOCATE|[129]|Bytes:7
+10:49:39.19 (30350746)|SOQL_EXECUTE_BEGIN|[129]|Aggregations:0|SELECT Case__c FROM Service_Request_Line_Item__c WHERE Case__c = :tmpVar1
+10:49:39.19 (30370420)|LIMIT_USAGE|[129]|SOQL|1|200
+10:49:39.19 (30375192)|LIMIT_USAGE|[129]|AGGS|0|600
+10:49:39.19 (38658069)|SOQL_EXECUTE_EXPLAIN|[129]|Index on Service_Request_Line_Item__c : [Case__c], cardinality: 2, sobjectCardinality: 10281040, relativeCost 0
+10:49:39.19 (38675219)|SOQL_EXECUTE_END|[129]|Rows:2
+10:49:39.19 (38691928)|LIMIT_USAGE|[129]|SOQL_ROWS|2|50000
+10:49:39.19 (38702850)|HEAP_ALLOCATE|[129]|Bytes:12
+10:49:39.19 (38721335)|HEAP_ALLOCATE|[129]|Bytes:116
+10:49:39.19 (38787101)|HEAP_ALLOCATE|[129]|Bytes:12
+10:49:39.19 (38841460)|HEAP_ALLOCATE|[129]|Bytes:12
+10:49:39.19 (38867112)|HEAP_ALLOCATE|[129]|Bytes:4
+10:49:39.19 (38874570)|HEAP_ALLOCATE|[129]|Bytes:12
+10:49:39.19 (38879060)|HEAP_ALLOCATE|[129]|Bytes:4
+10:49:39.19 (38890274)|VARIABLE_SCOPE_BEGIN|[129]|srliMap|Map<Id,Service_Request_Line_Item__c>|true|false
+10:49:39.19 (39025970)|VARIABLE_ASSIGNMENT|[129]|srliMap|{"aAmbV00000HZagLSAT":{"Case__c":"500bV00000XwbAhQAJ","Id":"aAmbV00000HZagLSAT"},"aAmbV00000HZagMSAT":{"Case__c":"500bV00000XwbAhQAJ","Id":"aAmbV00000HZagMSAT"}}|0x1ceeb9c4
+10:49:39.19 (39033244)|STATEMENT_EXECUTE|[130]
+10:49:39.19 (39044820)|HEAP_ALLOCATE|[130]|Bytes:4
+10:49:39.19 (39054345)|VARIABLE_SCOPE_BEGIN|[130]|caseIdToSRLI|Map<Id,Service_Request_Line_Item__c>|true|false
+10:49:39.19 (39062296)|VARIABLE_ASSIGNMENT|[130]|caseIdToSRLI|{}|0xf8bbcf9
+10:49:39.19 (39065210)|STATEMENT_EXECUTE|[131]
+10:49:39.19 (39111565)|HEAP_ALLOCATE|[131]|Bytes:4
+10:49:39.19 (39116085)|HEAP_ALLOCATE|[131]|Bytes:99
+10:49:39.19 (39122636)|HEAP_ALLOCATE|[131]|Bytes:4
+10:49:39.19 (39135098)|HEAP_ALLOCATE|[131]|Bytes:7
+10:49:39.19 (45837258)|SOQL_EXECUTE_BEGIN|[131]|Aggregations:0|SELECT RelatedToId, Type__c FROM EmailMessage WHERE (RelatedToId = :tmpVar1 AND Type__c = :tmpVar2)
+10:49:39.19 (45863855)|LIMIT_USAGE|[131]|SOQL|2|200
+10:49:39.19 (45868861)|LIMIT_USAGE|[131]|AGGS|0|600
+10:49:39.19 (61331767)|SOQL_EXECUTE_EXPLAIN|[131]|Index on EmailMessage : [RelatedToId], cardinality: 0, sobjectCardinality: 8663700, relativeCost 0
+10:49:39.19 (61352480)|SOQL_EXECUTE_END|[131]|Rows:1
+10:49:39.19 (61374671)|LIMIT_USAGE|[131]|SOQL_ROWS|3|50000
+10:49:39.19 (61385492)|HEAP_ALLOCATE|[131]|Bytes:8
+10:49:39.19 (61401097)|HEAP_ALLOCATE|[131]|Bytes:81
+10:49:39.19 (61481686)|HEAP_ALLOCATE|[131]|Bytes:8
+10:49:39.19 (61562311)|HEAP_ALLOCATE|[131]|Bytes:16
+10:49:39.19 (61580562)|HEAP_ALLOCATE|[131]|Bytes:4
+10:49:39.19 (61599717)|VARIABLE_SCOPE_BEGIN|[131]|emailMessageMap|Map<Id,EmailMessage>|true|false
+10:49:39.19 (61705434)|VARIABLE_ASSIGNMENT|[131]|emailMessageMap|{"02sbV00000W57D1QAJ":{"RelatedToId":"500bV00000XwbAhQAJ","Type__c":"Dispatch","Id":"02sbV00000W57D1QAJ"}}|0x6c687247
+10:49:39.19 (61713439)|STATEMENT_EXECUTE|[132]
+10:49:39.19 (61728823)|HEAP_ALLOCATE|[132]|Bytes:4
+10:49:39.19 (61737889)|VARIABLE_SCOPE_BEGIN|[132]|caseIdToEmail|Map<Id,EmailMessage>|true|false
+10:49:39.19 (61745091)|VARIABLE_ASSIGNMENT|[132]|caseIdToEmail|{}|0x47d76652
+10:49:39.19 (61756372)|HEAP_ALLOCATE|[134]|Bytes:4
+10:49:39.19 (61766246)|SYSTEM_CONSTRUCTOR_ENTRY|[134]|<init>()
+10:49:39.19 (61809834)|SYSTEM_CONSTRUCTOR_EXIT|[134]|<init>()
+10:49:39.19 (61826917)|SYSTEM_METHOD_ENTRY|[134]|Map<Id,Service_Request_Line_Item__c>.keySet()
+10:49:39.19 (61852691)|HEAP_ALLOCATE|[134]|Bytes:48
+10:49:39.19 (61857652)|SYSTEM_METHOD_EXIT|[134]|Map<Id,Service_Request_Line_Item__c>.keySet()
+10:49:39.19 (61880824)|SYSTEM_METHOD_ENTRY|[134]|List<Id>.addAll(Object)
+10:49:39.19 (61887990)|HEAP_ALLOCATE|[134]|Bytes:8
+10:49:39.19 (61892652)|SYSTEM_METHOD_EXIT|[134]|List<Id>.addAll(Object)
+10:49:39.19 (61896817)|SYSTEM_METHOD_ENTRY|[134]|List<Id>.iterator()
+10:49:39.19 (62052855)|SYSTEM_METHOD_EXIT|[134]|List<Id>.iterator()
+10:49:39.19 (62068185)|SYSTEM_METHOD_ENTRY|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62081772)|HEAP_ALLOCATE|[134]|Bytes:5
+10:49:39.19 (62087100)|SYSTEM_METHOD_EXIT|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62125595)|HEAP_ALLOCATE|[134]|Bytes:4
+10:49:39.19 (62128638)|VARIABLE_SCOPE_BEGIN|[134]|key|Id|false|false
+10:49:39.19 (62172140)|VARIABLE_ASSIGNMENT|[134]|key|"aAmbV00000HZagLSAT"
+10:49:39.19 (62176024)|STATEMENT_EXECUTE|[134]
+10:49:39.19 (62176998)|STATEMENT_EXECUTE|[135]
+10:49:39.19 (62185645)|SYSTEM_METHOD_ENTRY|[135]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62213472)|SYSTEM_METHOD_EXIT|[135]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62218771)|VARIABLE_SCOPE_BEGIN|[135]|srli|Service_Request_Line_Item__c|true|false
+10:49:39.19 (62306514)|VARIABLE_ASSIGNMENT|[135]|srli|{"Case__c":"500bV00000XwbAhQAJ","Id":"aAmbV00000HZagLSAT"}|0x4c46ed80
+10:49:39.19 (62335718)|SYSTEM_METHOD_ENTRY|[136]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62351876)|SYSTEM_METHOD_EXIT|[136]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62355915)|STATEMENT_EXECUTE|[136]
+10:49:39.19 (62365433)|SYSTEM_METHOD_ENTRY|[136]|Map<Id,Service_Request_Line_Item__c>.put(Object, Object)
+10:49:39.19 (62374244)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+10:49:39.19 (62382897)|SYSTEM_METHOD_EXIT|[136]|Map<Id,Service_Request_Line_Item__c>.put(Object, Object)
+10:49:39.19 (62391050)|SYSTEM_METHOD_ENTRY|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62399286)|HEAP_ALLOCATE|[134]|Bytes:5
+10:49:39.19 (62403157)|SYSTEM_METHOD_EXIT|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62417571)|HEAP_ALLOCATE|[134]|Bytes:4
+10:49:39.19 (62420212)|VARIABLE_SCOPE_BEGIN|[134]|key|Id|false|false
+10:49:39.19 (62441508)|VARIABLE_ASSIGNMENT|[134]|key|"aAmbV00000HZagMSAT"
+10:49:39.19 (62444752)|STATEMENT_EXECUTE|[134]
+10:49:39.19 (62445526)|STATEMENT_EXECUTE|[135]
+10:49:39.19 (62449832)|SYSTEM_METHOD_ENTRY|[135]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62455388)|SYSTEM_METHOD_EXIT|[135]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62458269)|VARIABLE_SCOPE_BEGIN|[135]|srli|Service_Request_Line_Item__c|true|false
+10:49:39.19 (62495402)|VARIABLE_ASSIGNMENT|[135]|srli|{"Case__c":"500bV00000XwbAhQAJ","Id":"aAmbV00000HZagMSAT"}|0x63135405
+10:49:39.19 (62504264)|SYSTEM_METHOD_ENTRY|[136]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62508832)|SYSTEM_METHOD_EXIT|[136]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (62511129)|STATEMENT_EXECUTE|[136]
+10:49:39.19 (62513372)|SYSTEM_METHOD_ENTRY|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62516631)|HEAP_ALLOCATE|[134]|Bytes:5
+10:49:39.19 (62519142)|SYSTEM_METHOD_EXIT|[134]|system.ListIterator.hasNext()
+10:49:39.19 (62525389)|VARIABLE_ASSIGNMENT|[134]|key|null
+10:49:39.19 (62536036)|HEAP_ALLOCATE|[139]|Bytes:4
+10:49:39.19 (62541127)|SYSTEM_CONSTRUCTOR_ENTRY|[139]|<init>()
+10:49:39.19 (62555574)|SYSTEM_CONSTRUCTOR_EXIT|[139]|<init>()
+10:49:39.19 (62561783)|SYSTEM_METHOD_ENTRY|[139]|Map<Id,EmailMessage>.keySet()
+10:49:39.19 (62577704)|HEAP_ALLOCATE|[139]|Bytes:26
+10:49:39.19 (62581334)|SYSTEM_METHOD_EXIT|[139]|Map<Id,EmailMessage>.keySet()
+10:49:39.19 (62591007)|SYSTEM_METHOD_ENTRY|[139]|List<Id>.addAll(Object)
+10:49:39.19 (62596327)|HEAP_ALLOCATE|[139]|Bytes:4
+10:49:39.19 (62601575)|SYSTEM_METHOD_EXIT|[139]|List<Id>.addAll(Object)
+10:49:39.19 (62606476)|SYSTEM_METHOD_ENTRY|[139]|List<Id>.iterator()
+10:49:39.19 (62610670)|SYSTEM_METHOD_EXIT|[139]|List<Id>.iterator()
+10:49:39.19 (62615489)|SYSTEM_METHOD_ENTRY|[139]|system.ListIterator.hasNext()
+10:49:39.19 (62620163)|HEAP_ALLOCATE|[139]|Bytes:5
+10:49:39.19 (62624154)|SYSTEM_METHOD_EXIT|[139]|system.ListIterator.hasNext()
+10:49:39.19 (62637416)|HEAP_ALLOCATE|[139]|Bytes:4
+10:49:39.19 (62639993)|VARIABLE_SCOPE_BEGIN|[139]|emailKey|Id|false|false
+10:49:39.19 (62655867)|VARIABLE_ASSIGNMENT|[139]|emailKey|"02sbV00000W57D1QAJ"
+10:49:39.19 (62658877)|STATEMENT_EXECUTE|[139]
+10:49:39.19 (62660009)|STATEMENT_EXECUTE|[140]
+10:49:39.19 (62666470)|SYSTEM_METHOD_ENTRY|[140]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (62684842)|SYSTEM_METHOD_EXIT|[140]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (62689704)|VARIABLE_SCOPE_BEGIN|[140]|em|EmailMessage|true|false
+10:49:39.19 (62746353)|VARIABLE_ASSIGNMENT|[140]|em|{"RelatedToId":"500bV00000XwbAhQAJ","Type__c":"Dispatch","Id":"02sbV00000W57D1QAJ"}|0x33e77a34
+10:49:39.19 (62769786)|SYSTEM_METHOD_ENTRY|[141]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (62782018)|SYSTEM_METHOD_EXIT|[141]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (62784718)|STATEMENT_EXECUTE|[141]
+10:49:39.19 (62790513)|SYSTEM_METHOD_ENTRY|[141]|Map<Id,EmailMessage>.put(Object, Object)
+10:49:39.19 (62794424)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+10:49:39.19 (62799130)|SYSTEM_METHOD_EXIT|[141]|Map<Id,EmailMessage>.put(Object, Object)
+10:49:39.19 (62803533)|SYSTEM_METHOD_ENTRY|[139]|system.ListIterator.hasNext()
+10:49:39.19 (62807360)|HEAP_ALLOCATE|[139]|Bytes:5
+10:49:39.19 (62810067)|SYSTEM_METHOD_EXIT|[139]|system.ListIterator.hasNext()
+10:49:39.19 (62814674)|VARIABLE_ASSIGNMENT|[139]|emailKey|null
+10:49:39.19 (62818072)|STATEMENT_EXECUTE|[144]
+10:49:39.19 (62821286)|HEAP_ALLOCATE|[144]|Bytes:59
+10:49:39.19 (62834940)|HEAP_ALLOCATE|[144]|Bytes:4
+10:49:39.19 (63306398)|SOQL_EXECUTE_BEGIN|[144]|Aggregations:0|SELECT Id FROM EmailTemplate WHERE DeveloperName = :tmpVar1
+10:49:39.19 (63326239)|LIMIT_USAGE|[144]|SOQL|3|200
+10:49:39.19 (63332240)|LIMIT_USAGE|[144]|AGGS|0|600
+10:49:39.19 (69233930)|SOQL_EXECUTE_EXPLAIN|[144]|Index on EmailTemplate : [DeveloperName], cardinality: 1, sobjectCardinality: 4800, relativeCost 0.001
+10:49:39.19 (69250934)|SOQL_EXECUTE_END|[144]|Rows:1
+10:49:39.19 (69266502)|LIMIT_USAGE|[144]|SOQL_ROWS|4|50000
+10:49:39.19 (69276825)|HEAP_ALLOCATE|[144]|Bytes:8
+10:49:39.19 (69289328)|HEAP_ALLOCATE|[144]|Bytes:29
+10:49:39.19 (69378737)|HEAP_ALLOCATE|[144]|Bytes:8
+10:49:39.19 (69399280)|VARIABLE_SCOPE_BEGIN|[144]|template|List<EmailTemplate>|true|false
+10:49:39.19 (69468237)|VARIABLE_ASSIGNMENT|[144]|template|[{"Id":"00X36000001Je0ZEAS"}]|0x403be75c
+10:49:39.19 (69496295)|SYSTEM_METHOD_ENTRY|[146]|List<Case>.iterator()
+10:49:39.19 (69600303)|SYSTEM_METHOD_EXIT|[146]|List<Case>.iterator()
+10:49:39.19 (69622350)|SYSTEM_METHOD_ENTRY|[146]|system.ListIterator.hasNext()
+10:49:39.19 (69637611)|HEAP_ALLOCATE|[146]|Bytes:5
+10:49:39.19 (69642673)|SYSTEM_METHOD_EXIT|[146]|system.ListIterator.hasNext()
+10:49:39.19 (69654645)|HEAP_ALLOCATE|[146]|Bytes:28
+10:49:39.19 (69662996)|VARIABLE_SCOPE_BEGIN|[146]|c|Case|true|false
+10:49:39.19 (69778176)|VARIABLE_ASSIGNMENT|[146]|c|{"Status":"Assigned","attributes":{"type":"Case","url":"/services/data/v65.0 (33 more) ..."},"Id":"500bV00000XwbAhQAJ","CreatedById":"0051R00000JeE4nQAF","CS_TCD_Store__c":"00136000019WhTOAA0","CS_TCD_Store__r":{"IsonNOMAD__c":true,"SMA_ContactEmail__c":"tireshop291@loves.co (1 more) ...","attributes":{"type":"Account","url":"/services/data/v65.0 (36 more) ..."},"Id":"00136000019WhTOAA0"}}|0x4cd10b4b
+10:49:39.19 (69786157)|STATEMENT_EXECUTE|[146]
+10:49:39.19 (69824138)|SYSTEM_METHOD_ENTRY|[147]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (69845605)|SYSTEM_METHOD_EXIT|[147]|Map<Id,Service_Request_Line_Item__c>.get(Object)
+10:49:39.19 (69849229)|STATEMENT_EXECUTE|[147]
+10:49:39.19 (69857212)|SYSTEM_METHOD_ENTRY|[148]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (69867505)|SYSTEM_METHOD_EXIT|[148]|Map<Id,EmailMessage>.get(Object)
+10:49:39.19 (69870918)|STATEMENT_EXECUTE|[148]
+10:49:39.19 (69875058)|SYSTEM_METHOD_ENTRY|[146]|system.ListIterator.hasNext()
+10:49:39.19 (69879604)|HEAP_ALLOCATE|[146]|Bytes:5
+10:49:39.19 (69882625)|SYSTEM_METHOD_EXIT|[146]|system.ListIterator.hasNext()
+10:49:39.19 (69888349)|VARIABLE_ASSIGNMENT|[146]|c|null|
+10:49:39.19 (69891994)|STATEMENT_EXECUTE|[160]
+10:49:39.19 (69894773)|VARIABLE_SCOPE_BEGIN|[160]|methodResponse|Boolean|false|false
+10:49:39.19 (69899977)|VARIABLE_ASSIGNMENT|[160]|methodResponse|null
+10:49:39.19 (69907162)|SYSTEM_METHOD_ENTRY|[161]|List<EmailMessage_Handler.EmailConfiguration>.size()
+10:49:39.19 (69916307)|SYSTEM_METHOD_EXIT|[161]|List<EmailMessage_Handler.EmailConfiguration>.size()
+10:49:39.19 (69921795)|STATEMENT_EXECUTE|[161]
+10:49:39.19 (69933150)|METHOD_EXIT|[120]|01p1R00000JU2Nx|EmailOnStatus.sendEmailMessageForCoreShops(Set<Id>, String)
+10:49:39.19 (69940730)|SYSTEM_MODE_EXIT|false
+10:49:39.69 (69990163)|CUMULATIVE_LIMIT_USAGE
+10:49:39.69 (69990163)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 3 out of 200
+  Number of query rows: 4 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+10:49:39.69 (69990163)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+10:49:39.69 (69990163)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_static_DISPATCH_EMAIL_TYPE:0
+  String:_static_DISPATCH_ORG_WIDE_EMAIL:0
+  String:_static_SOURCE_SYSTEM_CHECK:0
+  String:_static_STORE_DATA_NOT_FOUND:0
+  String:_static_TEMPLATE_NOT_FOUND:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+10:49:39.69 (69990163)|CUMULATIVE_LIMIT_USAGE_END
+
+10:49:39.19 (70236880)|CODE_UNIT_FINISHED|EmailOnStatus.sendEmailMessageForCoreShopsAtFuture(Set<Id>, String)
+10:49:39.19 (70249768)|EXECUTION_FINISHED
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING_BEGIN
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING|SOQL operations|
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 131, column 1: [SELECT RelatedToId, Type__c FROM EmailMessage WHERE RelatedToId IN :caseIds AND Type__c =: DISPATCH_EMAIL_TYPE]: executed 1 time in 23 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 129, column 1: [SELECT Case__c FROM Service_Request_Line_Item__c WHERE Case__c IN :caseIds]: executed 1 time in 9 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 144, column 1: [SELECT Id FROM EmailTemplate WHERE DeveloperName =: templateDeveloperName]: executed 1 time in 7 ms
+
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING|No profiling information for DML operations
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static void sendEmailMessageForCoreShopsAtFuture(Set<Id>, String): executed 1 time in 50 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShopsAtFuture: line 120, column 1: public static void sendEmailMessageForCoreShops(Set<Id>, String): executed 1 time in 49 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 123, column 1: global static Object deserialize(String, System.Type): executed 1 time in 2 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 126, column 1: global public static Env_Variable__c getInstance(String): executed 1 time in 1 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 161, column 1: global public Integer size(): executed 1 time in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 134, column 1: global public List<Id>(): executed 7 times in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 135, column 1: global public Object get(Object): executed 2 times in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 136, column 1: global public Object get(Object): executed 3 times in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 139, column 1: global public List<Id>(): executed 6 times in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 140, column 1: global public Object get(Object): executed 1 time in 0 ms
+Class.EmailOnStatus.sendEmailMessageForCoreShops: line 141, column 1: global public Object get(Object): executed 2 times in 0 ms
+
+10:49:39.118 (118697853)|CUMULATIVE_PROFILING_END
+

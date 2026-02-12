@@ -1,0 +1,449 @@
+﻿52.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+10:48:51.0 (344187)|USER_INFO|[EXTERNAL]|0051R00000JeE4n|truck.care.process@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+10:48:51.0 (444776)|EXECUTION_STARTED
+10:48:51.0 (479900)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000K3xNF|apiServiceLog.createServiceLog(String, String)
+10:48:51.0 (782187)|HEAP_ALLOCATE|[95]|Bytes:3
+10:48:51.0 (893238)|HEAP_ALLOCATE|[100]|Bytes:152
+10:48:51.0 (913224)|HEAP_ALLOCATE|[417]|Bytes:408
+10:48:51.0 (930557)|HEAP_ALLOCATE|[430]|Bytes:408
+10:48:51.0 (965368)|HEAP_ALLOCATE|[317]|Bytes:6
+10:48:51.0 (985530)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:252
+10:48:51.0 (991744)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:25
+10:48:51.0 (1019710)|SYSTEM_METHOD_ENTRY|[1]|RestRequest.RestRequest()
+10:48:51.0 (1027419)|STATEMENT_EXECUTE|[1]
+10:48:51.0 (1038425)|SYSTEM_METHOD_EXIT|[1]|RestRequest
+10:48:51.0 (1046347)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (1223483)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:48:51.0 (1229292)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:13
+10:48:51.0 (1243813)|VARIABLE_SCOPE_BEGIN|[16]|this|System.RestRequest|true|false
+10:48:51.0 (1448627)|VARIABLE_ASSIGNMENT|[16]|this|{}|0x320ac75c
+10:48:51.0 (1469001)|VARIABLE_SCOPE_BEGIN|[16]|request|java:com.force.swag.rest.RestRequest|true|false
+10:48:51.0 (1721093)|VARIABLE_ASSIGNMENT|[16]|request|"com.force.swag.rest.RestRequestServletImpl@7601f89d"|0x7601f89d
+10:48:51.0 (1740215)|VARIABLE_SCOPE_BEGIN|[16]|urlMapping|String|false|false
+10:48:51.0 (1761952)|VARIABLE_ASSIGNMENT|[16]|urlMapping|"/ServiceLog/*"
+10:48:51.0 (4677424)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (4694909)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:21
+10:48:51.0 (4698186)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:48:51.0 (4719334)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (4838052)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (4852115)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (4866488)|VARIABLE_ASSIGNMENT|[28]|name|"x-salesforce-via-mes (1 more) ..."
+10:48:51.0 (4873550)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (4910230)|VARIABLE_ASSIGNMENT|[28]|value|"true"
+10:48:51.0 (5023279)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5028826)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+10:48:51.0 (5031974)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (5037790)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5088913)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5118259)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5130651)|VARIABLE_ASSIGNMENT|[28]|name|"charset"
+10:48:51.0 (5136360)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5146513)|VARIABLE_ASSIGNMENT|[28]|value|"UTF-8"
+10:48:51.0 (5194098)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5198497)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:23
+10:48:51.0 (5201219)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:22
+10:48:51.0 (5206345)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5253951)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5262924)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5274706)|VARIABLE_ASSIGNMENT|[28]|name|"x-salesforce-tls-cip (3 more) ..."
+10:48:51.0 (5279946)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5290540)|VARIABLE_ASSIGNMENT|[28]|value|"TLS_AES_256_GCM_SHA3 (2 more) ..."
+10:48:51.0 (5342534)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5346941)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:11
+10:48:51.0 (5349770)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:39
+10:48:51.0 (5355126)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5397493)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5405582)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5416835)|VARIABLE_ASSIGNMENT|[28]|name|"CipherSuite"
+10:48:51.0 (5421618)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5432177)|VARIABLE_ASSIGNMENT|[28]|value|"ECDHE-RSA-AES256-GCM (19 more) ..."
+10:48:51.0 (5473102)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5476835)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+10:48:51.0 (5479725)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+10:48:51.0 (5484340)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5525839)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5533851)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5546802)|VARIABLE_ASSIGNMENT|[28]|name|"User-Agent"
+10:48:51.0 (5551732)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5561779)|VARIABLE_ASSIGNMENT|[28]|value|"AHC/1.0"
+10:48:51.0 (5598777)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5602297)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:15
+10:48:51.0 (5605243)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (5609933)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5725403)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5733866)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5744154)|VARIABLE_ASSIGNMENT|[28]|name|"Accept-Encoding"
+10:48:51.0 (5749112)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5758198)|VARIABLE_ASSIGNMENT|[28]|value|"application/json"
+10:48:51.0 (5804683)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5808963)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+10:48:51.0 (5811793)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+10:48:51.0 (5816656)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (5856303)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (5863408)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (5873830)|VARIABLE_ASSIGNMENT|[28]|name|"x-envoy-external-add (4 more) ..."
+10:48:51.0 (5878789)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (5887278)|VARIABLE_ASSIGNMENT|[28]|value|"3.19.34.58"
+10:48:51.0 (5964227)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (5968038)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (5970343)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:1
+10:48:51.0 (5976226)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6017401)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6026579)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6036994)|VARIABLE_ASSIGNMENT|[28]|name|"X-B3-Sampled"
+10:48:51.0 (6042256)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6051430)|VARIABLE_ASSIGNMENT|[28]|value|"0"
+10:48:51.0 (6094878)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6098715)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (6101624)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6106403)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6144619)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6151911)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6160540)|VARIABLE_ASSIGNMENT|[28]|name|"X-B3-TraceId"
+10:48:51.0 (6164792)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6173294)|VARIABLE_ASSIGNMENT|[28]|value|"642e25eefb244b2b6b9c (12 more) ..."
+10:48:51.0 (6212878)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6216153)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (6218720)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:15
+10:48:51.0 (6222735)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6260780)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6269050)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6279770)|VARIABLE_ASSIGNMENT|[28]|name|"X-Salesforce-org"
+10:48:51.0 (6284308)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6293327)|VARIABLE_ASSIGNMENT|[28]|value|"00D36000000Kq3u"
+10:48:51.0 (6333655)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6337805)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:19
+10:48:51.0 (6340934)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+10:48:51.0 (6346360)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6399393)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6411081)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6425982)|VARIABLE_ASSIGNMENT|[28]|name|"x-original-protocol"
+10:48:51.0 (6430443)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6439051)|VARIABLE_ASSIGNMENT|[28]|value|"HTTP/1.1"
+10:48:51.0 (6482960)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6487176)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:23
+10:48:51.0 (6489691)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (6493891)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6530774)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6538731)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6551866)|VARIABLE_ASSIGNMENT|[28]|name|"x-salesforce-tls-sou (3 more) ..."
+10:48:51.0 (6558181)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6570329)|VARIABLE_ASSIGNMENT|[28]|value|"3.19.34.58:18018"
+10:48:51.0 (6613917)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6617757)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (6620382)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (6624651)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6661060)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6667730)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6677505)|VARIABLE_ASSIGNMENT|[28]|name|"Content-Type"
+10:48:51.0 (6682085)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6691293)|VARIABLE_ASSIGNMENT|[28]|value|"application/json"
+10:48:51.0 (6731472)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6735112)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (6738120)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (6742877)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6783085)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6791456)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6802640)|VARIABLE_ASSIGNMENT|[28]|name|"x-envoy-internal"
+10:48:51.0 (6807817)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6816109)|VARIABLE_ASSIGNMENT|[28]|value|"false"
+10:48:51.0 (6858226)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6862296)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:6
+10:48:51.0 (6864949)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3
+10:48:51.0 (6869258)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (6915815)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (6923723)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (6936013)|VARIABLE_ASSIGNMENT|[28]|name|"Accept"
+10:48:51.0 (6941111)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (6950706)|VARIABLE_ASSIGNMENT|[28]|value|"*/*"
+10:48:51.0 (6993191)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (6998186)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (7001167)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7008146)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7051298)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7058691)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7068943)|VARIABLE_ASSIGNMENT|[28]|name|"X-Request-Id"
+10:48:51.0 (7074611)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7085276)|VARIABLE_ASSIGNMENT|[28]|value|"bd66a50aa1314b8f63a2 (12 more) ..."
+10:48:51.0 (7125292)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7128924)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:17
+10:48:51.0 (7131944)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7136894)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7176849)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7184659)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7197013)|VARIABLE_ASSIGNMENT|[28]|name|"X-SFDC-Request-Id"
+10:48:51.0 (7203747)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7215444)|VARIABLE_ASSIGNMENT|[28]|value|"bd66a50aa1314b8f63a2 (12 more) ..."
+10:48:51.0 (7253434)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7257534)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:17
+10:48:51.0 (7260679)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (7265460)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7304734)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7312873)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7324018)|VARIABLE_ASSIGNMENT|[28]|name|"X-Forwarded-Proto"
+10:48:51.0 (7329344)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7339993)|VARIABLE_ASSIGNMENT|[28]|value|"https"
+10:48:51.0 (7416715)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7420685)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:17
+10:48:51.0 (7423799)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (7428970)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7469993)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7478285)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7489871)|VARIABLE_ASSIGNMENT|[28]|name|"X-B3-ParentSpanId"
+10:48:51.0 (7494905)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7504957)|VARIABLE_ASSIGNMENT|[28]|value|"0c503d912044dcf3"
+10:48:51.0 (7543482)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7547110)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:48:51.0 (7550366)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:23
+10:48:51.0 (7555186)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7594810)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7602886)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7614476)|VARIABLE_ASSIGNMENT|[28]|name|"Host"
+10:48:51.0 (7619823)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7631034)|VARIABLE_ASSIGNMENT|[28]|value|"loves.my.salesforce. (3 more) ..."
+10:48:51.0 (7670926)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7674541)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (7677753)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+10:48:51.0 (7683325)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7721923)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7729758)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7740731)|VARIABLE_ASSIGNMENT|[28]|name|"X-Salesforce-VIP"
+10:48:51.0 (7745729)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7756506)|VARIABLE_ASSIGNMENT|[28]|value|"EDGE"
+10:48:51.0 (7794228)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7798179)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (7800821)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+10:48:51.0 (7805643)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7843057)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7850547)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7860502)|VARIABLE_ASSIGNMENT|[28]|name|"x-tls-source"
+10:48:51.0 (7865428)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (7875883)|VARIABLE_ASSIGNMENT|[28]|value|"3.19.34.58"
+10:48:51.0 (7912997)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (7916931)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (7920150)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:11
+10:48:51.0 (7924940)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (7965892)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (7974175)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (7985099)|VARIABLE_ASSIGNMENT|[28]|name|"X-Salesforce-SIP"
+10:48:51.0 (7991137)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8001668)|VARIABLE_ASSIGNMENT|[28]|value|"3.91.52.218"
+10:48:51.0 (8044117)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8047702)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3
+10:48:51.0 (8050433)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:17
+10:48:51.0 (8055750)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8095828)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8103381)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8113937)|VARIABLE_ASSIGNMENT|[28]|name|"Via"
+10:48:51.0 (8119027)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8129779)|VARIABLE_ASSIGNMENT|[28]|value|"HTTP/1.1 sfdcedge"
+10:48:51.0 (8168146)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8172121)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:21
+10:48:51.0 (8174803)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (8180358)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8221439)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8229594)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8240936)|VARIABLE_ASSIGNMENT|[28]|name|"x-salesforce-interna (1 more) ..."
+10:48:51.0 (8246445)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8256555)|VARIABLE_ASSIGNMENT|[28]|value|"false"
+10:48:51.0 (8298471)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8302831)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:21
+10:48:51.0 (8305747)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:1
+10:48:51.0 (8310565)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8349257)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8357166)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8368719)|VARIABLE_ASSIGNMENT|[28]|name|"x-envoy-attempt-coun (1 more) ..."
+10:48:51.0 (8374204)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8385622)|VARIABLE_ASSIGNMENT|[28]|value|"1"
+10:48:51.0 (8423557)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8426847)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:23
+10:48:51.0 (8430066)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3409
+10:48:51.0 (8434227)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8471367)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8480914)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8492552)|VARIABLE_ASSIGNMENT|[28]|name|"x-forwarded-client-c (3 more) ..."
+10:48:51.0 (8497764)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8508841)|VARIABLE_ASSIGNMENT|[28]|value|"Hash=f5f2a5d36b1050c (3389 more) ..."
+10:48:51.0 (8549616)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8553380)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:11
+10:48:51.0 (8556619)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (8561336)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8598896)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8606299)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8617145)|VARIABLE_ASSIGNMENT|[28]|name|"X-B3-SpanId"
+10:48:51.0 (8622352)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8633033)|VARIABLE_ASSIGNMENT|[28]|value|"ece07d9df85a6742"
+10:48:51.0 (8671340)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8674975)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+10:48:51.0 (8677975)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+10:48:51.0 (8682900)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8718902)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8727310)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8739068)|VARIABLE_ASSIGNMENT|[28]|name|"x-salesforce-tls-ver (4 more) ..."
+10:48:51.0 (8744853)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8755611)|VARIABLE_ASSIGNMENT|[28]|value|"TLSv1.3"
+10:48:51.0 (8794776)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8798983)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (8802495)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:22
+10:48:51.0 (8806785)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8843454)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8849387)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8858915)|VARIABLE_ASSIGNMENT|[28]|name|"x-tls-cipher"
+10:48:51.0 (8870220)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (8882051)|VARIABLE_ASSIGNMENT|[28]|value|"TLS_AES_256_GCM_SHA3 (2 more) ..."
+10:48:51.0 (8923576)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (8927515)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:13
+10:48:51.0 (8930701)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:7
+10:48:51.0 (8935856)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (8975964)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (8984129)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (8994759)|VARIABLE_ASSIGNMENT|[28]|name|"x-tls-version"
+10:48:51.0 (9000574)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (9011524)|VARIABLE_ASSIGNMENT|[28]|value|"TLSv1.3"
+10:48:51.0 (9051345)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (9055166)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:15
+10:48:51.0 (9058201)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:22
+10:48:51.0 (9062722)|VARIABLE_SCOPE_BEGIN|[28]|this|System.RestRequest|true|false
+10:48:51.0 (9102765)|VARIABLE_ASSIGNMENT|[28]|this|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (9110792)|VARIABLE_SCOPE_BEGIN|[28]|name|String|false|false
+10:48:51.0 (9121767)|VARIABLE_ASSIGNMENT|[28]|name|"X-Forwarded-For"
+10:48:51.0 (9127858)|VARIABLE_SCOPE_BEGIN|[28]|value|String|false|false
+10:48:51.0 (9138675)|VARIABLE_ASSIGNMENT|[28]|value|"3.91.52.218,3.19.34. (2 more) ..."
+10:48:51.0 (9329561)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:156
+10:48:51.0 (9338486)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+10:48:51.0 (9363021)|SYSTEM_METHOD_ENTRY|[1]|RestResponse.RestResponse()
+10:48:51.0 (9369003)|STATEMENT_EXECUTE|[1]
+10:48:51.0 (9378002)|SYSTEM_METHOD_EXIT|[1]|RestResponse
+10:48:51.0 (9387510)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (9400743)|VARIABLE_SCOPE_BEGIN|[7]|this|System.RestResponse|true|false
+10:48:51.0 (9477887)|VARIABLE_ASSIGNMENT|[7]|this|{}|0x4e5dca46
+10:48:51.0 (9981100)|VARIABLE_SCOPE_BEGIN|[3]|System.RestContext.request|System.RestRequest|true|true
+10:48:51.0 (10011607)|VARIABLE_SCOPE_BEGIN|[4]|System.RestContext.response|System.RestResponse|true|true
+10:48:51.0 (10023985)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:112
+10:48:51.0 (10028374)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (10048708)|SYSTEM_METHOD_ENTRY|[1]|RestContext.RestContext()
+10:48:51.0 (10052630)|STATEMENT_EXECUTE|[1]
+10:48:51.0 (10059700)|SYSTEM_METHOD_EXIT|[1]|RestContext
+10:48:51.0 (10070632)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:32
+10:48:51.0 (10155359)|VARIABLE_ASSIGNMENT|[EXTERNAL]|System.RestContext.request|{"headers":"0xf9dbe14","httpMethod":"POST","params":"0x76a17a6a","remoteAddress":"3.91.52.218","requestURI":"/ServiceLog","resourcePath":"/services/apexrest/S (11 more) ..."}|0x320ac75c
+10:48:51.0 (10170938)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:16
+10:48:51.0 (10200418)|VARIABLE_ASSIGNMENT|[EXTERNAL]|System.RestContext.response|{"headers":"0xa1d4017"}|0x4e5dca46
+10:48:51.0 (10585374)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (10607666)|METHOD_ENTRY|[9]|01p1R00000K3xNF|apiServiceLog.apiServiceLog()
+10:48:51.0 (10614039)|STATEMENT_EXECUTE|[9]
+10:48:51.0 (10618543)|STATEMENT_EXECUTE|[9]
+10:48:51.0 (11756864)|SYSTEM_MODE_ENTER|false
+10:48:51.0 (11805951)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+10:48:51.0 (11826864)|SYSTEM_MODE_EXIT|false
+10:48:51.0 (11874003)|METHOD_EXIT|[9]|apiServiceLog
+10:48:51.0 (11883598)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:18
+10:48:51.0 (11887886)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:1393
+10:48:51.0 (11918738)|VARIABLE_SCOPE_BEGIN|[12]|caseId|String|false|false
+10:48:51.0 (11953216)|VARIABLE_ASSIGNMENT|[12]|caseId|"500bV00000Y2G59QAF"
+10:48:51.0 (11962327)|VARIABLE_SCOPE_BEGIN|[12]|body|String|false|false
+10:48:51.0 (11976303)|VARIABLE_ASSIGNMENT|[12]|body|"{\n  \"status\": \"ETA A (1373 more) ..."
+10:48:51.0 (12005871)|SYSTEM_MODE_ENTER|false
+10:48:51.0 (12018456)|HEAP_ALLOCATE|[14]|Bytes:5
+10:48:51.0 (12027054)|STATEMENT_EXECUTE|[12]
+10:48:51.0 (12029290)|STATEMENT_EXECUTE|[14]
+10:48:51.0 (12034370)|HEAP_ALLOCATE|[14]|Bytes:39
+10:48:51.0 (12069579)|HEAP_ALLOCATE|[14]|Bytes:4
+10:48:51.0 (12089333)|HEAP_ALLOCATE|[14]|Bytes:7
+10:48:51.0 (14337718)|SOQL_EXECUTE_BEGIN|[14]|Aggregations:0|SELECT Id FROM Case WHERE Id = :tmpVar1
+10:48:51.0 (14376026)|LIMIT_USAGE|[14]|SOQL|1|100
+10:48:51.0 (14387312)|LIMIT_USAGE|[14]|AGGS|0|300
+10:48:51.0 (28795210)|SOQL_EXECUTE_EXPLAIN|[14]|Index on Case : [Id], cardinality: 1, sobjectCardinality: 21884271, relativeCost 0
+10:48:51.0 (28839861)|SOQL_EXECUTE_END|[14]|Rows:1
+10:48:51.0 (28878549)|LIMIT_USAGE|[14]|SOQL_ROWS|1|50000
+10:48:51.0 (28907444)|HEAP_ALLOCATE|[14]|Bytes:8
+10:48:51.0 (28930681)|HEAP_ALLOCATE|[14]|Bytes:29
+10:48:51.0 (29091387)|HEAP_ALLOCATE|[14]|Bytes:8
+10:48:51.0 (29125443)|VARIABLE_SCOPE_BEGIN|[14]|c|List<Case>|true|false
+10:48:51.0 (29275087)|VARIABLE_ASSIGNMENT|[14]|c|[{"Id":"500bV00000Y2G59QAF"}]|0x7e456da6
+10:48:51.0 (29366933)|SYSTEM_METHOD_ENTRY|[15]|List<Case>.size()
+10:48:51.0 (29405198)|SYSTEM_METHOD_EXIT|[15]|List<Case>.size()
+10:48:51.0 (29416513)|STATEMENT_EXECUTE|[15]
+10:48:51.0 (29417770)|STATEMENT_EXECUTE|[19]
+10:48:51.0 (29422311)|HEAP_ALLOCATE|[19]|Bytes:13
+10:48:51.0 (29426727)|HEAP_ALLOCATE|[19]|Bytes:16
+10:48:51.0 (29440490)|HEAP_ALLOCATE|[19]|Bytes:4
+10:48:51.0 (29461154)|SYSTEM_CONSTRUCTOR_ENTRY|[19]|<init>()
+10:48:51.0 (29478799)|SYSTEM_CONSTRUCTOR_EXIT|[19]|<init>()
+10:48:51.0 (29493730)|HEAP_ALLOCATE|[19]|Bytes:4
+10:48:51.0 (29497203)|SYSTEM_CONSTRUCTOR_ENTRY|[19]|<init>()
+10:48:51.0 (29500641)|SYSTEM_CONSTRUCTOR_EXIT|[19]|<init>()
+10:48:51.0 (29503152)|HEAP_ALLOCATE|[19]|Bytes:6
+10:48:51.0 (29534211)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (29543130)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+10:48:51.0 (29590914)|LIMIT_USAGE|[19]|FUTURE|1|50
+10:48:51.0 (29596642)|LIMIT_USAGE|[19]|MAX_ASYNC|1|200
+10:48:51.0 (55862124)|STATEMENT_EXECUTE|[20]
+10:48:51.0 (55875123)|HEAP_ALLOCATE|[20]|Bytes:31
+10:48:51.0 (55916460)|SYSTEM_MODE_EXIT|false
+10:48:51.67 (67764789)|CUMULATIVE_LIMIT_USAGE
+10:48:51.67 (67764789)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 100
+  Number of query rows: 1 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 1 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+10:48:51.67 (67764789)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+10:48:51.67 (67764789)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcProperties:0
+  String:__sfdcProperties:0
+  String:__sfdcProperties:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+10:48:51.67 (67764789)|CUMULATIVE_LIMIT_USAGE_END
+
+10:48:51.0 (68078656)|CODE_UNIT_FINISHED|apiServiceLog.createServiceLog(String, String)
+10:48:51.0 (68167791)|EXECUTION_FINISHED
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING_BEGIN
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING|SOQL operations|
+Class.apiServiceLog.createServiceLog: line 14, column 1: [SELECT Id From Case WHERE Id = :caseId]: executed 1 time in 17 ms
+
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING|No profiling information for DML operations
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING|method invocations|
+External entry point: global static String createServiceLog(String, String): executed 1 time in 46 ms
+Class.apiServiceLog.createServiceLog: line 19, column 1: global public List<ANY>(): executed 2 times in 0 ms
+Class.apiServiceLog.createServiceLog: line 15, column 1: global public Integer size(): executed 1 time in 0 ms
+
+10:48:51.69 (69866469)|CUMULATIVE_PROFILING_END
+

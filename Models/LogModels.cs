@@ -89,6 +89,12 @@ public class DatabaseOperation
     /// Relative cost from execution plan (higher = worse, >1.0 often means table scan)
     /// </summary>
     public double RelativeCost { get; set; }
+    
+    /// <summary>
+    /// True if this query targets a Custom Metadata Type (__mdt object).
+    /// CMDT queries don't count against the SOQL governor limit.
+    /// </summary>
+    public bool IsCustomMetadataQuery { get; set; }
 }
 
 /// <summary>
@@ -109,6 +115,17 @@ public class CalloutOperation
     /// StatusCode 0 means status was not captured — not an error.
     /// </summary>
     public bool IsError => StatusCode >= 400;
+    
+    /// <summary>
+    /// The Named Credential used for this callout (e.g., "RabbitMQ", "TruckCare_API").
+    /// Empty if the callout used a hardcoded URL instead.
+    /// </summary>
+    public string NamedCredentialName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// True if the callout used a Named Credential (best practice for security).
+    /// </summary>
+    public bool UsesNamedCredential => !string.IsNullOrEmpty(NamedCredentialName);
 }
 
 /// <summary>
@@ -293,6 +310,37 @@ public class LogAnalysis
     /// These represent DML failures, validation errors, etc. within Flow execution.
     /// </summary>
     public List<FlowError> FlowErrors { get; set; } = new();
+    
+    /// <summary>
+    /// Workflow rules evaluated during this transaction (WF_RULE_EVAL events)
+    /// </summary>
+    public List<WorkflowRuleEvaluation> WorkflowRules { get; set; } = new();
+    
+    /// <summary>
+    /// Trigger re-entry tracking — shows how many times each trigger fired
+    /// </summary>
+    public List<TriggerReEntry> TriggerReEntries { get; set; } = new();
+    
+    /// <summary>
+    /// Count of SOQL queries that target Custom Metadata Types (__mdt).
+    /// These don't count against the SOQL governor limit.
+    /// </summary>
+    public int CustomMetadataQueryCount { get; set; }
+    
+    /// <summary>
+    /// Count of regular SOQL queries (excluding CMDT). These DO count against limits.
+    /// </summary>
+    public int RegularSoqlCount { get; set; }
+    
+    /// <summary>
+    /// Bulk safety grade: A (fully bulkified), B (mostly safe), C (some risk), D (not bulk-safe), F (will fail in bulk)
+    /// </summary>
+    public string BulkSafetyGrade { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Explanation of the bulk safety grade
+    /// </summary>
+    public string BulkSafetyReason { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -340,6 +388,49 @@ public class FlowError
     
     /// <summary>The Flow name this error belongs to (if determinable)</summary>
     public string FlowName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Represents a workflow rule evaluated during the transaction
+/// </summary>
+public class WorkflowRuleEvaluation
+{
+    /// <summary>The workflow rule's filter criteria (e.g., "Service Name contains QuikQ_CreatePolicies")</summary>
+    public string RuleName { get; set; } = string.Empty;
+    
+    /// <summary>The object type being evaluated (from WF_RULE_EVAL_BEGIN context)</summary>
+    public string ObjectType { get; set; } = string.Empty;
+    
+    /// <summary>Whether the rule criteria was met (true = rule fired)</summary>
+    public bool Matched { get; set; }
+    
+    /// <summary>Line number in the debug log</summary>
+    public int LineNumber { get; set; }
+}
+
+/// <summary>
+/// Tracks how many times a trigger fired during a single transaction.
+/// Re-entry happens when a trigger's DML causes the same trigger to fire again.
+/// </summary>
+public class TriggerReEntry
+{
+    /// <summary>The trigger name (e.g., "ContactTrigger")</summary>
+    public string TriggerName { get; set; } = string.Empty;
+    
+    /// <summary>The SObject type (e.g., "Contact")</summary>
+    public string ObjectType { get; set; } = string.Empty;
+    
+    /// <summary>The events it fired on (e.g., ["BeforeInsert", "AfterInsert", "BeforeUpdate", "AfterUpdate"])</summary>
+    public List<string> Events { get; set; } = new();
+    
+    /// <summary>Total number of times this trigger fired</summary>
+    public int TotalFireCount { get; set; }
+    
+    /// <summary>Number of times it re-entered (fires beyond the expected before+after pair)</summary>
+    public int ReEntryCount { get; set; }
+    
+    /// <summary>True if the trigger fired more than the expected 2 times (before + after) for a single operation</summary>
+    public bool HasReEntry => ReEntryCount > 0;
 }
 
 /// <summary>

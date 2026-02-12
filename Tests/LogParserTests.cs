@@ -559,6 +559,39 @@ public class LogParserTests
                     _output.WriteLine($"  {riskIcon} Stack: {a.StackAnalysis.EstimatedTotalFrames} frames ({a.StackAnalysis.RiskLevel})" +
                         (a.StackAnalysis.HasFinestLogging ? $" [FINEST raw: {a.StackAnalysis.DebugLoggingOverhead}]" : ""));
                 }
+                
+                // CMDT vs regular SOQL split (new in R7)
+                if (a.CustomMetadataQueryCount > 0)
+                    _output.WriteLine($"  🏷️ SOQL split: {a.RegularSoqlCount} regular (count against limits) + {a.CustomMetadataQueryCount} CMDT (free)");
+                
+                // Workflow rules (new in R7)
+                if (a.WorkflowRules != null && a.WorkflowRules.Count > 0)
+                {
+                    var matched = a.WorkflowRules.Count(w => w.Matched);
+                    _output.WriteLine($"  ⚙️ Workflow Rules: {a.WorkflowRules.Count} evaluated, {matched} matched");
+                }
+                
+                // Trigger re-entry (new in R7)
+                if (a.TriggerReEntries != null && a.TriggerReEntries.Count > 0)
+                {
+                    foreach (var tr in a.TriggerReEntries)
+                    {
+                        var reentryIcon = tr.HasReEntry ? "🔄" : "✅";
+                        _output.WriteLine($"  {reentryIcon} Trigger: {tr.TriggerName} on {tr.ObjectType} fired {tr.TotalFireCount}x [{string.Join(", ", tr.Events)}]" +
+                            (tr.HasReEntry ? $" ⚠️ RE-ENTRY ({tr.ReEntryCount}x)" : ""));
+                    }
+                }
+                
+                // Named Credentials on callouts (new in R7)
+                if (a.Callouts != null && a.Callouts.Any(c => c.UsesNamedCredential))
+                {
+                    var ncCallouts = a.Callouts.Where(c => c.UsesNamedCredential).ToList();
+                    _output.WriteLine($"  🔑 Named Credentials: {string.Join(", ", ncCallouts.Select(c => c.NamedCredentialName).Distinct())}");
+                }
+                
+                // Bulk safety grade (new in R7)
+                if (!string.IsNullOrEmpty(a.BulkSafetyGrade) && a.BulkSafetyGrade != "?")
+                    _output.WriteLine($"  🛡️ Bulk Safety: Grade {a.BulkSafetyGrade} — {a.BulkSafetyReason}");
 
                 // Summary text (first 200 chars)
                 _output.WriteLine($"  📋 Summary: {a.Summary?.Substring(0, Math.Min(a.Summary.Length, 200))}...");
