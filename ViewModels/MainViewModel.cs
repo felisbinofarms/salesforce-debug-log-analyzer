@@ -25,6 +25,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly EditorBridgeService _editorBridge;
     private readonly ReportExportService _exportService;
     private readonly SettingsService _settingsService;
+    private readonly OrgMetadataService _metadataService;
     private bool _disposed;
 
     [ObservableProperty]
@@ -199,6 +200,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Timer to update elapsed time display</summary>
     private System.Windows.Threading.DispatcherTimer? _recordingTimer;
     
+    /// <summary>Buffer for streaming logs before adding to UI (throttling)</summary>
+    private readonly Queue<StreamingLogEntry> _streamingBuffer = new();
+    
+    /// <summary>Timer to batch streaming log updates (reduces UI lag)</summary>
+    private System.Windows.Threading.DispatcherTimer? _streamingThrottleTimer;
+    
+    /// <summary>Lock for thread-safe streaming buffer access</summary>
+    private readonly object _streamingLock = new();
+    
+    /// <summary>User-configured streaming options (filters, performance settings)</summary>
+    private StreamingOptions? _streamingOptions;
+    
     [ObservableProperty]
     private ObservableCollection<Interaction> _interactions = new();
     
@@ -244,6 +257,53 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private string _fullSummaryText = "";
+    
+    // ===== PLAIN-ENGLISH INSIGHTS (for non-technical users) =====
+    
+    [ObservableProperty]
+    private string _plainEnglishSummary = "";
+    
+    [ObservableProperty]
+    private string _userWaitTimeSeconds = "0";
+    
+    [ObservableProperty]
+    private string _userWaitExplanation = "";
+    
+    [ObservableProperty]
+    private string _speedRating = "Fast"; // Fast, Moderate, Slow, Very Slow
+    
+    [ObservableProperty]
+    private string _resourceUsageExplanation = "";
+    
+    [ObservableProperty]
+    private int _soqlCount = 0;
+    
+    [ObservableProperty]
+    private int _soqlLimit = 100;
+    
+    [ObservableProperty]
+    private int _dmlCount = 0;
+    
+    [ObservableProperty]
+    private int _dmlLimit = 150;
+    
+    [ObservableProperty]
+    private int _cpuPercentValue = 0;
+    
+    [ObservableProperty]
+    private ObservableCollection<PlainEnglishProblem> _plainEnglishProblems = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<PlainEnglishRecommendation> _plainEnglishRecommendations = new();
+    
+    [ObservableProperty]
+    private bool _hasProblems = false;
+    
+    [ObservableProperty]
+    private bool _hasRecommendations = false;
+    
+    [ObservableProperty]
+    private bool _isAllClear = false;
     
     // ===== ALWAYS-USEFUL: TOP METHODS & QUERIES =====
     
@@ -293,6 +353,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _editorBridge = new EditorBridgeService();
         _exportService = new ReportExportService();
         _settingsService = new SettingsService();
+        _metadataService = new OrgMetadataService(_apiService);
         
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
@@ -307,13 +368,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Start Editor Bridge server
         _ = StartEditorBridgeAsync();
         _cliService.LogReceived += OnLogReceived;
+        
+        // Initialize streaming throttle timer (batches updates every 500ms to prevent UI lag)
+        _streamingThrottleTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _streamingThrottleTimer.Tick += OnStreamingThrottleTick;
     }
 
     public void OnConnected()
     {
         IsConnected = true;
         ConnectionStatus = $"Connected: {_apiService.Connection?.InstanceUrl}";
-        StatusMessage = "Ready";
+        
+        // Extract org name from instance URL (e.g., "acme" from "acme.my.salesforce.com")
+        var instanceUrl = _apiService.Connection?.InstanceUrl ?? "";
+        var orgName = "Salesforce";
+        
+        if (instanceUrl.Contains(".my.salesforce.com"))
+        {
+            var start = instanceUrl.IndexOf("//") + 2;
+            var end = instanceUrl.IndexOf(".my.salesforce.com");
+            if (end > start)
+            {
+                orgName = instanceUrl.Substring(start, end - start);
+            }
+        }
+        else if (instanceUrl.Contains(".sandbox.salesforce.com"))
+        {
+            orgName = "Sandbox";
+        }
+        
+        ConnectionDisplayName = orgName;
+        StatusMessage = $"✓ Connected to {orgName}";
     }
 
     partial void OnSelectedLogChanged(LogAnalysis? value)
@@ -558,6 +646,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             PopulateTopQueries(value);
             PopulateExecutionTree(value);
             PopulateTimelineDetails(value);
+            TranslateToPlainEnglish(value); // NEW: Generate plain-English insights
         }
         else
         {
@@ -791,6 +880,219 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HasTimelineDetails = details.Any();
     }
     
+    /// <summary>
+    /// Translate technical log analysis into plain English for non-technical users
+    /// </summary>
+    private void TranslateToPlainEnglish(LogAnalysis analysis)
+    {
+        // 1. WHAT HAPPENED (Summary)
+        if (analysis.IsTestExecution)
+        {
+            PlainEnglishSummary = $"Salesforce ran a test called \"{analysis.TestClassName}\". ";
+            PlainEnglishSummary += analysis.TransactionFailed 
+                ? "❌ The test failed." 
+                : "✅ The test passed.";
+        }
+        else if (!string.IsNullOrEmpty(analysis.EntryPoint))
+        {
+            PlainEnglishSummary = $"A user {analysis.LogUser} triggered \"{analysis.EntryPoint}\". ";
+            PlainEnglishSummary += analysis.TransactionFailed 
+                ? "❌ The operation failed." 
+                : "✅ The operation completed successfully.";
+        }
+        else
+        {
+            PlainEnglishSummary = "Salesforce processed a user action. ";
+            PlainEnglishSummary += analysis.TransactionFailed 
+                ? "❌ Something went wrong." 
+                : "✅ Everything worked.";
+        }
+        
+        // 2. WAIT TIME (User Experience)
+        double seconds = analysis.DurationMs / 1000.0;
+        UserWaitTimeSeconds = seconds < 1 ? seconds.ToString("0.00") : seconds.ToString("0.0");
+        
+        if (seconds < 0.5)
+        {
+            UserWaitExplanation = "This was instant! Users didn't notice any delay.";
+            SpeedRating = "Fast";
+        }
+        else if (seconds < 2)
+        {
+            UserWaitExplanation = $"This took {seconds:0.0} seconds, which is within the acceptable range for most operations.";
+            SpeedRating = "Moderate";
+        }
+        else if (seconds < 5)
+        {
+            UserWaitExplanation = $"This took {seconds:0.0} seconds, which users will notice. They might think the page is slow.";
+            SpeedRating = "Slow";
+        }
+        else
+        {
+            UserWaitExplanation = $"This took {seconds:0.0} seconds, which is very slow. Users will complain about performance.";
+            SpeedRating = "Very Slow";
+        }
+        
+        // 3. RESOURCE USAGE
+        var lastLimit = analysis.LimitSnapshots?.LastOrDefault();
+        if (lastLimit != null)
+        {
+            SoqlCount = lastLimit.SoqlQueries;
+            SoqlLimit = lastLimit.SoqlQueriesLimit;
+            DmlCount = lastLimit.DmlStatements;
+            DmlLimit = lastLimit.DmlStatementsLimit;
+            CpuPercentValue = lastLimit.CpuTimeLimit > 0 
+                ? (int)((lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit) 
+                : 0;
+            
+            ResourceUsageExplanation = $"Salesforce queried the database {SoqlCount} times (limit: {SoqlLimit}) and saved data {DmlCount} times (limit: {DmlLimit}). ";
+            ResourceUsageExplanation += $"The code used {CpuPercentValue}% of available processing power.";
+        }
+        else
+        {
+            SoqlCount = 0;
+            DmlCount = 0;
+            CpuPercentValue = 0;
+            ResourceUsageExplanation = "No resource usage data available.";
+        }
+        
+        // 4. PROBLEMS FOUND
+        var problems = new List<PlainEnglishProblem>();
+        
+        // Critical errors
+        if (analysis.Errors?.Any() == true)
+        {
+            var error = analysis.Errors.First();
+            problems.Add(new PlainEnglishProblem
+            {
+                Icon = "🔴",
+                Title = "The code crashed",
+                Description = $"There was an error: \"{error.Name}\". This stopped the entire operation from completing.",
+                Severity = "High",
+                ImpactLabel = "🔴 Critical - Operation failed"
+            });
+        }
+        
+        // Trigger re-entry
+        if (analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true)
+        {
+            var reentry = analysis.TriggerReEntries.First(t => t.HasReEntry);
+            problems.Add(new PlainEnglishProblem
+            {
+                Icon = "🔄",
+                Title = "A trigger ran multiple times",
+                Description = $"The \"{reentry.TriggerName}\" trigger fired {reentry.TotalFireCount} times instead of once. This means your code is doing extra work unnecessarily, making everything slower.",
+                Severity = "High",
+                ImpactLabel = "⚠️ High - Wastes time and resources"
+            });
+        }
+        
+        // Governor limit warnings
+        if (lastLimit != null)
+        {
+            var soqlPct = lastLimit.SoqlQueriesLimit > 0 ? (lastLimit.SoqlQueries * 100.0) / lastLimit.SoqlQueriesLimit : 0;
+            var dmlPct = lastLimit.DmlStatementsLimit > 0 ? (lastLimit.DmlStatements * 100.0) / lastLimit.DmlStatementsLimit : 0;
+            var cpuPct = lastLimit.CpuTimeLimit > 0 ? (lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit : 0;
+            
+            if (soqlPct > 80)
+            {
+                problems.Add(new PlainEnglishProblem
+                {
+                    Icon = "💾",
+                    Title = "Too many database reads",
+                    Description = $"Your code queried the database {lastLimit.SoqlQueries} times, which is {soqlPct:F0}% of the limit ({lastLimit.SoqlQueriesLimit}). If you go over, everything will fail.",
+                    Severity = soqlPct > 90 ? "High" : "Medium",
+                    ImpactLabel = soqlPct > 90 ? "🔴 Critical - Near limit!" : "⚠️ Warning - Getting close"
+                });
+            }
+            
+            if (dmlPct > 80)
+            {
+                problems.Add(new PlainEnglishProblem
+                {
+                    Icon = "📝",
+                    Title = "Too many database saves",
+                    Description = $"Your code saved data {lastLimit.DmlStatements} times, which is {dmlPct:F0}% of the limit ({lastLimit.DmlStatementsLimit}). If you go over, everything will fail.",
+                    Severity = dmlPct > 90 ? "High" : "Medium",
+                    ImpactLabel = dmlPct > 90 ? "🔴 Critical - Near limit!" : "⚠️ Warning - Getting close"
+                });
+            }
+            
+            if (cpuPct > 80)
+            {
+                problems.Add(new PlainEnglishProblem
+                {
+                    Icon = "⚡",
+                    Title = "Using too much CPU",
+                    Description = $"Your code used {cpuPct:F0}% of available processing power. If it goes over 100%, everything will fail.",
+                    Severity = cpuPct > 90 ? "High" : "Medium",
+                    ImpactLabel = cpuPct > 90 ? "🔴 Critical - Near limit!" : "⚠️ Warning - Getting close"
+                });
+            }
+        }
+        
+        // Bulk safety grade
+        if (!string.IsNullOrEmpty(analysis.BulkSafetyGrade) && (analysis.BulkSafetyGrade == "D" || analysis.BulkSafetyGrade == "F"))
+        {
+            problems.Add(new PlainEnglishProblem
+            {
+                Icon = "🚨",
+                Title = "Not safe for large data volumes",
+                Description = $"This code got a grade of {analysis.BulkSafetyGrade} for handling multiple records. {analysis.BulkSafetyReason}",
+                Severity = "High",
+                ImpactLabel = "⚠️ High - Will fail with more records"
+            });
+        }
+        
+        PlainEnglishProblems = new ObservableCollection<PlainEnglishProblem>(problems);
+        HasProblems = problems.Any();
+        
+        // 5. RECOMMENDATIONS
+        var recommendations = new List<PlainEnglishRecommendation>();
+        
+        // Fix trigger re-entry
+        if (analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true)
+        {
+            var reentry = analysis.TriggerReEntries.First(t => t.HasReEntry);
+            recommendations.Add(new PlainEnglishRecommendation
+            {
+                Title = $"Add recursion control to {reentry.TriggerName}",
+                Description = "Use a static variable to prevent the trigger from running more than once per transaction. This will make your code run faster and use fewer resources.",
+                EstimatedMinutes = 15
+            });
+        }
+        
+        // Optimize slow methods
+        if (analysis.MethodStats?.Any(m => m.Value.MaxDurationMs > 2000) == true)
+        {
+            var slowMethod = analysis.MethodStats.OrderByDescending(m => m.Value.MaxDurationMs).First();
+            var methodName = ExtractClassName(slowMethod.Key);
+            recommendations.Add(new PlainEnglishRecommendation
+            {
+                Title = $"Speed up {methodName}",
+                Description = $"This method takes {slowMethod.Value.MaxDurationMs}ms to run. Look for database queries inside loops or unnecessary calculations.",
+                EstimatedMinutes = 30
+            });
+        }
+        
+        // Reduce SOQL queries
+        if (lastLimit != null && lastLimit.SoqlQueries > 50)
+        {
+            recommendations.Add(new PlainEnglishRecommendation
+            {
+                Title = "Combine database queries",
+                Description = $"Your code queried the database {lastLimit.SoqlQueries} times. You can combine some of these queries to use fewer resources and run faster.",
+                EstimatedMinutes = 45
+            });
+        }
+        
+        PlainEnglishRecommendations = new ObservableCollection<PlainEnglishRecommendation>(recommendations);
+        HasRecommendations = recommendations.Any();
+        
+        // 6. ALL CLEAR?
+        IsAllClear = !HasProblems && !analysis.TransactionFailed && (lastLimit?.SoqlQueries ?? 0) < 50;
+    }
+    
     private string SimplifyQueryForDisplay(string query)
     {
         // Remove specific values to find similar queries
@@ -1017,7 +1319,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 IsConnected = true;
                 ConnectionStatus = $"Connected to {_apiService.Connection?.InstanceUrl}";
-                StatusMessage = "✓ Connected successfully";
+                
+                // Extract org name from instance URL
+                var instanceUrl = _apiService.Connection?.InstanceUrl ?? "";
+                var orgName = "Salesforce";
+                
+                if (instanceUrl.Contains(".my.salesforce.com"))
+                {
+                    var start = instanceUrl.IndexOf("//") + 2;
+                    var end = instanceUrl.IndexOf(".my.salesforce.com");
+                    if (end > start)
+                    {
+                        orgName = instanceUrl.Substring(start, end - start);
+                    }
+                }
+                else if (instanceUrl.Contains(".sandbox.salesforce.com"))
+                {
+                    orgName = "Sandbox";
+                }
+                
+                ConnectionDisplayName = orgName;
+                StatusMessage = $"✓ Connected to {orgName}";
 
                 // Optionally load recent logs
                 // await LoadRecentLogsAsync();
@@ -1114,6 +1436,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             StatusMessage = "Parsing log...";
             var analysis = await Task.Run(() => _parserService.ParseLog(logContent, fileName));
+            
+            // Enrich with org metadata (user names, trigger locations, etc.)
+            await EnrichLogWithMetadataAsync(analysis);
             
             Logs.Insert(0, analysis);
             SelectedLog = analysis;
@@ -1346,7 +1671,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _apiService.Disconnect();
         IsConnected = false;
         ConnectionStatus = "Not connected";
-        StatusMessage = "Disconnected from Salesforce";
+        ConnectionDisplayName = "Not Connected";
+        StatusMessage = "🔌 Disconnected from Salesforce";
     }
 
     [RelayCommand]
@@ -1527,14 +1853,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Use the connected org's username
-        var username = _apiService.Connection.Username;
-        if (string.IsNullOrEmpty(username))
+        // Use the connected org's username as default
+        var defaultUsername = _apiService.Connection.Username;
+        if (string.IsNullOrEmpty(defaultUsername))
         {
-            // Fall back to instance URL parsing or ask user
             StatusMessage = "⚠️ Unable to determine username for streaming";
             return;
         }
+
+        // Show options dialog to configure filters (prevents "fire hose" problem)
+        var dialog = new StreamingOptionsDialog(defaultUsername);
+        var result = dialog.ShowDialog();
+        
+        if (result != true)
+        {
+            StatusMessage = "Streaming cancelled";
+            return; // User cancelled
+        }
+        
+        // Store options for filtering in OnLogReceived
+        _streamingOptions = dialog.Options;
+        
+        // Determine which username to use for API queries
+        var username = _streamingOptions.FilterByUser && !string.IsNullOrEmpty(_streamingOptions.Username)
+            ? _streamingOptions.Username
+            : defaultUsername;
 
         StreamingUsername = username;
         StatusMessage = $"🕷️ Starting log stream for {username}...";
@@ -1546,7 +1889,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (success)
         {
             IsStreaming = true;
-            StreamingStatus = $"🔴 LIVE - {username}";
+            
+            // Show active filters in status
+            var filterInfo = _streamingOptions.FilterByUser ? $" (user: {_streamingOptions.Username})" : "";
+            StreamingStatus = $"🔴 LIVE - {username}{filterInfo}";
             StatusMessage = $"🕷️ Black Widow is watching... Waiting for logs from {username}";
         }
         else
@@ -1646,7 +1992,41 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                 // Parse the log content
                 var logId = !string.IsNullOrEmpty(e.LogId) ? e.LogId.Substring(0, 8) : $"Stream_{e.Timestamp:HHmmss}";
+                
+                // PERFORMANCE: Skip slow logs if user opted out (prevents UI freeze)
+                if (_streamingOptions?.SkipSlowLogs == true)
+                {
+                    var lineCount = e.LogContent.Split('\n').Length;
+                    if (lineCount > 50000) // ~10 seconds parse time
+                    {
+                        StatusMessage = $"⏭️ Skipped very large log ({lineCount:N0} lines) - enable in streaming options to parse";
+                        return;
+                    }
+                }
+                
                 var analysis = await Task.Run(() => _parserService.ParseLog(e.LogContent, logId));
+                
+                // Enrich with org metadata
+                await EnrichLogWithMetadataAsync(analysis);
+                
+                // FILTER: Only errors (if enabled)
+                if (_streamingOptions?.OnlyErrors == true)
+                {
+                    if (analysis.Errors?.Count == 0 && !analysis.TransactionFailed)
+                    {
+                        return; // Skip successful logs
+                    }
+                }
+                
+                // FILTER: User filter (if specified)
+                if (_streamingOptions?.FilterByUser == true && !string.IsNullOrEmpty(_streamingOptions.Username))
+                {
+                    // Case-insensitive comparison
+                    if (!e.Username.Equals(_streamingOptions.Username, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return; // Skip logs from other users
+                    }
+                }
                 
                 // Extract operation type from entry point or root node
                 var operationType = "Unknown";
@@ -1672,9 +2052,64 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     }
                 }
                 
+                // FILTER: Operation type filters
+                if (_streamingOptions != null)
+                {
+                    var shouldSkip = false;
+                    
+                    // Check against operation type filters
+                    if (!_streamingOptions.IncludeApex && 
+                        (operationType.Contains("Trigger") || operationType.Contains("Class") || 
+                         operationType.Contains("Execute Anonymous") || analysis.RootNode?.Type == ExecutionNodeType.CodeUnit))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (!_streamingOptions.IncludeFlows && 
+                        (operationType.Contains("Flow") || analysis.RootNode?.Type == ExecutionNodeType.Flow))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (!_streamingOptions.IncludeValidation && 
+                        (operationType.Contains("Validation") || analysis.RootNode?.Type == ExecutionNodeType.Validation))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (!_streamingOptions.IncludeLightning && 
+                        (operationType.Contains("Aura") || operationType.Contains("LWC") || operationType.Contains("Lightning")))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (!_streamingOptions.IncludeApi && 
+                        (operationType.Contains("API") || operationType.Contains("REST") || operationType.Contains("SOAP")))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (!_streamingOptions.IncludeBatch && 
+                        (operationType.Contains("Batch") || operationType.Contains("Scheduled") || operationType.Contains("Queueable")))
+                    {
+                        shouldSkip = true;
+                    }
+                    
+                    if (shouldSkip)
+                    {
+                        StatusMessage = $"⏭️ Filtered out: {operationType}";
+                        return; // Skip this log based on operation type filter
+                    }
+                }
+                
                 // Add to logs list
                 Logs.Insert(0, analysis);
-                SelectedLog = analysis;
+                
+                // Only auto-switch if user enabled it (prevents crash when viewing different log)
+                if (_streamingOptions?.AutoSwitchToNewest == true)
+                {
+                    SelectedLog = analysis;
+                }
                 
                 // Generate plain English insight for non-experts
                 var (insight, icon) = GenerateLogInsight(analysis);
@@ -1701,11 +2136,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 {
                     _recordingBuffer.Add(analysis);
                     streamingEntry.Message = $"🔴 [Recording #{_recordingBuffer.Count}] {operationType}";
-                    StreamingLogs.Insert(0, streamingEntry);
                 }
-                else
+                
+                // Queue to buffer instead of inserting directly (prevents UI lag from rapid updates)
+                lock (_streamingLock)
                 {
-                    StreamingLogs.Insert(0, streamingEntry);
+                    _streamingBuffer.Enqueue(streamingEntry);
+                }
+                
+                // Start timer if not already running
+                if (_streamingThrottleTimer != null && !_streamingThrottleTimer.IsEnabled)
+                {
+                    _streamingThrottleTimer.Start();
                 }
 
                 StatusMessage = IsRecording 
@@ -1714,14 +2156,58 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                StreamingLogs.Insert(0, new StreamingLogEntry
+                // Queue error entry to buffer
+                lock (_streamingLock)
                 {
-                    Timestamp = DateTime.Now,
-                    Message = $"❌ Failed to parse log: {ex.Message}",
-                    IsError = true
-                });
+                    _streamingBuffer.Enqueue(new StreamingLogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = $"❌ Failed to parse log: {ex.Message}",
+                        IsError = true
+                    });
+                }
             }
         });
+    }
+    
+    /// <summary>
+    /// Timer tick handler that processes queued streaming logs in batches.
+    /// This prevents UI lag when many logs arrive rapidly (batches updates every 500ms).
+    /// </summary>
+    private void OnStreamingThrottleTick(object? sender, EventArgs e)
+    {
+        var logsToAdd = new List<StreamingLogEntry>();
+        
+        lock (_streamingLock)
+        {
+            // Process up to 10 logs per tick (500ms)
+            var batchSize = Math.Min(10, _streamingBuffer.Count);
+            for (int i = 0; i < batchSize; i++)
+            {
+                if (_streamingBuffer.Count > 0)
+                {
+                    logsToAdd.Add(_streamingBuffer.Dequeue());
+                }
+            }
+            
+            // Stop timer if buffer is empty
+            if (_streamingBuffer.Count == 0)
+            {
+                _streamingThrottleTimer?.Stop();
+            }
+        }
+        
+        // Add to UI on dispatcher thread
+        foreach (var entry in logsToAdd)
+        {
+            StreamingLogs.Insert(0, entry);
+            
+            // Maintain 100-log limit (FIFO removal)
+            while (StreamingLogs.Count > 100)
+            {
+                StreamingLogs.RemoveAt(StreamingLogs.Count - 1);
+            }
+        }
     }
     
     /// <summary>
@@ -1750,6 +2236,79 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ];
         
         return markers.Any(marker => snippet.Contains(marker, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    /// <summary>
+    /// Enriches log analysis with org metadata to make it human-readable.
+    /// Replaces cryptic IDs and API names with actual labels, user names, and context.
+    /// </summary>
+    private async Task EnrichLogWithMetadataAsync(LogAnalysis log)
+    {
+        if (!IsConnected) return; // Need SF connection for metadata
+        
+        try
+        {
+            // Fetch org metadata (cached, so fast after first call)
+            var metadata = await _metadataService.GetOrgMetadataAsync();
+            
+            // Enrich entry point (e.g., "CaseTrigger" → "CaseTrigger.apxt on Case")
+            if (!string.IsNullOrEmpty(log.EntryPoint))
+            {
+                log.EntryPoint = _metadataService.EnrichEntryPoint(log.EntryPoint, metadata);
+            }
+            
+            // Enrich user (e.g., "005xx" → "John Smith (john@example.com)")
+            if (!string.IsNullOrEmpty(log.LogUser))
+            {
+                log.LogUser = _metadataService.EnrichUserId(log.LogUser, metadata);
+            }
+            
+            // Enrich execution tree nodes (add context to triggers, classes, methods)
+            if (log.RootNode?.Children != null && log.RootNode.Children.Count > 0)
+            {
+                await EnrichExecutionTreeAsync(log.RootNode.Children, metadata);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Silent fail - enrichment is nice-to-have, not critical
+            Console.WriteLine($"Failed to enrich log with metadata: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Recursively enriches execution tree nodes with metadata
+    /// </summary>
+    private async Task EnrichExecutionTreeAsync(List<ExecutionNode> nodes, OrgMetadata metadata)
+    {
+        foreach (var node in nodes)
+        {
+            // Enrich trigger names
+            if (node.Type == ExecutionNodeType.CodeUnit && node.Name.Contains("Trigger", StringComparison.OrdinalIgnoreCase))
+            {
+                var triggerName = node.Name.Split(' ').FirstOrDefault();
+                if (triggerName != null && metadata.ApexTriggers.TryGetValue(triggerName, out var trigger))
+                {
+                    node.Name = $"{triggerName}.apxt on {trigger.ObjectName}";
+                }
+            }
+            
+            // Enrich class/method names
+            if (node.Type == ExecutionNodeType.Method && node.Name.Contains('.'))
+            {
+                var className = node.Name.Split('.').FirstOrDefault();
+                if (className != null && metadata.ApexClasses.TryGetValue(className, out var cls))
+                {
+                    node.Name = $"{cls.FullName}.{node.Name.Split('.').LastOrDefault()}";
+                }
+            }
+            
+            // Recursively enrich children
+            if (node.Children?.Count > 0)
+            {
+                await EnrichExecutionTreeAsync(node.Children, metadata);
+            }
+        }
     }
     
     /// <summary>
@@ -1843,6 +2402,67 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         dialog.ShowDialog();
         return resultPath;
+    }
+
+    // ===== SALESFORCE CONNECTION MANAGEMENT =====
+    
+    [ObservableProperty]
+    private string _connectionDisplayName = "Not Connected";
+    
+    [RelayCommand]
+    private async Task RefreshMetadataAsync()
+    {
+        if (!IsConnected)
+        {
+            StatusMessage = "⚠️ Connect to Salesforce first";
+            return;
+        }
+        
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "🔄 Refreshing org metadata...";
+            
+            // Force refresh by clearing cache
+            var metadata = await _metadataService.GetOrgMetadataAsync(forceRefresh: true);
+            
+            if (metadata != null)
+            {
+                // Re-enrich all currently loaded logs with fresh metadata
+                var enrichmentTasks = Logs.Select(log => EnrichLogWithMetadataAsync(log));
+                await Task.WhenAll(enrichmentTasks);
+                
+                StatusMessage = $"✓ Metadata refreshed - {metadata.Users.Count} users, {metadata.Objects.Count} objects, " +
+                               $"{metadata.ApexClasses.Count} classes, {metadata.ApexTriggers.Count} triggers";
+            }
+            else
+            {
+                StatusMessage = "⚠️ Failed to refresh metadata";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"❌ Error refreshing metadata: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+    
+    [RelayCommand]
+    private void ManageConnections()
+    {
+        // TODO: Open ConnectionDialog to manage connections
+        StatusMessage = "⚙️ Connection management coming soon...";
+        
+        // For now, just open the connection dialog
+        var dialog = new ConnectionDialog(_oauthService, _apiService)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        
+        dialog.ShowDialog();
     }
 
     public void Dispose()

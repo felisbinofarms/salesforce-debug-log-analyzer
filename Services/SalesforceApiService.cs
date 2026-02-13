@@ -373,6 +373,46 @@ public class SalesforceApiService : IDisposable
     }
 
     /// <summary>
+    /// Generic SOQL query method for metadata queries
+    /// </summary>
+    public async Task<QueryResult<T>> QueryAsync<T>(string soql)
+    {
+        if (_connection == null || !_connection.IsConnected)
+            throw new InvalidOperationException("Not connected to Salesforce");
+
+        var encodedQuery = Uri.EscapeDataString(soql);
+        var url = $"{_connection.InstanceUrl}/services/data/v60.0/query/?q={encodedQuery}";
+
+        var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonConvert.DeserializeObject<QueryResult<T>>(content);
+
+        return result ?? new QueryResult<T> { Records = new List<T>(), Done = true, TotalSize = 0 };
+    }
+
+    /// <summary>
+    /// Generic REST API request for Describe and other metadata endpoints
+    /// </summary>
+    public async Task<T> ExecuteRequestAsync<T>(string method, string endpoint)
+    {
+        if (_connection == null || !_connection.IsConnected)
+            throw new InvalidOperationException("Not connected to Salesforce");
+
+        var url = $"{_connection.InstanceUrl}{endpoint}";
+        var request = new HttpRequestMessage(new HttpMethod(method), url);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonConvert.DeserializeObject<T>(content);
+
+        return result ?? throw new InvalidOperationException("Failed to deserialize response");
+    }
+
+    /// <summary>
     /// Disconnect and clear authentication
     /// </summary>
     public void Disconnect()
@@ -390,17 +430,20 @@ public class SalesforceApiService : IDisposable
         }
     }
 
-    private class QueryResult<T>
-    {
-        public List<T>? Records { get; set; }
-        public int TotalSize { get; set; }
-        public bool Done { get; set; }
-    }
-
     private class CreateResult
     {
         public string? Id { get; set; }
         public bool Success { get; set; }
         public List<string>? Errors { get; set; }
     }
+}
+
+/// <summary>
+/// Salesforce REST API query result
+/// </summary>
+public class QueryResult<T>
+{
+    public List<T>? Records { get; set; }
+    public int TotalSize { get; set; }
+    public bool Done { get; set; }
 }

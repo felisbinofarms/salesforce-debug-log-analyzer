@@ -353,3 +353,52 @@ public class HealthScoreToColorConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Generates a consistent color for a username (for visual differentiation in log lists)
+/// </summary>
+public class UserToColorConverter : IValueConverter
+{
+    private static readonly string[] UserColors = new[]
+    {
+        "#5865F2", // Discord Blurple
+        "#57F287", // Green
+        "#FEE75C", // Yellow
+        "#FAA61A", // Orange
+        "#EB459E", // Pink
+        "#22D3EE", // Cyan
+        "#8B5CF6", // Purple
+        "#F97316", // Orange-Red
+        "#10B981", // Emerald
+        "#EC4899", // Hot Pink
+        "#06B6D4", // Light Blue
+        "#8B5A2B"  // Brown
+    };
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string username && !string.IsNullOrEmpty(username))
+        {
+            // Generate consistent hash from username
+            int hash = 0;
+            foreach (char c in username)
+            {
+                hash = ((hash << 5) - hash) + c;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            // Use absolute value and modulo to get index
+            int index = Math.Abs(hash) % UserColors.Length;
+            string hex = UserColors[index];
+            
+            return new BrushConverter().ConvertFromString(hex) as Brush ?? Brushes.White;
+        }
+        
+        return new BrushConverter().ConvertFromString("#72767D") as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

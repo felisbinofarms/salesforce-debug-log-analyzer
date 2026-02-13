@@ -9,6 +9,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="DeepPurple" SecondaryColor="Lime" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <!-- Modern Theme System (VS Code Dark + Discord Accents) -->
+                <ResourceDictionary Source="pack://application:,,,/Themes/DiscordTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Discord Color Palette -->

@@ -242,6 +242,42 @@ public class LogAnalysis
     public string LogUser { get; set; } = string.Empty;
     
     /// <summary>
+    /// Icon representing the operation type (trigger, flow, class, etc.)
+    /// </summary>
+    public string OperationIcon => EntryPoint?.ToLower() switch
+    {
+        var ep when ep.Contains("trigger") => "⚡",
+        var ep when ep.Contains("flow") || ep.Contains("interview") => "🔄",
+        var ep when ep.Contains("validation") => "✓",
+        var ep when ep.Contains("@future") || ep.Contains("queueable") => "🔮",
+        var ep when ep.Contains("@auraenabled") || ep.Contains("lightning") => "🎯",
+        var ep when ep.Contains("batch") => "📊",
+        var ep when ep.Contains("schedule") => "⏰",
+        var ep when ep.Contains("webservice") || ep.Contains("restresource") => "🌐",
+        var ep when ep.Contains("visualforce") => "📄",
+        var ep when ep.Contains("test") => "🧪",
+        _ => "📦" // Default for classes
+    };
+    
+    /// <summary>
+    /// Human-readable operation type label
+    /// </summary>
+    public string OperationType => EntryPoint?.ToLower() switch
+    {
+        var ep when ep.Contains("trigger") => "Apex Trigger",
+        var ep when ep.Contains("flow") || ep.Contains("interview") => "Flow",
+        var ep when ep.Contains("validation") => "Validation Rule",
+        var ep when ep.Contains("@future") || ep.Contains("queueable") => "Async Apex",
+        var ep when ep.Contains("@auraenabled") || ep.Contains("lightning") => "Lightning",
+        var ep when ep.Contains("batch") => "Batch Apex",
+        var ep when ep.Contains("schedule") => "Scheduled Apex",
+        var ep when ep.Contains("webservice") || ep.Contains("restresource") => "Web Service",
+        var ep when ep.Contains("visualforce") => "Visualforce",
+        var ep when ep.Contains("test") => "Test Class",
+        _ => "Apex Class"
+    };
+    
+    /// <summary>
     /// Log file length in lines
     /// </summary>
     public int LogLength { get; set; }
@@ -929,4 +965,26 @@ public class Interaction
     /// <summary>Total DML statements across all logs</summary>
     public int TotalDmlStatements => CapturedLogs.Sum(l => 
         l.LimitSnapshots?.LastOrDefault()?.DmlStatements ?? 0);
+}
+
+/// <summary>
+/// Plain-English problem description for non-technical users
+/// </summary>
+public class PlainEnglishProblem
+{
+    public string Icon { get; set; } = "⚠️";
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Severity { get; set; } = "High"; // High, Medium, Low
+    public string ImpactLabel { get; set; } = "High Impact";
+}
+
+/// <summary>
+/// Plain-English recommendation for non-technical users
+/// </summary>
+public class PlainEnglishRecommendation
+{
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
+    public int EstimatedMinutes { get; set; } = 10;
 }

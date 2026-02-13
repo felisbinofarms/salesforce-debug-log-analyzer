@@ -1,0 +1,381 @@
+<UserControl x:Class="SalesforceDebugAnalyzer.Views.InsightsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:SalesforceDebugAnalyzer.Helpers"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="800"
+             Background="Transparent">
+    
+    <UserControl.Resources>
+        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <helpers:PercentToSeverityConverter x:Key="PercentToSeverityConverter"/>
+        
+        <!-- Discord Card Style -->
+        <Style x:Key="InsightCard" TargetType="Border" BasedOn="{StaticResource ModernCard}">
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+        
+        <Style x:Key="InsightTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource FontLG}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        
+        <Style x:Key="InsightBody" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource FontMD}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="24"/>
+        </Style>
+        
+        <Style x:Key="InsightMetric" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        </Style>
+        
+        <Style x:Key="InsightLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource FontSM}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+        </Style>
+    </UserControl.Resources>
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">
+        <StackPanel MaxWidth="900">
+            
+            <!-- ===== WHAT HAPPENED ===== -->
+            <Border Style="{StaticResource InsightCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource InsightTitle}">
+                        <Run Text="🎯 What Happened"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource InsightBody}" Text="{Binding PlainEnglishSummary}"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- ===== WAIT TIME (User Experience) ===== -->
+            <Border Style="{StaticResource InsightCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Metric -->
+                    <StackPanel Grid.Column="0" Margin="0,0,24,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource InsightMetric}" Text="{Binding UserWaitTimeSeconds}" HorizontalAlignment="Center"/>
+                        <TextBlock Style="{StaticResource InsightLabel}" Text="seconds" HorizontalAlignment="Center"/>
+                        <TextBlock Style="{StaticResource InsightLabel}" Text="user wait time" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <!-- Explanation -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource InsightTitle}">
+                            <Run Text="⏱️ How Long Did the User Wait?"/>
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource InsightBody}" Text="{Binding UserWaitExplanation}"/>
+                        
+                        <!-- Speed rating -->
+                        <Border Margin="0,12,0,0" Padding="12" CornerRadius="{StaticResource RadiusLG}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SpeedRating}" Value="Slow">
+                                            <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SpeedRating}" Value="Very Slow">
+                                            <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock FontSize="{StaticResource FontMD}" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                        <Setter Property="Text" Value="✓ Fast - Users won't notice"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SpeedRating}" Value="Moderate">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Setter Property="Text" Value="✓ Acceptable - Within normal range"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SpeedRating}" Value="Slow">
+                                                <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                <Setter Property="Text" Value="⚠ Slow - Users will notice delays"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SpeedRating}" Value="Very Slow">
+                                                <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                <Setter Property="Text" Value="✗ Very Slow - Users will complain"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+            <!-- ===== WHAT'S USING RESOURCES ===== -->
+            <Border Style="{StaticResource InsightCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource InsightTitle}">
+                        <Run Text="💾 What's Using Salesforce Resources?"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource InsightBody}" Text="{Binding ResourceUsageExplanation}" Margin="0,0,0,16"/>
+                    
+                    <!-- Resource meters -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Database Reads -->
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                            <TextBlock Text="Database Reads" FontSize="{StaticResource FontSM}" Foreground="{StaticResource TextMuted}" Margin="0,0,0,8"/>
+                            <Border Background="{StaticResource BgTertiary}" Height="120" CornerRadius="{StaticResource RadiusLG}" Padding="12">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock FontSize="28" FontWeight="Bold" HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SoqlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding SoqlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                        <Run Text="{Binding SoqlCount}"/><Run Text="/" FontSize="16"/><Run Text="{Binding SoqlLimit}" FontSize="16"/>
+                                    </TextBlock>
+                                    <TextBlock Text="queries" FontSize="{StaticResource FontXS}" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                                    <TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="{StaticResource FontXS}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Setter Property="Text" Value="✓ Safe"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SoqlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                        <Setter Property="Text" Value="⚠ Getting close"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding SoqlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                        <Setter Property="Text" Value="✗ Too many!"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- Database Writes -->
+                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                            <TextBlock Text="Database Writes" FontSize="{StaticResource FontSM}" Foreground="{StaticResource TextMuted}" Margin="0,0,0,8"/>
+                            <Border Background="{StaticResource BgTertiary}" Height="120" CornerRadius="{StaticResource RadiusLG}" Padding="12">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock FontSize="28" FontWeight="Bold" HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DmlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DmlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                        <Run Text="{Binding DmlCount}"/><Run Text="/" FontSize="16"/><Run Text="{Binding DmlLimit}" FontSize="16"/>
+                                    </TextBlock>
+                                    <TextBlock Text="saves" FontSize="{StaticResource FontXS}" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                                    <TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="{StaticResource FontXS}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Setter Property="Text" Value="✓ Safe"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DmlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                        <Setter Property="Text" Value="⚠ Getting close"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DmlPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                        <Setter Property="Text" Value="✗ Too many!"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- CPU Time -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Processing Power" FontSize="{StaticResource FontSM}" Foreground="{StaticResource TextMuted}" Margin="0,0,0,8"/>
+                            <Border Background="{StaticResource BgTertiary}" Height="120" CornerRadius="{StaticResource RadiusLG}" Padding="12">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock FontSize="28" FontWeight="Bold" HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CpuPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CpuPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                        <Run Text="{Binding CpuPercent}"/><Run Text="%" FontSize="16"/>
+                                    </TextBlock>
+                                    <TextBlock Text="used" FontSize="{StaticResource FontXS}" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                                    <TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="{StaticResource FontXS}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                <Setter Property="Text" Value="✓ Safe"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CpuPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Warning">
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                        <Setter Property="Text" Value="⚠ Getting close"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CpuPercent, Converter={StaticResource PercentToSeverityConverter}}" Value="Critical">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                        <Setter Property="Text" Value="✗ Overloaded!"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- ===== PROBLEMS FOUND ===== -->
+            <Border Style="{StaticResource InsightCard}" Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource InsightTitle}">
+                        <Run Text="⚠️ Problems We Found"/>
+                    </TextBlock>
+                    
+                    <ItemsControl ItemsSource="{Binding PlainEnglishProblems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource BgTertiary}" CornerRadius="{StaticResource RadiusLG}" Padding="16" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,8">
+                                            <Run Text="{Binding Icon}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding Title}"/>
+                                        </TextBlock>
+                                        <TextBlock FontSize="{StaticResource FontMD}" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Text="{Binding Description}" Margin="0,0,0,12"/>
+                                        
+                                        <!-- Impact badge -->
+                                        <Border CornerRadius="{StaticResource RadiusSM}" Padding="8,4" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Medium">
+                                                            <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Low">
+                                                            <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="{StaticResource FontSM}" FontWeight="SemiBold" Text="{Binding ImpactLabel}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Severity}" Value="Medium">
+                                                                <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Severity}" Value="Low">
+                                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            
+            <!-- ===== WHAT TO DO NEXT ===== -->
+            <Border Style="{StaticResource InsightCard}" Visibility="{Binding HasRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource InsightTitle}">
+                        <Run Text="✅ What Should You Do?"/>
+                    </TextBlock>
+                    
+                    <ItemsControl ItemsSource="{Binding PlainEnglishRecommendations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource BgTertiary}" CornerRadius="{StaticResource RadiusLG}" Padding="16" Margin="0,0,0,12" BorderBrush="{StaticResource Success}" BorderThickness="2">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" Text="{Binding Title}"/>
+                                            <TextBlock Grid.Column="1" FontSize="{StaticResource FontXS}" Foreground="{StaticResource TextMuted}">
+                                                <Run Text="⏱️ "/>
+                                                <Run Text="{Binding EstimatedMinutes}"/>
+                                                <Run Text=" min"/>
+                                            </TextBlock>
+                                        </Grid>
+                                        <TextBlock FontSize="{StaticResource FontMD}" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Text="{Binding Description}" LineHeight="22"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            
+            <!-- ===== ALL CLEAR MESSAGE ===== -->
+            <Border Style="{StaticResource InsightCard}" Visibility="{Binding IsAllClear, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="🎉" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                    <TextBlock Text="Everything Looks Good!" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Success}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock FontSize="{StaticResource FontMD}" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
+                        Your code ran successfully with no performance issues detected.
+                        Resources were used efficiently and within limits.
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

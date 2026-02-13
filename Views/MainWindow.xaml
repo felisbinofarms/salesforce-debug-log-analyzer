@@ -995,20 +995,20 @@
                         </Grid.RowDefinitions>
                         
                         <!-- Tab Headers -->
-                        <Border Grid.Row="0" Background="#2B2D31" BorderBrush="#3F4147" BorderThickness="0,0,0,1" Padding="16,12">
+                        <Border Grid.Row="0" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource SidebarBorder}" BorderThickness="0,0,0,1" Padding="16,12">
                             <WrapPanel>
                                 <Button Content="📝 Summary" Padding="12,8" Margin="0,0,6,0" 
                                         Command="{Binding SelectTabCommand}"
-                                        Foreground="White" BorderThickness="0" FontSize="13" FontWeight="SemiBold" Cursor="Hand">
+                                        Foreground="{StaticResource TextPrimary}" BorderThickness="0" FontSize="{StaticResource FontBaseline}" FontWeight="SemiBold" Cursor="Hand">
                                     <Button.CommandParameter>
                                         <sys:Int32>0</sys:Int32>
                                     </Button.CommandParameter>
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="#404249"/>
+                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                                    <Setter Property="Background" Value="#5865F2"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -1016,17 +1016,17 @@
                                 </Button>
                                 <Button Content="🌳 Tree" Padding="12,8" Margin="0,0,6,0" 
                                         Command="{Binding SelectTabCommand}"
-                                        Foreground="#B5BAC1" BorderThickness="0" FontSize="13" Cursor="Hand">
+                                        Foreground="{StaticResource TextSecondary}" BorderThickness="0" FontSize="{StaticResource FontBaseline}" Cursor="Hand">
                                     <Button.CommandParameter>
                                         <sys:Int32>1</sys:Int32>
                                     </Button.CommandParameter>
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource DiscordSecondaryButton}">
-                                            <Setter Property="Background" Value="#404249"/>
+                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                                    <Setter Property="Background" Value="#5865F2"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -1034,17 +1034,17 @@
                                 </Button>
                                 <Button Content="⏱️ Timeline" Padding="12,8" Margin="0,0,6,0" 
                                         Command="{Binding SelectTabCommand}"
-                                        Foreground="#B5BAC1" BorderThickness="0" FontSize="13" Cursor="Hand">
+                                        Foreground="{StaticResource TextSecondary}" BorderThickness="0" FontSize="{StaticResource FontBaseline}" Cursor="Hand">
                                     <Button.CommandParameter>
                                         <sys:Int32>2</sys:Int32>
                                     </Button.CommandParameter>
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource DiscordSecondaryButton}">
-                                            <Setter Property="Background" Value="#404249"/>
+                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                                    <Setter Property="Background" Value="#5865F2"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -1052,17 +1052,17 @@
                                 </Button>
                                 <Button Content="💾 Queries" Padding="12,8" Margin="0,0,6,0" 
                                         Command="{Binding SelectTabCommand}"
-                                        Foreground="#B5BAC1" BorderThickness="0" FontSize="13" Cursor="Hand">
+                                        Foreground="{StaticResource TextSecondary}" BorderThickness="0" FontSize="{StaticResource FontBaseline}" Cursor="Hand">
                                     <Button.CommandParameter>
                                         <sys:Int32>3</sys:Int32>
                                     </Button.CommandParameter>
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource DiscordSecondaryButton}">
-                                            <Setter Property="Background" Value="#404249"/>
+                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
-                                                    <Setter Property="Background" Value="#5865F2"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -1074,7 +1074,7 @@
                         <!-- Tab Content -->
                         <Grid Grid.Row="1">
                             <!-- "No log selected" empty state overlay -->
-                            <Border Background="#2B2D31" 
+                            <Border Background="{StaticResource BgSecondary}" 
                                     Visibility="{Binding SelectedLog, Converter={StaticResource InverseNullToVisibilityConverter}}"
                                     Panel.ZIndex="10">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="400">
