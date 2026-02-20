@@ -1562,6 +1562,79 @@
                                         </Grid>
                                     </Border>
 
+                                    <!-- ===== MIXED CONTEXT WARNING (Governance Education) ===== -->
+                                    <!-- Only visible when ShowMixedContextWarning=true -->
+                                    <Border CornerRadius="12" Margin="0,0,0,16" Padding="20,16" Background="#2A2520"
+                                            BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,3"
+                                            Visibility="{Binding ShowMixedContextWarning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Header -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0" Text="🔍" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Governance Insight: Mixed Execution Contexts" FontSize="16" FontWeight="Bold" 
+                                                               Foreground="{StaticResource Warning}"/>
+                                                    <TextBlock Text="This can make debugging confusing. Here's what's happening..." 
+                                                               FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                            <!-- Friendly Explanation -->
+                                            <Border Grid.Row="1" Background="{StaticResource BgSecondary}" CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+                                                <TextBlock Text="{Binding MixedContextExplanation}" TextWrapping="Wrap" FontSize="12" 
+                                                           Foreground="White" LineHeight="18"/>
+                                            </Border>
+                                            
+                                            <!-- Context Breakdown -->
+                                            <StackPanel Grid.Row="2" Margin="0,0,0,12">
+                                                <TextBlock Text="What's in this transaction group:" FontSize="11" FontWeight="SemiBold" 
+                                                           Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+                                                <ItemsControl ItemsSource="{Binding ContextBreakdown}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{StaticResource BgTertiary}" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                                <TextBlock Text="{Binding}" FontSize="11" Foreground="{StaticResource TextSecondary}" FontFamily="Consolas"/>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                            
+                                            <!-- Best Practice Recommendation -->
+                                            <Border Grid.Row="3" Background="#1A2F1A" CornerRadius="8" Padding="14,10" BorderBrush="{StaticResource Success}" BorderThickness="1">
+                                                <StackPanel>
+                                                    <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Success}" Margin="0,0,0,6">
+                                                        <Run Text="💡"/>
+                                                        <Run Text="Best Practice:"/>
+                                                    </TextBlock>
+                                                    <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextSecondary}" LineHeight="16">
+                                                        <Run Text="Create dedicated users for automation:"/>
+                                                        <LineBreak/>
+                                                        <Run Text="  • IntegrationUser for API calls (e.g., IntegrationUser-SAP)"/>
+                                                        <LineBreak/>
+                                                        <Run Text="  • BatchUser for scheduled jobs (e.g., BatchUser-NightlyCleanup)"/>
+                                                        <LineBreak/>
+                                                        <LineBreak/>
+                                                        <Run Text="This keeps your debug logs clean and makes troubleshooting 10x easier!" FontStyle="Italic"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
                                     <!-- ===== HERO STATUS BANNER (Modern) ===== -->
                                     <Border CornerRadius="12" Margin="0,0,0,16" Padding="20">
                                         <Border.Style>

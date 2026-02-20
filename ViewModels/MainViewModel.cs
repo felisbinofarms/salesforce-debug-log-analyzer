@@ -64,9 +64,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _groupPhaseBreakdown = "";
     
+    // Mixed context warning details
+    [ObservableProperty]
+    private bool _showMixedContextWarning = false;
+    
+    [ObservableProperty]
+    private string _mixedContextExplanation = "";
+    
+    [ObservableProperty]
+    private ObservableCollection<string> _contextBreakdown = new();
+    
     partial void OnSelectedLogGroupChanged(LogGroup? value)
     {
-        if (value == null) return;
+        if (value == null) 
+        {
+            ShowMixedContextWarning = false;
+            return;
+        }
         
         // Don't change SelectedLog here — user will click individual logs in the group to see details
         // The group card shows aggregate metrics only
@@ -88,6 +102,48 @@ public partial class MainViewModel : ObservableObject, IDisposable
         else
         {
             GroupPhaseBreakdown = "";
+        }
+        
+        // Check for mixed contexts (governance issue)
+        ShowMixedContextWarning = value.HasMixedContexts;
+        
+        if (value.HasMixedContexts)
+        {
+            // Count logs by context
+            var contextCounts = value.Logs
+                .GroupBy(log => log.Context)
+                .Select(g => new { Context = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+            
+            var userActionCount = contextCounts.FirstOrDefault(x => x.Context == Models.ExecutionContext.Interactive)?.Count ?? 0;
+            var totalLogs = value.Logs.Count;
+            
+            // Generate friendly explanation
+            if (userActionCount > 0 && userActionCount < totalLogs)
+            {
+                MixedContextExplanation = $"Only {userActionCount} of these {totalLogs} logs are from YOUR action. The rest are background processes that happened to run at the same time.";
+            }
+            else
+            {
+                MixedContextExplanation = "Multiple execution contexts detected in the same user account. This makes debugging harder because you can't tell which logs are yours.";
+            }
+            
+            // Generate context breakdown
+            ContextBreakdown.Clear();
+            foreach (var ctx in contextCounts)
+            {
+                string contextName = ctx.Context switch
+                {
+                    Models.ExecutionContext.Interactive => "🖱️ User Action (button click, page load)",
+                    Models.ExecutionContext.Batch => "⚙️ Batch Job (scheduled Apex, bulk processing)",
+                    Models.ExecutionContext.Integration => "🔌 API Call (REST/SOAP from external system)",
+                    Models.ExecutionContext.Scheduled => "⏰ Scheduled Flow (time-based automation)",
+                    Models.ExecutionContext.Async => "⚡ Async Process (@future, Queueable)",
+                    _ => "❓ Unknown Context"
+                };
+                ContextBreakdown.Add($"{ctx.Count} logs: {contextName}");
+            }
         }
     }
 
