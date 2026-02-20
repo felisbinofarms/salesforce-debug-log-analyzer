@@ -193,8 +193,14 @@
         
         <!-- Custom Title Bar (48px) -->
         <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
-                Background="{StaticResource BgSecondary}" 
                 BorderBrush="{StaticResource SidebarBorder}" BorderThickness="0,0,0,1">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#08080F" Offset="0"/>
+                    <GradientStop Color="#13131E" Offset="0.5"/>
+                    <GradientStop Color="#13131E" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="88"/>
@@ -205,17 +211,27 @@
                 
                 <!-- App Icon Area -->
                 <Border Grid.Column="0" Background="{StaticResource SidebarBg}">
-                    <materialDesign:PackIcon Kind="Spider" Width="24" Height="24" 
+                    <materialDesign:PackIcon Kind="Spider" Width="26" Height="26" 
                                              VerticalAlignment="Center" HorizontalAlignment="Center"
-                                             Foreground="{StaticResource Danger}"/>
+                                             Foreground="{StaticResource Danger}">
+                        <materialDesign:PackIcon.Effect>
+                            <DropShadowEffect BlurRadius="12" Color="#F85149" Opacity="0.9" ShadowDepth="0"/>
+                        </materialDesign:PackIcon.Effect>
+                    </materialDesign:PackIcon>
                 </Border>
                 
                 <!-- App Title -->
                 <TextBlock Grid.Column="1" Text="Black Widow" 
-                           FontSize="14" FontWeight="SemiBold" 
-                           Foreground="{StaticResource TextPrimary}"
+                           FontSize="15" FontWeight="Bold" 
                            VerticalAlignment="Center"
-                           Margin="16,0,0,0"/>
+                           Margin="16,0,0,0">
+                    <TextBlock.Foreground>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#FFFFFF" Offset="0"/>
+                            <GradientStop Color="#B8A8FF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </TextBlock.Foreground>
+                </TextBlock>
                 
                 <!-- VSCode Connection Status (next to title) -->
                 <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -309,7 +325,7 @@
         
         <!-- Left Sidebar (88px) -->
         <Border Grid.Row="1" Grid.Column="0" 
-                Background="{StaticResource BgSecondary}" 
+                Background="{StaticResource SidebarBg}" 
                 BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -562,7 +578,13 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Panel - Logs & Filters -->
-                <Border Grid.Column="0" Style="{StaticResource DiscordCard}">
+                <Border Grid.Column="0" CornerRadius="10" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <GradientStop Color="#13131E" Offset="0"/>
+                            <GradientStop Color="#0D0D16" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                     <Grid Margin="16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>  <!-- 0: Header -->
@@ -581,7 +603,14 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Debug Logs" FontSize="18" FontWeight="Bold" 
-                                           Foreground="White" VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Foreground>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#B8A8FF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </TextBlock.Foreground>
+                                </TextBlock>
                                 <!-- Transaction grouping toggle -->
                                 <Border CornerRadius="4" Padding="6,2" Margin="12,0,0,0" VerticalAlignment="Center"
                                         Background="{StaticResource AccentSubtle}"
@@ -724,22 +753,33 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
-                                                <Border x:Name="ItemBorder" CornerRadius="6" 
-                                                        Padding="12" Margin="0,0,0,8" Cursor="Hand"
-                                                        Background="{StaticResource BgInput}">
+                                                <Border x:Name="ItemBorder" CornerRadius="8" 
+                                                        Margin="0,0,0,6" Cursor="Hand"
+                                                        Background="{StaticResource BgSecondary}"
+                                                        BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                                                        ClipToBounds="True">
                                                     <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto"/>
-                                                            <RowDefinition Height="Auto"/>
-                                                            <RowDefinition Height="Auto"/>
-                                                        </Grid.RowDefinitions>
-                                                        <!-- Row 0: icon + name + truncated badge -->
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="3"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- Left accent bar — dims at rest, blazes on selection -->
+                                                        <Border x:Name="AccentBar" CornerRadius="7,0,0,7"
+                                                                Background="{StaticResource AccentPrimary}" Opacity="0.2"/>
+                                                        <!-- Main content -->
+                                                        <Grid Grid.Column="1" Margin="10,10,12,10">
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                            </Grid.RowDefinitions>
+                                                            <!-- Row 0: icon + name + truncated badge -->
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
                                                             <TextBlock Grid.Column="0" Text="{Binding OperationIcon}" FontSize="16"
                                                                        VerticalAlignment="Center" Margin="0,0,6,0"/>
                                                             <TextBlock Grid.Column="1" Text="{Binding LogName}" FontSize="13"
@@ -761,7 +801,7 @@
                                                             <Run Text=" • "/>
                                                             <Run Text="{Binding LineCount}"/>
                                                             <Run Text=" lines • "/>
-                                                            <Run Text="{Binding OperationType}"/>
+                                                            <Run Text="{Binding OperationType, Mode=OneWay}"/>
                                                         </TextBlock>
                                                         <!-- Row 2: status badge + ASYNC badge + BulkSafetyGrade pill -->
                                                         <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,0">
@@ -838,10 +878,18 @@
                                                             </Border>
                                                         </WrapPanel>
                                                     </Grid>
+                                                </Grid>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#14103A"/>
+                                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+                                                        <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
+                                                        <Setter TargetName="ItemBorder" Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect BlurRadius="14" Color="#7C6AFF" Opacity="0.45" ShadowDepth="0"/>
+                                                            </Setter.Value>
+                                                        </Setter>
                                                     </Trigger>
                                                     <MultiTrigger>
                                                         <MultiTrigger.Conditions>
@@ -849,6 +897,7 @@
                                                             <Condition Property="IsSelected" Value="False"/>
                                                         </MultiTrigger.Conditions>
                                                         <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgHover}"/>
+                                                        <Setter TargetName="AccentBar" Property="Opacity" Value="0.6"/>
                                                     </MultiTrigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1109,7 +1158,7 @@
                                                                 
                                                                 <!-- Operation Type and User -->
                                                                 <TextBlock FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2">
-                                                                    <Run Text="{Binding OperationType}" FontWeight="SemiBold"/>
+                                                                    <Run Text="{Binding OperationType, Mode=OneWay}" FontWeight="SemiBold"/>
                                                                     <Run Text=" by " Foreground="{StaticResource TextMuted}"/>
                                                                     <Run Text="{Binding User}" Foreground="{StaticResource AccentPrimary}"/>
                                                                 </TextBlock>
@@ -1306,124 +1355,233 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
-                        <!-- Tab Headers -->
-                        <Border Grid.Row="0" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,1" Padding="12,8">
+                        <!-- Tab Headers — VS Code underline style -->
+                        <Border Grid.Row="0" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,1" Padding="4,0">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop Color="#0D0D16" Offset="0"/>
+                                    <GradientStop Color="#13131E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <StackPanel Orientation="Horizontal">
-                                <!-- Explain Tab (NEW — default tab) -->
-                                <Button Padding="12,8" Margin="0,0,6,0"
-                                        Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" FontSize="13">
-                                    <Button.CommandParameter>
-                                        <sys:Int32>4</sys:Int32>
-                                    </Button.CommandParameter>
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
+                                <!-- Explain Tab -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                    <Button.CommandParameter><sys:Int32>4</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Lightbulb" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                                                 Foreground="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=4, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                        <TextBlock Text="Explain" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <!-- Underline indicator -->
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0"
+                                                        Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
-                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Lightbulb" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Explain" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                    </StackPanel>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                 </Button>
                                 <!-- Summary Tab -->
-                                <Button Padding="12,8" Margin="0,0,6,0"
-                                        Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" FontSize="13">
-                                    <Button.CommandParameter>
-                                        <sys:Int32>0</sys:Int32>
-                                    </Button.CommandParameter>
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                    <Button.CommandParameter><sys:Int32>0</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="ChartBox" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Summary" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ChartBox" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Summary" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                 </Button>
                                 <!-- Tree Tab -->
-                                <Button Padding="12,8" Margin="0,0,6,0"
-                                        Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" FontSize="13">
-                                    <Button.CommandParameter>
-                                        <sys:Int32>1</sys:Int32>
-                                    </Button.CommandParameter>
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                    <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="FileTree" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Tree" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileTree" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Tree" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                 </Button>
                                 <!-- Timeline Tab -->
-                                <Button Padding="12,8" Margin="0,0,6,0"
-                                        Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" FontSize="13">
-                                    <Button.CommandParameter>
-                                        <sys:Int32>2</sys:Int32>
-                                    </Button.CommandParameter>
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                    <Button.CommandParameter><sys:Int32>2</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Timeline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Timeline" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Timeline" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Timeline" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                 </Button>
                                 <!-- Queries Tab -->
-                                <Button Padding="12,8" Margin="0,0,6,0"
-                                        Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" FontSize="13">
-                                    <Button.CommandParameter>
-                                        <sys:Int32>3</sys:Int32>
-                                    </Button.CommandParameter>
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource DiscordPrimaryButton}">
-                                            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                    <Button.CommandParameter><sys:Int32>3</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Queries" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
-                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Queries" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                 </Button>
                             </StackPanel>
                             </ScrollViewer>
@@ -2181,7 +2339,14 @@
                                         </Grid.ColumnDefinitions>
                                         
                                         <!-- SOQL Stat -->
-                                        <Border Grid.Column="0" Background="{StaticResource BgInput}" CornerRadius="8" Padding="14" Margin="0,0,8,0">
+                                        <Border Grid.Column="0" CornerRadius="8" Padding="14" Margin="0,0,8,0"
+                                                BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,2,0,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                    <GradientStop Color="#171730" Offset="0"/>
+                                                    <GradientStop Color="#13131E" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="??" FontSize="20" HorizontalAlignment="Center"/>
                                                 <TextBlock FontSize="24" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center" Margin="0,2,0,0">
@@ -2200,7 +2365,14 @@
                                         </Border>
                                         
                                         <!-- DML Stat -->
-                                        <Border Grid.Column="1" Background="{StaticResource BgInput}" CornerRadius="8" Padding="14" Margin="4,0">
+                                        <Border Grid.Column="1" CornerRadius="8" Padding="14" Margin="4,0"
+                                                BorderBrush="{StaticResource Warning}" BorderThickness="0,2,0,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                    <GradientStop Color="#1E1810" Offset="0"/>
+                                                    <GradientStop Color="#13131E" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="??" FontSize="20" HorizontalAlignment="Center"/>
                                                 <TextBlock FontSize="24" FontWeight="Bold" Foreground="{StaticResource Warning}" HorizontalAlignment="Center" Margin="0,2,0,0">
@@ -2212,7 +2384,14 @@
                                         </Border>
                                         
                                         <!-- Errors Stat -->
-                                        <Border Grid.Column="2" Background="{StaticResource BgInput}" CornerRadius="8" Padding="14" Margin="4,0">
+                                        <Border Grid.Column="2" CornerRadius="8" Padding="14" Margin="4,0"
+                                                BorderBrush="{StaticResource Danger}" BorderThickness="0,2,0,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                    <GradientStop Color="#1E1010" Offset="0"/>
+                                                    <GradientStop Color="#13131E" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="?" FontSize="20" HorizontalAlignment="Center"/>
                                                 <TextBlock FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,2,0,0">
@@ -2233,7 +2412,14 @@
                                         </Border>
                                         
                                         <!-- Warnings Stat -->
-                                        <Border Grid.Column="3" Background="{StaticResource BgInput}" CornerRadius="8" Padding="14" Margin="8,0,0,0">
+                                        <Border Grid.Column="3" CornerRadius="8" Padding="14" Margin="8,0,0,0"
+                                                BorderBrush="{StaticResource Warning}" BorderThickness="0,2,0,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                    <GradientStop Color="#1A1608" Offset="0"/>
+                                                    <GradientStop Color="#13131E" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="??" FontSize="20" HorizontalAlignment="Center"/>
                                                 <TextBlock FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,2,0,0">
@@ -2713,8 +2899,21 @@
                                 <StackPanel MaxWidth="900">
                                     
                                     <!-- SECTION 1: WHAT HAPPENED -->
-                                    <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                                    <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                                            BorderThickness="0,2,0,0">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#1A1A2A" Offset="0"/>
+                                                <GradientStop Color="#13131E" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                <GradientStop Color="#7C6AFF40" Offset="0.5"/>
+                                                <GradientStop Color="Transparent" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                                 <TextBlock Text="📋" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -2770,9 +2969,22 @@
                                     </Border>
                                     
                                     <!-- SECTION 2: ISSUES FOUND (Deep explanations) -->
-                                    <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                    <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                                            BorderThickness="0,2,0,0"
                                             Visibility="{Binding HasDetailedIssues, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#1E1818" Offset="0"/>
+                                                <GradientStop Color="#13131E" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#F85149" Offset="0"/>
+                                                <GradientStop Color="#F8514940" Offset="0.5"/>
+                                                <GradientStop Color="Transparent" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                                 <TextBlock Text="🔍" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -3348,13 +3560,13 @@
                                                                         <Style TargetType="Border">
                                                                             <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding OperationType}" Value="DML">
+                                                                                <DataTrigger Binding="{Binding OperationType, Mode=OneWay}" Value="DML">
                                                                                     <Setter Property="Background" Value="{StaticResource Warning}"/>
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
                                                                         </Style>
                                                                     </Border.Style>
-                                                                    <TextBlock Text="{Binding OperationType}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                                                    <TextBlock Text="{Binding OperationType, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="White"/>
                                                                 </Border>
                                                                 
                                                                 <!-- Object name -->

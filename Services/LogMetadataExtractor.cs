@@ -215,7 +215,41 @@ public class LogMetadataExtractor
             return metadata;
         }
 
-        var logFiles = Directory.GetFiles(directoryPath, "*.log");
+        // Search recursively; collect .log, .txt, and no-extension files that look like SF logs
+        var allFiles = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
+        
+        System.Diagnostics.Debug.WriteLine($"[LogMetadataExtractor] Scanning folder: {directoryPath}");
+        System.Diagnostics.Debug.WriteLine($"[LogMetadataExtractor] Total files found: {allFiles.Length}");
+
+        var logFiles = allFiles.Where(f =>
+        {
+            var ext = Path.GetExtension(f).ToLowerInvariant();
+            var fileName = Path.GetFileName(f);
+            
+            if (ext == ".log" || ext == ".txt")
+            {
+                System.Diagnostics.Debug.WriteLine($"  ✓ Accepted: {fileName} (extension: {ext})");
+                return true;
+            }
+            
+            // No extension: accept if filename looks like a Salesforce log ID (07L...)
+            // or if it starts with the numeric debug log prefix
+            if (ext == "")
+            {
+                var name = Path.GetFileNameWithoutExtension(f);
+                bool matches = name.StartsWith("07L", StringComparison.OrdinalIgnoreCase) || LooksLikeSalesforceLog(f);
+                if (matches)
+                    System.Diagnostics.Debug.WriteLine($"  ✓ Accepted: {fileName} (no extension, SF log pattern)");
+                else
+                    System.Diagnostics.Debug.WriteLine($"  ✗ Rejected: {fileName} (no extension, not SF pattern)");
+                return matches;
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"  ✗ Rejected: {fileName} (extension: {ext})");
+            return false;
+        }).ToList();
+
+        System.Diagnostics.Debug.WriteLine($"[LogMetadataExtractor] Accepted files: {logFiles.Count}");
 
         foreach (var logFile in logFiles)
         {
@@ -224,6 +258,28 @@ public class LogMetadataExtractor
         }
 
         return metadata.OrderBy(m => m.Timestamp).ToList();
+    }
+
+    /// <summary>
+    /// Quick peek at a file (first 3 lines) to see if it looks like a Salesforce debug log.
+    /// Used for extension-less files.
+    /// </summary>
+    private static bool LooksLikeSalesforceLog(string filePath)
+    {
+        try
+        {
+            using var reader = new StreamReader(filePath);
+            for (int i = 0; i < 3; i++)
+            {
+                var line = reader.ReadLine();
+                if (line == null) break;
+                if (line.Contains("APEX_CODE") || line.Contains("Execute Anonymous") ||
+                    line.Contains("USER_INFO") || line.Contains("EXECUTION_STARTED"))
+                    return true;
+            }
+        }
+        catch { /* ignore unreadable files */ }
+        return false;
     }
 
     private DateTime ParseTimestamp(string timestamp)

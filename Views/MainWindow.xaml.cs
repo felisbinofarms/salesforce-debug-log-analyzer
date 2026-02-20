@@ -87,6 +87,8 @@ public partial class MainWindow : Window
         _connectionsView = new ConnectionsView(apiService);
         _connectionsView.ConnectionEstablished += OnConnectionEstablished;
         _connectionsView.LogFileDropped += OnLogFileDropped;
+        _connectionsView.LoadFolderRequested += OnLoadFolderRequested;
+        _connectionsView.FolderDropped += OnFolderDropped;
         ConnectionsViewContainer.Content = _connectionsView;
         ConnectionsViewContainer.Visibility = Visibility.Visible;
         MainContentGrid.Visibility = Visibility.Collapsed;
@@ -100,6 +102,26 @@ public partial class MainWindow : Window
         
         // Load the dropped file
         await _viewModel.LoadLogFromPath(filePath);
+    }
+    
+    private async void OnLoadFolderRequested(object? sender, EventArgs e)
+    {
+        // Hide connections view and show main content
+        ConnectionsViewContainer.Visibility = Visibility.Collapsed;
+        MainContentGrid.Visibility = Visibility.Visible;
+        
+        // Trigger the LoadLogFolderCommand from ViewModel
+        if (_viewModel.LoadLogFolderCommand.CanExecute(null))
+        {
+            await _viewModel.LoadLogFolderCommand.ExecuteAsync(null);
+        }
+    }
+
+    private async void OnFolderDropped(object? sender, string folderPath)
+    {
+        ConnectionsViewContainer.Visibility = Visibility.Collapsed;
+        MainContentGrid.Visibility = Visibility.Visible;
+        await _viewModel.LoadLogFolderFromPath(folderPath);
     }
 
     private void OnConnectionEstablished(object? sender, SalesforceApiService apiService)

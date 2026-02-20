@@ -3,34 +3,48 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              AllowDrop="True"
-             Drop="DropZone_Drop"
-             DragOver="DropZone_DragOver"
-             DragLeave="DropZone_DragLeave">
+             PreviewDrop="DropZone_Drop"
+             PreviewDragOver="DropZone_DragOver"
+             PreviewDragLeave="DropZone_DragLeave">
     
     <UserControl.Resources>
         <!-- Discord Card Style -->
         <Style x:Key="GlassCard" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1C1C30" Offset="0"/>
+                        <GradientStop Color="#13131E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="20" ShadowDepth="8" Direction="270"/>
+                    <DropShadowEffect Color="#7C6AFF" Opacity="0.12" BlurRadius="24" ShadowDepth="0"/>
                 </Setter.Value>
             </Setter>
         </Style>
         
         <!-- Feature Card Style -->
         <Style x:Key="FeatureCard" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="24"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1A1A2E" Offset="0"/>
+                        <GradientStop Color="#13131E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect Color="Black" Opacity="0.2" BlurRadius="12" ShadowDepth="4" Direction="270"/>
+                    <DropShadowEffect Color="#7C6AFF" Opacity="0.1" BlurRadius="16" ShadowDepth="0"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -100,9 +114,15 @@
         </Style>
     </UserControl.Resources>
     
-    <Grid Background="{StaticResource BgTertiary}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <Grid Margin="24,24,24,24">
+    <Grid AllowDrop="True">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                <GradientStop Color="#0D0D16" Offset="0"/>
+                <GradientStop Color="#13131E" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" AllowDrop="True">
+            <Grid Margin="24,24,24,24" AllowDrop="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="24"/>
@@ -111,18 +131,43 @@
                 
                 <!-- Hero Card -->
                 <Border Grid.Row="0" Style="{StaticResource GlassCard}" 
-                        Padding="32,48,32,48" HorizontalAlignment="Stretch" MaxWidth="800">
+                        Padding="32,48,32,48" HorizontalAlignment="Stretch" MaxWidth="800"
+                        BorderThickness="0,2,0,0" BorderBrush="{StaticResource AccentPrimary}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#1E1630" Offset="0"/>
+                            <GradientStop Color="#13131E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect Color="#7C6AFF" Opacity="0.3" BlurRadius="40" ShadowDepth="0"/>
+                    </Border.Effect>
                     <StackPanel>
                     <!-- Logo & Title -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
-                        <Border Background="{StaticResource Danger}" CornerRadius="12" Width="56" Height="56" Margin="0,0,16,0">
-                            <materialDesign:PackIcon Kind="Spider" Width="32" Height="32" 
+                        <Border CornerRadius="16" Width="72" Height="72" Margin="0,0,16,0">
+                            <Border.Background>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#7B1010" Offset="0"/>
+                                    <GradientStop Color="#2A0505" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#F85149" Opacity="0.9" BlurRadius="22" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <materialDesign:PackIcon Kind="Spider" Width="42" Height="42" 
                                                      Foreground="White" VerticalAlignment="Center" 
                                                      HorizontalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Black Widow" FontSize="32" FontWeight="Bold" 
-                                       Foreground="{StaticResource TextPrimary}" LineHeight="38"/>
+                            <TextBlock Text="Black Widow" FontSize="38" FontWeight="Bold" LineHeight="46">
+                                <TextBlock.Foreground>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="White" Offset="0"/>
+                                        <GradientStop Color="#C4B5FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </TextBlock.Foreground>
+                            </TextBlock>
                         </StackPanel>
                     </StackPanel>
                     
@@ -150,7 +195,11 @@
                         <Button Content="Start Hunting 🕷️"
                                 Style="{StaticResource HeroButton}"
                                 Click="ConnectProduction_Click"
-                                Margin="0,0,0,16"/>
+                                Margin="0,0,0,16">
+                            <Button.Effect>
+                                <DropShadowEffect BlurRadius="20" Color="#7C6AFF" Opacity="0.6" ShadowDepth="0"/>
+                            </Button.Effect>
+                        </Button>
                         
                         <Button Content="Connect to Sandbox"
                                 Style="{StaticResource SecondaryButton}"
@@ -179,6 +228,7 @@
                                 Padding="24"
                                 Margin="0,0,0,16"
                                 Cursor="Hand"
+                                AllowDrop="True"
                                 MouseLeftButtonUp="DropZone_Click">
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -189,25 +239,44 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <StackPanel HorizontalAlignment="Center">
+                            <StackPanel HorizontalAlignment="Center" AllowDrop="True">
                                 <materialDesign:PackIcon Kind="FileDocumentOutline" 
                                                          Width="36" Height="36" 
                                                          Foreground="{StaticResource AccentPrimary}"
                                                          HorizontalAlignment="Center"
-                                                         Margin="0,0,0,8"/>
+                                                         Margin="0,0,0,8"
+                                                         IsHitTestVisible="False"/>
                                 <TextBlock x:Name="DropZoneText" 
-                                           Text="Drop a .log file here" 
+                                           Text="Drop a folder or .log file here" 
                                            FontSize="14" 
                                            FontWeight="SemiBold"
                                            Foreground="{StaticResource TextPrimary}"
-                                           HorizontalAlignment="Center"/>
+                                           HorizontalAlignment="Center"
+                                           IsHitTestVisible="False"/>
                                 <TextBlock Text="or click to paste file path" 
                                            FontSize="12" 
                                            Foreground="{StaticResource TextMuted}"
                                            HorizontalAlignment="Center"
-                                           Margin="0,4,0,0"/>
+                                           Margin="0,4,0,0"
+                                           IsHitTestVisible="False"/>
                             </StackPanel>
                         </Border>
+                        
+                        <!-- Load Folder Button -->
+                        <Button x:Name="LoadFolderButton"
+                                Click="LoadFolder_Click"
+                                Style="{StaticResource SecondaryButton}"
+                                Height="48"
+                                Margin="0,0,0,16"
+                                HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FolderOpen" 
+                                                         Width="20" Height="20" 
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,8,0"/>
+                                <TextBlock Text="Load Folder of Logs" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         
                         <!-- Manual Token Section -->
                         <Expander Header="🔧 Advanced: Manual Token"
@@ -290,81 +359,111 @@
                 <ItemsControl.Items>
                     
                     <!-- Feature 1: Setup -->
-                    <Border Style="{StaticResource FeatureCard}" Width="280" Margin="8">
-                    <StackPanel>
-                        <Border Background="{StaticResource AccentPrimary}" CornerRadius="10" 
-                                Width="48" Height="48" 
-                                HorizontalAlignment="Center"
-                                Margin="0,0,0,20">
-                            <TextBlock Text="⚡" FontSize="28" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Spin Your Web in 30 Seconds" 
-                                   FontSize="20" 
-                                   FontWeight="SemiBold" 
-                                   Foreground="{StaticResource TextPrimary}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12"/>
-                        <TextBlock Text="Set up debug logging faster than a spider spins silk." 
-                                   FontSize="15" 
-                                   Foreground="{StaticResource TextSecondary}"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   LineHeight="24"/>
-                    </StackPanel>
-                </Border>
+                    <Border Width="280" Margin="8" CornerRadius="8" Padding="24"
+                            BorderThickness="0,2,0,0" BorderBrush="{StaticResource AccentPrimary}">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#16163A" Offset="0"/>
+                                <GradientStop Color="#13131E" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#7C6AFF" Opacity="0.2" BlurRadius="20" ShadowDepth="0"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <Border CornerRadius="12" Width="52" Height="52"
+                                    HorizontalAlignment="Center" Margin="0,0,0,20">
+                                <Border.Background>
+                                    <RadialGradientBrush>
+                                        <GradientStop Color="#3D2AAF" Offset="0"/>
+                                        <GradientStop Color="#1A1260" Offset="1"/>
+                                    </RadialGradientBrush>
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#7C6AFF" Opacity="0.6" BlurRadius="12" ShadowDepth="0"/>
+                                </Border.Effect>
+                                <TextBlock Text="⚡" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Spin Your Web in 30 Seconds" 
+                                       FontSize="20" FontWeight="SemiBold" 
+                                       Foreground="{StaticResource TextPrimary}"
+                                       HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                            <TextBlock Text="Set up debug logging faster than a spider spins silk." 
+                                       FontSize="15" Foreground="{StaticResource TextSecondary}"
+                                       TextWrapping="Wrap" TextAlignment="Center" LineHeight="24"/>
+                        </StackPanel>
+                    </Border>
                 
                 <!-- Feature 2: Analyze -->
-                <Border Style="{StaticResource FeatureCard}" Width="280" Margin="8">
+                <Border Width="280" Margin="8" CornerRadius="8" Padding="24"
+                        BorderThickness="0,2,0,0" BorderBrush="#8B5CF6">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#1A1228" Offset="0"/>
+                            <GradientStop Color="#13131E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect Color="#8B5CF6" Opacity="0.2" BlurRadius="20" ShadowDepth="0"/>
+                    </Border.Effect>
                     <StackPanel>
-                        <Border Background="#8B5CF6" CornerRadius="10" 
-                                Width="48" Height="48" 
-                                HorizontalAlignment="Center"
-                                Margin="0,0,0,20">
-                            <TextBlock Text="🔍" FontSize="28" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
+                        <Border CornerRadius="12" Width="52" Height="52"
+                                HorizontalAlignment="Center" Margin="0,0,0,20">
+                            <Border.Background>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#6D28D9" Offset="0"/>
+                                    <GradientStop Color="#2D1260" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#8B5CF6" Opacity="0.6" BlurRadius="12" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <TextBlock Text="🔍" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Strike Fast, Kill Bugs Dead" 
-                                   FontSize="20" 
-                                   FontWeight="SemiBold" 
+                                   FontSize="20" FontWeight="SemiBold" 
                                    Foreground="{StaticResource TextPrimary}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12"/>
+                                   HorizontalAlignment="Center" Margin="0,0,0,12"/>
                         <TextBlock Text="Pinpoint performance killers instantly. Like venom, but for code." 
-                                   FontSize="15" 
-                                   Foreground="{StaticResource TextSecondary}"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   LineHeight="24"/>
+                                   FontSize="15" Foreground="{StaticResource TextSecondary}"
+                                   TextWrapping="Wrap" TextAlignment="Center" LineHeight="24"/>
                     </StackPanel>
                 </Border>
                 
                 <!-- Feature 3: Plain English -->
-                <Border Style="{StaticResource FeatureCard}" Width="280" Margin="8">
+                <Border Width="280" Margin="8" CornerRadius="8" Padding="24"
+                        BorderThickness="0,2,0,0" BorderBrush="#89D185">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#112218" Offset="0"/>
+                            <GradientStop Color="#13131E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect Color="#89D185" Opacity="0.18" BlurRadius="20" ShadowDepth="0"/>
+                    </Border.Effect>
                     <StackPanel>
-                        <Border Background="{StaticResource Success}" CornerRadius="10" 
-                                Width="48" Height="48" 
-                                HorizontalAlignment="Center"
-                                Margin="0,0,0,20">
-                            <TextBlock Text="📚" FontSize="28" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
+                        <Border CornerRadius="12" Width="52" Height="52"
+                                HorizontalAlignment="Center" Margin="0,0,0,20">
+                            <Border.Background>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#16653E" Offset="0"/>
+                                    <GradientStop Color="#0A2A1A" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#89D185" Opacity="0.5" BlurRadius="12" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <TextBlock Text="📚" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Every Bug Gets Caught" 
-                                   FontSize="20" 
-                                   FontWeight="SemiBold" 
+                                   FontSize="20" FontWeight="SemiBold" 
                                    Foreground="{StaticResource TextPrimary}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12"
+                                   HorizontalAlignment="Center" Margin="0,0,0,12"
                                    TextWrapping="Wrap"/>
                         <TextBlock Text="Plain English summaries. No jargon. Bugs can't hide in complexity." 
-                                   FontSize="15" 
-                                   Foreground="{StaticResource TextSecondary}"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   LineHeight="24"/>
+                                   FontSize="15" Foreground="{StaticResource TextSecondary}"
+                                   TextWrapping="Wrap" TextAlignment="Center" LineHeight="24"/>
                     </StackPanel>
                 </Border>
                 

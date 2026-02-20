@@ -21,6 +21,8 @@ public partial class ConnectionsView : UserControl
 
     public event EventHandler<SalesforceApiService>? ConnectionEstablished;
     public event EventHandler<string>? LogFileDropped;
+    public event EventHandler? LoadFolderRequested;
+    public event EventHandler<string>? FolderDropped;
 
     public ConnectionsView(SalesforceApiService apiService)
     {
@@ -241,18 +243,30 @@ public partial class ConnectionsView : UserControl
         }
     }
 
-    // Drag-Drop handlers for log files
+    // Drag-Drop handlers for log files and folders
     private void DropZone_DragOver(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
-            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files?.Length > 0 && IsLogFile(files[0]))
+            var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (paths?.Length > 0)
             {
-                e.Effects = DragDropEffects.Copy;
-                DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81)); // Green
-                DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x10, 0x3A, 0x2D)); // Dark green
-                DropZoneText.Text = "Drop to analyze!";
+                bool isFolder = Directory.Exists(paths[0]);
+                bool allLogFiles = !isFolder && paths.All(p => IsLogFile(p) && File.Exists(p));
+
+                if (isFolder || allLogFiles)
+                {
+                    e.Effects = DragDropEffects.Copy;
+                    DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
+                    DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x10, 0x3A, 0x2D));
+                    DropZoneText.Text = isFolder ? "Drop folder to load all logs!" :
+                                        paths.Length > 1 ? $"Drop {paths.Length} files to analyze!" :
+                                        "Drop to analyze!";
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
             }
             else
             {
@@ -268,21 +282,51 @@ public partial class ConnectionsView : UserControl
 
     private void DropZone_DragLeave(object sender, DragEventArgs e)
     {
-        DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2)); // Original blue
-        DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22)); // Original dark
-        DropZoneText.Text = "Drop a .log file here";
+        // Only reset visuals when the drag leaves the entire UserControl, not just a child element
+        var pos = e.GetPosition(this);
+        if (pos.X < 0 || pos.Y < 0 || pos.X > ActualWidth || pos.Y > ActualHeight)
+        {
+            DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2));
+            DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22));
+            DropZoneText.Text = "Drop a folder or .log file here";
+        }
     }
 
     private void DropZone_Drop(object sender, DragEventArgs e)
     {
         DropZone_DragLeave(sender, e); // Reset visual state
-        
+
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
-            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files?.Length > 0 && IsLogFile(files[0]) && File.Exists(files[0]))
+            var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (paths?.Length > 0)
             {
-                LogFileDropped?.Invoke(this, files[0]);
+                System.Diagnostics.Debug.WriteLine($"[ConnectionsView] Drop detected: {paths.Length} item(s)");
+                
+                // Folder drop → load all logs in folder
+                if (Directory.Exists(paths[0]))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ConnectionsView] Folder dropped: {paths[0]}");
+                    MessageBox.Show($"Folder detected:\n{paths[0]}\n\nAbout to trigger FolderDropped event...", 
+                        "Debug: Folder Drop", MessageBoxButton.OK, MessageBoxImage.Information);
+                    FolderDropped?.Invoke(this, paths[0]);
+                }
+                // Single .log file
+                else if (paths.Length == 1 && IsLogFile(paths[0]) && File.Exists(paths[0]))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ConnectionsView] Single file dropped: {paths[0]}");
+                    LogFileDropped?.Invoke(this, paths[0]);
+                }
+                // Multiple .log files → treat as a virtual folder (load each one)
+                else
+                {
+                    var logFiles = paths.Where(p => IsLogFile(p) && File.Exists(p)).ToList();
+                    System.Diagnostics.Debug.WriteLine($"[ConnectionsView] Multiple files dropped: {logFiles.Count} valid logs");
+                    foreach (var logFile in logFiles)
+                    {
+                        LogFileDropped?.Invoke(this, logFile);
+                    }
+                }
             }
         }
         e.Handled = true;
@@ -385,6 +429,11 @@ public partial class ConnectionsView : UserControl
     {
         return path.EndsWith(".log", StringComparison.OrdinalIgnoreCase) ||
                path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase);
+    }
+    
+    private void LoadFolder_Click(object sender, RoutedEventArgs e)
+    {
+        LoadFolderRequested?.Invoke(this, EventArgs.Empty);
     }
 }
 

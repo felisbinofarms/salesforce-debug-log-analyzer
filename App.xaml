@@ -11,30 +11,34 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
             
-            <!-- Theme colors defined inline to ensure availability -->
-            <SolidColorBrush x:Key="BgPrimary" Color="#1E1E1E"/>
-            <SolidColorBrush x:Key="BgSecondary" Color="#252526"/>
-            <SolidColorBrush x:Key="BgTertiary" Color="#2D2D30"/>
-            <SolidColorBrush x:Key="BgInput" Color="#3C3C3C"/>
-            <SolidColorBrush x:Key="BgHover" Color="#2A2D31"/>
-            <SolidColorBrush x:Key="SidebarBg" Color="#252526"/>
-            <SolidColorBrush x:Key="SidebarBgHover" Color="#2D2D30"/>
-            <SolidColorBrush x:Key="SidebarBorder" Color="#3F4147"/>
-            <SolidColorBrush x:Key="TextPrimary" Color="#D4D4D4"/>
-            <SolidColorBrush x:Key="TextSecondary" Color="#CCCCCC"/>
-            <SolidColorBrush x:Key="TextMuted" Color="#969696"/>
-            <SolidColorBrush x:Key="TextDisabled" Color="#6E6E6E"/>
-            <SolidColorBrush x:Key="BorderDefault" Color="#3F4147"/>
-            <SolidColorBrush x:Key="BorderSubtle" Color="#2C2F38"/>
-            <SolidColorBrush x:Key="BorderFocus" Color="#5865F2"/>
-            <SolidColorBrush x:Key="AccentPrimary" Color="#5865F2"/>
-            <SolidColorBrush x:Key="AccentHover" Color="#4752C4"/>
-            <SolidColorBrush x:Key="AccentActive" Color="#3C45A5"/>
-            <SolidColorBrush x:Key="AccentSubtle" Color="#5865F220"/>
+            <!-- Theme: Midnight Widow — deep space purple, built for 2AM production incidents -->
+            <SolidColorBrush x:Key="BgPrimary" Color="#0D0D16"/>
+            <SolidColorBrush x:Key="BgSecondary" Color="#13131E"/>
+            <SolidColorBrush x:Key="BgTertiary" Color="#1A1A2A"/>
+            <SolidColorBrush x:Key="BgInput" Color="#252538"/>
+            <SolidColorBrush x:Key="BgHover" Color="#1E1E35"/>
+            <SolidColorBrush x:Key="SidebarBg" Color="#08080F"/>
+            <SolidColorBrush x:Key="SidebarBgHover" Color="#16162A"/>
+            <SolidColorBrush x:Key="SidebarBorder" Color="#252538"/>
+            <SolidColorBrush x:Key="TextPrimary" Color="#E2E2F0"/>
+            <SolidColorBrush x:Key="TextSecondary" Color="#B0B0CC"/>
+            <SolidColorBrush x:Key="TextMuted" Color="#6E6E8A"/>
+            <SolidColorBrush x:Key="TextDisabled" Color="#484860"/>
+            <SolidColorBrush x:Key="BorderDefault" Color="#252538"/>
+            <SolidColorBrush x:Key="BorderSubtle" Color="#1A1A2A"/>
+            <SolidColorBrush x:Key="BorderFocus" Color="#7C6AFF"/>
+            <SolidColorBrush x:Key="AccentPrimary" Color="#7C6AFF"/>
+            <SolidColorBrush x:Key="AccentHover" Color="#6358D4"/>
+            <SolidColorBrush x:Key="AccentActive" Color="#4E46B0"/>
+            <SolidColorBrush x:Key="AccentSubtle" Color="#7C6AFF20"/>
             <SolidColorBrush x:Key="Success" Color="#89D185"/>
+            <SolidColorBrush x:Key="SuccessSubtle" Color="#89D18520"/>
             <SolidColorBrush x:Key="Warning" Color="#FFC66D"/>
+            <SolidColorBrush x:Key="WarningSubtle" Color="#FFC66D20"/>
             <SolidColorBrush x:Key="Danger" Color="#F48771"/>
+            <SolidColorBrush x:Key="DangerSubtle" Color="#F4877120"/>
             <SolidColorBrush x:Key="Info" Color="#79B8FF"/>
+            <SolidColorBrush x:Key="InfoSubtle" Color="#79B8FF20"/>
             
             <!-- Font sizes -->
             <system:Double x:Key="FontBaseline" xmlns:system="clr-namespace:System;assembly=mscorlib">14</system:Double>

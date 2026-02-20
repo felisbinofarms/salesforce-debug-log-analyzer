@@ -1906,11 +1906,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Use FolderBrowserDialog for WPF compatibility
+            // Use Vista-style folder browser for better UX
             var folderDialog = new System.Windows.Forms.FolderBrowserDialog
             {
                 Description = "Select Folder with Debug Logs",
-                ShowNewFolderButton = false
+                ShowNewFolderButton = false,
+                UseDescriptionForTitle = true,
+                AutoUpgradeEnabled = true,
+                RootFolder = Environment.SpecialFolder.MyComputer
             };
 
             if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -1925,7 +1928,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                 if (metadata.Count == 0)
                 {
-                    StatusMessage = "No log files found in folder";
+                    StatusMessage = "⚠️ No log files found in folder";
+                    MessageBox.Show(
+                        $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
+                        "Black Widow looks for:\n" +
+                        "  • *.log files (standard Salesforce export)\n" +
+                        "  • *.txt files\n" +
+                        "  • Extension-less files starting with 07L...\n" +
+                        "  • Subfolders are also searched\n\n" +
+                        "Tip: Download logs from Setup → Debug Logs and export the .log files.",
+                        "No Logs Found",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                     return;
                 }
 
@@ -1952,6 +1966,53 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 StatusMessage = "Folder selection cancelled";
             }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading folder: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task LoadLogFolderFromPath(string folderPath)
+    {
+        StatusMessage = "Scanning folder for logs...";
+        IsLoading = true;
+        try
+        {
+            var metadata = await Task.Run(() => _metadataExtractor.ExtractMetadataFromDirectory(folderPath));
+
+            if (metadata.Count == 0)
+            {
+                StatusMessage = "⚠️ No log files found in folder";
+                MessageBox.Show(
+                    $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
+                    "Black Widow looks for:\n" +
+                    "  • *.log files (standard Salesforce export)\n" +
+                    "  • *.txt files\n" +
+                    "  • Extension-less files starting with 07L...\n" +
+                    "  • Subfolders are also searched\n\n" +
+                    "Tip: Download logs from Setup → Debug Logs and export the .log files.",
+                    "No Logs Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            StatusMessage = $"Found {metadata.Count} logs, grouping by transaction...";
+            var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
+
+            LogGroups.Clear();
+            foreach (var group in groups)
+                LogGroups.Add(group);
+
+            StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
+
+            if (LogGroups.Any())
+                SelectedLogGroup = LogGroups.First();
         }
         catch (Exception ex)
         {
