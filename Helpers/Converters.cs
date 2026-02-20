@@ -426,3 +426,56 @@ public class DoubleGreaterThanConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
+/// <summary>
+/// Converts null to false, non-null to true (for use in MultiBinding)
+/// </summary>
+public class NullToBooleanConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value != null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Combines multiple boolean values with AND logic, then converts to Visibility
+/// Useful for showing elements only when multiple conditions are true
+/// Usage: <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
+///          <Binding Path="Condition1"/>
+///          <Binding Path="Condition2"/>
+///        </MultiBinding>
+/// </summary>
+public class MultiBooleanToVisibilityConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values == null || values.Length == 0)
+            return Visibility.Collapsed;
+
+        // All values must be boolean true
+        foreach (var value in values)
+        {
+            if (value is bool boolValue)
+            {
+                if (!boolValue) return Visibility.Collapsed;
+            }
+            else
+            {
+                // Non-boolean value, treat as false
+                return Visibility.Collapsed;
+            }
+        }
+
+        return Visibility.Visible;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

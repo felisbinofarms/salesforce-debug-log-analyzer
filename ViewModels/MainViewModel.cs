@@ -56,6 +56,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _showGroupedView = false;
+    
+    // Aggregate metrics displayed when a LogGroup is selected
+    [ObservableProperty]
+    private string _groupSummary = "";
+    
+    [ObservableProperty]
+    private string _groupPhaseBreakdown = "";
+    
+    partial void OnSelectedLogGroupChanged(LogGroup? value)
+    {
+        if (value == null) return;
+        
+        // Don't change SelectedLog here — user will click individual logs in the group to see details
+        // The group card shows aggregate metrics only
+        
+        // Generate aggregate summary
+        var logCount = value.Logs.Count;
+        var totalDuration = value.TotalDuration;
+        var userName = value.UserName ?? "Unknown User";
+        
+        GroupSummary = $"Transaction Group: {userName} • {logCount} logs • {totalDuration:F0}ms total user wait time";
+        
+        // Generate phase breakdown text
+        if (value.Phases != null && value.Phases.Any())
+        {
+            var phaseLines = value.Phases.Select(p => 
+                $"  • {p.Name}: {p.DurationMs:F0}ms ({(p.DurationMs / totalDuration * 100):F1}%)");
+            GroupPhaseBreakdown = $"Execution Phases:\n{string.Join("\n", phaseLines)}";
+        }
+        else
+        {
+            GroupPhaseBreakdown = "";
+        }
+    }
 
     [ObservableProperty]
     private string _summaryText = "";

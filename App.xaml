@@ -63,6 +63,8 @@
             <helpers:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <helpers:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
+            <helpers:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+            <helpers:MultiBooleanToVisibilityConverter x:Key="MultiBooleanToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

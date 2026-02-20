@@ -1482,6 +1482,86 @@
                                         </Grid>
                                     </Border>
 
+                                    <!-- ===== TRANSACTION GROUP AGGREGATE METRICS ===== -->
+                                    <!-- Only visible when viewing a grouped transaction (ShowGroupedView=true and SelectedLogGroup!=null) -->
+                                    <Border CornerRadius="12" Margin="0,0,0,16" Padding="20" Background="{StaticResource AccentSubtle}"
+                                            BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,0,0,3">
+                                        <Border.Visibility>
+                                            <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
+                                                <Binding Path="ShowGroupedView"/>
+                                                <Binding Path="SelectedLogGroup" Converter="{StaticResource NullToBooleanConverter}"/>
+                                            </MultiBinding>
+                                        </Border.Visibility>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Header -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="📦" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Transaction Group Analysis" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                                                    <TextBlock Text="{Binding GroupSummary}" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                            <!-- Phase Breakdown -->
+                                            <Border Grid.Row="1" Background="{StaticResource BgSecondary}" CornerRadius="8" Padding="14,10" Margin="0,0,0,10">
+                                                <TextBlock Text="{Binding GroupPhaseBreakdown}" FontSize="11" FontFamily="Consolas"
+                                                           Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                            </Border>
+                                            
+                                            <!-- Aggregate Stats Row -->
+                                            <Grid Grid.Row="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Total SOQL -->
+                                                <Border Grid.Column="0" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Total SOQL Queries" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
+                                                            <Run Text="{Binding SelectedLogGroup.TotalSoqlQueries}"/>
+                                                            <Run Text=" / 100" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <!-- Total DML -->
+                                                <Border Grid.Column="1" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Total DML Statements" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
+                                                            <Run Text="{Binding SelectedLogGroup.TotalDmlStatements}"/>
+                                                            <Run Text=" / 150" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <!-- Total CPU -->
+                                                <Border Grid.Column="2" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Total CPU Time" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
+                                                            <Run Text="{Binding SelectedLogGroup.TotalCpuTime}"/>
+                                                            <Run Text="ms" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+
                                     <!-- ===== HERO STATUS BANNER (Modern) ===== -->
                                     <Border CornerRadius="12" Margin="0,0,0,16" Padding="20">
                                         <Border.Style>
