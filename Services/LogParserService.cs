@@ -160,6 +160,9 @@ public class LogParserService
         // Phase 10k: Grade bulk safety (will this code work when processing 200 records?)
         GradeBulkSafety(analysis);
 
+        // Phase 10l: Extract Platform Event publishes (EVENT_SERVICE_PUB_BEGIN/END)
+        analysis.PlatformEventPublishes = ExtractPlatformEvents(logLines);
+
         // Phase 11: Generate summary and recommendations (AFTER all data is extracted)
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
@@ -3104,12 +3107,81 @@ public class LogParserService
     }
     
     /// <summary>
+    /// Parse EVENT_SERVICE_PUB_BEGIN / EVENT_SERVICE_PUB_END pairs into PlatformEventPublish records.
+    /// These appear when code calls EventBus.publish() and the PlatformEvent log level is enabled.
+    /// Format: EVENT_SERVICE_PUB_BEGIN|[lineRef]|{publishId}|{EventTypeName}
+    ///         EVENT_SERVICE_PUB_END  |[lineRef]|{publishId}|{EventTypeName}
+    /// </summary>
+    private List<Models.PlatformEventPublish> ExtractPlatformEvents(List<LogLine> logLines)
+    {
+        var results = new List<Models.PlatformEventPublish>();
+        var openPublishes = new Dictionary<string, Models.PlatformEventPublish>();
+
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "EVENT_SERVICE_PUB_BEGIN")
+            {
+                // Details layout varies: sometimes [lineRef, publishId, eventTypeName]
+                // sometimes [publishId, eventTypeName] — be defensive
+                string publishId, eventTypeName;
+                if (line.Details.Length >= 3)
+                {
+                    // [0] = lineRef like "[30]", [1] = publishId, [2] = typeName
+                    publishId    = line.Details[1];
+                    eventTypeName = line.Details[2];
+                }
+                else if (line.Details.Length == 2)
+                {
+                    publishId    = line.Details[0];
+                    eventTypeName = line.Details[1];
+                }
+                else
+                {
+                    publishId    = line.Details.Length > 0 ? line.Details[0] : $"pub_{line.LineNumber}";
+                    eventTypeName = string.Empty;
+                }
+
+                var pub = new Models.PlatformEventPublish
+                {
+                    PublishId     = publishId,
+                    EventTypeName = eventTypeName,
+                    LineNumber    = line.LineNumber,
+                    StartTime     = line.Timestamp
+                };
+                openPublishes[publishId] = pub;
+                results.Add(pub);
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_END")
+            {
+                string publishId;
+                if (line.Details.Length >= 3)
+                    publishId = line.Details[1];
+                else if (line.Details.Length >= 1)
+                    publishId = line.Details[0];
+                else
+                    continue;
+
+                if (openPublishes.TryGetValue(publishId, out var pub))
+                {
+                    pub.DurationMs = (long)(line.Timestamp - pub.StartTime).TotalMilliseconds;
+                    pub.Completed  = true;
+                    openPublishes.Remove(publishId);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    /// <summary>
     /// Build order of execution timeline showing major phases
     /// </summary>
     private ExecutionTimeline BuildExecutionTimeline(List<LogLine> logLines, LogAnalysis analysis)
     {
         var timeline = new ExecutionTimeline();
         var phaseStack = new Stack<TimelinePhase>();
+        var dmlPhaseStack = new Stack<TimelinePhase>();          // open DML_BEGIN phases awaiting DML_END
+        var openEventTimelinePhases = new Dictionary<string, TimelinePhase>(); // publishId → open platform-event phase for duration
         var allPhases = new List<TimelinePhase>();
         var triggerCounts = new Dictionary<string, int>();
         
@@ -3137,6 +3209,16 @@ public class LogParserService
                         phase.Type = "Trigger";
                         phase.Icon = "🔧";
                         
+                        // Assign OOE phase from trigger event name: "CaseTrigger on Case (Before Insert)"
+                        var nameLower = fullName.ToLowerInvariant();
+                        if (nameLower.Contains("(before ") || nameLower.Contains("before insert") ||
+                            nameLower.Contains("before update") || nameLower.Contains("before delete"))
+                            phase.OoePhase = Models.OoePhase.BeforeTrigger;
+                        else if (nameLower.Contains("(after ") || nameLower.Contains("after insert") ||
+                                 nameLower.Contains("after update") || nameLower.Contains("after delete") ||
+                                 nameLower.Contains("after undelete"))
+                            phase.OoePhase = Models.OoePhase.AfterTrigger;
+                        
                         // Track trigger recursion
                         var triggerName = fullName.Split('.')[0];
                         if (!triggerCounts.ContainsKey(triggerName))
@@ -3146,6 +3228,7 @@ public class LogParserService
                         if (triggerCounts[triggerName] > 1)
                         {
                             phase.IsRecursive = true;
+                            phase.OoePhase = Models.OoePhase.ReEntry; // Override with ReEntry on recursion
                             timeline.RecursionCount++;
                         }
                     }
@@ -3153,16 +3236,57 @@ public class LogParserService
                     {
                         phase.Type = "Flow";
                         phase.Icon = "🌊";
+                        // After-Save / Record-Triggered flows fire after after-triggers
+                        var nameLower = fullName.ToLowerInvariant();
+                        phase.OoePhase = (nameLower.Contains("after save") || nameLower.Contains("record-triggered"))
+                            ? Models.OoePhase.AfterSaveFlow
+                            : Models.OoePhase.Other;
                     }
                     else if (fullName.Contains("Validation:"))
                     {
                         phase.Type = "Validation";
                         phase.Icon = "✅";
+                        phase.OoePhase = Models.OoePhase.SystemValidation;
                     }
                     else if (fullName.Contains("Workflow:"))
                     {
                         phase.Type = "Workflow";
                         phase.Icon = "⚙️";
+                        phase.OoePhase = Models.OoePhase.Workflow;
+                    }
+                    else if (fullName.Contains("Process:") || fullName.Contains("ProcessBuilder"))
+                    {
+                        phase.Type = "Process";
+                        phase.Icon = "⚙️";
+                        phase.OoePhase = Models.OoePhase.Process;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("queueable"))
+                    {
+                        phase.Type = "Queueable";
+                        phase.Icon = "⏳";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("batchable") ||
+                             fullName.ToLowerInvariant().Contains("batchapex"))
+                    {
+                        phase.Type = "Batch";
+                        phase.Icon = "📊";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("schedulable") ||
+                             fullName.ToLowerInvariant().Contains("scheduled apex"))
+                    {
+                        phase.Type = "Scheduled";
+                        phase.Icon = "⏰";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("future invocation") ||
+                             fullName.ToLowerInvariant().Contains("futureinvocation") ||
+                             fullName.ToLowerInvariant().Contains("@future"))
+                    {
+                        phase.Type = "Future";
+                        phase.Icon = "🔮";
+                        phase.OoePhase = Models.OoePhase.Async;
                     }
                     else if (fullName.EndsWith("_Test") || fullName.EndsWith("Test"))
                     {
@@ -3219,6 +3343,78 @@ public class LogParserService
                     phaseStack.Peek().Children.Add(phase);
                 }
                 
+                dmlPhaseStack.Push(phase); // track for DML_END duration
+                allPhases.Add(phase);
+            }
+            else if (line.EventType == "DML_END")
+            {
+                if (dmlPhaseStack.Any())
+                {
+                    var phase = dmlPhaseStack.Pop();
+                    phase.DurationMs = (long)(line.Timestamp - phase.StartTime).TotalMilliseconds;
+                }
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_BEGIN")
+            {
+                // Platform Event publish starts — Details: [lineRef, publishId, eventTypeName]
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Type = "PlatformEvent",
+                    Icon = "📡",
+                    Depth = phaseStack.Count,
+                    OoePhase = Models.OoePhase.Other
+                };
+                var eventTypeName = line.Details.Length >= 3 ? line.Details[2]
+                                  : line.Details.Length >= 2 ? line.Details[1]
+                                  : "Platform Event";
+                phase.Name = $"Publish: {eventTypeName}";
+                if (phaseStack.Any())
+                    phaseStack.Peek().Children.Add(phase);
+                else
+                    timeline.Phases.Add(phase);
+                // Track by publishId for duration calc in EVENT_SERVICE_PUB_END
+                var pubIdTimeline = line.Details.Length >= 3 ? line.Details[1]
+                                  : line.Details.Length >= 2 ? line.Details[0]
+                                  : string.Empty;
+                if (!string.IsNullOrEmpty(pubIdTimeline))
+                    openEventTimelinePhases[pubIdTimeline] = phase;
+                allPhases.Add(phase);
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_END")
+            {
+                var pubIdEnd = line.Details.Length >= 3 ? line.Details[1]
+                             : line.Details.Length >= 1 ? line.Details[0]
+                             : string.Empty;
+                if (!string.IsNullOrEmpty(pubIdEnd) &&
+                    openEventTimelinePhases.TryGetValue(pubIdEnd, out var pubPhase))
+                {
+                    pubPhase.DurationMs = (long)(line.Timestamp - pubPhase.StartTime).TotalMilliseconds;
+                    openEventTimelinePhases.Remove(pubIdEnd);
+                }
+            }
+            else if (line.EventType == "WF_FIELD_UPDATE")
+            {
+                // Workflow field update — point-in-time marker; no paired END event
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Type = "FieldUpdate",
+                    Icon = "📝",
+                    Depth = phaseStack.Count,
+                    OoePhase = Models.OoePhase.FieldUpdate,
+                    DurationMs = 0
+                };
+                // Details format varies: [LINE]|[FIELD_NAME]|[RULE_NAME]|...
+                phase.Name = line.Details.Length >= 3
+                    ? $"Field Update: {line.Details[1]} (rule: {line.Details[2]})"
+                    : line.Details.Length >= 2
+                    ? $"Field Update: {line.Details[1]}"
+                    : "Workflow Field Update";
+                if (phaseStack.Any())
+                    phaseStack.Peek().Children.Add(phase);
                 allPhases.Add(phase);
             }
         }

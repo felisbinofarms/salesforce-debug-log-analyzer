@@ -402,3 +402,27 @@ public class UserToColorConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Returns true when a double value exceeds the threshold supplied as ConverterParameter.
+/// Usage: {Binding RelativeCost, Converter={StaticResource DoubleGreaterThanConverter}, ConverterParameter=1.0}
+/// Use in DataTrigger Value="True" to apply high-cost styling.
+/// </summary>
+public class DoubleGreaterThanConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        double threshold = 0;
+        if (parameter is string paramStr)
+            double.TryParse(paramStr, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out threshold);
+
+        if (value is double d) return d > threshold;
+        if (value is float f)  return f > threshold;
+        if (value is int i)    return i > threshold;
+        return false;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}

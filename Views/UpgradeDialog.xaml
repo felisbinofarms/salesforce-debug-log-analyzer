@@ -1,0 +1,345 @@
+﻿<Window x:Class="SalesforceDebugAnalyzer.Views.UpgradeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Upgrade Black Widow"
+        Width="560"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource BgSecondary}"
+        TextElement.Foreground="{StaticResource TextPrimary}"
+        FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <!-- Feature row separator -->
+        <Style x:Key="FeatureRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel>
+
+        <!-- ── Header ─────────────────────────────────────────────────── -->
+        <Border Background="{StaticResource BgTertiary}" Padding="32,28,32,24"
+                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="🕷️" FontSize="28" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Upgrade to Black Widow Pro"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Text="The only tool that explains what your logs actually mean"
+                                   FontSize="13"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Feature comparison table ───────────────────────────────── -->
+        <Border Padding="32,24,32,0">
+            <StackPanel>
+
+                <!-- Column headers -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="Free"   FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Pro"    FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center"/>
+                </Grid>
+
+                <!-- Divider -->
+                <Border Height="1" Background="{StaticResource BorderSubtle}" Margin="0,0,0,14"/>
+
+                <!-- Feature rows -->
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Single log analysis"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Plain-English explanations"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="File size limit"
+                                   FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="30 MB" FontSize="12"
+                               Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="∞" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Transaction grouping (multi-log analysis)"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="❌" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Live streaming (real-time log analysis)"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="❌" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="PDF governance report export"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="❌" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+                <Grid Style="{StaticResource FeatureRow}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="VSCode editor bridge"
+                               FontSize="13" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="❌" HorizontalAlignment="Center" FontSize="14"/>
+                    <TextBlock Grid.Column="2" Text="✅" HorizontalAlignment="Center" FontSize="14"/>
+                </Grid>
+
+            </StackPanel>
+        </Border>
+
+        <!-- ── Trial CTA ──────────────────────────────────────────────── -->
+        <Border Margin="32,24,32,0"
+                Background="{StaticResource AccentSubtle}"
+                BorderBrush="{StaticResource AccentPrimary}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="20,16">
+            <StackPanel>
+                <TextBlock Text="💎 Try Pro Free for 14 Days"
+                           FontSize="15" FontWeight="Bold"
+                           Foreground="{StaticResource AccentPrimary}"
+                           Margin="0,0,0,4"/>
+                <TextBlock Text="No credit card required. All Pro features unlocked immediately. Cancel any time."
+                           FontSize="12"
+                           Foreground="{StaticResource TextSecondary}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Action buttons ─────────────────────────────────────────── -->
+        <StackPanel Margin="32,20,32,28">
+
+            <!-- Start Free Trial -->
+            <Button x:Name="StartTrialButton"
+                    Content="✨ Start Free Trial — No Credit Card"
+                    Height="44"
+                    FontSize="14" FontWeight="SemiBold"
+                    Background="{StaticResource AccentPrimary}"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="StartTrialButton_Click"
+                    Margin="0,0,0,10">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="border"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Background" Value="{StaticResource AccentHover}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <!-- Buy Now + pricing row -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Buy Monthly -->
+                <Button Grid.Column="0"
+                        x:Name="BuyMonthlyButton"
+                        Content="Buy Now — $29/mo"
+                        Height="38"
+                        FontSize="13" FontWeight="Medium"
+                        Background="{StaticResource BgInput}"
+                        Foreground="{StaticResource TextPrimary}"
+                        BorderThickness="1"
+                        BorderBrush="{StaticResource BorderDefault}"
+                        Cursor="Hand"
+                        Click="BuyMonthlyButton_Click"
+                        Margin="0,0,6,0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="6"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="{StaticResource BgHover}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- Buy Yearly (28% off) -->
+                <Button Grid.Column="1"
+                        x:Name="BuyYearlyButton"
+                        Height="38"
+                        FontSize="13" FontWeight="Medium"
+                        Background="{StaticResource BgInput}"
+                        Foreground="{StaticResource TextPrimary}"
+                        BorderThickness="1"
+                        BorderBrush="{StaticResource BorderDefault}"
+                        Cursor="Hand"
+                        Click="BuyYearlyButton_Click"
+                        Margin="6,0,0,0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="6"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="{StaticResource BgHover}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="Buy Yearly — $249/yr" FontSize="13" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Save 28%" FontSize="10"
+                                   Foreground="{StaticResource Success}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- License key entry -->
+            <Expander Header="Already have a license key?" Margin="0,16,0,0"
+                      Foreground="{StaticResource TextSecondary}">
+                <StackPanel Margin="0,12,0,0">
+                    <TextBox x:Name="LicenseKeyTextBox"
+                             Height="36"
+                             Background="{StaticResource BgInput}"
+                             Foreground="{StaticResource TextPrimary}"
+                             BorderBrush="{StaticResource BorderDefault}"
+                             BorderThickness="1"
+                             Padding="10,8"
+                             FontSize="13"
+                             FontFamily="Consolas"
+                             VerticalContentAlignment="Center"
+                             materialDesign:HintAssist.Hint="BW-XXXX-XXXX-XXXX-XXXX"
+                             Margin="0,0,0,8"/>
+                    <Button x:Name="ActivateKeyButton"
+                            Content="Activate License"
+                            Height="36"
+                            FontSize="13"
+                            Background="{StaticResource AccentPrimary}"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Click="ActivateKeyButton_Click"/>
+                    <TextBlock x:Name="ActivationStatusText"
+                               FontSize="12"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </Expander>
+
+            <!-- Close -->
+            <Button Content="Maybe later"
+                    Height="32"
+                    FontSize="12"
+                    Background="Transparent"
+                    Foreground="{StaticResource TextMuted}"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Margin="0,14,0,0"
+                    Click="CloseButton_Click"/>
+        </StackPanel>
+
+    </StackPanel>
+</Window>

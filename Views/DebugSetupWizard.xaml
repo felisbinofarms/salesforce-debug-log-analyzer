@@ -1,15 +1,15 @@
-<UserControl x:Class="SalesforceDebugAnalyzer.Views.DebugSetupWizard"
+﻿<UserControl x:Class="SalesforceDebugAnalyzer.Views.DebugSetupWizard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        TextElement.Foreground="#DBDEE1"
-        Background="#313338"
+        TextElement.Foreground="{StaticResource TextPrimary}"
+        Background="{StaticResource BgTertiary}"
         FontFamily="Segoe UI, Arial">
     
     <UserControl.Resources>
         <!-- Discord-themed RadioButton Style -->
         <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#DBDEE1"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -18,18 +18,18 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Ellipse x:Name="Circle" Width="20" Height="20" Stroke="#5865F2" StrokeThickness="2" Fill="Transparent" Margin="0,0,12,0"/>
-                            <Ellipse x:Name="InnerCircle" Width="10" Height="10" Fill="#5865F2" Visibility="Collapsed" Margin="0,0,12,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse x:Name="Circle" Width="20" Height="20" Stroke="{StaticResource AccentPrimary}" StrokeThickness="2" Fill="Transparent" Margin="0,0,12,0"/>
+                            <Ellipse x:Name="InnerCircle" Width="10" Height="10" Fill="{StaticResource AccentPrimary}" Visibility="Collapsed" Margin="0,0,12,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="InnerCircle" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="Circle" Property="Fill" Value="#5865F2"/>
+                                <Setter TargetName="Circle" Property="Fill" Value="{StaticResource AccentPrimary}"/>
                                 <Setter TargetName="Circle" Property="Opacity" Value="0.2"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Circle" Property="Stroke" Value="#4752C4"/>
+                                <Setter TargetName="Circle" Property="Stroke" Value="{StaticResource AccentHover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -39,9 +39,9 @@
 
         <!-- Discord-themed ComboBox Style -->
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#383A40"/>
-            <Setter Property="Foreground" Value="#DBDEE1"/>
-            <Setter Property="BorderBrush" Value="#4E5058"/>
+            <Setter Property="Background" Value="{StaticResource BgHover}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="14"/>
@@ -55,51 +55,51 @@
         </Grid.ColumnDefinitions>
 
         <!-- Wizard Steps Sidebar -->
-        <Border Grid.Column="0" Background="#1E1F22" Padding="24" BorderBrush="#3F4147" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="{StaticResource BgTertiary}" Padding="24" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,1,0">
             <StackPanel>
-                <TextBlock Text="Setup Steps" FontSize="20" FontWeight="Bold" Foreground="#DBDEE1" Margin="0,0,0,24"/>
+                <TextBlock Text="Setup Steps" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,24"/>
                 
                 <!-- Step 1 -->
-                <Border x:Name="Step1Border" Background="#5865F2" Padding="16" CornerRadius="4" Margin="0,0,0,12">
+                <Border x:Name="Step1Border" Background="{StaticResource AccentPrimary}" Padding="16" CornerRadius="4" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <materialDesign:PackIcon Kind="Numeric1Circle" Foreground="White" Margin="0,0,8,0"/>
                             <TextBlock Text="Who to Debug" Foreground="White" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <TextBlock Text="Choose which user" Foreground="#B5BAC1" FontSize="11"/>
+                        <TextBlock Text="Choose which user" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Step 2 -->
-                <Border x:Name="Step2Border" Background="Transparent" BorderBrush="#4E5058" BorderThickness="1" Padding="16" CornerRadius="4" Margin="0,0,0,12">
+                <Border x:Name="Step2Border" Background="Transparent" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1" Padding="16" CornerRadius="4" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <materialDesign:PackIcon Kind="Numeric2Circle" Foreground="White" Margin="0,0,8,0"/>
                             <TextBlock Text="Detail Level" Foreground="White" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <TextBlock Text="How much to log" Foreground="#B5BAC1" FontSize="11"/>
+                        <TextBlock Text="How much to log" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Step 3 -->
-                <Border x:Name="Step3Border" Background="Transparent" BorderBrush="#4E5058" BorderThickness="1" Padding="16" CornerRadius="4" Margin="0,0,0,12">
+                <Border x:Name="Step3Border" Background="Transparent" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1" Padding="16" CornerRadius="4" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <materialDesign:PackIcon Kind="Numeric3Circle" Foreground="White" Margin="0,0,8,0"/>
                             <TextBlock Text="Duration" Foreground="White" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <TextBlock Text="How long to log" Foreground="#B5BAC1" FontSize="11"/>
+                        <TextBlock Text="How long to log" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Step 4 -->
-                <Border x:Name="Step4Border" Background="Transparent" BorderBrush="#4E5058" BorderThickness="1" Padding="16" CornerRadius="4">
+                <Border x:Name="Step4Border" Background="Transparent" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1" Padding="16" CornerRadius="4">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <materialDesign:PackIcon Kind="Numeric4Circle" Foreground="White" Margin="0,0,8,0"/>
                             <TextBlock Text="Enable &amp; Download" Foreground="White" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <TextBlock Text="Start logging" Foreground="#B5BAC1" FontSize="11"/>
+                        <TextBlock Text="Start logging" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -112,25 +112,25 @@
                 <StackPanel x:Name="Step1Panel">
                     <TextBlock Text="Step 1: Who Do You Want to Debug?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
-                    <Border Padding="24" Margin="0,0,0,16" Background="#2B2D31" BorderBrush="#5865F2" BorderThickness="2" CornerRadius="8">
+                    <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="2" CornerRadius="8">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <materialDesign:PackIcon Kind="InformationOutline" Width="20" Height="20" Margin="0,0,8,0" Foreground="#5865F2"/>
-                                <TextBlock Text="What is debug logging?" FontWeight="SemiBold" Foreground="#F9FAFB"/>
+                                <materialDesign:PackIcon Kind="InformationOutline" Width="20" Height="20" Margin="0,0,8,0" Foreground="{StaticResource AccentPrimary}"/>
+                                <TextBlock Text="What is debug logging?" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
                             </StackPanel>
-                            <TextBlock TextWrapping="Wrap" Foreground="#D1D5DB">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}">
                                 Debug logging records everything that happens when someone uses Salesforce - like clicking buttons, saving records, or running workflows.
                                 This helps you understand what your code is doing and find problems.
                             </TextBlock>
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="24" Margin="0,0,0,24" Background="#1E1E24" CornerRadius="12" BorderThickness="1">
+                    <Border Padding="24" Margin="0,0,0,24" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
                         <Border.BorderBrush>
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
                         <StackPanel>
-                            <TextBlock Text="Select a user to enable debug logging for:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" Foreground="#F9FAFB"/>
+                            <TextBlock Text="Select a user to enable debug logging for:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" Foreground="{StaticResource TextPrimary}"/>
                             
                             <!-- Current User Option -->
                             <RadioButton x:Name="CurrentUserRadio" GroupName="UserSelection" IsChecked="True" Margin="0,0,0,16">
@@ -138,7 +138,7 @@
                                     <TextBlock Text="Myself (Current User)" FontWeight="SemiBold" FontSize="15"/>
                                     <TextBlock x:Name="CurrentUserInfo" 
                                                Text="Loading..." 
-                                               Foreground="#9CA3AF"
+                                               Foreground="{StaticResource TextSecondary}"
                                                Margin="0,4,0,0"/>
                                     <TextBlock Text="✓ Best for troubleshooting your own actions" 
                                                Foreground="Green" 
@@ -150,9 +150,9 @@
                             <!-- Another User Option -->
                             <RadioButton x:Name="AnotherUserRadio" GroupName="UserSelection" Margin="0,0,0,8">
                                 <StackPanel>
-                                    <TextBlock Text="Another User" FontWeight="SemiBold" FontSize="15" Foreground="#F9FAFB"/>
+                                    <TextBlock Text="Another User" FontWeight="SemiBold" FontSize="15" Foreground="{StaticResource TextPrimary}"/>
                                     <TextBlock Text="Debug someone else's actions (requires their User ID)" 
-                                               Foreground="#9CA3AF"
+                                               Foreground="{StaticResource TextSecondary}"
                                                Margin="0,4,0,0"/>
                                 </StackPanel>
                             </RadioButton>
@@ -162,12 +162,12 @@
                                 <TextBlock Text="User ID:" Margin="0,0,0,4"/>
                                 <TextBox x:Name="UserIdTextBox" 
                                          Margin="0,0,0,8"
-                                         Background="#28282F"
-                                         Foreground="#F9FAFB"
-                                         BorderBrush="#4B5563"/>
+                                         Background="{StaticResource BgSecondary}"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         BorderBrush="{StaticResource BorderDefault}"/>
                                 <TextBlock Text="💡 Tip: Find this in Setup > Users > Click on user > View their User ID" 
                                            FontSize="12"
-                                           Foreground="#9CA3AF"
+                                           Foreground="{StaticResource TextSecondary}"
                                            TextWrapping="Wrap"/>
                             </StackPanel>
 
@@ -175,7 +175,7 @@
                                     HorizontalAlignment="Right"
                                     Margin="0,24,0,0"
                                     Click="NextToStep2_Click"
-                                    Background="#6366F1"
+                                    Background="{StaticResource AccentPrimary}"
                                     Foreground="White"
                                     Padding="24,12"
                                     FontSize="15"
@@ -190,20 +190,20 @@
                 <StackPanel x:Name="Step2Panel" Visibility="Collapsed">
                     <TextBlock Text="Step 2: How Much Detail Do You Need?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
-                    <Border Padding="24" Margin="0,0,0,16" Background="#2B2D31" BorderBrush="#FAA81A" BorderThickness="2" CornerRadius="8">
+                    <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource Warning}" BorderThickness="2" CornerRadius="8">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <materialDesign:PackIcon Kind="Alert" Width="20" Height="20" Margin="0,0,8,0" Foreground="#FAA81A"/>
-                                <TextBlock Text="Why does this matter?" FontWeight="SemiBold" Foreground="#DBDEE1"/>
+                                <materialDesign:PackIcon Kind="Alert" Width="20" Height="20" Margin="0,0,8,0" Foreground="{StaticResource Warning}"/>
+                                <TextBlock Text="Why does this matter?" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
                             </StackPanel>
-                            <TextBlock TextWrapping="Wrap" Foreground="#D1D5DB">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}">
                                 More detail = bigger log files. Logs are limited to 20MB, so too much detail might cause important information to be cut off.
                                 Start with "Standard" for most troubleshooting.
                             </TextBlock>
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="24" Margin="0,0,0,24" Background="#1E1E24" CornerRadius="12" BorderThickness="1">
+                    <Border Padding="24" Margin="0,0,0,24" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
                         <Border.BorderBrush>
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
@@ -212,30 +212,30 @@
                             <StackPanel x:Name="PresetLevelsPanel">
                                 <RadioButton x:Name="StandardLevelRadio" GroupName="DebugLevel" IsChecked="True" Margin="0,0,0,20">
                                     <StackPanel>
-                                        <TextBlock Text="✓ Standard (Recommended)" FontWeight="SemiBold" FontSize="16" Foreground="#F9FAFB"/>
+                                        <TextBlock Text="✓ Standard (Recommended)" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock Text="Good balance of detail. Shows errors, warnings, and important events." 
                                                    TextWrapping="Wrap"
-                                                   Foreground="#9CA3AF"
+                                                   Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
                                     </StackPanel>
                                 </RadioButton>
 
                                 <RadioButton x:Name="DetailedLevelRadio" GroupName="DebugLevel" Margin="0,0,0,20">
                                     <StackPanel>
-                                        <TextBlock Text="Detailed" FontWeight="SemiBold" FontSize="16" Foreground="#F9FAFB"/>
+                                        <TextBlock Text="Detailed" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock Text="More information including database queries and code execution flow." 
                                                    TextWrapping="Wrap"
-                                                   Foreground="#9CA3AF"
+                                                   Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
                                     </StackPanel>
                                 </RadioButton>
 
                                 <RadioButton x:Name="CustomLevelRadio" GroupName="DebugLevel">
                                     <StackPanel>
-                                        <TextBlock Text="Custom (Advanced)" FontWeight="SemiBold" FontSize="16" Foreground="#F9FAFB"/>
+                                        <TextBlock Text="Custom (Advanced)" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock Text="Choose an existing debug level or create your own" 
                                                    TextWrapping="Wrap"
-                                                   Foreground="#9CA3AF"
+                                                   Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
                                     </StackPanel>
                                 </RadioButton>
@@ -246,15 +246,15 @@
                                 <ComboBox x:Name="DebugLevelComboBox" 
                                           DisplayMemberPath="MasterLabel"
                                           Margin="0,0,0,8"
-                                          Background="#28282F"
-                                          Foreground="#F9FAFB"
-                                          BorderBrush="#4B5563"/>
+                                          Background="{StaticResource BgSecondary}"
+                                          Foreground="{StaticResource TextPrimary}"
+                                          BorderBrush="{StaticResource BorderDefault}"/>
                                 <Button Content="Create New Debug Level" 
                                         Click="CreateDebugLevel_Click"
                                         HorizontalAlignment="Left"
                                         Background="Transparent"
-                                        Foreground="#6366F1"
-                                        BorderBrush="#6366F1"
+                                        Foreground="{StaticResource AccentPrimary}"
+                                        BorderBrush="{StaticResource AccentPrimary}"
                                         BorderThickness="1"
                                         Padding="20,10"
                                         Cursor="Hand"/>
@@ -265,14 +265,14 @@
                                         Click="BackToStep1_Click"
                                         Margin="0,0,8,0"
                                         Background="Transparent"
-                                        Foreground="#9CA3AF"
-                                        BorderBrush="#4B5563"
+                                        Foreground="{StaticResource TextSecondary}"
+                                        BorderBrush="{StaticResource BorderDefault}"
                                         BorderThickness="1"
                                         Padding="20,10"
                                         Cursor="Hand"/>
                                 <Button Content="Next: Set Duration →" 
                                         Click="NextToStep3_Click"
-                                        Background="#6366F1"
+                                        Background="{StaticResource AccentPrimary}"
                                         Foreground="White"
                                         Padding="24,12"
                                         FontWeight="SemiBold"
@@ -287,20 +287,20 @@
                 <StackPanel x:Name="Step3Panel" Visibility="Collapsed">
                     <TextBlock Text="Step 3: How Long Should Logging Stay Active?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
-                    <Border Padding="24" Margin="0,0,0,16" Background="#2B2D31" BorderBrush="#3BA55D" BorderThickness="2" CornerRadius="8">
+                    <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource Success}" BorderThickness="2" CornerRadius="8">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <materialDesign:PackIcon Kind="ClockOutline" Width="20" Height="20" Margin="0,0,8,0" Foreground="#3BA55D"/>
-                                <TextBlock Text="Why set a time limit?" FontWeight="SemiBold" Foreground="#DBDEE1"/>
+                                <materialDesign:PackIcon Kind="ClockOutline" Width="20" Height="20" Margin="0,0,8,0" Foreground="{StaticResource Success}"/>
+                                <TextBlock Text="Why set a time limit?" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
                             </StackPanel>
-                            <TextBlock TextWrapping="Wrap" Foreground="#D1D5DB">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}">
                                 Debug logs take up space and can slow things down slightly. After the time expires, logging automatically stops.
                                 You can always turn it back on later!
                             </TextBlock>
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="24" Margin="0,0,0,24" Background="#1E1E24" CornerRadius="12" BorderThickness="1">
+                    <Border Padding="24" Margin="0,0,0,24" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
                         <Border.BorderBrush>
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
@@ -333,14 +333,14 @@
                                         Click="BackToStep2_Click"
                                         Margin="0,0,8,0"
                                         Background="Transparent"
-                                        Foreground="#9CA3AF"
-                                        BorderBrush="#4B5563"
+                                        Foreground="{StaticResource TextSecondary}"
+                                        BorderBrush="{StaticResource BorderDefault}"
                                         BorderThickness="1"
                                         Padding="20,10"
                                         Cursor="Hand"/>
                                 <Button Content="Next: Enable Logging →" 
                                         Click="NextToStep4_Click"
-                                        Background="#6366F1"
+                                        Background="{StaticResource AccentPrimary}"
                                         Foreground="White"
                                         Padding="24,12"
                                         FontWeight="SemiBold"
@@ -355,12 +355,12 @@
                 <StackPanel x:Name="Step4Panel" Visibility="Collapsed">
                     <TextBlock Text="Step 4: Ready to Enable Debug Logging!" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
-                    <Border Padding="24" Margin="0,0,0,16" Background="#1E1E24" CornerRadius="12" BorderThickness="1">
+                    <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
                         <Border.BorderBrush>
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
                         <StackPanel>
-                            <TextBlock Text="Summary:" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12" Foreground="#F9FAFB"/>
+                            <TextBlock Text="Summary:" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12" Foreground="{StaticResource TextPrimary}"/>
                             
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -373,31 +373,31 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="User:" FontWeight="SemiBold" Margin="0,4" Foreground="#F9FAFB"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="SummaryUser" Text="Current User" Margin="8,4" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="User:" FontWeight="SemiBold" Margin="0,4" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="SummaryUser" Text="Current User" Margin="8,4" Foreground="{StaticResource TextSecondary}"/>
                                 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Detail Level:" FontWeight="SemiBold" Margin="0,4" Foreground="#F9FAFB"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="SummaryLevel" Text="Standard" Margin="8,4" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Detail Level:" FontWeight="SemiBold" Margin="0,4" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="SummaryLevel" Text="Standard" Margin="8,4" Foreground="{StaticResource TextSecondary}"/>
                                 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Duration:" FontWeight="SemiBold" Margin="0,4" Foreground="#F9FAFB"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="SummaryDuration" Text="2 hours" Margin="8,4" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Duration:" FontWeight="SemiBold" Margin="0,4" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="SummaryDuration" Text="2 hours" Margin="8,4" Foreground="{StaticResource TextSecondary}"/>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="24" Margin="0,0,0,16" Background="#2B2D31" BorderBrush="#5865F2" BorderThickness="2" CornerRadius="8">
+                    <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="2" CornerRadius="8">
                         <StackPanel>
-                            <TextBlock Text="What Happens Next?" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="#DBDEE1"/>
+                            <TextBlock Text="What Happens Next?" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="{StaticResource TextPrimary}"/>
                             <StackPanel Margin="16,0,0,0">
-                                <TextBlock Text="1. We'll enable debug logging with your settings" Margin="0,4" Foreground="#D1D5DB"/>
-                                <TextBlock Text="2. Have the user perform the action you want to troubleshoot" Margin="0,4" Foreground="#D1D5DB"/>
-                                <TextBlock Text="3. Come back here to download and analyze the logs" Margin="0,4" Foreground="#D1D5DB"/>
-                                <TextBlock Text="4. Get plain-English explanations of what happened!" Margin="0,4" FontWeight="SemiBold" Foreground="#F9FAFB"/>
+                                <TextBlock Text="1. We'll enable debug logging with your settings" Margin="0,4" Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="2. Have the user perform the action you want to troubleshoot" Margin="0,4" Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="3. Come back here to download and analyze the logs" Margin="0,4" Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="4. Get plain-English explanations of what happened!" Margin="0,4" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="24" Background="#1E1E24" CornerRadius="12" BorderThickness="1">
+                    <Border Padding="24" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
                         <Border.BorderBrush>
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
@@ -408,7 +408,7 @@
                                     Height="48"
                                     Click="EnableLogging_Click"
                                     Margin="0,0,0,16"
-                                    Background="#6366F1"
+                                    Background="{StaticResource AccentPrimary}"
                                     Foreground="White"
                                     Padding="24,12"
                                     FontWeight="Bold"
@@ -424,15 +424,15 @@
                                        Text="" 
                                        TextAlignment="Center"
                                        Visibility="Collapsed"
-                                       Foreground="#F9FAFB"/>
+                                       Foreground="{StaticResource TextPrimary}"/>
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
                                 <Button Content="← Back" 
                                         Click="BackToStep3_Click"
                                         Margin="0,0,8,0"
                                         Background="Transparent"
-                                        Foreground="#9CA3AF"
-                                        BorderBrush="#4B5563"
+                                        Foreground="{StaticResource TextSecondary}"
+                                        BorderBrush="{StaticResource BorderDefault}"
                                         BorderThickness="1"
                                         Padding="20,10"
                                         Cursor="Hand"/>
@@ -440,7 +440,7 @@
                                         x:Name="ViewLogsButton"
                                         Visibility="Collapsed"
                                         Click="ViewLogs_Click"
-                                        Background="#6366F1"
+                                        Background="{StaticResource AccentPrimary}"
                                         Foreground="White"
                                         Padding="24,12"
                                         FontWeight="SemiBold"

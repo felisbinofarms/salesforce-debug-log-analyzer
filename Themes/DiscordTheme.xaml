@@ -9,60 +9,62 @@
          ======================================== -->
 
     <!-- ============ COLOR PALETTE ============ -->
-    
-    <!-- Base Colors (VS Code Dark inspired - darker than Discord #313338) -->
-    <SolidColorBrush x:Key="BgPrimary" Color="#1E1E1E"/>      <!-- Main background -->
-    <SolidColorBrush x:Key="BgSecondary" Color="#252526"/>    <!-- Panels, cards -->
-    <SolidColorBrush x:Key="BgTertiary" Color="#2D2D30"/>     <!-- Elevated cards -->
-    <SolidColorBrush x:Key="BgInput" Color="#3C3C3C"/>        <!-- Form fields -->
-    <SolidColorBrush x:Key="BgHover" Color="#2A2D31"/>        <!-- Hover states -->
-    
-    <!-- Sidebar Colors -->
-    <SolidColorBrush x:Key="SidebarBg" Color="#252526"/>
-    <SolidColorBrush x:Key="SidebarBgHover" Color="#2D2D30"/>
-    <SolidColorBrush x:Key="SidebarBorder" Color="#3F4147"/>
-    
-    <!-- Text Colors (Softer than Discord #DBDEE1) -->
-    <SolidColorBrush x:Key="TextPrimary" Color="#D4D4D4"/>    <!-- Main text -->
-    <SolidColorBrush x:Key="TextSecondary" Color="#CCCCCC"/>  <!-- Secondary text -->
-    <SolidColorBrush x:Key="TextMuted" Color="#969696"/>      <!-- Timestamps, metadata -->
-    <SolidColorBrush x:Key="TextDisabled" Color="#6E6E6E"/>   <!-- Disabled text -->
-    
-    <!-- Border Colors -->
-    <SolidColorBrush x:Key="BorderDefault" Color="#3F4147"/>
-    <SolidColorBrush x:Key="BorderSubtle" Color="#2C2F38"/>
-    <SolidColorBrush x:Key="BorderFocus" Color="#5865F2"/>
-    
-    <!-- Accent Colors (Keep Discord Blurple) -->
-    <SolidColorBrush x:Key="AccentPrimary" Color="#5865F2"/>
-    <SolidColorBrush x:Key="AccentHover" Color="#4752C4"/>
-    <SolidColorBrush x:Key="AccentActive" Color="#3C45A5"/>
-    <SolidColorBrush x:Key="AccentSubtle" Color="#5865F220"/>  <!-- 20% opacity -->
-    
-    <!-- Semantic Colors (Modern, softer than before) -->
-    <SolidColorBrush x:Key="Success" Color="#89D185"/>        <!-- Mint green -->
-    <SolidColorBrush x:Key="SuccessSubtle" Color="#89D18520"/>
-    <SolidColorBrush x:Key="Warning" Color="#FFC66D"/>        <!-- Warm yellow -->
-    <SolidColorBrush x:Key="WarningSubtle" Color="#FFC66D20"/>
-    <SolidColorBrush x:Key="Danger" Color="#F48771"/>         <!-- Soft red -->
-    <SolidColorBrush x:Key="DangerSubtle" Color="#F4877120"/>
-    <SolidColorBrush x:Key="Info" Color="#79B8FF"/>           <!-- Sky blue -->
-    <SolidColorBrush x:Key="InfoSubtle" Color="#79B8FF20"/>
-    
-    <!-- Log Level Colors (with gutter bar support) -->
-    <SolidColorBrush x:Key="LevelDebug" Color="#5C6370"/>     <!-- Gray -->
-    <SolidColorBrush x:Key="LevelInfo" Color="#61AFEF"/>      <!-- Blue -->
-    <SolidColorBrush x:Key="LevelWarn" Color="#E5C07B"/>      <!-- Gold -->
-    <SolidColorBrush x:Key="LevelError" Color="#E06C75"/>     <!-- Red -->
-    <SolidColorBrush x:Key="LevelFatal" Color="#BE5046"/>     <!-- Dark red -->
-    
-    <!-- Operation Type Colors -->
-    <SolidColorBrush x:Key="OperationTrigger" Color="#FF6B35"/>    <!-- Orange -->
-    <SolidColorBrush x:Key="OperationFlow" Color="#4A90E2"/>       <!-- Blue -->
-    <SolidColorBrush x:Key="OperationLWC" Color="#50E3C2"/>        <!-- Teal -->
-    <SolidColorBrush x:Key="OperationAsync" Color="#9013FE"/>      <!-- Purple -->
-    <SolidColorBrush x:Key="OperationIntegration" Color="#F5A623"/> <!-- Amber -->
-    <SolidColorBrush x:Key="OperationValidation" Color="#F8E71C"/> <!-- Yellow -->
+    <!-- MIDNIGHT OPS — Calm, trustworthy, built for 2AM production incidents -->
+    <!-- Inspired by GitHub Dark + Linear + the feeling of a steady war room -->
+
+    <!-- Base Backgrounds (deep navy — easier on exhausted eyes than pure black) -->
+    <SolidColorBrush x:Key="BgPrimary" Color="#0D1117"/>      <!-- Deepest canvas -->
+    <SolidColorBrush x:Key="BgSecondary" Color="#161B22"/>    <!-- Panel surfaces -->
+    <SolidColorBrush x:Key="BgTertiary" Color="#21262D"/>     <!-- Elevated cards -->
+    <SolidColorBrush x:Key="BgInput" Color="#30363D"/>        <!-- Inputs, hover -->
+    <SolidColorBrush x:Key="BgHover" Color="#30363D"/>        <!-- Hover state -->
+
+    <!-- Sidebar (near-black — clean nav separation from content) -->
+    <SolidColorBrush x:Key="SidebarBg" Color="#010409"/>
+    <SolidColorBrush x:Key="SidebarBgHover" Color="#161B22"/>
+    <SolidColorBrush x:Key="SidebarBorder" Color="#21262D"/>
+
+    <!-- Text (warm white hierarchy — readable without eye strain) -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#E6EDF3"/>    <!-- Body text -->
+    <SolidColorBrush x:Key="TextSecondary" Color="#8B949E"/>  <!-- Supporting text -->
+    <SolidColorBrush x:Key="TextMuted" Color="#6E7681"/>      <!-- Timestamps, meta -->
+    <SolidColorBrush x:Key="TextDisabled" Color="#484F58"/>   <!-- Disabled -->
+
+    <!-- Borders (whisper-quiet, never fights for attention) -->
+    <SolidColorBrush x:Key="BorderDefault" Color="#30363D"/>
+    <SolidColorBrush x:Key="BorderSubtle" Color="#21262D"/>
+    <SolidColorBrush x:Key="BorderFocus" Color="#58A6FF"/>
+
+    <!-- Accent: Electric Blue — calm, trustworthy, clear leadership -->
+    <SolidColorBrush x:Key="AccentPrimary" Color="#58A6FF"/>
+    <SolidColorBrush x:Key="AccentHover" Color="#1F6FEB"/>
+    <SolidColorBrush x:Key="AccentActive" Color="#1158C7"/>
+    <SolidColorBrush x:Key="AccentSubtle" Color="#58A6FF20"/>
+
+    <!-- Semantic Colors: visible but never panic-inducing at 2AM -->
+    <SolidColorBrush x:Key="Success" Color="#3FB950"/>        <!-- Emerald -->
+    <SolidColorBrush x:Key="SuccessSubtle" Color="#3FB95020"/>
+    <SolidColorBrush x:Key="Warning" Color="#D29922"/>        <!-- Warm amber -->
+    <SolidColorBrush x:Key="WarningSubtle" Color="#D2992220"/>
+    <SolidColorBrush x:Key="Danger" Color="#F85149"/>         <!-- Coral red —  loud enough to notice, not enough to panic -->
+    <SolidColorBrush x:Key="DangerSubtle" Color="#F8514920"/>
+    <SolidColorBrush x:Key="Info" Color="#79C0FF"/>           <!-- Sky blue -->
+    <SolidColorBrush x:Key="InfoSubtle" Color="#79C0FF20"/>
+
+    <!-- Log Level Colors -->
+    <SolidColorBrush x:Key="LevelDebug" Color="#6E7681"/>     <!-- Muted gray -->
+    <SolidColorBrush x:Key="LevelInfo" Color="#58A6FF"/>      <!-- Blue -->
+    <SolidColorBrush x:Key="LevelWarn" Color="#D29922"/>      <!-- Amber -->
+    <SolidColorBrush x:Key="LevelError" Color="#F85149"/>     <!-- Coral -->
+    <SolidColorBrush x:Key="LevelFatal" Color="#DA3633"/>     <!-- Dark red -->
+
+    <!-- Operation Type Colors (distinct, readable on dark canvas) -->
+    <SolidColorBrush x:Key="OperationTrigger" Color="#E05D44"/>    <!-- Salmon/trigger -->
+    <SolidColorBrush x:Key="OperationFlow" Color="#58A6FF"/>       <!-- Blue/flow -->
+    <SolidColorBrush x:Key="OperationLWC" Color="#3FB950"/>        <!-- Green/LWC -->
+    <SolidColorBrush x:Key="OperationAsync" Color="#BC8EDA"/>      <!-- Soft purple/async -->
+    <SolidColorBrush x:Key="OperationIntegration" Color="#D29922"/> <!-- Amber/callout -->
+    <SolidColorBrush x:Key="OperationValidation" Color="#E3B341"/> <!-- Gold/validation -->
     
     <!-- ============ SPACING SCALE ============ -->
     <sys:Double x:Key="Space1">4</sys:Double>
@@ -142,11 +144,6 @@
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Effect" Value="{StaticResource ShadowMedium}"/>
-                <Setter Property="RenderTransform">
-                    <Setter.Value>
-                        <TranslateTransform Y="-2"/>
-                    </Setter.Value>
-                </Setter>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -157,25 +154,18 @@
         <Setter Property="Effect" Value="{StaticResource ShadowMedium}"/>
     </Style>
     
-    <!-- Log Card Style (80px height, left color gutter) -->
+    <!-- Log Card Style (auto-height, left color gutter) -->
     <Style x:Key="LogCard" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource BgSecondary}"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
-        <Setter Property="BorderThickness" Value="0,0,0,0"/>
-        <Setter Property="Height" Value="80"/>
-        <Setter Property="Margin" Value="0,0,0,8"/>
-        <Setter Property="Padding" Value="12,12,16,12"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Padding" Value="12,10,14,10"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{StaticResource BgHover}"/>
-                <Setter Property="Effect" Value="{StaticResource ShadowSmall}"/>
-                <Setter Property="RenderTransform">
-                    <Setter.Value>
-                        <TranslateTransform Y="-2"/>
-                    </Setter.Value>
-                </Setter>
             </Trigger>
         </Style.Triggers>
     </Style>

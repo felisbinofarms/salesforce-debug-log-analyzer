@@ -26,6 +26,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ReportExportService _exportService;
     private readonly SettingsService _settingsService;
     private readonly OrgMetadataService _metadataService;
+    private readonly LogExplainerService _explainerService;
+    private readonly LicenseService _licenseService;
     private bool _disposed;
 
     [ObservableProperty]
@@ -163,9 +165,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _showDebugStatements = false;
 
-    // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries)
+    // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries, 4=Explain)
     [ObservableProperty]
-    private int _selectedTabIndex = 0;
+    private int _selectedTabIndex = 4;
 
     // Streaming properties
     [ObservableProperty]
@@ -305,6 +307,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isAllClear = false;
     
+    // ===== DEEP EXPLANATION (LogExplainerService output) =====
+    
+    [ObservableProperty]
+    private LogExplanation? _currentExplanation;
+    
+    [ObservableProperty]
+    private bool _hasExplanation = false;
+    
+    [ObservableProperty]
+    private ObservableCollection<DetailedIssue> _detailedIssues = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<DetailedRecommendation> _detailedRecommendations = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<LearningItem> _learningItems = new();
+    
+    [ObservableProperty]
+    private bool _hasDetailedIssues = false;
+    
+    [ObservableProperty]
+    private bool _hasDetailedRecommendations = false;
+    
+    [ObservableProperty]
+    private bool _hasLearningItems = false;
+    
+    [ObservableProperty]
+    private ObservableCollection<string> _whatYourCodeDid = new();
+    
     // ===== ALWAYS-USEFUL: TOP METHODS & QUERIES =====
     
     [ObservableProperty]
@@ -335,12 +366,103 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _hasTimelineDetails = false;
 
+    // ===== PLATFORM EVENTS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.PlatformEventPublish> _platformEventPublishes = new();
+
+    [ObservableProperty]
+    private bool _hasPlatformEvents = false;
+
+    // ===== NAMESPACE LIMITS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.GovernorLimitSnapshot> _namespaceLimitItems = new();
+
+    [ObservableProperty]
+    private bool _hasNamespaceLimits = false;
+
+    // ===== FLOW FAULTS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.FlowExecution> _faultedFlows = new();
+
+    [ObservableProperty]
+    private bool _hasFlowFaults = false;
+
+    // ===== CALLOUTS =====
+    [ObservableProperty]
+    private ObservableCollection<Models.CalloutOperation> _callouts = new();
+    [ObservableProperty]
+    private bool _hasCallouts = false;
+
+    // ===== LOG CONTEXT FLAGS =====
+    [ObservableProperty]
+    private bool _isLogTruncated = false;
+    [ObservableProperty]
+    private bool _isAsyncExecution = false;
+
+    // ===== BULK SAFETY =====
+    [ObservableProperty]
+    private string _bulkSafetyGrade = "";
+    [ObservableProperty]
+    private string _bulkSafetyReason = "";
+
+    // ===== DUPLICATE QUERIES =====
+    [ObservableProperty]
+    private ObservableCollection<Models.DuplicateQueryInfo> _duplicateQueries = new();
+    [ObservableProperty]
+    private bool _hasDuplicateQueries = false;
+
+    // ===== WORKFLOW RULES =====
+    [ObservableProperty]
+    private ObservableCollection<Models.WorkflowRuleEvaluation> _workflowRules = new();
+    [ObservableProperty]
+    private bool _hasWorkflowRules = false;
+
+    // ===== FLOW ERRORS (DML/validation failures inside flows, distinct from fault paths) =====
+    [ObservableProperty]
+    private ObservableCollection<Models.FlowError> _flowErrors = new();
+    [ObservableProperty]
+    private bool _hasFlowErrors = false;
+
+    // ===== HEAP & CMDT QUERY STATS =====
+    [ObservableProperty]
+    private long _totalHeapAllocated = 0;
+    [ObservableProperty]
+    private int _customMetadataQueryCount = 0;
+    [ObservableProperty]
+    private int _regularSoqlCount = 0;
+
+    // ===== TESTING LIMITS (overhead from test framework vs production code) =====
+    [ObservableProperty]
+    private Models.GovernorLimitSnapshot? _testingLimits = null;
+    [ObservableProperty]
+    private bool _hasTestingLimits = false;
+
     // Editor Bridge (VSCode Integration)
     [ObservableProperty]
     private bool _isEditorConnected = false;
     
     [ObservableProperty]
     private string _editorConnectionStatus = "VSCode: Not Connected";
+
+    // ===== LICENSE PROPERTIES =====
+
+    [ObservableProperty]
+    private LicenseTier _currentLicenseTier = LicenseTier.Free;
+
+    [ObservableProperty]
+    private bool _isProUser = false;
+
+    [ObservableProperty]
+    private bool _showTrialBanner = false;
+
+    [ObservableProperty]
+    private string _trialBannerText = "";
+
+    [ObservableProperty]
+    private string _tierDisplayName = "Free";
 
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
@@ -354,7 +476,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _exportService = new ReportExportService();
         _settingsService = new SettingsService();
         _metadataService = new OrgMetadataService(_apiService);
-        
+        _explainerService = new LogExplainerService();
+        _licenseService   = new LicenseService();
+
+        // Apply initial license state immediately (from local cache, no network)
+        RefreshLicenseDisplay();
+
+        // Then fire-and-forget the async revalidation (may hit network)
+        _ = ValidateLicenseOnStartupAsync();
+
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
         
@@ -376,6 +506,86 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         _streamingThrottleTimer.Tick += OnStreamingThrottleTick;
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // License helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    private void RefreshLicenseDisplay()
+    {
+        CurrentLicenseTier = _licenseService.CurrentTier;
+        IsProUser          = _licenseService.IsProOrAbove;
+        TierDisplayName    = CurrentLicenseTier switch
+        {
+            LicenseTier.Free       => "Free",
+            LicenseTier.Trial      => $"Pro Trial",
+            LicenseTier.Pro        => "Pro",
+            LicenseTier.Team       => "Team",
+            LicenseTier.Enterprise => "Enterprise",
+            _                      => "Free"
+        };
+
+        if (CurrentLicenseTier == LicenseTier.Trial)
+        {
+            var days = _licenseService.TrialDaysRemaining();
+            ShowTrialBanner = true;
+            TrialBannerText = days > 1
+                ? $"⏳ Pro Trial — {days} days remaining"
+                : days == 1
+                    ? "⚠️ Pro Trial expires tomorrow — upgrade now!"
+                    : "⚠️ Trial expired — upgrade to keep Pro features";
+        }
+        else
+        {
+            ShowTrialBanner = false;
+            TrialBannerText = string.Empty;
+        }
+    }
+
+    private async Task ValidateLicenseOnStartupAsync()
+    {
+        var result = await _licenseService.RevalidateIfNeededAsync().ConfigureAwait(false);
+
+        // Re-apply display on the UI thread
+        App.Current.Dispatcher.Invoke(RefreshLicenseDisplay);
+
+        if (!result.IsValid && result.ErrorMessage != null)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                // Non-blocking notification — don't interrupt startup with a dialog
+                StatusMessage = $"⚠️ License: {result.ErrorMessage}";
+            });
+        }
+        else if (result.IsOfflineGracePeriod)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                StatusMessage = "ℹ️ License: offline — will revalidate when connected";
+            });
+        }
+    }
+
+    /// <summary>
+    /// Returns true and shows the upgrade dialog if the feature requires Pro.
+    /// Use as a guard at the top of Pro-gated commands.
+    /// </summary>
+    private bool RequiresPro(LicenseFeature feature)
+    {
+        if (_licenseService.IsFeatureAvailable(feature)) return false;
+        ShowUpgradeDialog();
+        return true;
+    }
+
+    private void ShowUpgradeDialog()
+    {
+        var dialog = new Views.UpgradeDialog { Owner = App.Current.MainWindow };
+        dialog.ShowDialog();
+        // Refresh tier in case user just started a trial
+        RefreshLicenseDisplay();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
 
     public void OnConnected()
     {
@@ -528,15 +738,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
             else
                 HeroStatus = "SUCCESS";
             
-            // Stat cards
-            StatSoqlCount = value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
-            StatDmlCount = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+            // Governor limits snapshot — extracted first; authoritative source for all limit consumption data
+            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+
+            // Stat cards — prefer snapshot values (exact governor limit slots used) over raw op counts
+            StatSoqlCount = lastSnapshot?.SoqlQueries ?? value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
+            StatDmlCount  = lastSnapshot?.DmlStatements ?? value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
             StatMethodCount = value.MethodStats?.Count ?? 0;
             StatErrorCount = value.Errors?.Count ?? 0;
             StatWarningCount = value.HandledExceptions?.Count ?? 0;
-            
-            // Governor limits from snapshot
-            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+
+            // Governor limits display
             if (lastSnapshot != null)
             {
                 StatSoqlLimit = lastSnapshot.SoqlQueriesLimit;
@@ -647,6 +859,58 @@ public partial class MainViewModel : ObservableObject, IDisposable
             PopulateExecutionTree(value);
             PopulateTimelineDetails(value);
             TranslateToPlainEnglish(value); // NEW: Generate plain-English insights
+
+            // ===== PLATFORM EVENTS =====
+            PlatformEventPublishes = new ObservableCollection<Models.PlatformEventPublish>(
+                value.PlatformEventPublishes ?? new List<Models.PlatformEventPublish>());
+            HasPlatformEvents = PlatformEventPublishes.Any();
+
+            // ===== NAMESPACE LIMITS =====
+            NamespaceLimitItems = new ObservableCollection<Models.GovernorLimitSnapshot>(
+                value.NamespaceLimitSnapshots ?? new List<Models.GovernorLimitSnapshot>());
+            HasNamespaceLimits = NamespaceLimitItems.Any();
+
+            // ===== FLOW FAULTS =====
+            FaultedFlows = new ObservableCollection<Models.FlowExecution>(
+                value.Flows?.Where(f => f.HasFault).ToList() ?? new List<Models.FlowExecution>());
+            HasFlowFaults = FaultedFlows.Any();
+
+            // ===== CALLOUTS =====
+            Callouts = new ObservableCollection<Models.CalloutOperation>(
+                value.Callouts ?? new List<Models.CalloutOperation>());
+            HasCallouts = Callouts.Any();
+
+            // ===== LOG CONTEXT FLAGS =====
+            IsLogTruncated = value.IsLogTruncated;
+            IsAsyncExecution = value.IsAsyncExecution;
+
+            // ===== BULK SAFETY =====
+            BulkSafetyGrade = value.BulkSafetyGrade ?? "";
+            BulkSafetyReason = value.BulkSafetyReason ?? "";
+
+            // ===== DUPLICATE QUERIES =====
+            DuplicateQueries = new ObservableCollection<Models.DuplicateQueryInfo>(
+                value.DuplicateQueries ?? new List<Models.DuplicateQueryInfo>());
+            HasDuplicateQueries = DuplicateQueries.Any();
+
+            // ===== WORKFLOW RULES =====
+            WorkflowRules = new ObservableCollection<Models.WorkflowRuleEvaluation>(
+                value.WorkflowRules ?? new List<Models.WorkflowRuleEvaluation>());
+            HasWorkflowRules = WorkflowRules.Any();
+
+            // ===== FLOW ERRORS (DML/validation failures inside flows) =====
+            FlowErrors = new ObservableCollection<Models.FlowError>(
+                value.FlowErrors ?? new List<Models.FlowError>());
+            HasFlowErrors = FlowErrors.Any();
+
+            // ===== HEAP & CMDT STATS =====
+            TotalHeapAllocated = value.TotalHeapAllocated;
+            CustomMetadataQueryCount = value.CustomMetadataQueryCount;
+            RegularSoqlCount = value.RegularSoqlCount;
+
+            // ===== TESTING LIMITS =====
+            TestingLimits = value.TestingLimits;
+            HasTestingLimits = value.TestingLimits != null;
         }
         else
         {
@@ -697,6 +961,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HasExecutionTree = false;
             TimelineDetails.Clear();
             HasTimelineDetails = false;
+            
+            // Reset deep explanation
+            CurrentExplanation = null;
+            HasExplanation = false;
+            DetailedIssues.Clear();
+            DetailedRecommendations.Clear();
+            LearningItems.Clear();
+            WhatYourCodeDid.Clear();
+            HasDetailedIssues = false;
+            HasDetailedRecommendations = false;
+            HasLearningItems = false;
+
+            // Reset new collections
+            PlatformEventPublishes.Clear();
+            HasPlatformEvents = false;
+            NamespaceLimitItems.Clear();
+            HasNamespaceLimits = false;
+            FaultedFlows.Clear();
+            HasFlowFaults = false;
+
+            // Reset expanded collections
+            Callouts.Clear(); HasCallouts = false;
+            IsLogTruncated = false; IsAsyncExecution = false;
+            BulkSafetyGrade = ""; BulkSafetyReason = "";
+            DuplicateQueries.Clear(); HasDuplicateQueries = false;
+            WorkflowRules.Clear(); HasWorkflowRules = false;
+            FlowErrors.Clear(); HasFlowErrors = false;
+            TotalHeapAllocated = 0; CustomMetadataQueryCount = 0; RegularSoqlCount = 0;
+            TestingLimits = null; HasTestingLimits = false;
         }
     }
     
@@ -870,6 +1163,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     Icon = phase.Icon,
                     IsRecursive = phase.IsRecursive,
                     Depth = phase.Depth,
+                    OoePhase = phase.OoePhase,
                     PercentOfTotal = analysis.DurationMs > 0 ? (Math.Max(0, phase.DurationMs) * 100.0) / analysis.DurationMs : 0
                 });
                 cumulativeMs += Math.Max(0, phase.DurationMs);
@@ -1091,6 +1385,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         // 6. ALL CLEAR?
         IsAllClear = !HasProblems && !analysis.TransactionFailed && (lastLimit?.SoqlQueries ?? 0) < 50;
+        
+        // 7. DEEP EXPLANATION — rich analogies, before/after code, learning
+        try
+        {
+            var explanation = _explainerService.Explain(analysis);
+            CurrentExplanation = explanation;
+            HasExplanation = true;
+            
+            // Populate bindable collections
+            WhatYourCodeDid = new ObservableCollection<string>(explanation.WhatYourCodeDid);
+            DetailedIssues = new ObservableCollection<DetailedIssue>(explanation.Issues);
+            DetailedRecommendations = new ObservableCollection<DetailedRecommendation>(explanation.Recommendations);
+            LearningItems = new ObservableCollection<LearningItem>(explanation.WhatYouLearned);
+            
+            HasDetailedIssues = explanation.Issues.Any();
+            HasDetailedRecommendations = explanation.Recommendations.Any();
+            HasLearningItems = explanation.WhatYouLearned.Any();
+            
+            // Override the basic summary with the rich one
+            PlainEnglishSummary = explanation.WhatHappened;
+        }
+        catch
+        {
+            // Fallback: keep the basic plain English if explainer fails
+            HasExplanation = false;
+            DetailedIssues.Clear();
+            DetailedRecommendations.Clear();
+            LearningItems.Clear();
+            HasDetailedIssues = false;
+            HasDetailedRecommendations = false;
+            HasLearningItems = false;
+        }
     }
     
     private string SimplifyQueryForDisplay(string query)
@@ -1408,6 +1734,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
             
+            // ── License gate: Free tier has a 30 MB file size cap ──────────
+            if (!_licenseService.IsFeatureAvailable(LicenseFeature.UnlimitedFileSize))
+            {
+                var fileInfo = new FileInfo(filePath);
+                var fileMB   = fileInfo.Length / (1024.0 * 1024.0);
+                if (fileMB > LicenseService.FreeTierMaxFileSizeMB)
+                {
+                    var result = MessageBox.Show(
+                        $"This log is {fileMB:F0} MB, which exceeds the {LicenseService.FreeTierMaxFileSizeMB} MB limit for the Free tier.\n\n" +
+                        "Upgrade to Pro for unlimited file sizes.\n\n" +
+                        "Would you like to upgrade now?",
+                        "File Too Large — Upgrade to Pro",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                        ShowUpgradeDialog();
+
+                    StatusMessage = $"⚠️ File too large for Free tier ({fileMB:F0} MB > {LicenseService.FreeTierMaxFileSizeMB} MB)";
+                    IsLoading = false;
+                    return;
+                }
+            }
+            // ──────────────────────────────────────────────────────────────
+
             StatusMessage = "Reading log file...";
             IsLoading = true;
 
@@ -1713,11 +2064,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (IsStreaming)
         {
             StopStreaming();
+            return;
         }
-        else
-        {
-            await StartStreamingAsync();
-        }
+
+        // Pro-gated feature
+        if (RequiresPro(LicenseFeature.LiveStreaming)) return;
+
+        await StartStreamingAsync();
     }
     
     [RelayCommand]
@@ -2551,6 +2904,26 @@ public class TimelineDetailItem
     public bool IsRecursive { get; set; }
     public int Depth { get; set; }
     public double PercentOfTotal { get; set; }
+
+    /// <summary>Salesforce OOE phase label — empty when not determinable.</summary>
+    public Models.OoePhase? OoePhase { get; set; }
+
+    /// <summary>Short label shown as a badge in the timeline UI. Empty when OoePhase is null or Other.</summary>
+    public string OoePhaseLabel => OoePhase switch
+    {
+        Models.OoePhase.BeforeTrigger    => "Before Trigger",
+        Models.OoePhase.SystemValidation => "Validation",
+        Models.OoePhase.AfterTrigger     => "After Trigger",
+        Models.OoePhase.Workflow         => "Workflow",
+        Models.OoePhase.AfterSaveFlow    => "After-Save Flow",
+        Models.OoePhase.Process          => "Process",
+        Models.OoePhase.FieldUpdate      => "Field Update",
+        Models.OoePhase.ReEntry          => "Re-Entry ⚠",
+        Models.OoePhase.Async            => "Async",
+        _                                => string.Empty
+    };
+
+    public bool HasOoePhaseLabel => !string.IsNullOrEmpty(OoePhaseLabel);
     
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
     public string PercentDisplay => $"{PercentOfTotal:N1}%";
