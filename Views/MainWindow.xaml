@@ -579,9 +579,51 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Debug Logs" FontSize="18" FontWeight="Bold" 
-                                       Foreground="White" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Debug Logs" FontSize="18" FontWeight="Bold" 
+                                           Foreground="White" VerticalAlignment="Center"/>
+                                <!-- Transaction grouping toggle -->
+                                <Border CornerRadius="4" Padding="6,2" Margin="12,0,0,0" VerticalAlignment="Center"
+                                        Background="{StaticResource AccentSubtle}"
+                                        Visibility="{Binding LogGroups.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"
+                                        ToolTip="Transaction grouping enabled — logs from the same user action are grouped together">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="📦" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" VerticalAlignment="Center">
+                                            <Run Text="{Binding LogGroups.Count, Mode=OneWay}"/><Run Text=" groups"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <!-- Group/Ungroup toggle -->
+                                <ToggleButton IsChecked="{Binding ShowGroupedView}" Width="32" Height="32" Margin="0,0,8,0"
+                                              Background="{StaticResource BgHover}" BorderThickness="0"
+                                              Visibility="{Binding LogGroups.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="ToolTip" Value="Show grouped transactions"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="ToolTip" Value="Show individual logs"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                    <materialDesign:PackIcon Width="16" Height="16" Foreground="White">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="ViewList"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ShowGroupedView}" Value="True">
+                                                        <Setter Property="Kind" Value="ViewModule"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </ToggleButton>
                                 <Button ToolTip="Open single log file" 
                                         Command="{Binding UploadLogCommand}"
                                         Width="32" Height="32" Padding="0" Margin="0,0,4,0"
@@ -670,7 +712,8 @@
                                  VirtualizingStackPanel.IsVirtualizing="True"
                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 HorizontalContentAlignment="Stretch">
+                                 HorizontalContentAlignment="Stretch"
+                                 Visibility="{Binding ShowGroupedView, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="Background" Value="Transparent"/>
@@ -806,6 +849,140 @@
                                                             <Condition Property="IsSelected" Value="False"/>
                                                         </MultiTrigger.Conditions>
                                                         <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgHover}"/>
+                                                    </MultiTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        
+                        <!-- Transaction Group List (shown when ShowGroupedView = true) -->
+                        <ListBox Grid.Row="4" ItemsSource="{Binding LogGroups}" 
+                                 SelectedItem="{Binding SelectedLogGroup}"
+                                 Background="Transparent" BorderThickness="0" Margin="0,0,0,8"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 HorizontalContentAlignment="Stretch"
+                                 Visibility="{Binding ShowGroupedView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="GroupBorder" CornerRadius="6" 
+                                                        Padding="12" Margin="0,0,0,8" Cursor="Hand"
+                                                        Background="{StaticResource BgInput}"
+                                                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        
+                                                        <!-- Row 0: Header with user + log count -->
+                                                        <Grid Grid.Row="0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="📦" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
+                                                                           TextTrimming="CharacterEllipsis">
+                                                                    <Run Text="{Binding UserName, Mode=OneWay}"/>
+                                                                    <Run Text=" transaction" Foreground="{StaticResource TextMuted}"/>
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="10" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0">
+                                                                    <Run Text="{Binding Logs.Count, Mode=OneWay}"/><Run Text=" logs • "/><Run Text="{Binding TotalDuration, StringFormat={}{0:N0}ms, Mode=OneWay}"/><Run Text=" total"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                            <Border Grid.Column="2" CornerRadius="3" Padding="6,2" Background="{StaticResource AccentSubtle}" VerticalAlignment="Center"
+                                                                    Visibility="{Binding IsSingleLog, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                                                <TextBlock Text="GROUPED" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}"/>
+                                                            </Border>
+                                                        </Grid>
+                                                        
+                                                        <!-- Row 1: Phase breakdown (when phases detected) -->
+                                                        <StackPanel Grid.Row="1" Margin="22,6,0,0"
+                                                                    Visibility="{Binding Phases.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                                            <ItemsControl ItemsSource="{Binding Phases}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Grid Margin="0,2">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <Border Grid.Column="0" Width="4" Height="4" CornerRadius="2" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                                                <Border.Style>
+                                                                                    <Style TargetType="Border">
+                                                                                        <Setter Property="Background" Value="{StaticResource Info}"/>
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding Type}" Value="Frontend">
+                                                                                                <Setter Property="Background" Value="{StaticResource Success}"/>
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </Border.Style>
+                                                                            </Border>
+                                                                            <TextBlock Grid.Column="1" FontSize="10" Foreground="{StaticResource TextSecondary}">
+                                                                                <Run Text="{Binding Name, Mode=OneWay}"/><Run Text=":"/>
+                                                                            </TextBlock>
+                                                                            <TextBlock Grid.Column="2" FontSize="10" Foreground="{StaticResource TextMuted}">
+                                                                                <Run Text="{Binding DurationMs, StringFormat={}{0:N0}ms, Mode=OneWay}"/>
+                                                                            </TextBlock>
+                                                                        </Grid>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                        
+                                                        <!-- Row 2: Recommendations count (when available) -->
+                                                        <Border Grid.Row="2" CornerRadius="3" Padding="6,3" Margin="22,6,0,0" HorizontalAlignment="Left"
+                                                                Background="{StaticResource WarningSubtle}"
+                                                                Visibility="{Binding Recommendations.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="💡" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                                <TextBlock FontSize="9" FontWeight="Bold" Foreground="{StaticResource Warning}" VerticalAlignment="Center">
+                                                                    <Run Text="{Binding Recommendations.Count, Mode=OneWay}"/><Run Text=" recommendation"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        
+                                                        <!-- Row 3: Mixed context warning -->
+                                                        <Border Grid.Row="3" CornerRadius="3" Padding="6,3" Margin="22,6,0,0" HorizontalAlignment="Left"
+                                                                Background="{StaticResource DangerSubtle}"
+                                                                Visibility="{Binding HasMixedContexts, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="⚠️" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="MIXED CONTEXTS" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Danger}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="GroupBorder" Property="Background" Value="{StaticResource AccentPrimary}"/>
+                                                        <Setter TargetName="GroupBorder" Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+                                                    </Trigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="IsMouseOver" Value="True"/>
+                                                            <Condition Property="IsSelected" Value="False"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter TargetName="GroupBorder" Property="Background" Value="{StaticResource BgHover}"/>
                                                     </MultiTrigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>

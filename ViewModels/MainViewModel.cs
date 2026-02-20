@@ -55,6 +55,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private LogAnalysis? _selectedLog;
 
     [ObservableProperty]
+    private bool _showGroupedView = false;
+
+    [ObservableProperty]
     private string _summaryText = "";
 
     [ObservableProperty]
