@@ -690,42 +690,110 @@
                                                             <RowDefinition Height="Auto"/>
                                                             <RowDefinition Height="Auto"/>
                                                         </Grid.RowDefinitions>
-                                                        <TextBlock Text="{Binding LogName}" FontSize="13"
-                                                                   FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   ToolTip="{Binding LogName}"/>
-                                                        <TextBlock Grid.Row="1" FontSize="11" 
+                                                        <!-- Row 0: icon + name + truncated badge -->
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding OperationIcon}" FontSize="16"
+                                                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding LogName}" FontSize="13"
+                                                                       FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
+                                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                                       ToolTip="{Binding LogName}"/>
+                                                            <!-- Truncated log warning icon -->
+                                                            <Border Grid.Column="2" CornerRadius="3" Padding="4,1" Margin="4,0,0,0"
+                                                                    Background="{StaticResource WarningSubtle}" VerticalAlignment="Center"
+                                                                    Visibility="{Binding IsLogTruncated, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                    ToolTip="Log was truncated by Salesforce — data may be incomplete">
+                                                                <TextBlock Text="⚠️" FontSize="9"/>
+                                                            </Border>
+                                                        </Grid>
+                                                        <!-- Row 1: duration + lines + operation type -->
+                                                        <TextBlock Grid.Row="1" FontSize="11"
                                                                    Foreground="{StaticResource TextMuted}" Margin="0,4,0,0">
                                                             <Run Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"/>
                                                             <Run Text=" • "/>
                                                             <Run Text="{Binding LineCount}"/>
-                                                            <Run Text=" lines"/>
+                                                            <Run Text=" lines • "/>
+                                                            <Run Text="{Binding OperationType}"/>
                                                         </TextBlock>
-                                                        <Border Grid.Row="2" CornerRadius="3" Padding="6,2" 
-                                                                HorizontalAlignment="Left" Margin="0,6,0,0">
-                                                            <Border.Style>
-                                                                <Style TargetType="Border">
-                                                                    <Setter Property="Background" Value="{StaticResource Success}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding HasErrors}" Value="True">
-                                                                            <Setter Property="Background" Value="{StaticResource Danger}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </Border.Style>
-                                                            <TextBlock FontSize="9" FontWeight="Bold" Foreground="White">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Text" Value="SUCCESS"/>
+                                                        <!-- Row 2: status badge + ASYNC badge + BulkSafetyGrade pill -->
+                                                        <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,0">
+                                                            <!-- SUCCESS / ERROR badge -->
+                                                            <Border CornerRadius="3" Padding="6,2" Margin="0,0,4,0">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="{StaticResource Success}"/>
                                                                         <Style.Triggers>
                                                                             <DataTrigger Binding="{Binding HasErrors}" Value="True">
-                                                                                <Setter Property="Text" Value="ERROR"/>
+                                                                                <Setter Property="Background" Value="{StaticResource Danger}"/>
                                                                             </DataTrigger>
                                                                         </Style.Triggers>
                                                                     </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </Border>
+                                                                </Border.Style>
+                                                                <TextBlock FontSize="9" FontWeight="Bold" Foreground="White">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Text" Value="SUCCESS"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                                                                                    <Setter Property="Text" Value="ERROR"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Border>
+                                                            <!-- ASYNC badge -->
+                                                            <Border CornerRadius="3" Padding="6,2" Margin="0,0,4,0"
+                                                                    Background="{StaticResource InfoSubtle}"
+                                                                    Visibility="{Binding IsAsyncExecution, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                <TextBlock Text="ASYNC" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Info}"/>
+                                                            </Border>
+                                                            <!-- Bulk Safety Grade pill -->
+                                                            <Border CornerRadius="3" Padding="6,2"
+                                                                    Visibility="{Binding BulkSafetyGrade, Converter={StaticResource StringToVisibilityConverter}}">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="C">
+                                                                                <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="D">
+                                                                                <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="F">
+                                                                                <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock FontSize="9" FontWeight="Bold">
+                                                                    <Run Text="Bulk "/>
+                                                                    <Run Text="{Binding BulkSafetyGrade}"/>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="C">
+                                                                                    <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="D">
+                                                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="F">
+                                                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Border>
+                                                        </WrapPanel>
                                                     </Grid>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1217,6 +1285,26 @@
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=0}">
                                 <StackPanel MaxWidth="900">
                                     
+                                    <!-- ===== TRUNCATED LOG WARNING ===== -->
+                                    <Border CornerRadius="8" Margin="0,0,0,12" Padding="14,10"
+                                            Background="{StaticResource WarningSubtle}"
+                                            BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,2"
+                                            Visibility="{Binding IsLogTruncated, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="⚠️" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Log Truncated — Data May Be Incomplete" FontSize="13" FontWeight="Bold"
+                                                           Foreground="{StaticResource Warning}"/>
+                                                <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap"
+                                                           Text="Salesforce cut this log short before it finished writing. Governor limit counters, timing totals, and issue counts may be understated. Raise your debug level retention or reduce log verbosity."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
                                     <!-- ===== HERO STATUS BANNER (Modern) ===== -->
                                     <Border CornerRadius="12" Margin="0,0,0,16" Padding="20">
                                         <Border.Style>
@@ -1771,6 +1859,13 @@
                                                 </TextBlock>
                                                 <TextBlock Text="Reads (SOQL)" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"
                                                            ToolTip="SOQL = Salesforce Object Query Language. These are database read operations."/>
+                                                <!-- CMDT footnote: shown only when free CMDT queries were detected -->
+                                                <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="10"
+                                                           Foreground="{StaticResource TextMuted}"
+                                                           Visibility="{Binding CustomMetadataQueryCount, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"
+                                                           ToolTip="Custom Metadata Type queries don't consume your SOQL governor limit allocation.">
+                                                    <Run Text="+"/><Run Text="{Binding CustomMetadataQueryCount, Mode=OneWay}"/><Run Text=" free CMDT"/>
+                                                </TextBlock>
                                             </StackPanel>
                                         </Border>
                                         
@@ -1829,11 +1924,101 @@
                                         </Border>
                                     </Grid>
                                     
+                                    <!-- ===== BULK SAFETY GRADE ===== -->
+                                    <Border CornerRadius="8" Margin="0,0,0,16" Padding="16"
+                                            Visibility="{Binding BulkSafetyGrade, Converter={StaticResource StringToVisibilityConverter}}">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource Success}"/>
+                                                <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="C">
+                                                        <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="D">
+                                                        <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="F">
+                                                        <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- Grade badge -->
+                                            <Border Grid.Column="0" Width="52" Height="52" CornerRadius="8" Margin="0,0,14,0" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource Success}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="C">
+                                                                <Setter Property="Background" Value="{StaticResource Warning}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="D">
+                                                                <Setter Property="Background" Value="{StaticResource Danger}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="F">
+                                                                <Setter Property="Background" Value="{StaticResource Danger}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding BulkSafetyGrade}" FontSize="26" FontWeight="Bold"
+                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock FontSize="13" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                            <Setter Property="Text" Value="Bulk Safe"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="C">
+                                                                    <Setter Property="Text" Value="Bulk Safety Concern"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="D">
+                                                                    <Setter Property="Text" Value="Bulk Safety Risk"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding BulkSafetyGrade}" Value="F">
+                                                                    <Setter Property="Text" Value="Not Bulk Safe"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding BulkSafetyReason}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
                                     <!-- ===== GOVERNOR LIMITS PROGRESS BARS ===== -->
                                     <Border Background="{StaticResource BgInput}" CornerRadius="6" Padding="16" Margin="0,0,0,16">
                                         <StackPanel>
-                                            <TextBlock Text="Resource Usage" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"
-                                                       ToolTip="Salesforce limits how much each transaction can do (called 'Governor Limits'). These bars show how close you are to those limits."/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <TextBlock Text="Resource Usage" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
+                                                           VerticalAlignment="Center"
+                                                           ToolTip="Salesforce limits how much each transaction can do (called 'Governor Limits'). These bars show how close you are to those limits."/>
+                                                <!-- Async execution context badge — async transactions get 200 SOQL instead of 100 -->
+                                                <Border CornerRadius="4" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                        Background="{StaticResource InfoSubtle}"
+                                                        Visibility="{Binding IsAsyncExecution, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        ToolTip="Async transactions (Batch, @future, Queueable, Scheduled) get higher governor limits — e.g. 200 SOQL instead of 100.">
+                                                    <TextBlock Text="⚡ Async — Higher Limits" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Info}"/>
+                                                </Border>
+                                            </StackPanel>
                                             
                                             <!-- SOQL Progress -->
                                             <Grid Margin="0,0,0,10">
@@ -3059,6 +3244,250 @@
                                                                     </TextBlock>
                                                                 </Border>
                                                             </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ===== ITEM 6: HTTP CALLOUTS ===== -->
+                                    <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,0,0,2"
+                                            CornerRadius="6" Padding="16" Margin="0,0,0,12"
+                                            Visibility="{Binding HasCallouts, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="HTTP Callouts" FontSize="15" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource AccentPrimary}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding Callouts.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="Outbound HTTP requests made during this transaction. Each callout consumes one of your 100 callout limit slots."
+                                                       FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                            <ItemsControl ItemsSource="{Binding Callouts}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{StaticResource BgSecondary}" CornerRadius="4" Padding="12" Margin="0,0,0,6">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <!-- HTTP Method badge -->
+                                                                <Border Grid.Column="0" CornerRadius="3" Padding="6,2" Margin="0,0,8,0"
+                                                                        Background="{StaticResource BgHover}" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding HttpMethod}" FontSize="10" FontWeight="Bold"
+                                                                               Foreground="{StaticResource AccentPrimary}"/>
+                                                                </Border>
+                                                                <!-- Named Credential badge -->
+                                                                <Border Grid.Column="1" CornerRadius="3" Padding="6,2" Margin="0,0,8,0"
+                                                                        Background="{StaticResource SuccessSubtle}" VerticalAlignment="Center"
+                                                                        Visibility="{Binding UsesNamedCredential, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                        ToolTip="This callout uses a Named Credential — best practice for security.">
+                                                                    <TextBlock Text="🔑 NC" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Success}"/>
+                                                                </Border>
+                                                                <!-- Endpoint -->
+                                                                <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                                                           FontSize="12" Foreground="{StaticResource TextPrimary}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding Endpoint}">
+                                                                    <Run Text="{Binding NamedCredentialName, Mode=OneWay}"/>
+                                                                    <Run Text="{Binding Endpoint, Mode=OneWay}"/>
+                                                                </TextBlock>
+                                                                <!-- Status badge -->
+                                                                <Border Grid.Column="3" CornerRadius="3" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                                                    <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock FontSize="10" FontWeight="Bold">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                        <Run Text="{Binding StatusCode, Mode=OneWay}"/>
+                                                                    </TextBlock>
+                                                                </Border>
+                                                                <!-- Duration -->
+                                                                <Border Grid.Column="4" CornerRadius="3" Padding="6,2" Margin="6,0,0,0"
+                                                                        Background="{StaticResource BgHover}" VerticalAlignment="Center">
+                                                                    <TextBlock FontSize="10" Foreground="{StaticResource TextMuted}">
+                                                                        <Run Text="{Binding DurationMs, StringFormat={}{0:N0}, Mode=OneWay}"/><Run Text="ms"/>
+                                                                    </TextBlock>
+                                                                </Border>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ===== ITEM 7: DUPLICATE QUERIES (N+1 PATTERNS) ===== -->
+                                    <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,2"
+                                            CornerRadius="6" Padding="16" Margin="0,0,0,12"
+                                            Visibility="{Binding HasDuplicateQueries, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="🔁" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Duplicate SOQL Queries" FontSize="15" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource Warning}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding DuplicateQueries.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="The same SOQL query ran more than once. This is often caused by an N+1 loop — each iteration queries individually instead of querying all records up front."
+                                                       FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                            <ItemsControl ItemsSource="{Binding DuplicateQueries}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{StaticResource BgSecondary}" CornerRadius="4" Padding="12" Margin="0,0,0,6">
+                                                            <StackPanel>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding ExampleQuery}" FontSize="12"
+                                                                               Foreground="{StaticResource TextPrimary}" TextTrimming="CharacterEllipsis"
+                                                                               ToolTip="{Binding ExampleQuery}" VerticalAlignment="Center" FontFamily="Consolas"/>
+                                                                    <!-- N+1 badge for high-frequency duplicates -->
+                                                                    <Border Grid.Column="1" CornerRadius="3" Padding="6,2" Margin="8,0,0,0"
+                                                                            Background="{StaticResource DangerSubtle}" VerticalAlignment="Center"
+                                                                            Visibility="{Binding ExecutionCount, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"
+                                                                            ToolTip="This query ran many times — classic N+1 loop pattern.">
+                                                                        <TextBlock Text="N+1" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Danger}"/>
+                                                                    </Border>
+                                                                    <!-- Execution count -->
+                                                                    <Border Grid.Column="2" CornerRadius="3" Padding="6,2" Margin="6,0,0,0"
+                                                                            Background="{StaticResource WarningSubtle}" VerticalAlignment="Center">
+                                                                        <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource Warning}">
+                                                                            <Run Text="×"/><Run Text="{Binding ExecutionCount, Mode=OneWay}"/>
+                                                                        </TextBlock>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <TextBlock FontSize="10" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0">
+                                                                    <Run Text="{Binding TotalRows, Mode=OneWay}"/><Run Text=" total rows returned"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ===== ITEM 8: WORKFLOW RULES ===== -->
+                                    <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource TextMuted}" BorderThickness="0,0,0,2"
+                                            CornerRadius="6" Padding="16" Margin="0,0,0,12"
+                                            Visibility="{Binding HasWorkflowRules, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="📋" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Workflow Rules Evaluated" FontSize="15" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource BgHover}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding WorkflowRules.Count}" FontSize="11" Foreground="{StaticResource TextSecondary}" FontWeight="Bold"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="Classic Workflow Rules evaluated during this transaction. Note: Salesforce is retiring Workflow Rules — consider migrating to Flow."
+                                                       FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                            <ItemsControl ItemsSource="{Binding WorkflowRules}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{StaticResource BgSecondary}" CornerRadius="4" Padding="10,8" Margin="0,0,0,4">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="📋" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding RuleName}" FontSize="12" FontWeight="SemiBold"
+                                                                               Foreground="{StaticResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Text="{Binding ObjectType}" FontSize="10"
+                                                                               Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                                                                </StackPanel>
+                                                                <!-- Matched badge -->
+                                                                <Border Grid.Column="2" CornerRadius="3" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                        Background="{StaticResource SuccessSubtle}"
+                                                                        Visibility="{Binding Matched, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                    <TextBlock Text="Fired" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Success}"/>
+                                                                </Border>
+                                                                <Border Grid.Column="3" CornerRadius="3" Padding="6,2" Margin="6,0,0,0" VerticalAlignment="Center"
+                                                                        Background="{StaticResource BgHover}"
+                                                                        Visibility="{Binding Matched, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                                                    <TextBlock Text="Skipped" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                                </Border>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ===== ITEM 9: FLOW ERRORS (DML/VALIDATION FAILURES INSIDE FLOWS) ===== -->
+                                    <Border Background="{StaticResource DangerSubtle}" BorderBrush="{StaticResource Danger}" BorderThickness="0,0,0,2"
+                                            CornerRadius="6" Padding="16" Margin="0,0,0,12"
+                                            Visibility="{Binding HasFlowErrors, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="💥" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Flow Errors" FontSize="15" FontWeight="Bold"
+                                                           Foreground="{StaticResource Danger}" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource Danger}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding FlowErrors.Count}" FontSize="11" Foreground="White" FontWeight="Bold"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="DML or validation errors that occurred inside a Flow element. These cause the entire transaction to roll back unless the Flow has fault-path handling."
+                                                       FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                            <ItemsControl ItemsSource="{Binding FlowErrors}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{StaticResource BgSecondary}" CornerRadius="4" Padding="12" Margin="0,0,0,6">
+                                                            <StackPanel>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <StackPanel Grid.Column="0">
+                                                                        <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}">
+                                                                            <Run Text="{Binding FlowName, Mode=OneWay}"/>
+                                                                            <Run Text=" → "/><Run Text="{Binding ElementName, Mode=OneWay}"/>
+                                                                        </TextBlock>
+                                                                    </StackPanel>
+                                                                    <Border Grid.Column="1" CornerRadius="3" Padding="6,2" Margin="8,0,0,0"
+                                                                            Background="{StaticResource DangerSubtle}" VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding ErrorCode}" FontSize="9" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource Danger}" FontFamily="Consolas"/>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <TextBlock Text="{Binding ErrorMessage}" FontSize="11"
+                                                                           Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"
+                                                                           TextWrapping="Wrap"/>
+                                                            </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
