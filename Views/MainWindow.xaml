@@ -2121,14 +2121,14 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
-                                                                        <Run Text="{Binding SeverityIcon}"/>
-                                                                        <Run Text=" "/><Run Text="{Binding Title}"/>
+                                                                        <Run Text="{Binding SeverityIcon, Mode=OneWay}"/>
+                                                                        <Run Text=" "/><Run Text="{Binding Title, Mode=OneWay}"/>
                                                                     </TextBlock>
                                                                     <Border Grid.Column="1" Background="{StaticResource BgHover}" CornerRadius="4" Padding="8,4" Margin="0,0,6,0">
-                                                                        <TextBlock Text="{Binding RoleBadge}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                        <TextBlock Text="{Binding RoleBadge, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                                     </Border>
                                                                     <Border Grid.Column="2" Background="{StaticResource BgHover}" CornerRadius="4" Padding="8,4">
-                                                                        <TextBlock Text="{Binding DifficultyBadge}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                        <TextBlock Text="{Binding DifficultyBadge, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                                     </Border>
                                                                 </Grid>
                                                                 
@@ -2170,7 +2170,7 @@
                                                                         <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
                                                                                    Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
                                                                         <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
-                                                                            <Run Text="?? Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes}"/><Run Text=" minutes"/>
+                                                                            <Run Text="?? Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
                                                                 </Border>
@@ -2205,14 +2205,14 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
-                                                                        <Run Text="{Binding SeverityIcon}"/>
-                                                                        <Run Text=" "/><Run Text="{Binding Title}"/>
+                                                                        <Run Text="{Binding SeverityIcon, Mode=OneWay}"/>
+                                                                        <Run Text=" "/><Run Text="{Binding Title, Mode=OneWay}"/>
                                                                     </TextBlock>
                                                                     <Border Grid.Column="1" Background="{StaticResource BgHover}" CornerRadius="4" Padding="8,4" Margin="0,0,6,0">
-                                                                        <TextBlock Text="{Binding RoleBadge}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                        <TextBlock Text="{Binding RoleBadge, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                                     </Border>
                                                                     <Border Grid.Column="2" Background="{StaticResource BgHover}" CornerRadius="4" Padding="8,4">
-                                                                        <TextBlock Text="{Binding DifficultyBadge}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                        <TextBlock Text="{Binding DifficultyBadge, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                                     </Border>
                                                                 </Grid>
                                                                 
@@ -2246,7 +2246,7 @@
                                                                         <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
                                                                                    Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
                                                                         <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
-                                                                            <Run Text="?? Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes}"/><Run Text=" minutes"/>
+                                                                            <Run Text="?? Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
                                                                 </Border>
@@ -2279,21 +2279,21 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold">
-                                                                        <Run Text="{Binding SeverityIcon}"/>
-                                                                        <Run Text=" "/><Run Text="{Binding Title}"/>
+                                                                        <Run Text="{Binding SeverityIcon, Mode=OneWay}"/>
+                                                                        <Run Text=" "/><Run Text="{Binding Title, Mode=OneWay}"/>
                                                                     </TextBlock>
-                                                                    <TextBlock Grid.Column="1" Text="{Binding RoleBadge}" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="8,0,4,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding RoleBadge, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="8,0,4,0" VerticalAlignment="Center"/>
                                                                     <TextBlock Grid.Column="2" FontSize="11" Foreground="{StaticResource Success}">
-                                                                        <Run Text="?? "/><Run Text="{Binding EstimatedFixTimeMinutes}"/><Run Text=" min"/>
+                                                                        <Run Text="?? "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" min"/>
                                                                     </TextBlock>
                                                                 </Grid>
                                                                 
                                                                 <!-- Details -->
                                                                 <StackPanel Grid.Row="1">
                                                                     <TextBlock FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" Margin="0,0,0,6">
-                                                                        <Run Text="{Binding Problem}"/>
+                                                                        <Run Text="{Binding Problem, Mode=OneWay}"/>
                                                                         <Run Text=" ? " Foreground="{StaticResource TextMuted}"/>
-                                                                        <Run Text="{Binding Impact}" Foreground="{StaticResource Success}"/>
+                                                                        <Run Text="{Binding Impact, Mode=OneWay}" Foreground="{StaticResource Success}"/>
                                                                     </TextBlock>
                                                                     <Button Style="{StaticResource PillLinkButton}" Margin="0,0,0,6"
                                                                             Command="{Binding DataContext.OpenInEditorCommand, RelativeSource={RelativeSource AncestorType=Window}}"
