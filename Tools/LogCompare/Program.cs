@@ -9,6 +9,7 @@ namespace LogCompare;
 /// Usage:
 ///   dotnet run -- "path\to\log.log"
 ///   dotnet run -- "path\to\logs-folder\"
+///   dotnet run -- "file1.log" "file2.log" "path\to\folder\"
 ///
 /// For each log it produces two files in ./output/:
 ///   [name]-scripted.txt  — the full output from LogExplainerService (what the app says today)
@@ -43,32 +44,35 @@ class Program
             return 1;
         }
 
-        var path = args[0].Trim('"');
         var outputDir = Path.Combine(AppContext.BaseDirectory, "output");
         Directory.CreateDirectory(outputDir);
 
         var logFiles = new List<string>();
 
-        if (File.Exists(path))
+        foreach (var arg in args)
         {
-            logFiles.Add(path);
-        }
-        else if (Directory.Exists(path))
-        {
-            logFiles.AddRange(Directory.GetFiles(path, "*.log", SearchOption.TopDirectoryOnly));
-            logFiles.AddRange(Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly));
-            if (logFiles.Count == 0)
+            var path = arg.Trim('"');
+            if (File.Exists(path))
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"No .log or .txt files found in: {path}");
+                logFiles.Add(path);
+            }
+            else if (Directory.Exists(path))
+            {
+                logFiles.AddRange(Directory.GetFiles(path, "*.log", SearchOption.TopDirectoryOnly));
+                logFiles.AddRange(Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly));
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"  ⚠ Not found, skipping: {path}");
                 Console.ResetColor();
-                return 1;
             }
         }
-        else
+
+        if (logFiles.Count == 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Path not found: {path}");
+            Console.WriteLine("No .log or .txt files found in the specified path(s).");
             Console.ResetColor();
             return 1;
         }

@@ -59,11 +59,24 @@ public class LogExplainerService
 
         if (!string.IsNullOrEmpty(analysis.EntryPoint))
         {
-            var friendlyEntry = FriendlyEntryPoint(analysis.EntryPoint);
+            // Detect developer tool context vs real user action
+            var isAnonApex = analysis.EntryPoint.Contains("execute_anonymous_apex", StringComparison.OrdinalIgnoreCase);
+            var actor = isAnonApex ? "A developer" : user;
+            var action = isAnonApex
+                ? "ran code directly from Developer Console or VS Code"
+                : $"triggered {FriendlyEntryPoint(analysis.EntryPoint)}";
+
+            // Detect silent validation failure (exception caught but record wasn't saved)
+            var hasValidationFailure = analysis.HandledExceptions?.Any(e =>
+                e.Name?.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase) == true) ?? false;
+
+            if (hasValidationFailure && !analysis.TransactionFailed)
+                return $"{actor} {action}. ⚠️ The code ran, but a record save was rejected by a validation rule — the record was NOT saved.";
+
             var result = analysis.TransactionFailed
                 ? "❌ The operation failed with an error."
                 : "✅ The operation completed successfully.";
-            return $"{user} triggered {friendlyEntry}. {result}";
+            return $"{actor} {action}. {result}";
         }
 
         return analysis.TransactionFailed
@@ -178,6 +191,48 @@ public class LogExplainerService
             }
         }
 
+        // --- VALIDATION FAILURE (caught DmlException) ---
+        var validationFailures = analysis.HandledExceptions?
+            .Where(e => e.Name?.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase) == true)
+            .ToList();
+        if (validationFailures?.Any() == true && !analysis.IsTestExecution)
+        {
+            var msg = TruncateText(validationFailures.First().Name ?? "", 200);
+            issues.Add(new DetailedIssue
+            {
+                Icon = "⚠️",
+                Title = "Validation Rule Blocked a Record Save",
+                WhatThisMeans = "A Salesforce validation rule rejected an insert or update. The code caught the error and didn't crash — but the record was NOT saved.",
+                WhyThisHappened = $"Error: {msg}",
+                Analogy = "Think of it like submitting a form online and getting a red 'This field is required' message. The page didn't crash, but nothing was submitted either.",
+                WhyItsBad = "If this runs in production, the user's data is silently lost. Make sure you surface this error to the user with a clear message — don't just swallow the exception.",
+                Severity = "Medium"
+            });
+        }
+
+        // --- INTENTIONAL TEST EXCEPTIONS ---
+        if (analysis.IsTestExecution && analysis.HandledExceptions?.Any() == true)
+        {
+            var restExceptions = analysis.HandledExceptions
+                .Where(e => e.Name?.Contains("NotFoundException", StringComparison.OrdinalIgnoreCase) == true ||
+                            e.Name?.Contains("MethodNotAllowedException", StringComparison.OrdinalIgnoreCase) == true ||
+                            e.Name?.Contains("RestFramework", StringComparison.OrdinalIgnoreCase) == true)
+                .ToList();
+            if (restExceptions.Count > 0)
+            {
+                issues.Add(new DetailedIssue
+                {
+                    Icon = "✅",
+                    Title = $"{restExceptions.Count} Intentional Test Exception{(restExceptions.Count > 1 ? "s" : "")} — Expected Behaviour",
+                    WhatThisMeans = $"Your test caught {restExceptions.Count} REST API exception{(restExceptions.Count > 1 ? "s" : "")} on purpose. These are NOT bugs — the test is verifying that bad requests fail correctly.",
+                    WhyThisHappened = "Your test method deliberately triggers invalid scenarios (wrong HTTP method, missing records) and confirms the right exception is thrown.",
+                    Analogy = "This is like a test driver deliberately braking hard to verify the ABS kicks in — the 'failure' IS the thing being tested. This is excellent defensive design.",
+                    WhyItsBad = "Nothing is wrong here.",
+                    Severity = "Info"
+                });
+            }
+        }
+
         // --- N+1 QUERY PATTERN ---
         var duplicateQueries = analysis.DuplicateQueries?.Where(d => d.ExecutionCount > 3).ToList();
         if (duplicateQueries?.Any() == true)
@@ -251,15 +306,21 @@ public class LogExplainerService
         var reentries = analysis.TriggerReEntries?.Where(t => t.HasReEntry).ToList();
         if (reentries?.Any() == true)
         {
+            var firstRecursion = true;
             foreach (var re in reentries)
             {
+                var analogy = firstRecursion
+                    ? "It's like a smoke detector that's so sensitive it goes off from the steam of cooking — which makes you fan the air — which triggers it again. A never-ending cycle!"
+                    : $"Same cascade pattern as the first trigger above — each update fires the trigger again, burning through governor limits until Salesforce stops it.";
+                firstRecursion = false;
+
                 issues.Add(new DetailedIssue
                 {
                     Icon = "🔄",
                     Title = $"{re.TriggerName} fired {re.TotalFireCount} times (recursion)",
                     WhatThisMeans = $"The trigger \"{re.TriggerName}\" ran {re.TotalFireCount} times in a single transaction instead of once. This wastes resources and can cause infinite loops.",
                     WhyThisHappened = "Your trigger updates the same object it's triggered on, which fires the trigger again. This creates a loop.",
-                    Analogy = "It's like a smoke detector that's so sensitive it goes off from the steam of cooking — which makes you fan the air — which triggers it again. A never-ending cycle!",
+                    Analogy = analogy,
                     WhyItsBad = $"Each re-entry burns through governor limits. With {re.TotalFireCount} runs, you're using {re.TotalFireCount}x the SOQL/DML you should be. In worst case, Salesforce kills the transaction.",
                     Severity = re.TotalFireCount > 3 ? "Critical" : "High"
                 });
@@ -284,14 +345,25 @@ public class LogExplainerService
         // --- SLOW EXECUTION ---
         if (analysis.DurationMs > 5000 && issues.All(i => i.Title.Contains("CPU") == false))
         {
+            var isTest = analysis.IsTestExecution;
+            var hasRecursion = reentries?.Any() == true;
+            var slowWhy = hasRecursion
+                ? "The trigger cascade is the likely root cause — each trigger re-entry runs queries, Flows, and DML again, multiplying the execution time."
+                : "Common causes: too many database queries, unoptimized loops, external API callouts, or complex Flow logic.";
             issues.Add(new DetailedIssue
             {
                 Icon = "🐌",
                 Title = $"Slow Execution: {FormatDuration(analysis.DurationMs)}",
-                WhatThisMeans = $"This transaction took {FormatDuration(analysis.DurationMs)}, which users will definitely notice. Anything over 3 seconds feels \"slow\" to users.",
-                WhyThisHappened = "Common causes: too many database queries, unoptimized loops, external API callouts, or complex Flow logic.",
-                Analogy = "When a webpage takes more than 3 seconds to load, 53% of mobile users leave. Your users are waiting this long every time they do this action.",
-                WhyItsBad = "Slow operations frustrate users, reduce adoption, and can cascade into timeout errors during peak usage.",
+                WhatThisMeans = isTest
+                    ? $"This test took {FormatDuration(analysis.DurationMs)}. A test suite of 10 methods like this could hit Salesforce's 10-minute total test limit and block your deployments."
+                    : $"This transaction took {FormatDuration(analysis.DurationMs)}, which users will definitely notice. Anything over 3 seconds feels \"slow\" to users.",
+                WhyThisHappened = slowWhy,
+                Analogy = isTest
+                    ? $"A {FormatDuration(analysis.DurationMs)} test is like a car that takes that long just to start. It works, but in CI/CD every commit will wait for it — and your team will start skipping tests to save time."
+                    : "When a webpage takes more than 3 seconds to load, 53% of mobile users leave. Your users are waiting this long every time they do this action.",
+                WhyItsBad = isTest
+                    ? "Fix the trigger cascade first — that will likely cut this test time by 80% or more."
+                    : "Slow operations frustrate users, reduce adoption, and can cascade into timeout errors during peak usage.",
                 Severity = analysis.DurationMs > 10000 ? "High" : "Medium"
             });
         }
@@ -612,6 +684,12 @@ trigger MyTrigger on Account (after update) {
         if (analysis.TransactionFailed)
             return "Your code crashed. Fix the error first, then address any performance issues.";
 
+        // Validation failure — technically didn't crash but functionally broken
+        var hasValidationFailure = !analysis.IsTestExecution && (analysis.HandledExceptions?.Any(e =>
+            e.Name?.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase) == true) ?? false);
+        if (hasValidationFailure)
+            return "The code ran without crashing, but a record save was silently rejected by a validation rule. Your users may not know their data wasn't saved — make sure you surface this error to them.";
+
         var lastLimit = analysis.LimitSnapshots?.LastOrDefault();
         if (lastLimit == null) return "Transaction completed successfully.";
 
@@ -632,11 +710,14 @@ trigger MyTrigger on Account (after update) {
     {
         if (analysis.TransactionFailed) return "Critical";
         var lastLimit = analysis.LimitSnapshots?.LastOrDefault();
-        if (lastLimit == null) return "Low";
-        var maxPct = MaxLimitPercent(lastLimit);
+        var maxPct = lastLimit != null ? MaxLimitPercent(lastLimit) : 0;
         if (maxPct >= 95) return "Critical";
         if (maxPct >= 80) return "High";
         if (maxPct >= 50) return "Medium";
+        // Validation failure is at least Medium even if limits look fine
+        var hasValidationFailure = !analysis.IsTestExecution && (analysis.HandledExceptions?.Any(e =>
+            e.Name?.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase) == true) ?? false);
+        if (hasValidationFailure) return "Medium";
         return "Low";
     }
 
@@ -647,6 +728,9 @@ trigger MyTrigger on Account (after update) {
         if (analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true) totalMinutes += 15;
         if (analysis.Errors?.Any() == true) totalMinutes += 60;
         if (analysis.BulkSafetyGrade is "D" or "F") totalMinutes += 45;
+        var hasValidationFailure = !analysis.IsTestExecution && (analysis.HandledExceptions?.Any(e =>
+            e.Name?.Contains("FIELD_CUSTOM_VALIDATION_EXCEPTION", StringComparison.OrdinalIgnoreCase) == true) ?? false);
+        if (hasValidationFailure) totalMinutes += 20;
 
         if (totalMinutes == 0) return "No action needed — your code looks great!";
         if (totalMinutes <= 30) return $"🛠️ Quick fix — about {totalMinutes} minutes of work";
