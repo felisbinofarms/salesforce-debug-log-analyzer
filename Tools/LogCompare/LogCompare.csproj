@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>LogCompare</AssemblyName>
+    <RootNamespace>LogCompare</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Link the real source files from the main project.
+    We don't copy them — changes to the main services are picked up automatically.
+  -->
+  <ItemGroup>
+    <Compile Include="..\..\Models\LogModels.cs"        Link="Shared\LogModels.cs" />
+    <Compile Include="..\..\Models\SalesforceModels.cs" Link="Shared\SalesforceModels.cs" />
+    <Compile Include="..\..\Services\LogParserService.cs"   Link="Shared\LogParserService.cs" />
+    <Compile Include="..\..\Services\LogExplainerService.cs" Link="Shared\LogExplainerService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>
