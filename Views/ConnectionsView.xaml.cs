@@ -307,8 +307,6 @@ public partial class ConnectionsView : UserControl
                 if (Directory.Exists(paths[0]))
                 {
                     System.Diagnostics.Debug.WriteLine($"[ConnectionsView] Folder dropped: {paths[0]}");
-                    MessageBox.Show($"Folder detected:\n{paths[0]}\n\nAbout to trigger FolderDropped event...", 
-                        "Debug: Folder Drop", MessageBoxButton.OK, MessageBoxImage.Information);
                     FolderDropped?.Invoke(this, paths[0]);
                 }
                 // Single .log file

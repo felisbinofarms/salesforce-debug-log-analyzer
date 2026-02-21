@@ -81,9 +81,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ShowMixedContextWarning = false;
             return;
         }
-        
-        // Don't change SelectedLog here — user will click individual logs in the group to see details
-        // The group card shows aggregate metrics only
+
+        // Auto-parse the first log in the group so the right panel shows content
+        var firstLog = value.Logs.FirstOrDefault();
+        if (firstLog != null && !string.IsNullOrEmpty(firstLog.FilePath))
+        {
+            _ = LoadLogFromPath(firstLog.FilePath);
+        }
         
         // Generate aggregate summary
         var logCount = value.Logs.Count;
@@ -1954,6 +1958,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     LogGroups.Add(group);
                 }
 
+                ShowGroupedView = true;  // Auto-switch to grouped view
                 StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
 
                 // Auto-select first group
@@ -2005,18 +2010,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"Found {metadata.Count} logs, grouping by transaction...";
             var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
 
-            LogGroups.Clear();
-            foreach (var group in groups)
-                LogGroups.Add(group);
-
-            StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
-
-            if (LogGroups.Any())
-                SelectedLogGroup = LogGroups.First();
+            // Force UI thread update
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                LogGroups.Clear();
+                foreach (var group in groups)
+                    LogGroups.Add(group);
+                ShowGroupedView = true;
+                StatusMessage = $"\u2713 Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
+                if (LogGroups.Any())
+                    SelectedLogGroup = LogGroups.First();
+            });
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error loading folder: {ex.Message}";
+            MessageBox.Show($"Failed to load logs:\n\n{ex.Message}",
+                "Error Loading Folder", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
