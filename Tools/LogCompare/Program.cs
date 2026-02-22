@@ -180,7 +180,7 @@ class Program
             sb.AppendLine();
             sb.AppendLine("What your code did:");
             foreach (var bullet in explanation.WhatYourCodeDid)
-                sb.AppendLine($"  • {bullet}");
+                sb.AppendLine($"  \u2022 {StripMarkdown(bullet).TrimStart('\u2022', ' ')}");
         }
 
         sb.AppendLine();
@@ -584,4 +584,12 @@ class Program
         if (string.IsNullOrEmpty(text)) return "";
         return text.Length <= max ? text : text[..max] + "…";
     }
-}
+    // Strip Markdown bold/italic/code markers for plain-text output
+    static string StripMarkdown(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        return text
+            .Replace("**", "")
+            .Replace("__", "")
+            .Replace("`", "");
+    }}

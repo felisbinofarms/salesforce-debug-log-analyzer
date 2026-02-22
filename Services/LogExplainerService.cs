@@ -49,7 +49,7 @@ public class LogExplainerService
 
     private string BuildWhatHappened(LogAnalysis analysis)
     {
-        var user = string.IsNullOrEmpty(analysis.LogUser) ? "A user" : analysis.LogUser;
+        var user = FriendlyUserLabel(analysis.LogUser);
 
         if (analysis.IsTestExecution)
         {
@@ -105,9 +105,16 @@ public class LogExplainerService
         if (dmlCount > 0)
             items.Add($"• 📝 Saved data **{dmlCount} time{(dmlCount > 1 ? "s" : "")}** (inserts/updates/deletes)");
 
-        // Callouts
+        // Callouts — include domain + timing of slowest call
         if (analysis.Callouts?.Count > 0)
-            items.Add($"• 🌐 Made **{analysis.Callouts.Count} external API call{(analysis.Callouts.Count > 1 ? "s" : "")}**");
+        {
+            var topCallout = analysis.Callouts.OrderByDescending(c => c.DurationMs).First();
+            var domain = ExtractDomain(topCallout.Endpoint);
+            var detail = analysis.Callouts.Count == 1
+                ? $" → {domain} ({topCallout.DurationMs}ms, HTTP {topCallout.StatusCode})"
+                : $" — slowest: {topCallout.DurationMs}ms to {domain}";
+            items.Add($"• 🌐 Made **{analysis.Callouts.Count} external API call{(analysis.Callouts.Count > 1 ? "s" : "")}**{detail}");
+        }
 
         // Flows
         if (analysis.Flows?.Count > 0)
@@ -149,6 +156,15 @@ public class LogExplainerService
             return $"⚠️ Your code is using {maxPct:F0}% of Salesforce limits — dangerously close. It works now but won't scale.";
         if (maxPct >= 50)
             return $"⚡ Your code used {maxPct:F0}% of limits. It works fine but has room for optimization.";
+
+        // Duration-based verdict even when limit % looks fine
+        var durationMs = analysis.WallClockMs > 0 ? analysis.WallClockMs : analysis.DurationMs;
+        if (durationMs >= 10000)
+            return $"🐌 Took {FormatDuration(durationMs)} — users will feel this. Investigate slow methods and callouts.";
+        if (durationMs >= 5000)
+            return $"⚠️ Took {FormatDuration(durationMs)} — borderline slow. Aim for under 3 seconds for interactive actions.";
+        if (durationMs >= 3000 && analysis.Callouts?.Count > 0)
+            return $"⚡ Took {FormatDuration(durationMs)} — the external callout(s) are adding latency. Consider async patterns.";
 
         return "✅ Your code is efficient and well within Salesforce limits. Nice work!";
     }
@@ -401,40 +417,58 @@ public class LogExplainerService
         {
             var worst = duplicateQueries.OrderByDescending(d => d.ExecutionCount).First();
             var queryObj = ExtractObjectFromQuery(worst.ExampleQuery);
+            var isCmt = queryObj.EndsWith("__mdt", StringComparison.OrdinalIgnoreCase);
+
+            var codeAfter = isCmt
+                ? $@"// ✅ GOOD: Load ALL {queryObj} records once — CMT is cached by Salesforce
+Map<String, {queryObj}> settingsMap = new Map<String, {queryObj}>();
+for ({queryObj} rec : [SELECT DeveloperName, MasterLabel FROM {queryObj}]) {{
+    settingsMap.put(rec.DeveloperName, rec);
+}}
+
+// Use the Map in every loop — zero extra queries!
+for (SObject record : records) {{
+    String key = // derive the DeveloperName key from your record
+    {queryObj} setting = settingsMap.get(key);
+    if (setting != null) {{
+        // use setting values directly
+    }}
+}}"
+                : $@"// ✅ GOOD: Query ONCE before the loop
+Set<Id> recordIds = new Set<Id>();
+for (SObject rec : records) {{
+    recordIds.add(rec.Id);
+}}
+
+// One query gets ALL the data
+Map<Id, {queryObj}> recordMap = new Map<Id, {queryObj}>(
+    [SELECT Id FROM {queryObj} WHERE Id IN :recordIds]
+);
+
+// Now loop and use the Map — no queries!
+for (SObject record : records) {{
+    {queryObj} related = recordMap.get(record.Id);
+    if (related != null) {{
+        // Process related...
+    }}
+}}";
 
             recommendations.Add(new DetailedRecommendation
             {
                 Icon = "🎯",
                 Title = "Fix the N+1 Query Pattern (CRITICAL — Do This First!)",
-                Explanation = $"Your code queries {queryObj} inside a loop, {worst.ExecutionCount} separate times. Move the query BEFORE the loop and query all records at once.",
+                Explanation = isCmt
+                    ? $"Your code queries {queryObj} (Custom Metadata) inside a loop, {worst.ExecutionCount} times. Load ALL records into a Map once before the loop — CMT is cached by Salesforce so a single bulk query is fast."
+                    : $"Your code queries {queryObj} inside a loop, {worst.ExecutionCount} separate times. Move the query BEFORE the loop and query all records at once.",
                 CodeBefore = $@"// ❌ BAD: Query inside a loop — runs {worst.ExecutionCount} times!
-for (Account acc : Trigger.new) {{
-    List<{queryObj}> records = [
+for (SObject record : records) {{
+    List<{queryObj}> result = [
         {TruncateText(worst.ExampleQuery, 120)}
     ];
-    // Process records...
+    // Process result...
 }}",
                 CodeBeforeLabel = $"❌ Current — {worst.ExecutionCount} queries",
-                CodeAfter = $@"// ✅ GOOD: Query ONCE before the loop
-Set<Id> parentIds = new Set<Id>();
-for (Account acc : Trigger.new) {{
-    parentIds.add(acc.Id);
-}}
-
-// One query gets ALL the data
-Map<Id, List<{queryObj}>> recordsByParent = new Map<Id, List<{queryObj}>>();
-for ({queryObj} rec : [{TruncateText(worst.ExampleQuery, 80)} WHERE Id IN :parentIds]) {{
-    if (!recordsByParent.containsKey(rec.Id)) {{
-        recordsByParent.put(rec.Id, new List<{queryObj}>());
-    }}
-    recordsByParent.get(rec.Id).add(rec);
-}}
-
-// Now loop and use the Map — no queries!
-for (Account acc : Trigger.new) {{
-    List<{queryObj}> records = recordsByParent.get(acc.Id);
-    // Process records...
-}}",
+                CodeAfter = codeAfter,
                 CodeAfterLabel = "✅ Fixed — 1 query total",
                 ImpactBefore = $"{worst.ExecutionCount} database queries, {worst.ExecutionCount * 50}-{worst.ExecutionCount * 100}ms wasted",
                 ImpactAfter = "1 database query, ~50ms total",
@@ -612,8 +646,13 @@ trigger MyTrigger on Account (after update) {
         var items = new List<LearningItem>();
         var lastLimit = analysis.LimitSnapshots?.LastOrDefault();
 
-        // Governor limits — always teach this
-        if (lastLimit != null)
+        // Governor limits — only show when limits are actually being stressed or issues were found
+        var anyLimitAbove30 = lastLimit != null && MaxLimitPercent(lastLimit) >= 30;
+        var hasAnyIssue = analysis.DuplicateQueries?.Any(d => d.ExecutionCount > 3) == true
+            || analysis.BulkSafetyGrade is "C" or "D" or "F"
+            || analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true
+            || (lastLimit != null && MaxLimitPercent(lastLimit) >= 50);
+        if (anyLimitAbove30 || hasAnyIssue)
         {
             items.Add(new LearningItem
             {
@@ -778,6 +817,11 @@ trigger MyTrigger on Account (after update) {
     private static string FriendlyEntryPoint(string entryPoint)
     {
         if (string.IsNullOrEmpty(entryPoint)) return "a Salesforce action";
+        // Recognise platform/system entry points
+        if (entryPoint.StartsWith("Validation:DataLakeObject", StringComparison.OrdinalIgnoreCase))
+            return "a Data Cloud object schema validation";
+        if (entryPoint.StartsWith("ConduitEvent", StringComparison.OrdinalIgnoreCase))
+            return "a CRM Analytics event pipeline step";
         // Clean up common patterns
         var clean = entryPoint
             .Replace("trigger event", "")
@@ -807,6 +851,35 @@ trigger MyTrigger on Account (after update) {
             return endIdx > 0 ? after.Substring(0, endIdx) : after;
         }
         return "SObject";
+    }
+
+    private static string FriendlyUserLabel(string? username)
+    {
+        if (string.IsNullOrEmpty(username)) return "A user";
+        var u = username.ToLower();
+        if (u.StartsWith("autoproc@")) return "Salesforce (background automation)";
+        if (u.Contains("heroku")) return $"Heroku integration ({username})";
+        if (u.Contains("mulesoft")) return $"MuleSoft integration ({username})";
+        if (u.Contains(".connected@") || u.Contains("integration@") || u.Contains("api@"))
+            return $"Integration service ({username})";
+        return username;
+    }
+
+    private static string ExtractDomain(string? url)
+    {
+        if (string.IsNullOrEmpty(url)) return "external service";
+        try
+        {
+            if (!url.StartsWith("http")) return url.Split('/')[0];
+            var uri = new Uri(url);
+            return uri.Host;
+        }
+        catch
+        {
+            var stripped = url.Replace("https://", "").Replace("http://", "");
+            var slash = stripped.IndexOf('/');
+            return slash > 0 ? stripped[..slash] : stripped;
+        }
     }
 
     private static string TruncateText(string text, int maxLength)
