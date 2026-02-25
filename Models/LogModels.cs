@@ -6,6 +6,8 @@ namespace SalesforceDebugAnalyzer.Models;
 public class LogLine
 {
     public DateTime Timestamp { get; set; }
+    /// <summary>Nanosecond counter from the log line parenthetical, e.g. (225728779). Zero if not present.</summary>
+    public long NanosecondCounter { get; set; }
     public string EventType { get; set; } = string.Empty;
     public string[] Details { get; set; } = Array.Empty<string>();
     public int LineNumber { get; set; }
@@ -21,12 +23,19 @@ public class ExecutionNode
     public ExecutionNodeType Type { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    public long DurationMs => EndTime.HasValue ? (long)(EndTime.Value - StartTime).TotalMilliseconds : 0;
+    /// <summary>Nanosecond counter at node entry. Zero means unavailable.</summary>
+    public long NanosecondStart { get; set; }
+    /// <summary>Nanosecond counter at node exit. Zero means unavailable.</summary>
+    public long NanosecondEnd { get; set; }
+    /// <summary>Duration in ms. Prefers nanosecond counters when available for sub-millisecond precision.</summary>
+    public long DurationMs => NanosecondEnd > NanosecondStart
+        ? (NanosecondEnd - NanosecondStart) / 1_000_000
+        : (EndTime.HasValue ? (long)(EndTime.Value - StartTime).TotalMilliseconds : 0);
     public List<ExecutionNode> Children { get; set; } = new();
     public Dictionary<string, object> Metadata { get; set; } = new();
     public int StartLineNumber { get; set; }
     public int? EndLineNumber { get; set; }
-    
+
     /// <summary>
     /// For Exception nodes: indicates if this exception was handled (caught) or unhandled
     /// </summary>
@@ -172,6 +181,19 @@ public class GovernorLimitSnapshot
     public string Namespace { get; set; } = "(default)";
 }
 
+/// <summary>Confidence level of the duration measurement shown to the user.</summary>
+public enum DurationSource
+{
+    /// <summary>From nanosecond counters in the log — exact to microsecond precision.</summary>
+    NanosecondPrecise,
+    /// <summary>Derived from HH:MM:SS DateTime timestamps — millisecond precision only.</summary>
+    DateTimeDerived,
+    /// <summary>Log was truncated before EXECUTION_FINISHED — duration is a lower bound.</summary>
+    Incomplete,
+    /// <summary>Async execution — the synchronous portion only; async work continues after this log ends.</summary>
+    Async
+}
+
 /// <summary>
 /// Complete analysis of a parsed debug log
 /// </summary>
@@ -181,6 +203,8 @@ public class LogAnalysis
     public string LogName { get; set; } = string.Empty;
     public DateTime ParsedAt { get; set; }
     public double DurationMs { get; set; }
+    /// <summary>How the DurationMs figure was derived. Affects the display prefix (~, >, etc.) and tooltip.</summary>
+    public DurationSource DurationSource { get; set; } = DurationSource.NanosecondPrecise;
     public int LineCount { get; set; }
     public bool HasErrors { get; set; }
     public ExecutionNode RootNode { get; set; } = new();
@@ -235,6 +259,12 @@ public class LogAnalysis
     /// Cumulative profiling data (from CUMULATIVE_PROFILING section at end of log)
     /// </summary>
     public CumulativeProfiling? CumulativeProfiling { get; set; }
+
+    /// <summary>
+    /// True if CUMULATIVE_PROFILING_BEGIN marker was found in the log.
+    /// When true but CumulativeProfiling is null, the section existed but parsing produced no data.
+    /// </summary>
+    public bool CumulativeProfilingFound { get; set; } = false;
     
     /// <summary>
     /// Log user name from USER_INFO line

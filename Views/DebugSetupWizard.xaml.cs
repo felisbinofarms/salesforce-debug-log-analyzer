@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
 
@@ -265,6 +267,12 @@ public partial class DebugSetupWizard : UserControl
     private void ViewLogs_Click(object sender, RoutedEventArgs e)
     {
         WizardCompleted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        e.Handled = true;
     }
 
     private async void CreateDebugLevel_Click(object sender, RoutedEventArgs e)

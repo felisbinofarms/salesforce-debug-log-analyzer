@@ -110,6 +110,7 @@
             <StackPanel Margin="32">
                 <!-- Step 1: Choose User -->
                 <StackPanel x:Name="Step1Panel">
+                    <TextBlock Text="Step 1 of 4" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                     <TextBlock Text="Step 1: Who Do You Want to Debug?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
                     <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="2" CornerRadius="8">
@@ -188,6 +189,7 @@
 
                 <!-- Step 2: Debug Level -->
                 <StackPanel x:Name="Step2Panel" Visibility="Collapsed">
+                    <TextBlock Text="Step 2 of 4" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                     <TextBlock Text="Step 2: How Much Detail Do You Need?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
                     <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource Warning}" BorderThickness="2" CornerRadius="8">
@@ -199,6 +201,11 @@
                             <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}">
                                 More detail = bigger log files. Logs are limited to 20MB, so too much detail might cause important information to be cut off.
                                 Start with "Standard" for most troubleshooting.
+                            </TextBlock>
+                            <TextBlock Margin="0,8,0,0" FontSize="12">
+                                <Hyperlink NavigateUri="https://help.salesforce.com/s/articleView?id=sf.code_setting_debug_log_levels.htm" RequestNavigate="Hyperlink_RequestNavigate" Foreground="{StaticResource AccentPrimary}">
+                                    ? Learn about Debug Levels in Salesforce Help
+                                </Hyperlink>
                             </TextBlock>
                         </StackPanel>
                     </Border>
@@ -213,8 +220,12 @@
                                 <RadioButton x:Name="StandardLevelRadio" GroupName="DebugLevel" IsChecked="True" Margin="0,0,0,20">
                                     <StackPanel>
                                         <TextBlock Text="✓ Standard (Recommended)" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimary}"/>
-                                        <TextBlock Text="Good balance of detail. Shows errors, warnings, and important events." 
+                                        <TextBlock Text="Good balance of detail. Shows errors, warnings, and important events."
                                                    TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,4,0,0"/>
+                                        <TextBlock Text="Example: SOQL counts, exceptions, trigger/flow names, callout details"
+                                                   FontSize="12" FontStyle="Italic"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
                                     </StackPanel>
@@ -223,10 +234,19 @@
                                 <RadioButton x:Name="DetailedLevelRadio" GroupName="DebugLevel" Margin="0,0,0,20">
                                     <StackPanel>
                                         <TextBlock Text="Detailed" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimary}"/>
-                                        <TextBlock Text="More information including database queries and code execution flow." 
+                                        <TextBlock Text="More information including database queries and code execution flow."
                                                    TextWrapping="Wrap"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
+                                        <TextBlock Text="Example: every method call, line-by-line variable values, heap allocations"
+                                                   FontSize="12" FontStyle="Italic"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,4,0,0"/>
+                                        <TextBlock Text="⚠️ Log files will be 10–50x larger. Only use when debugging a specific problem."
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource Warning}"
+                                                   Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -285,6 +305,7 @@
 
                 <!-- Step 3: Duration -->
                 <StackPanel x:Name="Step3Panel" Visibility="Collapsed">
+                    <TextBlock Text="Step 3 of 4" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                     <TextBlock Text="Step 3: How Long Should Logging Stay Active?" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
                     <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource Success}" BorderThickness="2" CornerRadius="8">
@@ -297,6 +318,11 @@
                                 Debug logs take up space and can slow things down slightly. After the time expires, logging automatically stops.
                                 You can always turn it back on later!
                             </TextBlock>
+                            <TextBlock Margin="0,8,0,0" FontSize="12">
+                                <Hyperlink NavigateUri="https://help.salesforce.com/s/articleView?id=sf.code_trace_flag.htm" RequestNavigate="Hyperlink_RequestNavigate" Foreground="{StaticResource AccentPrimary}">
+                                    ? Learn about Trace Flags in Salesforce Help
+                                </Hyperlink>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -305,14 +331,20 @@
                             <SolidColorBrush Color="White" Opacity="0.1"/>
                         </Border.BorderBrush>
                         <StackPanel>
-                            <Slider x:Name="DurationSlider" 
-                                    Minimum="1" 
-                                    Maximum="24" 
-                                    Value="2" 
-                                    TickFrequency="1" 
+                            <Slider x:Name="DurationSlider"
+                                    Minimum="1"
+                                    Maximum="24"
+                                    Value="2"
+                                    TickFrequency="1"
                                     IsSnapToTickEnabled="True"
-                                    Margin="0,0,0,16"
+                                    Margin="0,0,0,4"
                                     ValueChanged="DurationSlider_ValueChanged"/>
+
+                            <!-- Endpoint labels -->
+                            <Grid Margin="0,0,0,12">
+                                <TextBlock Text="1 hour (minimum)" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Left"/>
+                                <TextBlock Text="24 hours (maximum)" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                            </Grid>
                             
                             <TextBlock x:Name="DurationDisplay" 
                                        Text="Expires in 2 hours" 
@@ -353,6 +385,7 @@
 
                 <!-- Step 4: Enable & Download -->
                 <StackPanel x:Name="Step4Panel" Visibility="Collapsed">
+                    <TextBlock Text="Step 4 of 4" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                     <TextBlock Text="Step 4: Ready to Enable Debug Logging!" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                     
                     <Border Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" CornerRadius="12" BorderThickness="1">
@@ -394,6 +427,21 @@
                                 <TextBlock Text="3. Come back here to download and analyze the logs" Margin="0,4" Foreground="{StaticResource TextSecondary}"/>
                                 <TextBlock Text="4. Get plain-English explanations of what happened!" Margin="0,4" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
                             </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- What will the log look like? -->
+                    <Border Padding="16" Margin="0,0,0,16" Background="{StaticResource BgSecondary}" CornerRadius="8" BorderThickness="1">
+                        <Border.BorderBrush>
+                            <SolidColorBrush Color="White" Opacity="0.1"/>
+                        </Border.BorderBrush>
+                        <StackPanel>
+                            <TextBlock Text="What will I see in the log?" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8" Foreground="{StaticResource TextPrimary}"/>
+                            <Border Background="{StaticResource BgTertiary}" CornerRadius="4" Padding="10,8">
+                                <TextBlock FontFamily="Consolas, Courier New" FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap">
+17:34:10.123 (1234567)|SOQL_EXECUTE_BEGIN|[23]|SELECT Id,Name FROM Account WHERE ...&#x0A;17:34:10.145 (2345678)|SOQL_EXECUTE_END|[23]|Rows:5&#x0A;17:34:10.200 (3456789)|DML_BEGIN|[45]|Op:Update|Type:Account|Rows:5&#x0A;17:34:10.350 (4567890)|DML_END|[45]&#x0A;17:34:11.500 (9999999)|CUMULATIVE_LIMIT_USAGE|SOQL:3/100|DML:1/150|CPU:450/10000</TextBlock>
+                            </Border>
+                            <TextBlock Text="Black Widow will parse this automatically and explain it in plain English." FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
