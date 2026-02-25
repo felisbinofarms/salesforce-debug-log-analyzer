@@ -1399,8 +1399,8 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Start Here" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Start Here" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1447,8 +1447,8 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Plain English" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Plain English" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <!-- Underline indicator -->
@@ -1496,8 +1496,8 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Database" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Database" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1543,8 +1543,8 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Performance" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Performance" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1590,8 +1590,8 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Deep Dive" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Deep Dive" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1793,7 +1793,7 @@
                                                            Foreground="{StaticResource TextPrimary}" Margin="0,0,0,8"/>
                                                 <WrapPanel>
                                                     <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
-                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextPrimary}"
                                                             BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
                                                             Padding="10,5" FontSize="11" Cursor="Hand"
                                                             ToolTip="Jump to Timeline tab — shows where time was spent and slowest operations">
@@ -1801,7 +1801,7 @@
                                                         <TextBlock Text="🐢 Something is slow"/>
                                                     </Button>
                                                     <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
-                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextPrimary}"
                                                             BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
                                                             Padding="10,5" FontSize="11" Cursor="Hand"
                                                             ToolTip="Jump to Explain tab — plain-English breakdown of what happened and any errors">
@@ -1809,7 +1809,7 @@
                                                         <TextBlock Text="💥 Something crashed"/>
                                                     </Button>
                                                     <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
-                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextPrimary}"
                                                             BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
                                                             Padding="10,5" FontSize="11" Cursor="Hand"
                                                             ToolTip="Jump to Queries tab — shows all SOQL queries, N+1 patterns, and duplicate reads">
@@ -1817,7 +1817,7 @@
                                                         <TextBlock Text="🔄 Too many queries"/>
                                                     </Button>
                                                     <Button Command="{Binding SelectTabCommand}" Margin="0,0,0,4"
-                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextPrimary}"
                                                             BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
                                                             Padding="10,5" FontSize="11" Cursor="Hand"
                                                             ToolTip="Jump to Explain tab — plain-English summary of everything that happened">
@@ -1916,10 +1916,10 @@
                                                 <!-- Total SOQL -->
                                                 <Border Grid.Column="0" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
                                                     <StackPanel>
-                                                        <TextBlock Text="Total SOQL Queries" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Total SOQL Queries" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
                                                             <Run Text="{Binding SelectedLogGroup.TotalSoqlQueries}"/>
-                                                            <Run Text=" / 100" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                            <Run Text=" / 100" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
                                                         </TextBlock>
                                                     </StackPanel>
                                                 </Border>
@@ -1927,10 +1927,10 @@
                                                 <!-- Total DML -->
                                                 <Border Grid.Column="1" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
                                                     <StackPanel>
-                                                        <TextBlock Text="Total DML Statements" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Total DML Statements" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
                                                             <Run Text="{Binding SelectedLogGroup.TotalDmlStatements}"/>
-                                                            <Run Text=" / 150" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                            <Run Text=" / 150" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
                                                         </TextBlock>
                                                     </StackPanel>
                                                 </Border>
@@ -1938,10 +1938,10 @@
                                                 <!-- Total CPU -->
                                                 <Border Grid.Column="2" Background="{StaticResource BgSecondary}" CornerRadius="6" Padding="10,6">
                                                     <StackPanel>
-                                                        <TextBlock Text="Total CPU Time" FontSize="9" Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Total CPU Time" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" Margin="0,2,0,0">
                                                             <Run Text="{Binding SelectedLogGroup.TotalCpuTime}"/>
-                                                            <Run Text="ms" FontSize="10" Foreground="{StaticResource TextMuted}"/>
+                                                            <Run Text="ms" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
                                                         </TextBlock>
                                                     </StackPanel>
                                                 </Border>
@@ -1974,8 +1974,8 @@
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock Text="Governance Insight: Mixed Execution Contexts" FontSize="16" FontWeight="Bold" 
                                                                Foreground="{StaticResource Warning}"/>
-                                                    <TextBlock Text="This can make debugging confusing. Here's what's happening..." 
-                                                               FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                                                    <TextBlock Text="This can make debugging confusing. Here's what's happening..."
+                                                               FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
                                                 </StackPanel>
                                             </Grid>
                                             
@@ -2359,8 +2359,8 @@
                                                         Margin="8,0,0,0"
                                                         Padding="10,4"
                                                         FontSize="12"
-                                                        Background="Transparent"
-                                                        Foreground="{StaticResource TextSecondary}"
+                                                        Background="{StaticResource BgTertiary}"
+                                                        Foreground="{StaticResource TextPrimary}"
                                                         BorderBrush="{StaticResource BorderDefault}"
                                                         BorderThickness="1"
                                                         Cursor="Hand"
