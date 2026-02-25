@@ -2613,7 +2613,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Marshal to UI thread
         Application.Current?.Dispatcher.Invoke(() =>
         {
-            // Add to streaming log
+            // Add to streaming log panel
             StreamingLogs.Insert(0, new StreamingLogEntry
             {
                 Timestamp = DateTime.Now,
@@ -2625,6 +2625,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
             while (StreamingLogs.Count > 100)
             {
                 StreamingLogs.RemoveAt(StreamingLogs.Count - 1);
+            }
+
+            // Mirror key events to the main status bar so users don't have to watch the side panel
+            if (status.Contains("✅ Streaming started") ||
+                status.Contains("Found") ||
+                status.Contains("Downloaded") ||
+                status.Contains("⚠️") ||
+                status.Contains("Failed") ||
+                status.Contains("No logs found"))
+            {
+                StatusMessage = status;
+            }
+
+            // After repeated "No logs found", suggest trace flag setup
+            var noLogCount = StreamingLogs.Count(e => e.Message.Contains("No logs found") || e.Message.Contains("No new logs"));
+            if (noLogCount == 5)
+            {
+                StatusMessage = "💡 No logs yet — make sure Debug Logging is enabled for your user in Salesforce Setup → Debug Logs";
             }
         });
     }

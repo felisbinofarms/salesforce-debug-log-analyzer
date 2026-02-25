@@ -67,9 +67,15 @@ public partial class MainWindow : Window
             if (files?.Length > 0)
             {
                 var filePath = files[0];
-                if (File.Exists(filePath) && (filePath.EndsWith(".log", StringComparison.OrdinalIgnoreCase) || 
+                if (File.Exists(filePath) && (filePath.EndsWith(".log", StringComparison.OrdinalIgnoreCase) ||
                                                filePath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)))
                 {
+                    // If still on connection screen, transition to main view before loading
+                    if (ConnectionsViewContainer.Visibility == Visibility.Visible)
+                    {
+                        ConnectionsViewContainer.Visibility = Visibility.Collapsed;
+                        MainContentGrid.Visibility = Visibility.Visible;
+                    }
                     await _viewModel.LoadLogFromPath(filePath);
                 }
                 else

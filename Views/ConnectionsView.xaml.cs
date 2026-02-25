@@ -252,7 +252,9 @@ public partial class ConnectionsView : UserControl
             if (paths?.Length > 0)
             {
                 bool isFolder = Directory.Exists(paths[0]);
-                bool allLogFiles = !isFolder && paths.All(p => IsLogFile(p) && File.Exists(p));
+                // Check extension only during DragOver — File.Exists is not needed here
+                // and can return false transiently (network drives, antivirus holds, etc.)
+                bool allLogFiles = !isFolder && paths.All(p => IsLogFile(p));
 
                 if (isFolder || allLogFiles)
                 {
