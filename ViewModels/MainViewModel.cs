@@ -178,6 +178,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private string _heroDuration = "0ms";
+
+    [ObservableProperty]
+    private string _durationPrefix = "";
+
+    [ObservableProperty]
+    private string _durationConfidenceTooltip = "";
     
     [ObservableProperty]
     private string _heroEntryPoint = "";
@@ -263,8 +269,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _showDebugStatements = false;
 
     // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries, 4=Explain)
+    // Default: Summary (0) — admin-first: start on the most digestible view
     [ObservableProperty]
-    private int _selectedTabIndex = 4;
+    private int _selectedTabIndex = 0;
+
+    // First-log onboarding tour (shown once, persisted in settings)
+    [ObservableProperty]
+    private bool _showOnboardingTour = false;
+
+    // Profiling parse warning (shown when CUMULATIVE_PROFILING_BEGIN found but data couldn't be parsed)
+    [ObservableProperty]
+    private bool _hasProfilingWarning = false;
+
+    // Parser debug mode (hidden feature for power users — enabled via settings.json)
+    [ObservableProperty]
+    private bool _isParserDebugMode = false;
+
+    [ObservableProperty]
+    private string _parserDebugInfo = "";
 
     // Streaming properties
     [ObservableProperty]
@@ -348,9 +370,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private bool _hasHealthData = false;
-    
+
     [ObservableProperty]
     private bool _isCleanBillOfHealth = false;
+
+    // Plain-language health statement for non-technical users (replaces letter grade)
+    [ObservableProperty]
+    private string _healthPlainStatement = "";
+
+    // Traffic-light status icons for instant at-a-glance scanning (🟢 / 🟡 / 🔴)
+    [ObservableProperty]
+    private string _soqlStatusIcon = "";
+    [ObservableProperty]
+    private string _dmlStatusIcon = "";
+    [ObservableProperty]
+    private string _cpuStatusIcon = "";
+    [ObservableProperty]
+    private string _errorStatusIcon = "";
     
     // ===== FULL ANALYSIS SUMMARY =====
     
@@ -530,6 +566,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private int _customMetadataQueryCount = 0;
     [ObservableProperty]
     private int _regularSoqlCount = 0;
+    /// <summary>SOQL queries executed by managed packages (governor total - event-parsed regular SOQL)</summary>
+    [ObservableProperty]
+    private int _managedPackageSoqlCount = 0;
+    [ObservableProperty]
+    private bool _hasManagedPackageQueries = false;
+    /// <summary>DML operations visible in log events (event-parsed, your code only)</summary>
+    [ObservableProperty]
+    private int _eventParsedDmlCount = 0;
+    /// <summary>DML operations by managed packages (governor total - event-parsed DML)</summary>
+    [ObservableProperty]
+    private int _managedPackageDmlCount = 0;
+    [ObservableProperty]
+    private bool _hasManagedPackageDml = false;
 
     // ===== TESTING LIMITS (overhead from test framework vs production code) =====
     [ObservableProperty]
@@ -578,6 +627,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // Apply initial license state immediately (from local cache, no network)
         RefreshLicenseDisplay();
+
+        // Load power-user debug mode setting
+        IsParserDebugMode = _settingsService.Load().IsDebugMode;
 
         // Then fire-and-forget the async revalidation (may hit network)
         _ = ValidateLicenseOnStartupAsync();
@@ -715,6 +767,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (value != null)
         {
+            // Show onboarding tour on first-ever log analysis
+            if (!_settingsService.Load().OnboardingShown)
+                ShowOnboardingTour = true;
+
+            // Warn if profiling section was present but couldn't be parsed
+            HasProfilingWarning = value.CumulativeProfilingFound && value.CumulativeProfiling == null;
+
             // Simple summary title
             if (value.IsTestExecution)
             {
@@ -825,6 +884,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // Hero section
             HeroEntryPoint = value.EntryPoint ?? "";
             HeroDuration = FormatDuration(value.DurationMs);
+
+            // Duration confidence indicator — tells admin how reliable this time figure is
+            (DurationPrefix, DurationConfidenceTooltip) = value.DurationSource switch
+            {
+                Models.DurationSource.NanosecondPrecise => ("",  "Precise — measured with nanosecond counters from the log."),
+                Models.DurationSource.DateTimeDerived   => ("~", "Estimated — this log uses second-precision timestamps. Actual time may differ slightly."),
+                Models.DurationSource.Incomplete        => (">", "Minimum — the log was truncated before finishing. The operation took at least this long."),
+                Models.DurationSource.Async             => ("",  "Async — this is the synchronous portion only. Async work continues after this log ends."),
+                _                                       => ("",  "")
+            };
             
             if (value.TransactionFailed)
                 HeroStatus = "FAILED";
@@ -844,6 +913,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatMethodCount = value.MethodStats?.Count ?? 0;
             StatErrorCount = value.Errors?.Count ?? 0;
             StatWarningCount = value.HandledExceptions?.Count ?? 0;
+
+            // Managed-package breakdown: when governor total > event-parsed count, the delta
+            // is SOQL/DML from managed packages/platform code that doesn't appear in log events.
+            var parsedDml = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+            EventParsedDmlCount = parsedDml;
+            ManagedPackageSoqlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.SoqlQueries - value.RegularSoqlCount) : 0;
+            HasManagedPackageQueries = ManagedPackageSoqlCount > 0;
+            ManagedPackageDmlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.DmlStatements - parsedDml) : 0;
+            HasManagedPackageDml = ManagedPackageDmlCount > 0;
 
             // Governor limits display
             if (lastSnapshot != null)
@@ -931,9 +1009,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 TotalEstimatedMinutes = value.Health.TotalEstimatedMinutes;
                 
                 // "Clean bill of health" when score is good and no serious issues
-                IsCleanBillOfHealth = value.Health.Score >= 80 
-                    && value.Health.CriticalIssues.Count == 0 
+                IsCleanBillOfHealth = value.Health.Score >= 80
+                    && value.Health.CriticalIssues.Count == 0
                     && value.Health.HighPriorityIssues.Count == 0;
+
+                // Plain-language health phrase (replaces academic letter grade)
+                HealthPlainStatement = value.Health.CriticalIssues.Count > 0
+                    ? "This log has critical problems"
+                    : value.Health.HighPriorityIssues.Count > 0
+                        ? "This log needs attention"
+                        : value.Health.Score >= 80
+                            ? "This log is healthy"
+                            : "Review recommended";
             }
             else
             {
@@ -948,7 +1035,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 HighPriorityIssues.Clear();
                 QuickWins.Clear();
                 TotalEstimatedMinutes = 0;
+                HealthPlainStatement = "";
             }
+
+            // Traffic-light status icons (computed after percentages and health are set)
+            SoqlStatusIcon  = SoqlPercent >= 80 ? "🔴" : SoqlPercent >= 50 ? "🟡" : "🟢";
+            DmlStatusIcon   = DmlPercent  >= 80 ? "🔴" : DmlPercent  >= 50 ? "🟡" : "🟢";
+            CpuStatusIcon   = CpuPercent  >= 80 ? "🔴" : CpuPercent  >= 50 ? "🟡" : "🟢";
+            ErrorStatusIcon = (value.Errors?.Count > 0 || value.TransactionFailed) ? "🔴" : "🟢";
             
             // ===== ALWAYS-USEFUL: TOP METHODS (even for clean logs) =====
             PopulateTopMethods(value);
@@ -1008,6 +1102,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // ===== TESTING LIMITS =====
             TestingLimits = value.TestingLimits;
             HasTestingLimits = value.TestingLimits != null;
+
+            // ===== PARSER DEBUG INFO =====
+            if (IsParserDebugMode)
+                ParserDebugInfo = BuildParserDebugInfo(value);
         }
         else
         {
@@ -1039,6 +1137,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HealthScore = 0;
             HealthGrade = "";
             HealthStatus = "";
+            HealthPlainStatement = "";
+            SoqlStatusIcon = ""; DmlStatusIcon = ""; CpuStatusIcon = ""; ErrorStatusIcon = "";
             HasTimelineData = false;
             TimelineSegments.Clear();
             TimelineTotalDurationMs = 0;
@@ -1086,7 +1186,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             WorkflowRules.Clear(); HasWorkflowRules = false;
             FlowErrors.Clear(); HasFlowErrors = false;
             TotalHeapAllocated = 0; CustomMetadataQueryCount = 0; RegularSoqlCount = 0;
+            ManagedPackageSoqlCount = 0; HasManagedPackageQueries = false;
+            EventParsedDmlCount = 0; ManagedPackageDmlCount = 0; HasManagedPackageDml = false;
             TestingLimits = null; HasTestingLimits = false;
+            ParserDebugInfo = "";
         }
     }
     
@@ -1515,7 +1618,85 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HasLearningItems = false;
         }
     }
-    
+
+    /// <summary>
+    /// Builds a plain-text audit trail string showing where each displayed metric came from.
+    /// Used by the Parser Debug tab (visible only when IsParserDebugMode = true).
+    /// Activate by setting "IsDebugMode": true in %AppData%\BlackWidow\settings.json.
+    /// </summary>
+    private string BuildParserDebugInfo(LogAnalysis analysis)
+    {
+        var sb = new System.Text.StringBuilder();
+        var snap = analysis.LimitSnapshots?.LastOrDefault();
+
+        sb.AppendLine("=== DURATION ===");
+        sb.AppendLine($"DurationMs:        {analysis.DurationMs:N0} ms");
+        sb.AppendLine($"DurationSource:    {analysis.DurationSource}");
+        sb.AppendLine($"WallClockMs:       {analysis.WallClockMs:N0} ms");
+        sb.AppendLine($"CpuTimeMs:         {analysis.CpuTimeMs:N0} ms");
+        sb.AppendLine($"OverheadMs:        {Math.Max(0, analysis.WallClockMs - analysis.CpuTimeMs):N0} ms");
+        sb.AppendLine();
+
+        sb.AppendLine("=== SOQL COUNTS ===");
+        sb.AppendLine($"Governor total:    {snap?.SoqlQueries ?? 0} / {snap?.SoqlQueriesLimit ?? 100}  (from CUMULATIVE_LIMIT_USAGE)");
+        sb.AppendLine($"Event-parsed:      {analysis.RegularSoqlCount}  (SOQL_EXECUTE_BEGIN events — your code only)");
+        sb.AppendLine($"CMDT queries:      {analysis.CustomMetadataQueryCount}  (excluded from governor limit)");
+        sb.AppendLine($"Managed pkg delta: {Math.Max(0, (snap?.SoqlQueries ?? 0) - analysis.RegularSoqlCount)}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== DML COUNTS ===");
+        var parsedDml = analysis.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+        sb.AppendLine($"Governor total:    {snap?.DmlStatements ?? 0} / {snap?.DmlStatementsLimit ?? 150}  (from CUMULATIVE_LIMIT_USAGE)");
+        sb.AppendLine($"Event-parsed:      {parsedDml}  (DML_BEGIN events — your code only)");
+        sb.AppendLine($"Managed pkg delta: {Math.Max(0, (snap?.DmlStatements ?? 0) - parsedDml)}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== CPU / HEAP ===");
+        sb.AppendLine($"CPU time (snap):   {snap?.CpuTime ?? 0} ms / {snap?.CpuTimeLimit ?? 10000} ms");
+        sb.AppendLine($"Heap (snap):       {snap?.HeapSize ?? 0} / {snap?.HeapSizeLimit ?? 6000000}");
+        sb.AppendLine($"Heap alloc total:  {analysis.TotalHeapAllocated:N0} bytes  (sum of HEAP_ALLOCATE events)");
+        sb.AppendLine();
+
+        sb.AppendLine("=== LOG CONTEXT ===");
+        sb.AppendLine($"IsAsyncExecution:  {analysis.IsAsyncExecution}");
+        sb.AppendLine($"IsLogTruncated:    {analysis.IsLogTruncated}");
+        sb.AppendLine($"IsTestExecution:   {analysis.IsTestExecution}");
+        sb.AppendLine($"ExecutionUnits:    {analysis.ExecutionUnits?.Count ?? 0}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== PROFILING SECTION ===");
+        sb.AppendLine($"Found:             {analysis.CumulativeProfilingFound}  (CUMULATIVE_PROFILING_BEGIN marker present)");
+        sb.AppendLine($"Parsed OK:         {analysis.CumulativeProfiling != null}");
+        if (analysis.CumulativeProfiling != null)
+        {
+            sb.AppendLine($"  Top methods:     {analysis.CumulativeProfiling.TopMethods?.Count ?? 0}");
+            sb.AppendLine($"  Top queries:     {analysis.CumulativeProfiling.TopQueries?.Count ?? 0}");
+            sb.AppendLine($"  Top DML:         {analysis.CumulativeProfiling.TopDmlOperations?.Count ?? 0}");
+        }
+        sb.AppendLine();
+
+        sb.AppendLine("=== HEALTH SCORE ===");
+        sb.AppendLine($"Score:             {analysis.Health?.Score ?? 0} / 100  (grade: {analysis.Health?.Grade ?? "N/A"})");
+        sb.AppendLine($"Status:            {analysis.Health?.Status ?? "N/A"}");
+        sb.AppendLine($"Critical issues:   {analysis.Health?.CriticalIssues?.Count ?? 0}");
+        sb.AppendLine($"High priority:     {analysis.Health?.HighPriorityIssues?.Count ?? 0}");
+        sb.AppendLine($"Quick wins:        {analysis.Health?.QuickWins?.Count ?? 0}");
+        sb.AppendLine($"Reasoning:         {analysis.Health?.Reasoning ?? "N/A"}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== DUPLICATE / N+1 ===");
+        sb.AppendLine($"Duplicate queries: {analysis.DuplicateQueries?.Count ?? 0}");
+        sb.AppendLine($"Bulk safety grade: {analysis.BulkSafetyGrade}  — {analysis.BulkSafetyReason}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== LOG STATS ===");
+        sb.AppendLine($"Log lines parsed:  {analysis.LineCount}");
+        sb.AppendLine($"ParsedAt:          {analysis.ParsedAt:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"LogId:             {analysis.LogId}");
+
+        return sb.ToString();
+    }
+
     private string SimplifyQueryForDisplay(string query)
     {
         // Remove specific values to find similar queries
@@ -1575,6 +1756,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void SelectTab(int tabIndex)
     {
         SelectedTabIndex = tabIndex;
+    }
+
+    [RelayCommand]
+    private void DismissOnboardingTour()
+    {
+        ShowOnboardingTour = false;
+        var settings = _settingsService.Load();
+        settings.OnboardingShown = true;
+        _settingsService.Save(settings);
     }
     
     /// <summary>

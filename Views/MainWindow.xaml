@@ -631,10 +631,10 @@
                                               Visibility="{Binding LogGroups.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
                                     <ToggleButton.Style>
                                         <Style TargetType="ToggleButton">
-                                            <Setter Property="ToolTip" Value="Show grouped transactions"/>
+                                            <Setter Property="ToolTip" Value="Grouped View: use when you have multiple logs from the same transaction (e.g., a trigger + flow + future method all from one button click)"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter Property="ToolTip" Value="Show individual logs"/>
+                                                    <Setter Property="ToolTip" Value="Switch back to individual log list"/>
                                                     <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
                                                 </Trigger>
                                             </Style.Triggers>
@@ -838,7 +838,8 @@
                                                             </Border>
                                                             <!-- Bulk Safety Grade pill -->
                                                             <Border CornerRadius="3" Padding="6,2"
-                                                                    Visibility="{Binding BulkSafetyGrade, Converter={StaticResource StringToVisibilityConverter}}">
+                                                                    Visibility="{Binding BulkSafetyGrade, Converter={StaticResource StringToVisibilityConverter}}"
+                                                                    ToolTip="Bulk Safety grades how well your code handles 200 records at once. Salesforce triggers can process up to 200 records per call.&#x0a;A = handles 200 records safely.  C = some risk.  D/F = likely to fail with more than ~10 records.">
                                                                 <Border.Style>
                                                                     <Style TargetType="Border">
                                                                         <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
@@ -907,10 +908,20 @@
                             </ListBox.ItemContainerStyle>
                         </ListBox>
                         
+                        <!-- Grouped View info banner (shown when ShowGroupedView = true) -->
+                        <Border Grid.Row="4" VerticalAlignment="Top" Padding="10,8" Margin="0,0,0,4"
+                                Background="{StaticResource BgInput}" CornerRadius="6"
+                                Visibility="{Binding ShowGroupedView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource AccentPrimary}" Text="🔗 Grouped View — "/>
+                                <Run Text="Shows logs from the same transaction together. Select a group to see the combined picture."/>
+                            </TextBlock>
+                        </Border>
+
                         <!-- Transaction Group List (shown when ShowGroupedView = true) -->
-                        <ListBox Grid.Row="4" ItemsSource="{Binding LogGroups}" 
+                        <ListBox Grid.Row="4" ItemsSource="{Binding LogGroups}"
                                  SelectedItem="{Binding SelectedLogGroup}"
-                                 Background="Transparent" BorderThickness="0" Margin="0,0,0,8"
+                                 Background="Transparent" BorderThickness="0" Margin="0,44,0,8"
                                  VirtualizingStackPanel.IsVirtualizing="True"
                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -1355,7 +1366,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
-                        <!-- Tab Headers — VS Code underline style -->
+                        <!-- Tab Headers — VS Code underline style — Order: Summary | Explain | Queries | Timeline | Tree -->
                         <Border Grid.Row="0" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,1" Padding="4,0">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
@@ -1365,28 +1376,79 @@
                             </Border.Background>
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <StackPanel Orientation="Horizontal">
-                                <!-- Explain Tab -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                <!-- Summary Tab (index 0) — first tab, admin entry point -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                    <Button.CommandParameter><sys:Int32>0</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="ChartBox" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="Summary" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Start Here" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Explain Tab (index 4) — plain English for admins -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
                                     <Button.CommandParameter><sys:Int32>4</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <materialDesign:PackIcon Kind="Lightbulb" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"
-                                                                                 Foreground="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=4, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                                        <TextBlock Text="Explain" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
-                                                                            <Setter Property="Foreground" Value="White"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="Lightbulb" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                                                     Foreground="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=4, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                            <TextBlock Text="Explain" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Plain English" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <!-- Underline indicator -->
@@ -1411,27 +1473,31 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Summary Tab -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
-                                    <Button.CommandParameter><sys:Int32>0</sys:Int32></Button.CommandParameter>
+                                <!-- Queries Tab (index 3) — database operations -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                    <Button.CommandParameter><sys:Int32>3</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <materialDesign:PackIcon Kind="ChartBox" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="Summary" FontSize="13" VerticalAlignment="Center">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                                                            <Setter Property="Foreground" Value="White"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="DatabaseSearch" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="Queries" FontSize="13" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Database" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1444,7 +1510,7 @@
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
                                                     <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -1454,70 +1520,31 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Tree Tab -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
-                                    <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Grid>
-                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <materialDesign:PackIcon Kind="FileTree" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="Tree" FontSize="13" VerticalAlignment="Center">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                                                            <Setter Property="Foreground" Value="White"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </StackPanel>
-                                                </Border>
-                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
-                                                            <GradientStop Color="#A78BFA" Offset="1"/>
-                                                        </LinearGradientBrush>
-                                                    </Border.Background>
-                                                </Border>
-                                            </Grid>
-                                            <ControlTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                                <!-- Timeline Tab -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
+                                <!-- Timeline Tab (index 2) — performance timeline -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
                                     <Button.CommandParameter><sys:Int32>2</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <materialDesign:PackIcon Kind="Timeline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="Timeline" FontSize="13" VerticalAlignment="Center">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                                                            <Setter Property="Foreground" Value="White"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="Timeline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="Timeline" FontSize="13" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Performance" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1540,27 +1567,31 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Queries Tab -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="44">
-                                    <Button.CommandParameter><sys:Int32>3</sys:Int32></Button.CommandParameter>
+                                <!-- Tree Tab (index 1) — deep technical dive -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                    <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="Queries" FontSize="13" VerticalAlignment="Center">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
-                                                                            <Setter Property="Foreground" Value="White"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="FileTree" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="Tree" FontSize="13" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Deep Dive" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
@@ -1573,7 +1604,55 @@
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Debug Tab (index 5) — parser audit trail (hidden unless IsDebugMode=true in settings.json) -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52"
+                                        Visibility="{Binding IsParserDebugMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Button.CommandParameter><sys:Int32>5</sys:Int32></Button.CommandParameter>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <materialDesign:PackIcon Kind="Bug" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="Debug" FontSize="13" VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Parser Info" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#7C6AFF" Offset="0"/>
+                                                            <GradientStop Color="#A78BFA" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
                                                     <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -1614,12 +1693,142 @@
                                                Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
-                            
+
+                            <!-- First-Log Onboarding Tour Overlay (shown on first analysis, dismissed to settings) -->
+                            <Border Background="#CC000000" Panel.ZIndex="9"
+                                    Visibility="{Binding ShowOnboardingTour, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Border Background="{StaticResource BgSecondary}" CornerRadius="12" Padding="28,24"
+                                        Width="480" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        BorderBrush="{StaticResource AccentPrimary}" BorderThickness="2">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="👋" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Welcome to Black Widow!" FontSize="20" FontWeight="Bold"
+                                                       Foreground="White" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Here's how to read your first log — takes 30 seconds."
+                                                   FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,20" TextWrapping="Wrap"/>
+
+                                        <!-- Step 1 -->
+                                        <Border Background="{StaticResource BgTertiary}" CornerRadius="8" Padding="14,12" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Background="{StaticResource AccentPrimary}" CornerRadius="16" Width="32" Height="32" Margin="0,0,12,0">
+                                                    <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Summary tab = quick health check" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
+                                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"
+                                                               Text="The score and color tell you everything at a glance. 🟢 Green = fine, 🟡 Yellow = watch it, 🔴 Red = fix this."/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Step 2 -->
+                                        <Border Background="{StaticResource BgTertiary}" CornerRadius="8" Padding="14,12" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Background="{StaticResource AccentPrimary}" CornerRadius="16" Width="32" Height="32" Margin="0,0,12,0">
+                                                    <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Explain tab = plain English" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
+                                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"
+                                                               Text="Click the Explain tab to see a plain-English story of what your code did — no Apex knowledge required."/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Step 3 -->
+                                        <Border Background="{StaticResource BgTertiary}" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Background="{StaticResource AccentPrimary}" CornerRadius="16" Width="32" Height="32" Margin="0,0,12,0">
+                                                    <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Use the navigator bar (top of Summary)" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
+                                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"
+                                                               Text="Click what you're investigating — 'something is slow', 'something crashed', etc. — to jump straight to the right view."/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Button Content="Got it — let me explore!"
+                                                Command="{Binding DismissOnboardingTourCommand}"
+                                                HorizontalAlignment="Right"
+                                                Background="{StaticResource AccentPrimary}" Foreground="White"
+                                                BorderThickness="0" Padding="20,10" FontSize="13" FontWeight="SemiBold"
+                                                Cursor="Hand"/>
+                                    </StackPanel>
+                                </Border>
+                            </Border>
+
                             <!-- Summary Tab (Index 0) - VISUAL DASHBOARD -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=0}">
                                 <StackPanel MaxWidth="900">
-                                    
+
+                                    <!-- ===== INTENT NAVIGATOR — Quick-navigate by what you're investigating ===== -->
+                                    <Border CornerRadius="8" Margin="0,0,0,12" Padding="14,12"
+                                            Background="{StaticResource BgSecondary}"
+                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="🧭" FontSize="16" VerticalAlignment="Top" Margin="0,2,10,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="What are you investigating?" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimary}" Margin="0,0,0,8"/>
+                                                <WrapPanel>
+                                                    <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                                            Padding="10,5" FontSize="11" Cursor="Hand"
+                                                            ToolTip="Jump to Timeline tab — shows where time was spent and slowest operations">
+                                                        <Button.CommandParameter><sys:Int32>3</sys:Int32></Button.CommandParameter>
+                                                        <TextBlock Text="🐢 Something is slow"/>
+                                                    </Button>
+                                                    <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                                            Padding="10,5" FontSize="11" Cursor="Hand"
+                                                            ToolTip="Jump to Explain tab — plain-English breakdown of what happened and any errors">
+                                                        <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
+                                                        <TextBlock Text="💥 Something crashed"/>
+                                                    </Button>
+                                                    <Button Command="{Binding SelectTabCommand}" Margin="0,0,8,4"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                                            Padding="10,5" FontSize="11" Cursor="Hand"
+                                                            ToolTip="Jump to Queries tab — shows all SOQL queries, N+1 patterns, and duplicate reads">
+                                                        <Button.CommandParameter><sys:Int32>2</sys:Int32></Button.CommandParameter>
+                                                        <TextBlock Text="🔄 Too many queries"/>
+                                                    </Button>
+                                                    <Button Command="{Binding SelectTabCommand}" Margin="0,0,0,4"
+                                                            Background="{StaticResource BgHover}" Foreground="{StaticResource TextSecondary}"
+                                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                                            Padding="10,5" FontSize="11" Cursor="Hand"
+                                                            ToolTip="Jump to Explain tab — plain-English summary of everything that happened">
+                                                        <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
+                                                        <TextBlock Text="🔍 Just exploring"/>
+                                                    </Button>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
                                     <!-- ===== TRUNCATED LOG WARNING ===== -->
                                     <Border CornerRadius="8" Margin="0,0,0,12" Padding="14,10"
                                             Background="{StaticResource WarningSubtle}"
@@ -1636,6 +1845,26 @@
                                                            Foreground="{StaticResource Warning}"/>
                                                 <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap"
                                                            Text="Salesforce cut this log short before it finished writing. Governor limit counters, timing totals, and issue counts may be understated. Raise your debug level retention or reduce log verbosity."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- ===== PROFILING PARSE WARNING ===== -->
+                                    <Border CornerRadius="8" Margin="0,0,0,12" Padding="14,10"
+                                            Background="{StaticResource WarningSubtle}"
+                                            BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,2"
+                                            Visibility="{Binding HasProfilingWarning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="⚙️" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Profiling Data Unavailable" FontSize="13" FontWeight="Bold"
+                                                           Foreground="{StaticResource Warning}"/>
+                                                <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap"
+                                                           Text="This log contains a CUMULATIVE_PROFILING section but the format didn't match the expected pattern. Top queries, DML, and method timing data may be missing. The log format may have changed in a recent Salesforce release."/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -1917,8 +2146,13 @@
 
                                             <!-- Duration Badge -->
                                             <Border Grid.Column="2" Background="#1A1A1A55" CornerRadius="10" Padding="16,10" VerticalAlignment="Center">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding HeroDuration}" FontSize="26" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                                <StackPanel HorizontalAlignment="Center"
+                                                            ToolTip="{Binding DurationConfidenceTooltip}">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding DurationPrefix}" FontSize="20" FontWeight="Normal" Foreground="#FFAAAABB" VerticalAlignment="Center"
+                                                                   Visibility="{Binding DurationPrefix, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                        <TextBlock Text="{Binding HeroDuration}" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                                                    </StackPanel>
                                                     <TextBlock Text="Total Duration" FontSize="11" Foreground="#FFFFFFAA" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
@@ -2033,12 +2267,13 @@
                                                 </Path>
 
                                                 <!-- Score text -->
-                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                            ToolTip="Health Score (0–100) measures overall code quality and governor-limit risk.&#x0a;90–100 = Excellent  •  80–89 = Good  •  70–79 = Needs Work  •  Below 70 = Problems found.">
                                                     <TextBlock FontSize="34" FontWeight="Bold" HorizontalAlignment="Center"
                                                              Foreground="{Binding HealthScore, Converter={StaticResource HealthScoreToColorConverter}}">
                                                         <Run Text="{Binding HealthScore, Mode=OneWay}"/><Run Text="/100" FontSize="16"/>
                                                     </TextBlock>
-                                                    <TextBlock Text="{Binding HealthGrade}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding HealthPlainStatement}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="160" TextAlignment="Center"/>
                                                     <TextBlock Text="{Binding HealthStatus}" FontSize="12" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Grid>
@@ -2082,14 +2317,54 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
-                                    
+
+                                    <!-- ===== QUICK-SCAN TRAFFIC LIGHTS ===== -->
+                                    <Border Style="{StaticResource DiscordCard}" Padding="16,10" Margin="0,0,0,16"
+                                            Visibility="{Binding HasHealthData, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,20,0"
+                                                        ToolTip="SOQL (database reads): 🟢 safe  🟡 watch closely  🔴 near limit">
+                                                <TextBlock Text="{Binding SoqlStatusIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <TextBlock Text="SOQL" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,20,0"
+                                                        ToolTip="DML (database saves/updates/deletes): 🟢 safe  🟡 watch closely  🔴 near limit">
+                                                <TextBlock Text="{Binding DmlStatusIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <TextBlock Text="DML" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,20,0"
+                                                        ToolTip="CPU Time (processing time): 🟢 safe  🟡 watch closely  🔴 near limit">
+                                                <TextBlock Text="{Binding CpuStatusIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <TextBlock Text="CPU" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal"
+                                                        ToolTip="Errors: 🟢 none  🔴 errors or transaction failed">
+                                                <TextBlock Text="{Binding ErrorStatusIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <TextBlock Text="Errors" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
                                     <!-- ===== FULL ANALYSIS SUMMARY ===== -->
                                     <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
                                             Visibility="{Binding FullSummaryText, Converter={StaticResource StringToVisibilityConverter}}">
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                                 <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Analysis Summary" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Analysis Summary" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,0,0"/>
+                                                <Button x:Name="CopySummaryButton"
+                                                        Content="📋 Copy"
+                                                        Click="CopySummary_Click"
+                                                        HorizontalAlignment="Right"
+                                                        Margin="8,0,0,0"
+                                                        Padding="10,4"
+                                                        FontSize="12"
+                                                        Background="Transparent"
+                                                        Foreground="{StaticResource TextSecondary}"
+                                                        BorderBrush="{StaticResource BorderDefault}"
+                                                        BorderThickness="1"
+                                                        Cursor="Hand"
+                                                        ToolTip="Copy summary to clipboard — paste into Slack, email, or a support ticket"/>
                                             </StackPanel>
                                             <TextBlock Text="{Binding FullSummaryText}" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondary}" LineHeight="22"/>
                                         </StackPanel>
@@ -2361,6 +2636,13 @@
                                                            ToolTip="Custom Metadata Type queries don't consume your SOQL governor limit allocation.">
                                                     <Run Text="+"/><Run Text="{Binding CustomMetadataQueryCount, Mode=OneWay}"/><Run Text=" free CMDT"/>
                                                 </TextBlock>
+                                                <!-- Managed package footnote: shown when governor snapshot > event-parsed queries -->
+                                                <TextBlock HorizontalAlignment="Center" Margin="0,2,0,0" FontSize="10"
+                                                           Foreground="{StaticResource TextMuted}"
+                                                           Visibility="{Binding HasManagedPackageQueries, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                           ToolTip="Some SOQL queries were run by installed managed packages or platform code. They consume your SOQL limit but aren't visible in this log.">
+                                                    <Run Text="{Binding RegularSoqlCount, Mode=OneWay}"/><Run Text=" yours + "/><Run Text="{Binding ManagedPackageSoqlCount, Mode=OneWay}"/><Run Text=" pkg"/>
+                                                </TextBlock>
                                             </StackPanel>
                                         </Border>
                                         
@@ -2380,6 +2662,13 @@
                                                 </TextBlock>
                                                 <TextBlock Text="Writes (DML)" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"
                                                            ToolTip="DML = Data Manipulation Language. These are database write operations (insert, update, delete)."/>
+                                                <!-- Managed package DML footnote: shown when governor snapshot > event-parsed DML -->
+                                                <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="10"
+                                                           Foreground="{StaticResource TextMuted}"
+                                                           Visibility="{Binding HasManagedPackageDml, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                           ToolTip="Some DML operations were performed by installed managed packages or platform code. They consume your DML limit but aren't visible in this log.">
+                                                    <Run Text="{Binding EventParsedDmlCount, Mode=OneWay}"/><Run Text=" yours + "/><Run Text="{Binding ManagedPackageDmlCount, Mode=OneWay}"/><Run Text=" pkg"/>
+                                                </TextBlock>
                                             </StackPanel>
                                         </Border>
                                         
@@ -2407,7 +2696,8 @@
                                                     </TextBlock.Style>
                                                     <Run Text="{Binding StatErrorCount, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <TextBlock Text="Errors" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Errors" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"
+                                                           ToolTip="Unhandled exceptions that stopped the operation from completing. Each error here means Salesforce rolled back everything."/>
                                             </StackPanel>
                                         </Border>
                                         
@@ -2435,7 +2725,8 @@
                                                     </TextBlock.Style>
                                                     <Run Text="{Binding StatWarningCount, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <TextBlock Text="Warnings" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Warnings" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"
+                                                           ToolTip="Handled exceptions — the code caught and recovered from these, so the operation still completed."/>
                                             </StackPanel>
                                         </Border>
                                     </Grid>
@@ -2605,7 +2896,8 @@
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="80"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="CPU Time" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="CPU Time" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"
+                                                           ToolTip="How long your Apex code ran. Salesforce limits this to 10,000ms (10 seconds) per transaction.&#x0a;High CPU usually means complex calculations or queries inside loops."/>
                                                 <Border Grid.Column="1" Background="{StaticResource BgSecondary}" CornerRadius="4" Height="20">
                                                     <Border CornerRadius="4" HorizontalAlignment="Left"
                                                             Width="{Binding CpuPercent, Converter={StaticResource PercentToWidthConverter}}">
@@ -3338,7 +3630,38 @@
                                     </Border>
                                 </StackPanel>
                             </ScrollViewer>
-                            
+
+                            <!-- Debug Tab (Index 5) — parser audit trail, only visible when IsParserDebugMode=true -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
+                                          Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=5}">
+                                <StackPanel MaxWidth="900">
+                                    <!-- Header -->
+                                    <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <materialDesign:PackIcon Kind="Bug" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource AccentPrimary}"/>
+                                                <TextBlock Text="Parser Debug" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
+                                                       Text="Audit trail showing exactly where each metric came from — governor limit snapshot vs event-parsed counts, duration source, profiling section status, and health score breakdown."/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Audit text (monospace) -->
+                                    <Border Background="{StaticResource BgInput}" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding ParserDebugInfo}"
+                                                   FontFamily="Consolas, Courier New, monospace"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   TextWrapping="Wrap"/>
+                                    </Border>
+
+                                    <!-- Footer note -->
+                                    <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,16" TextWrapping="Wrap"
+                                               Text="Debug mode is enabled via settings.json (IsDebugMode: true). This tab is not visible to regular users."/>
+                                </StackPanel>
+                            </ScrollViewer>
+
                             <!-- Timeline Tab (Index 2) -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16"
                                           Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=2}">
