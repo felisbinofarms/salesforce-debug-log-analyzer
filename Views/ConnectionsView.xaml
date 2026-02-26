@@ -204,7 +204,15 @@
                         <Button Content="Connect to Sandbox"
                                 Style="{StaticResource SecondaryButton}"
                                 Click="ConnectSandbox_Click"
-                                Margin="0,0,0,16"/>
+                                Margin="0,0,0,8"/>
+
+                        <!-- Connection benefit hint -->
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Margin="0,0,0,16"
+                                   Foreground="{StaticResource TextMuted}" TextAlignment="Center">
+                            <Run Text="✓ Connect to download logs, set up debug logging,"/>
+                            <LineBreak/>
+                            <Run Text="and stream logs live as you work in Salesforce"/>
+                        </TextBlock>
                         
                         <!-- OR Divider -->
                         <Grid Margin="0,8,0,16">
@@ -456,12 +464,49 @@
                             </Border.Effect>
                             <TextBlock Text="📚" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Every Bug Gets Caught" 
-                                   FontSize="20" FontWeight="SemiBold" 
+                        <TextBlock Text="Every Bug Gets Caught"
+                                   FontSize="20" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}"
                                    HorizontalAlignment="Center" Margin="0,0,0,12"
                                    TextWrapping="Wrap"/>
-                        <TextBlock Text="Plain English summaries. No jargon. Bugs can't hide in complexity." 
+                        <TextBlock Text="Plain English summaries. No jargon. Bugs can't hide in complexity."
+                                   FontSize="15" Foreground="{StaticResource TextSecondary}"
+                                   TextWrapping="Wrap" TextAlignment="Center" LineHeight="24"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Feature 4: Live Streaming -->
+                <Border Width="280" Margin="8" CornerRadius="8" Padding="24"
+                        BorderThickness="0,2,0,0" BorderBrush="#79B8FF">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#0E1E36" Offset="0"/>
+                            <GradientStop Color="#13131E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect Color="#79B8FF" Opacity="0.18" BlurRadius="20" ShadowDepth="0"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <Border CornerRadius="12" Width="52" Height="52"
+                                HorizontalAlignment="Center" Margin="0,0,0,20">
+                            <Border.Background>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#1A4A7A" Offset="0"/>
+                                    <GradientStop Color="#0A1E3A" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#79B8FF" Opacity="0.5" BlurRadius="12" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <TextBlock Text="📡" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Watch Logs Live"
+                                   FontSize="20" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   HorizontalAlignment="Center" Margin="0,0,0,12"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="Connect to your org and watch debug logs appear in real-time as you click through Salesforce. Great for actively hunting a bug."
                                    FontSize="15" Foreground="{StaticResource TextSecondary}"
                                    TextWrapping="Wrap" TextAlignment="Center" LineHeight="24"/>
                     </StackPanel>
