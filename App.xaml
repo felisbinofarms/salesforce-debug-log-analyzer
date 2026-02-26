@@ -31,12 +31,12 @@
             <SolidColorBrush x:Key="AccentHover" Color="#6358D4"/>
             <SolidColorBrush x:Key="AccentActive" Color="#4E46B0"/>
             <SolidColorBrush x:Key="AccentSubtle" Color="#7C6AFF20"/>
-            <SolidColorBrush x:Key="Success" Color="#89D185"/>
-            <SolidColorBrush x:Key="SuccessSubtle" Color="#89D18520"/>
-            <SolidColorBrush x:Key="Warning" Color="#FFC66D"/>
-            <SolidColorBrush x:Key="WarningSubtle" Color="#FFC66D20"/>
-            <SolidColorBrush x:Key="Danger" Color="#F48771"/>
-            <SolidColorBrush x:Key="DangerSubtle" Color="#F4877120"/>
+            <SolidColorBrush x:Key="Success" Color="#76BA70"/>          <!-- Muted sage-green -->
+            <SolidColorBrush x:Key="SuccessSubtle" Color="#76BA7015"/>     <!-- Very subtle wash -->
+            <SolidColorBrush x:Key="Warning" Color="#C09040"/>            <!-- Muted warm amber -->
+            <SolidColorBrush x:Key="WarningSubtle" Color="#C0904015"/>     <!-- Very subtle wash -->
+            <SolidColorBrush x:Key="Danger" Color="#CC6055"/>             <!-- Muted coral-red -->
+            <SolidColorBrush x:Key="DangerSubtle" Color="#CC605515"/>      <!-- Very subtle wash -->
             <SolidColorBrush x:Key="Info" Color="#79B8FF"/>
             <SolidColorBrush x:Key="InfoSubtle" Color="#79B8FF20"/>
             

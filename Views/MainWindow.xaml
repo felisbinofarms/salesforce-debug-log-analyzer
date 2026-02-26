@@ -351,7 +351,7 @@
                             <materialDesign:PackIcon Kind="Home"
                                                      Foreground="White" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Home" FontSize="9" FontWeight="SemiBold"
+                            <TextBlock Text="Home" FontSize="11" FontWeight="SemiBold"
                                        Foreground="White" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
@@ -375,8 +375,8 @@
                             <materialDesign:PackIcon Kind="FileDocument"
                                                      Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Manage" FontSize="9" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                            <TextBlock Text="Manage" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                     </Button>
@@ -399,8 +399,8 @@
                             <materialDesign:PackIcon Kind="Upload"
                                                      Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Upload" FontSize="9" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                            <TextBlock Text="Upload" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                     </Button>
@@ -468,11 +468,11 @@
                                         </Ellipse.Style>
                                     </Ellipse>
                                 </Grid>
-                                <TextBlock FontSize="9" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <TextBlock FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,4,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="Live"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsStreaming}" Value="True">
                                                     <Setter Property="Text" Value="● Live"/>
@@ -507,8 +507,8 @@
                             <materialDesign:PackIcon Kind="FileExport"
                                                      Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Export" FontSize="9" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                            <TextBlock Text="Export" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                     </Button>
@@ -531,8 +531,8 @@
                             <materialDesign:PackIcon Kind="Cog"
                                                      Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Settings" FontSize="9" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                            <TextBlock Text="Settings" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                     </Button>
@@ -555,7 +555,7 @@
                             <materialDesign:PackIcon Kind="Power"
                                                      Foreground="{StaticResource Danger}" Width="20" Height="20"
                                                      HorizontalAlignment="Center"/>
-                            <TextBlock Text="Sign Out" FontSize="9" FontWeight="SemiBold"
+                            <TextBlock Text="Sign Out" FontSize="11" FontWeight="SemiBold"
                                        Foreground="{StaticResource Danger}" HorizontalAlignment="Center"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
@@ -1496,7 +1496,7 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Database" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                        <TextBlock Text="Reads &amp; Writes" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
                                                                    Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
@@ -1590,7 +1590,7 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Text="Deep Dive" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                                        <TextBlock Text="Code Trace" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
                                                                    Foreground="{StaticResource TextSecondary}"/>
                                                     </StackPanel>
                                                 </Border>
@@ -1951,7 +1951,7 @@
 
                                     <!-- ===== MIXED CONTEXT WARNING (Governance Education) ===== -->
                                     <!-- Only visible when ShowMixedContextWarning=true -->
-                                    <Border CornerRadius="12" Margin="0,0,0,16" Padding="20,16" Background="#2A2520"
+                                    <Border CornerRadius="12" Margin="0,0,0,16" Padding="20,16" Background="#1C1C28"
                                             BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,3"
                                             Visibility="{Binding ShowMixedContextWarning, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Grid>
@@ -2001,7 +2001,7 @@
                                             </StackPanel>
                                             
                                             <!-- Best Practice Recommendation -->
-                                            <Border Grid.Row="3" Background="#1A2F1A" CornerRadius="8" Padding="14,10" BorderBrush="{StaticResource Success}" BorderThickness="1">
+                                            <Border Grid.Row="3" Background="#141C15" CornerRadius="8" Padding="14,10" BorderBrush="{StaticResource Success}" BorderThickness="1">
                                                 <StackPanel>
                                                     <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Success}" Margin="0,0,0,6">
                                                         <Run Text="💡"/>
@@ -2040,9 +2040,9 @@
                                                         <Setter Property="Background">
                                                             <Setter.Value>
                                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                    <GradientStop Color="#DC2626" Offset="0"/>
-                                                                    <GradientStop Color="#991B1B" Offset="0.6"/>
-                                                                    <GradientStop Color="#7F1D1D" Offset="1"/>
+                                                                    <GradientStop Color="#1E0A0A" Offset="0"/>
+                                                                    <GradientStop Color="#180808" Offset="0.6"/>
+                                                                    <GradientStop Color="#140606" Offset="1"/>
                                                                 </LinearGradientBrush>
                                                             </Setter.Value>
                                                         </Setter>
@@ -2051,9 +2051,9 @@
                                                         <Setter Property="Background">
                                                             <Setter.Value>
                                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                    <GradientStop Color="#0A3D24" Offset="0"/>
-                                                                    <GradientStop Color="#064E3B" Offset="0.5"/>
-                                                                    <GradientStop Color="#083D30" Offset="1"/>
+                                                                    <GradientStop Color="#0E1E14" Offset="0"/>
+                                                                    <GradientStop Color="#0C1A11" Offset="0.5"/>
+                                                                    <GradientStop Color="#0E201A" Offset="1"/>
                                                                 </LinearGradientBrush>
                                                             </Setter.Value>
                                                         </Setter>
@@ -2062,9 +2062,9 @@
                                                         <Setter Property="Background">
                                                             <Setter.Value>
                                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                    <GradientStop Color="#4D2E00" Offset="0"/>
-                                                                    <GradientStop Color="#7C4A00" Offset="0.6"/>
-                                                                    <GradientStop Color="#5C3500" Offset="1"/>
+                                                                    <GradientStop Color="#1E1608" Offset="0"/>
+                                                                    <GradientStop Color="#1C1406" Offset="0.6"/>
+                                                                    <GradientStop Color="#1A1205" Offset="1"/>
                                                                 </LinearGradientBrush>
                                                             </Setter.Value>
                                                         </Setter>
@@ -3301,7 +3301,7 @@
                                                                             <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
                                                                         </DataTrigger>
                                                                         <DataTrigger Binding="{Binding Severity}" Value="High">
-                                                                            <Setter Property="BorderBrush" Value="#F59E0B"/>
+                                                                            <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
                                                                             <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -3340,7 +3340,7 @@
                                                                 </Border>
                                                                 
                                                                 <!-- Why it's bad -->
-                                                                <TextBlock FontSize="12" Foreground="#F59E0B" TextWrapping="Wrap" LineHeight="20">
+                                                                <TextBlock FontSize="12" Foreground="{StaticResource Warning}" TextWrapping="Wrap" LineHeight="20">
                                                                     <Run Text="⚠️ Impact: " FontWeight="SemiBold"/>
                                                                     <Run Text="{Binding WhyItsBad, Mode=OneWay}"/>
                                                                 </TextBlock>
