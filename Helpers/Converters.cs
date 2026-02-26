@@ -339,10 +339,10 @@ public class HealthScoreToColorConverter : IValueConverter
         
         var hex = score switch
         {
-            >= 80 => "#57F287", // Green
-            >= 60 => "#FEE75C", // Yellow
-            >= 40 => "#FAA61A", // Orange
-            _ => "#ED4245"      // Red
+            >= 80 => "#76BA70", // Sage green  — calm, no glare
+            >= 60 => "#C09040", // Warm amber  — noticeable, not screaming
+            >= 40 => "#B87040", // Muted orange — caution without alarm
+            _ => "#CC6055"      // Muted coral  — clear problem, not panic
         };
         
         return new BrushConverter().ConvertFromString(hex) as Brush ?? Brushes.White;
