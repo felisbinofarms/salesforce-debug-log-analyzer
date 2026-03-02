@@ -26,6 +26,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ReportExportService _exportService;
     private readonly SettingsService _settingsService;
     private readonly OrgMetadataService _metadataService;
+    private readonly LicenseService _licenseService;
     private bool _disposed;
 
     [ObservableProperty]
@@ -258,6 +259,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _fullSummaryText = "";
     
+    [ObservableProperty]
+    private string _detailedSummaryText = "";
+    
+    [ObservableProperty]
+    private ObservableCollection<DetailedIssue> _detailedIssues = new();
+    
     // ===== PLAIN-ENGLISH INSIGHTS (for non-technical users) =====
     
     [ObservableProperty]
@@ -341,6 +348,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private string _editorConnectionStatus = "VSCode: Not Connected";
+    
+    // License Management
+    [ObservableProperty]
+    private License? _currentLicense;
+    
+    [ObservableProperty]
+    private string _licenseStatus = "Free";
+    
+    [ObservableProperty]
+    private bool _isProUser = false;
+    
+    [ObservableProperty]
+    private string _trialWarning = "";
 
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
@@ -354,6 +374,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _exportService = new ReportExportService();
         _settingsService = new SettingsService();
         _metadataService = new OrgMetadataService(_apiService);
+        _licenseService = new LicenseService();
         
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
@@ -375,6 +396,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _streamingThrottleTimer.Tick += OnStreamingThrottleTick;
+        
+        // Initialize license
+        _ = InitializeLicenseAsync();
     }
 
     public void OnConnected()
@@ -420,6 +444,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             
             // FULL SUMMARY - the rich markdown-like analysis
             FullSummaryText = value.Summary ?? "";
+            
+            // NEW: Detailed, educational summary with analogies and code examples
+            DetailedSummaryText = value.DetailedSummary ?? "";
+            
+            // NEW: Detailed issues with full explanations
+            DetailedIssues = value.DetailedIssues != null ? 
+                new ObservableCollection<DetailedIssue>(value.DetailedIssues.OrderBy(i => i.Priority)) : 
+                new ObservableCollection<DetailedIssue>();
             
             // ISSUES - Only show real problems
             var simpleIssues = new List<string>();
@@ -1458,6 +1490,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task LoadLogFolder()
     {
+        // Feature gating - Pro feature
+        if (!await _licenseService.CanUseProFeatureAsync("FolderImport"))
+        {
+            MessageBox.Show(
+                _licenseService.GetUpgradeMessage("FolderImport"),
+                "Upgrade to Pro",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+        
         StatusMessage = "Select folder containing debug logs...";
 
         try
@@ -1572,6 +1615,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ExportReport()
     {
+        // Feature gating - Pro feature
+        if (!await _licenseService.CanUseProFeatureAsync("ExportReports"))
+        {
+            MessageBox.Show(
+                _licenseService.GetUpgradeMessage("ExportReports"),
+                "Upgrade to Pro",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+        
         if (SelectedLog == null)
         {
             StatusMessage = "⚠️ Please select a log to export";
@@ -1710,6 +1764,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ToggleStreaming()
     {
+        // Feature gating - Pro feature
+        if (!await _licenseService.CanUseProFeatureAsync("CliStreaming"))
+        {
+            MessageBox.Show(
+                _licenseService.GetUpgradeMessage("CliStreaming"),
+                "Upgrade to Pro",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+        
         if (IsStreaming)
         {
             StopStreaming();
@@ -2463,6 +2528,61 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         
         dialog.ShowDialog();
+    }
+    
+    [RelayCommand]
+    private void Upgrade()
+    {
+        var dialog = new UpgradeDialog(_licenseService, async () =>
+        {
+            // Refresh license after upgrade
+            await InitializeLicenseAsync();
+        })
+        {
+            Owner = Application.Current.MainWindow
+        };
+        
+        dialog.ShowDialog();
+    }
+    
+    private async Task InitializeLicenseAsync()
+    {
+        try
+        {
+            CurrentLicense = await _licenseService.GetCurrentLicenseAsync();
+            IsProUser = CurrentLicense.Tier != LicenseTier.Free;
+            
+            // Update license status display
+            if (CurrentLicense.Tier == LicenseTier.Free)
+            {
+                LicenseStatus = "Free";
+            }
+            else if (CurrentLicense.IsTrialLicense)
+            {
+                var daysLeft = CurrentLicense.DaysUntilExpiration;
+                LicenseStatus = $"Pro Trial ({daysLeft} days)";
+                
+                if (daysLeft <= 3)
+                {
+                    TrialWarning = $"⚠️ Trial expires in {daysLeft} days";
+                }
+            }
+            else
+            {
+                LicenseStatus = $"{CurrentLicense.Tier}";
+            }
+            
+            // Show trial expiration warning if needed
+            if (CurrentLicense.IsTrialLicense && CurrentLicense.DaysUntilExpiration <= 7)
+            {
+                var daysLeft = CurrentLicense.DaysUntilExpiration;
+                StatusMessage = $"⚠️ Pro trial: {daysLeft} days remaining";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"❌ License check failed: {ex.Message}";
+        }
     }
 
     public void Dispose()

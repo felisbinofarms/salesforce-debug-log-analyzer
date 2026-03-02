@@ -232,6 +232,16 @@ public class LogAnalysis
     public List<string> Recommendations { get; set; } = new();
     
     /// <summary>
+    /// Detailed, educational explanations with code examples (from LogExplainerService)
+    /// </summary>
+    public List<DetailedIssue> DetailedIssues { get; set; } = new();
+    
+    /// <summary>
+    /// Comprehensive plain English summary (from LogExplainerService)
+    /// </summary>
+    public string DetailedSummary { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Cumulative profiling data (from CUMULATIVE_PROFILING section at end of log)
     /// </summary>
     public CumulativeProfiling? CumulativeProfiling { get; set; }
@@ -987,4 +997,17 @@ public class PlainEnglishRecommendation
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public int EstimatedMinutes { get; set; } = 10;
+}
+
+/// <summary>
+/// Detailed issue with plain English explanation, code examples, and actionable advice
+/// </summary>
+public class DetailedIssue
+{
+    public IssueSeverity Severity { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty; // Full markdown with code examples
+    public string Impact { get; set; } = string.Empty;
+    public string Effort { get; set; } = string.Empty;
+    public int Priority { get; set; } // 1 = fix now, 2 = fix this week, 3 = fix eventually
 }

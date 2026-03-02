@@ -402,3 +402,30 @@ public class UserToColorConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts IssueSeverity enum to a color
+/// </summary>
+public class SeverityToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is Models.IssueSeverity severity)
+        {
+            return severity switch
+            {
+                Models.IssueSeverity.Critical => new SolidColorBrush(Color.FromRgb(237, 66, 69)), // Red
+                Models.IssueSeverity.High => new SolidColorBrush(Color.FromRgb(250, 166, 26)),    // Orange
+                Models.IssueSeverity.Medium => new SolidColorBrush(Color.FromRgb(254, 231, 92)),  // Yellow
+                Models.IssueSeverity.Low => new SolidColorBrush(Color.FromRgb(87, 242, 135)),     // Green
+                _ => new SolidColorBrush(Color.FromRgb(64, 65, 71))                               // Gray
+            };
+        }
+        return new SolidColorBrush(Color.FromRgb(64, 65, 71));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

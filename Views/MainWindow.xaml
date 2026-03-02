@@ -45,6 +45,7 @@
         <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <helpers:ArcPathConverter x:Key="ArcPathConverter"/>
         <helpers:HealthScoreToColorConverter x:Key="HealthScoreToColorConverter"/>
+        <helpers:SeverityToColorConverter x:Key="SeverityToColorConverter"/>
         
         <!-- Discord Card Style -->
         <Style x:Key="DiscordCard" TargetType="Border">
@@ -1405,6 +1406,67 @@
                                             <TextBlock Text="{Binding FullSummaryText}" TextWrapping="Wrap" FontSize="13" Foreground="#B5BAC1" LineHeight="22"/>
                                         </StackPanel>
                                     </Border>
+                                    
+                                    <!-- ===== PLAIN ENGLISH EXPLANATION (NEW!) ===== -->
+                                    <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
+                                            Visibility="{Binding DetailedSummaryText, Converter={StaticResource StringToVisibilityConverter}}"
+                                            BorderBrush="#5865F2" BorderThickness="2">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <TextBlock Text="📚" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Plain English Explanation" FontSize="16" FontWeight="SemiBold" Foreground="#5865F2" VerticalAlignment="Center"/>
+                                                <Border Background="#5865F2" CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
+                                                    <TextBlock Text="NEW!" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding DetailedSummaryText}" TextWrapping="Wrap" FontSize="14" Foreground="#DBDEE1" LineHeight="24" FontFamily="Segoe UI, sans-serif"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- ===== DETAILED ISSUES WITH CODE EXAMPLES (NEW!) ===== -->
+                                    <ItemsControl ItemsSource="{Binding DetailedIssues}" Margin="0,0,0,16">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource DiscordCard}" Padding="20" Margin="0,0,0,16"
+                                                        BorderThickness="2"
+                                                        BorderBrush="{Binding Severity, Converter={StaticResource SeverityToColorConverter}}">
+                                                    <StackPanel>
+                                                        <!-- Issue Header -->
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                            <TextBlock FontSize="18" FontWeight="Bold" Foreground="#DBDEE1" Margin="0,0,8,0">
+                                                                <Run Text="{Binding Priority, StringFormat={}#{0}}"/>
+                                                            </TextBlock>
+                                                            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Foreground="#DBDEE1" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                        
+                                                        <!-- Issue Details -->
+                                                        <Border Background="#1E1F22" CornerRadius="4" Padding="12" Margin="0,0,0,12">
+                                                            <StackPanel>
+                                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                                    <TextBlock Text="💥 " FontSize="13"/>
+                                                                    <TextBlock Text="Impact: " FontSize="13" FontWeight="SemiBold" Foreground="#ED4245"/>
+                                                                    <TextBlock Text="{Binding Impact}" FontSize="13" Foreground="#B5BAC1" TextWrapping="Wrap"/>
+                                                                </StackPanel>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="⏱️ " FontSize="13"/>
+                                                                    <TextBlock Text="Effort: " FontSize="13" FontWeight="SemiBold" Foreground="#FEE75C"/>
+                                                                    <TextBlock Text="{Binding Effort}" FontSize="13" Foreground="#B5BAC1" TextWrapping="Wrap"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        
+                                                        <!-- Full Explanation with Code Examples -->
+                                                        <TextBlock Text="{Binding Description}" 
+                                                                   TextWrapping="Wrap" 
+                                                                   FontSize="13" 
+                                                                   Foreground="#DBDEE1" 
+                                                                   LineHeight="22"
+                                                                   FontFamily="Segoe UI, Consolas, monospace"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                     
                                     <!-- ===== ACTIONABLE ISSUES ===== -->
                                     <StackPanel Visibility="{Binding HasHealthData, Converter={StaticResource BooleanToVisibilityConverter}}">
