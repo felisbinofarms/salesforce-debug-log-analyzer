@@ -25,6 +25,19 @@ public enum LicenseStatus
 }
 
 /// <summary>
+/// Features that can be gated by license tier
+/// </summary>
+public enum LicenseFeature
+{
+    UnlimitedFileSize,
+    LiveStreaming,
+    TransactionGrouping,
+    FolderImport,
+    ExportReports,
+    MarketplaceSubmit
+}
+
+/// <summary>
 /// License information stored locally (encrypted)
 /// </summary>
 public class License

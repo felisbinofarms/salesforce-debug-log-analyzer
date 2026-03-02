@@ -229,6 +229,25 @@ public class LicenseService
         return await ApplyLicenseAsync(trialKey, email);
     }
     
+    /// <summary>
+    /// Check if a specific feature is available for the current license
+    /// </summary>
+    public bool IsFeatureAvailable(LicenseFeature feature)
+    {
+        var license = GetCurrentLicenseAsync().Result; // Sync version for easier use
+        
+        // Free tier can't use Pro features
+        if (license.Tier == LicenseTier.Free)
+            return false;
+        
+        // Expired licenses revert to Free tier
+        if (license.IsExpired && !license.InGracePeriod)
+            return false;
+        
+        // All features available for Pro+
+        return true;
+    }
+    
     #endregion
     
     #region Private Helper Methods
