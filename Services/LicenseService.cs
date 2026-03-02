@@ -247,9 +247,67 @@ public class LicenseService
         // All features available for Pro+
         return true;
     }
-    
+
+    /// <summary>Maximum file size (MB) allowed on the Free tier</summary>
+    public static int FreeTierMaxFileSizeMB => 30;
+
+    /// <summary>Current license tier (synchronous convenience property)</summary>
+    public LicenseTier CurrentTier
+    {
+        get
+        {
+            var license = GetCurrentLicenseAsync().GetAwaiter().GetResult();
+            return license.Tier;
+        }
+    }
+
+    /// <summary>True if the license is Pro, Team, or Enterprise and not expired</summary>
+    public bool IsProOrAbove
+    {
+        get
+        {
+            var license = GetCurrentLicenseAsync().GetAwaiter().GetResult();
+            if (license.Tier == LicenseTier.Free || license.Tier == LicenseTier.Trial)
+                return false;
+            return !(license.IsExpired && !license.InGracePeriod);
+        }
+    }
+
+    /// <summary>Days remaining on a trial or pro license (0 if expired / free)</summary>
+    public int TrialDaysRemaining()
+    {
+        var license = GetCurrentLicenseAsync().GetAwaiter().GetResult();
+        if (license.ExpiresDate == default) return 0;
+        return (int)Math.Max(0, (license.ExpiresDate - DateTime.UtcNow).TotalDays);
+    }
+
+    /// <summary>Re-validate the license online if it needs revalidation; returns a result object</summary>
+    public async Task<LicenseValidationResult> RevalidateIfNeededAsync()
+    {
+        try
+        {
+            var license = await GetCurrentLicenseAsync();
+            if (license.Tier == LicenseTier.Free)
+                return new LicenseValidationResult { IsValid = true };
+            if (!license.NeedsOnlineValidation)
+                return new LicenseValidationResult { IsValid = true };
+
+            var status = await ValidateOnlineAsync();
+            return new LicenseValidationResult
+            {
+                IsValid = status == LicenseStatus.Active || status == LicenseStatus.Trial,
+                IsOfflineGracePeriod = status == LicenseStatus.Offline,
+                ErrorMessage = status == LicenseStatus.Expired ? "License has expired" : null
+            };
+        }
+        catch (Exception ex)
+        {
+            return new LicenseValidationResult { IsValid = false, ErrorMessage = ex.Message };
+        }
+    }
+
     #endregion
-    
+
     #region Private Helper Methods
     
     private async Task<License?> LoadLicenseFromDiskAsync()

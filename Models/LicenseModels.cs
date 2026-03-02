@@ -6,6 +6,7 @@ namespace SalesforceDebugAnalyzer.Models;
 public enum LicenseTier
 {
     Free,
+    Trial,
     Pro,
     Team,
     Enterprise
@@ -65,4 +66,12 @@ public class License
     public bool IsExpired => DateTime.UtcNow > ExpiresDate;
     public bool NeedsOnlineValidation => (DateTime.UtcNow - LastValidated).Days >= 30;
     public bool InGracePeriod => Status == LicenseStatus.Offline && (DateTime.UtcNow - LastValidated).Days <= 7;
+}
+
+/// <summary>Result returned by LicenseService.RevalidateIfNeededAsync()</summary>
+public class LicenseValidationResult
+{
+    public bool IsValid { get; set; }
+    public bool IsOfflineGracePeriod { get; set; }
+    public string? ErrorMessage { get; set; }
 }

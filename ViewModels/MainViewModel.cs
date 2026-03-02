@@ -728,7 +728,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ShowUpgradeDialog()
     {
-        var dialog = new Views.UpgradeDialog { Owner = App.Current.MainWindow };
+        var dialog = new Views.UpgradeDialog(_licenseService) { Owner = App.Current.MainWindow };
         dialog.ShowDialog();
         // Refresh tier in case user just started a trial
         RefreshLicenseDisplay();

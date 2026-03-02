@@ -212,7 +212,7 @@ public class LogExplainerService
         
         return new DetailedIssue
         {
-            Severity = IssueSeverity.Critical,
+            Severity = IssueSeverity.Critical.ToString(),
             Title = "🚨 CRITICAL: Governor Limits at Maximum",
             Description = sb.ToString(),
             Impact = "Code will fail if processing one more record or making one more query",
@@ -292,7 +292,7 @@ public class LogExplainerService
         
         return new DetailedIssue
         {
-            Severity = IssueSeverity.High,
+            Severity = IssueSeverity.High.ToString(),
             Title = $"🔁 N+1 Query Pattern ({queryCount} duplicate queries)",
             Description = sb.ToString(),
             Impact = $"{queryCount}x slower than necessary, wastes {queryCount - 1} of your 100-query limit",
@@ -349,7 +349,7 @@ public class LogExplainerService
         
         return new DetailedIssue
         {
-            Severity = IssueSeverity.Critical,
+            Severity = IssueSeverity.Critical.ToString(),
             Title = "🚨 Stack Overflow Risk",
             Description = sb.ToString(),
             Impact = "Code may crash with 'Maximum stack depth exceeded' error",
@@ -397,7 +397,7 @@ public class LogExplainerService
         
         return new DetailedIssue
         {
-            Severity = IssueSeverity.Medium,
+            Severity = IssueSeverity.Medium.ToString(),
             Title = $"🐌 {slowQueries.Count} Slow Database Quer{(slowQueries.Count > 1 ? "ies" : "y")}",
             Description = sb.ToString(),
             Impact = $"Users wait {FormatDuration((long)slowQueries.Sum(q => q.DurationMs))} unnecessarily",
@@ -453,7 +453,7 @@ public class LogExplainerService
         
         return new DetailedIssue
         {
-            Severity = IssueSeverity.High,
+            Severity = IssueSeverity.High.ToString(),
             Title = $"🔄 Trigger Recursion ({reEntry.TriggerName} fired {reEntry.TotalFireCount}x)",
             Description = sb.ToString(),
             Impact = "Wastes governor limits, risk of infinite loops and stack overflow",
@@ -513,5 +513,20 @@ public class LogExplainerService
     private double SafePercent(int value, int max)
     {
         return max == 0 ? 0 : (value * 100.0 / max);
+    }
+
+    /// <summary>
+    /// Convenience wrapper: generates a full LogExplanation from a LogAnalysis.
+    /// </summary>
+    public LogExplanation Explain(LogAnalysis analysis)
+    {
+        return new LogExplanation
+        {
+            WhatHappened = GenerateDetailedSummary(analysis),
+            Issues = GenerateDetailedIssues(analysis),
+            WhatYourCodeDid = new List<string>(),
+            Recommendations = new List<DetailedRecommendation>(),
+            WhatYouLearned = new List<LearningItem>()
+        };
     }
 }

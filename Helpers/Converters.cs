@@ -479,3 +479,24 @@ public class MultiBooleanToVisibilityConverter : IMultiValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts an issue severity string ("Critical", "High", "Medium", "Low") to a SolidColorBrush
+/// </summary>
+public class SeverityToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return (value?.ToString() ?? "") switch
+        {
+            "Critical" => new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49)), // Danger red
+            "High"     => new SolidColorBrush(Color.FromRgb(0xD2, 0x99, 0x22)), // Warning yellow
+            "Medium"   => new SolidColorBrush(Color.FromRgb(0x58, 0xA6, 0xFF)), // Accent blue
+            "Low"      => new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50)), // Success green
+            _          => new SolidColorBrush(Color.FromRgb(0x30, 0x36, 0x3D))  // Border default
+        };
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
