@@ -6,6 +6,8 @@ namespace SalesforceDebugAnalyzer.Models;
 public class LogLine
 {
     public DateTime Timestamp { get; set; }
+    /// <summary>Nanosecond counter from the log line parenthetical, e.g. (225728779). Zero if not present.</summary>
+    public long NanosecondCounter { get; set; }
     public string EventType { get; set; } = string.Empty;
     public string[] Details { get; set; } = Array.Empty<string>();
     public int LineNumber { get; set; }
@@ -21,12 +23,19 @@ public class ExecutionNode
     public ExecutionNodeType Type { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    public long DurationMs => EndTime.HasValue ? (long)(EndTime.Value - StartTime).TotalMilliseconds : 0;
+    /// <summary>Nanosecond counter at node entry. Zero means unavailable.</summary>
+    public long NanosecondStart { get; set; }
+    /// <summary>Nanosecond counter at node exit. Zero means unavailable.</summary>
+    public long NanosecondEnd { get; set; }
+    /// <summary>Duration in ms. Prefers nanosecond counters when available for sub-millisecond precision.</summary>
+    public long DurationMs => NanosecondEnd > NanosecondStart
+        ? (NanosecondEnd - NanosecondStart) / 1_000_000
+        : (EndTime.HasValue ? (long)(EndTime.Value - StartTime).TotalMilliseconds : 0);
     public List<ExecutionNode> Children { get; set; } = new();
     public Dictionary<string, object> Metadata { get; set; } = new();
     public int StartLineNumber { get; set; }
     public int? EndLineNumber { get; set; }
-    
+
     /// <summary>
     /// For Exception nodes: indicates if this exception was handled (caught) or unhandled
     /// </summary>
@@ -172,6 +181,19 @@ public class GovernorLimitSnapshot
     public string Namespace { get; set; } = "(default)";
 }
 
+/// <summary>Confidence level of the duration measurement shown to the user.</summary>
+public enum DurationSource
+{
+    /// <summary>From nanosecond counters in the log — exact to microsecond precision.</summary>
+    NanosecondPrecise,
+    /// <summary>Derived from HH:MM:SS DateTime timestamps — millisecond precision only.</summary>
+    DateTimeDerived,
+    /// <summary>Log was truncated before EXECUTION_FINISHED — duration is a lower bound.</summary>
+    Incomplete,
+    /// <summary>Async execution — the synchronous portion only; async work continues after this log ends.</summary>
+    Async
+}
+
 /// <summary>
 /// Complete analysis of a parsed debug log
 /// </summary>
@@ -181,6 +203,8 @@ public class LogAnalysis
     public string LogName { get; set; } = string.Empty;
     public DateTime ParsedAt { get; set; }
     public double DurationMs { get; set; }
+    /// <summary>How the DurationMs figure was derived. Affects the display prefix (~, >, etc.) and tooltip.</summary>
+    public DurationSource DurationSource { get; set; } = DurationSource.NanosecondPrecise;
     public int LineCount { get; set; }
     public bool HasErrors { get; set; }
     public ExecutionNode RootNode { get; set; } = new();
@@ -232,19 +256,15 @@ public class LogAnalysis
     public List<string> Recommendations { get; set; } = new();
     
     /// <summary>
-    /// Detailed, educational explanations with code examples (from LogExplainerService)
-    /// </summary>
-    public List<DetailedIssue> DetailedIssues { get; set; } = new();
-    
-    /// <summary>
-    /// Comprehensive plain English summary (from LogExplainerService)
-    /// </summary>
-    public string DetailedSummary { get; set; } = string.Empty;
-    
-    /// <summary>
     /// Cumulative profiling data (from CUMULATIVE_PROFILING section at end of log)
     /// </summary>
     public CumulativeProfiling? CumulativeProfiling { get; set; }
+
+    /// <summary>
+    /// True if CUMULATIVE_PROFILING_BEGIN marker was found in the log.
+    /// When true but CumulativeProfiling is null, the section existed but parsing produced no data.
+    /// </summary>
+    public bool CumulativeProfilingFound { get; set; } = false;
     
     /// <summary>
     /// Log user name from USER_INFO line
@@ -387,6 +407,40 @@ public class LogAnalysis
     /// Explanation of the bulk safety grade
     /// </summary>
     public string BulkSafetyReason { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Platform Events published during this transaction (EVENT_SERVICE_PUB_BEGIN/END pairs).
+    /// Each entry represents one EventBus.publish() call.
+    /// </summary>
+    public List<PlatformEventPublish> PlatformEventPublishes { get; set; } = new();
+}
+
+/// <summary>
+/// Represents a single Platform Event publish operation captured from
+/// EVENT_SERVICE_PUB_BEGIN / EVENT_SERVICE_PUB_END log events.
+/// </summary>
+public class PlatformEventPublish
+{
+    /// <summary>Salesforce object API name for the event type (e.g. "Service_Log_Event__e").</summary>
+    public string EventTypeName { get; set; } = string.Empty;
+
+    /// <summary>Internal publish ID from the log line (e.g. "01I5f0000018pCe").</summary>
+    public string PublishId { get; set; } = string.Empty;
+
+    /// <summary>Line number where EVENT_SERVICE_PUB_BEGIN appeared.</summary>
+    public int LineNumber { get; set; }
+
+    /// <summary>Timestamp of the BEGIN event.</summary>
+    public DateTime StartTime { get; set; }
+
+    /// <summary>Duration between BEGIN and END in milliseconds. Zero when END was not found.</summary>
+    public long DurationMs { get; set; }
+
+    /// <summary>True when a matching EVENT_SERVICE_PUB_END was found (publish completed).</summary>
+    public bool Completed { get; set; }
+
+    /// <summary>Display string: event type name, shortened if needed.</summary>
+    public string DisplayName => string.IsNullOrEmpty(EventTypeName) ? PublishId : EventTypeName;
 }
 
 /// <summary>
@@ -593,6 +647,34 @@ public class ExecutionTimeline
 }
 
 /// <summary>
+/// Salesforce Order of Execution phase label.
+/// Maps each CODE_UNIT_STARTED event to its position in the Salesforce transaction lifecycle.
+/// </summary>
+public enum OoePhase
+{
+    /// <summary>Trigger(s) that fire before the DML operation (before insert/update/delete)</summary>
+    BeforeTrigger,
+    /// <summary>System and user-defined validation rules run after before-triggers</summary>
+    SystemValidation,
+    /// <summary>Trigger(s) that fire after the DML is committed to DB (after insert/update/delete)</summary>
+    AfterTrigger,
+    /// <summary>Workflow rules evaluated after after-triggers</summary>
+    Workflow,
+    /// <summary>Record-Triggered / After-Save flows (runs after workflow rules in newer Salesforce)</summary>
+    AfterSaveFlow,
+    /// <summary>Processes (Process Builder) evaluated during the transaction</summary>
+    Process,
+    /// <summary>Field updates applied after workflow/process actions</summary>
+    FieldUpdate,
+    /// <summary>A trigger firing again because code in an after-trigger caused another DML</summary>
+    ReEntry,
+    /// <summary>Async operation: @future, Queueable, Batch, or Scheduled</summary>
+    Async,
+    /// <summary>Phase does not clearly map to an OOE step</summary>
+    Other
+}
+
+/// <summary>
 /// A phase in the execution timeline (e.g., Trigger, Flow, Validation)
 /// </summary>
 public class TimelinePhase
@@ -606,6 +688,27 @@ public class TimelinePhase
     public List<TimelinePhase> Children { get; set; } = new(); // Nested calls
     public int Depth { get; set; }
     public bool IsRecursive { get; set; }
+
+    /// <summary>
+    /// Salesforce Order-of-Execution phase this event belongs to.
+    /// Null when the phase cannot be mapped (e.g., inner method calls).
+    /// </summary>
+    public OoePhase? OoePhase { get; set; }
+
+    /// <summary>Short human-readable OOE label used in the timeline UI badge.</summary>
+    public string OoePhaseLabel => OoePhase switch
+    {
+        Models.OoePhase.BeforeTrigger   => "Before Trigger",
+        Models.OoePhase.SystemValidation => "Validation",
+        Models.OoePhase.AfterTrigger    => "After Trigger",
+        Models.OoePhase.Workflow        => "Workflow",
+        Models.OoePhase.AfterSaveFlow   => "After-Save Flow",
+        Models.OoePhase.Process         => "Process",
+        Models.OoePhase.FieldUpdate     => "Field Update",
+        Models.OoePhase.ReEntry         => "Re-Entry ⚠",
+        Models.OoePhase.Async           => "Async",
+        _                               => string.Empty
+    };
 }
 
 /// <summary>
@@ -1000,14 +1103,82 @@ public class PlainEnglishRecommendation
 }
 
 /// <summary>
-/// Detailed issue with plain English explanation, code examples, and actionable advice
+/// Complete plain-English explanation of a log analysis, matching the EXAMPLE_OUTPUT.md vision.
+/// Contains deep explanations with analogies, before/after code, and learning content.
+/// </summary>
+public class LogExplanation
+{
+    // ===== SUMMARY SECTION =====
+    public string WhatHappened { get; set; } = "";
+    public List<string> WhatYourCodeDid { get; set; } = new();
+    public string PerformanceVerdict { get; set; } = "";
+    public string VerdictIcon { get; set; } = "✅";
+    
+    // ===== DETAILED ISSUES =====
+    public List<DetailedIssue> Issues { get; set; } = new();
+    
+    // ===== RECOMMENDATIONS WITH CODE =====
+    public List<DetailedRecommendation> Recommendations { get; set; } = new();
+    
+    // ===== LEARNING SECTION =====
+    public List<LearningItem> WhatYouLearned { get; set; } = new();
+    
+    // ===== OVERALL ASSESSMENT =====
+    public string OverallAssessment { get; set; } = "";
+    public string Priority { get; set; } = "Low"; // Low, Medium, High, Critical
+    public string Effort { get; set; } = "";
+    public string ImpactSummary { get; set; } = "";
+}
+
+/// <summary>
+/// A deeply explained issue with analogy, root cause, and context.
+/// Goes beyond ActionableIssue by explaining "why" not just "what".
 /// </summary>
 public class DetailedIssue
 {
-    public IssueSeverity Severity { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty; // Full markdown with code examples
-    public string Impact { get; set; } = string.Empty;
-    public string Effort { get; set; } = string.Empty;
-    public int Priority { get; set; } // 1 = fix now, 2 = fix this week, 3 = fix eventually
+    public string Icon { get; set; } = "⚠️";
+    public string Title { get; set; } = "";
+    public string WhatThisMeans { get; set; } = "";
+    public string WhyThisHappened { get; set; } = "";
+    public string Analogy { get; set; } = "";
+    public string WhyItsBad { get; set; } = "";
+    public string Severity { get; set; } = "Medium";
+    public string SeverityColor => Severity switch
+    {
+        "Critical" => "#ED4245",
+        "High" => "#F59E0B",
+        "Medium" => "#FBBF24",
+        "Low" => "#57F287",
+        _ => "#80848E"
+    };
+}
+
+/// <summary>
+/// A recommendation with before/after code examples and quantified impact.
+/// </summary>
+public class DetailedRecommendation
+{
+    public string Icon { get; set; } = "💡";
+    public string Title { get; set; } = "";
+    public string Explanation { get; set; } = "";
+    public string CodeBefore { get; set; } = "";
+    public string CodeBeforeLabel { get; set; } = "❌ Current (Bad)";
+    public string CodeAfter { get; set; } = "";
+    public string CodeAfterLabel { get; set; } = "✅ Fixed (Good)";
+    public string ImpactBefore { get; set; } = "";
+    public string ImpactAfter { get; set; } = "";
+    public string SpeedImprovement { get; set; } = "";
+    public int EstimatedMinutes { get; set; } = 30;
+    public bool HasCodeExample => !string.IsNullOrEmpty(CodeBefore) || !string.IsNullOrEmpty(CodeAfter);
+}
+
+/// <summary>
+/// A concept the user learned from this analysis
+/// </summary>
+public class LearningItem
+{
+    public string Concept { get; set; } = "";
+    public string Explanation { get; set; } = "";
+    public string ResourceUrl { get; set; } = "";
+    public string ResourceLabel { get; set; } = "";
 }

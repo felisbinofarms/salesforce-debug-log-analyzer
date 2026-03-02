@@ -1,0 +1,38 @@
+57.0 APEX_CODE,INFO;APEX_PROFILING,INFO;DB,INFO;SYSTEM,DEBUG;VALIDATION,INFO;WORKFLOW,INFO
+Trigger: OpportunityTrigger on Opportunity (after update)
+15:00:00.000 (1000000)|EXECUTION_STARTED
+15:00:00.001 (2000000)|CODE_UNIT_STARTED|[EXTERNAL]|OpportunityTrigger on Opportunity trigger event AfterUpdate for [Opportunity]
+15:00:00.002 (3000000)|SOQL_EXECUTE_BEGIN|[8]|Aggregations:0|SELECT Id, StageName FROM Opportunity WHERE Id = '0063000000001AAA'
+15:00:00.003 (4000000)|SOQL_EXECUTE_END|[8]|Rows:1
+15:00:00.004 (5000000)|DML_BEGIN|[15]|Op:Update|Type:Opportunity|Rows:1
+15:00:00.005 (6000000)|DML_END|[15]
+15:00:00.006 (7000000)|CODE_UNIT_FINISHED|OpportunityTrigger on Opportunity trigger event AfterUpdate for [Opportunity]
+15:00:00.007 (8000000)|CUMULATIVE_LIMIT_USAGE
+15:00:00.007 (8100000)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 11 out of 100
+  Number of query rows: 45 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 3 out of 150
+  Number of DML rows: 3 out of 10000
+  Maximum CPU time: 875 out of 10000
+  Maximum heap size: 98304 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+15:00:00.007 (8200000)|LIMIT_USAGE_FOR_NS|crm|
+  Number of SOQL queries: 10 out of 100
+  Number of query rows: 44 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 2 out of 150
+  Number of DML rows: 2 out of 10000
+  Maximum CPU time: 400 out of 10000
+  Maximum heap size: 49152 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+15:00:00.008 (9000000)|CUMULATIVE_LIMIT_USAGE_END
+15:00:00.009 (10000000)|EXECUTION_FINISHED

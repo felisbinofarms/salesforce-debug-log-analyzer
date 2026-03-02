@@ -26,6 +26,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ReportExportService _exportService;
     private readonly SettingsService _settingsService;
     private readonly OrgMetadataService _metadataService;
+    private readonly LogExplainerService _explainerService;
     private readonly LicenseService _licenseService;
     private bool _disposed;
 
@@ -54,6 +55,103 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private LogAnalysis? _selectedLog;
 
     [ObservableProperty]
+    private bool _showGroupedView = false;
+    
+    // Aggregate metrics displayed when a LogGroup is selected
+    [ObservableProperty]
+    private string _groupSummary = "";
+    
+    [ObservableProperty]
+    private string _groupPhaseBreakdown = "";
+    
+    // Mixed context warning details
+    [ObservableProperty]
+    private bool _showMixedContextWarning = false;
+    
+    [ObservableProperty]
+    private string _mixedContextExplanation = "";
+    
+    [ObservableProperty]
+    private ObservableCollection<string> _contextBreakdown = new();
+    
+    partial void OnSelectedLogGroupChanged(LogGroup? value)
+    {
+        if (value == null) 
+        {
+            ShowMixedContextWarning = false;
+            return;
+        }
+
+        // Auto-parse the first log in the group so the right panel shows content
+        var firstLog = value.Logs.FirstOrDefault();
+        if (firstLog != null && !string.IsNullOrEmpty(firstLog.FilePath))
+        {
+            _ = LoadLogFromPath(firstLog.FilePath);
+        }
+        
+        // Generate aggregate summary
+        var logCount = value.Logs.Count;
+        var totalDuration = value.TotalDuration;
+        var userName = value.UserName ?? "Unknown User";
+        
+        GroupSummary = $"Transaction Group: {userName} • {logCount} logs • {totalDuration:F0}ms total user wait time";
+        
+        // Generate phase breakdown text
+        if (value.Phases != null && value.Phases.Any())
+        {
+            var phaseLines = value.Phases.Select(p => 
+                $"  • {p.Name}: {p.DurationMs:F0}ms ({(p.DurationMs / totalDuration * 100):F1}%)");
+            GroupPhaseBreakdown = $"Execution Phases:\n{string.Join("\n", phaseLines)}";
+        }
+        else
+        {
+            GroupPhaseBreakdown = "";
+        }
+        
+        // Check for mixed contexts (governance issue)
+        ShowMixedContextWarning = value.HasMixedContexts;
+        
+        if (value.HasMixedContexts)
+        {
+            // Count logs by context
+            var contextCounts = value.Logs
+                .GroupBy(log => log.Context)
+                .Select(g => new { Context = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+            
+            var userActionCount = contextCounts.FirstOrDefault(x => x.Context == Models.ExecutionContext.Interactive)?.Count ?? 0;
+            var totalLogs = value.Logs.Count;
+            
+            // Generate friendly explanation
+            if (userActionCount > 0 && userActionCount < totalLogs)
+            {
+                MixedContextExplanation = $"Only {userActionCount} of these {totalLogs} logs are from YOUR action. The rest are background processes that happened to run at the same time.";
+            }
+            else
+            {
+                MixedContextExplanation = "Multiple execution contexts detected in the same user account. This makes debugging harder because you can't tell which logs are yours.";
+            }
+            
+            // Generate context breakdown
+            ContextBreakdown.Clear();
+            foreach (var ctx in contextCounts)
+            {
+                string contextName = ctx.Context switch
+                {
+                    Models.ExecutionContext.Interactive => "🖱️ User Action (button click, page load)",
+                    Models.ExecutionContext.Batch => "⚙️ Batch Job (scheduled Apex, bulk processing)",
+                    Models.ExecutionContext.Integration => "🔌 API Call (REST/SOAP from external system)",
+                    Models.ExecutionContext.Scheduled => "⏰ Scheduled Flow (time-based automation)",
+                    Models.ExecutionContext.Async => "⚡ Async Process (@future, Queueable)",
+                    _ => "❓ Unknown Context"
+                };
+                ContextBreakdown.Add($"{ctx.Count} logs: {contextName}");
+            }
+        }
+    }
+
+    [ObservableProperty]
     private string _summaryText = "";
 
     [ObservableProperty]
@@ -80,6 +178,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private string _heroDuration = "0ms";
+
+    [ObservableProperty]
+    private string _durationPrefix = "";
+
+    [ObservableProperty]
+    private string _durationConfidenceTooltip = "";
     
     [ObservableProperty]
     private string _heroEntryPoint = "";
@@ -164,9 +268,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _showDebugStatements = false;
 
-    // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries)
+    // Tab selection (0=Summary, 1=Tree, 2=Timeline, 3=Queries, 4=Explain)
+    // Default: Summary (0) — admin-first: start on the most digestible view
     [ObservableProperty]
     private int _selectedTabIndex = 0;
+
+    // First-log onboarding tour (shown once, persisted in settings)
+    [ObservableProperty]
+    private bool _showOnboardingTour = false;
+
+    // Profiling parse warning (shown when CUMULATIVE_PROFILING_BEGIN found but data couldn't be parsed)
+    [ObservableProperty]
+    private bool _hasProfilingWarning = false;
+
+    // Parser debug mode (hidden feature for power users — enabled via settings.json)
+    [ObservableProperty]
+    private bool _isParserDebugMode = false;
+
+    [ObservableProperty]
+    private string _parserDebugInfo = "";
 
     // Streaming properties
     [ObservableProperty]
@@ -250,20 +370,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private bool _hasHealthData = false;
-    
+
     [ObservableProperty]
     private bool _isCleanBillOfHealth = false;
+
+    // Plain-language health statement for non-technical users (replaces letter grade)
+    [ObservableProperty]
+    private string _healthPlainStatement = "";
+
+    // Traffic-light status icons for instant at-a-glance scanning (🟢 / 🟡 / 🔴)
+    [ObservableProperty]
+    private string _soqlStatusIcon = "";
+    [ObservableProperty]
+    private string _dmlStatusIcon = "";
+    [ObservableProperty]
+    private string _cpuStatusIcon = "";
+    [ObservableProperty]
+    private string _errorStatusIcon = "";
     
     // ===== FULL ANALYSIS SUMMARY =====
     
     [ObservableProperty]
     private string _fullSummaryText = "";
-    
-    [ObservableProperty]
-    private string _detailedSummaryText = "";
-    
-    [ObservableProperty]
-    private ObservableCollection<DetailedIssue> _detailedIssues = new();
     
     // ===== PLAIN-ENGLISH INSIGHTS (for non-technical users) =====
     
@@ -312,6 +440,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isAllClear = false;
     
+    // ===== DEEP EXPLANATION (LogExplainerService output) =====
+    
+    [ObservableProperty]
+    private LogExplanation? _currentExplanation;
+    
+    [ObservableProperty]
+    private bool _hasExplanation = false;
+    
+    [ObservableProperty]
+    private ObservableCollection<DetailedIssue> _detailedIssues = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<DetailedRecommendation> _detailedRecommendations = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<LearningItem> _learningItems = new();
+    
+    [ObservableProperty]
+    private bool _hasDetailedIssues = false;
+    
+    [ObservableProperty]
+    private bool _hasDetailedRecommendations = false;
+    
+    [ObservableProperty]
+    private bool _hasLearningItems = false;
+    
+    [ObservableProperty]
+    private ObservableCollection<string> _whatYourCodeDid = new();
+    
     // ===== ALWAYS-USEFUL: TOP METHODS & QUERIES =====
     
     [ObservableProperty]
@@ -342,25 +499,116 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _hasTimelineDetails = false;
 
+    // ===== PLATFORM EVENTS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.PlatformEventPublish> _platformEventPublishes = new();
+
+    [ObservableProperty]
+    private bool _hasPlatformEvents = false;
+
+    // ===== NAMESPACE LIMITS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.GovernorLimitSnapshot> _namespaceLimitItems = new();
+
+    [ObservableProperty]
+    private bool _hasNamespaceLimits = false;
+
+    // ===== FLOW FAULTS =====
+
+    [ObservableProperty]
+    private ObservableCollection<Models.FlowExecution> _faultedFlows = new();
+
+    [ObservableProperty]
+    private bool _hasFlowFaults = false;
+
+    // ===== CALLOUTS =====
+    [ObservableProperty]
+    private ObservableCollection<Models.CalloutOperation> _callouts = new();
+    [ObservableProperty]
+    private bool _hasCallouts = false;
+
+    // ===== LOG CONTEXT FLAGS =====
+    [ObservableProperty]
+    private bool _isLogTruncated = false;
+    [ObservableProperty]
+    private bool _isAsyncExecution = false;
+
+    // ===== BULK SAFETY =====
+    [ObservableProperty]
+    private string _bulkSafetyGrade = "";
+    [ObservableProperty]
+    private string _bulkSafetyReason = "";
+
+    // ===== DUPLICATE QUERIES =====
+    [ObservableProperty]
+    private ObservableCollection<Models.DuplicateQueryInfo> _duplicateQueries = new();
+    [ObservableProperty]
+    private bool _hasDuplicateQueries = false;
+
+    // ===== WORKFLOW RULES =====
+    [ObservableProperty]
+    private ObservableCollection<Models.WorkflowRuleEvaluation> _workflowRules = new();
+    [ObservableProperty]
+    private bool _hasWorkflowRules = false;
+
+    // ===== FLOW ERRORS (DML/validation failures inside flows, distinct from fault paths) =====
+    [ObservableProperty]
+    private ObservableCollection<Models.FlowError> _flowErrors = new();
+    [ObservableProperty]
+    private bool _hasFlowErrors = false;
+
+    // ===== HEAP & CMDT QUERY STATS =====
+    [ObservableProperty]
+    private long _totalHeapAllocated = 0;
+    [ObservableProperty]
+    private int _customMetadataQueryCount = 0;
+    [ObservableProperty]
+    private int _regularSoqlCount = 0;
+    /// <summary>SOQL queries executed by managed packages (governor total - event-parsed regular SOQL)</summary>
+    [ObservableProperty]
+    private int _managedPackageSoqlCount = 0;
+    [ObservableProperty]
+    private bool _hasManagedPackageQueries = false;
+    /// <summary>DML operations visible in log events (event-parsed, your code only)</summary>
+    [ObservableProperty]
+    private int _eventParsedDmlCount = 0;
+    /// <summary>DML operations by managed packages (governor total - event-parsed DML)</summary>
+    [ObservableProperty]
+    private int _managedPackageDmlCount = 0;
+    [ObservableProperty]
+    private bool _hasManagedPackageDml = false;
+
+    // ===== TESTING LIMITS (overhead from test framework vs production code) =====
+    [ObservableProperty]
+    private Models.GovernorLimitSnapshot? _testingLimits = null;
+    [ObservableProperty]
+    private bool _hasTestingLimits = false;
+
     // Editor Bridge (VSCode Integration)
     [ObservableProperty]
     private bool _isEditorConnected = false;
     
     [ObservableProperty]
     private string _editorConnectionStatus = "VSCode: Not Connected";
-    
-    // License Management
+
+    // ===== LICENSE PROPERTIES =====
+
     [ObservableProperty]
-    private License? _currentLicense;
-    
-    [ObservableProperty]
-    private string _licenseStatus = "Free";
-    
+    private LicenseTier _currentLicenseTier = LicenseTier.Free;
+
     [ObservableProperty]
     private bool _isProUser = false;
-    
+
     [ObservableProperty]
-    private string _trialWarning = "";
+    private bool _showTrialBanner = false;
+
+    [ObservableProperty]
+    private string _trialBannerText = "";
+
+    [ObservableProperty]
+    private string _tierDisplayName = "Free";
 
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
@@ -374,8 +622,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _exportService = new ReportExportService();
         _settingsService = new SettingsService();
         _metadataService = new OrgMetadataService(_apiService);
-        _licenseService = new LicenseService();
-        
+        _explainerService = new LogExplainerService();
+        _licenseService   = new LicenseService();
+
+        // Apply initial license state immediately (from local cache, no network)
+        RefreshLicenseDisplay();
+
+        // Load power-user debug mode setting
+        IsParserDebugMode = _settingsService.Load().IsDebugMode;
+
+        // Then fire-and-forget the async revalidation (may hit network)
+        _ = ValidateLicenseOnStartupAsync();
+
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
         
@@ -396,10 +654,87 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _streamingThrottleTimer.Tick += OnStreamingThrottleTick;
-        
-        // Initialize license
-        _ = InitializeLicenseAsync();
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // License helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    private void RefreshLicenseDisplay()
+    {
+        CurrentLicenseTier = _licenseService.CurrentTier;
+        IsProUser          = _licenseService.IsProOrAbove;
+        TierDisplayName    = CurrentLicenseTier switch
+        {
+            LicenseTier.Free       => "Free",
+            LicenseTier.Trial      => $"Pro Trial",
+            LicenseTier.Pro        => "Pro",
+            LicenseTier.Team       => "Team",
+            LicenseTier.Enterprise => "Enterprise",
+            _                      => "Free"
+        };
+
+        if (CurrentLicenseTier == LicenseTier.Trial)
+        {
+            var days = _licenseService.TrialDaysRemaining();
+            ShowTrialBanner = true;
+            TrialBannerText = days > 1
+                ? $"⏳ Pro Trial — {days} days remaining"
+                : days == 1
+                    ? "⚠️ Pro Trial expires tomorrow — upgrade now!"
+                    : "⚠️ Trial expired — upgrade to keep Pro features";
+        }
+        else
+        {
+            ShowTrialBanner = false;
+            TrialBannerText = string.Empty;
+        }
+    }
+
+    private async Task ValidateLicenseOnStartupAsync()
+    {
+        var result = await _licenseService.RevalidateIfNeededAsync().ConfigureAwait(false);
+
+        // Re-apply display on the UI thread
+        App.Current.Dispatcher.Invoke(RefreshLicenseDisplay);
+
+        if (!result.IsValid && result.ErrorMessage != null)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                // Non-blocking notification — don't interrupt startup with a dialog
+                StatusMessage = $"⚠️ License: {result.ErrorMessage}";
+            });
+        }
+        else if (result.IsOfflineGracePeriod)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                StatusMessage = "ℹ️ License: offline — will revalidate when connected";
+            });
+        }
+    }
+
+    /// <summary>
+    /// Returns true and shows the upgrade dialog if the feature requires Pro.
+    /// Use as a guard at the top of Pro-gated commands.
+    /// </summary>
+    private bool RequiresPro(LicenseFeature feature)
+    {
+        if (_licenseService.IsFeatureAvailable(feature)) return false;
+        ShowUpgradeDialog();
+        return true;
+    }
+
+    private void ShowUpgradeDialog()
+    {
+        var dialog = new Views.UpgradeDialog { Owner = App.Current.MainWindow };
+        dialog.ShowDialog();
+        // Refresh tier in case user just started a trial
+        RefreshLicenseDisplay();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
 
     public void OnConnected()
     {
@@ -432,6 +767,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (value != null)
         {
+            // Show onboarding tour on first-ever log analysis
+            if (!_settingsService.Load().OnboardingShown)
+                ShowOnboardingTour = true;
+
+            // Warn if profiling section was present but couldn't be parsed
+            HasProfilingWarning = value.CumulativeProfilingFound && value.CumulativeProfiling == null;
+
             // Simple summary title
             if (value.IsTestExecution)
             {
@@ -444,14 +786,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             
             // FULL SUMMARY - the rich markdown-like analysis
             FullSummaryText = value.Summary ?? "";
-            
-            // NEW: Detailed, educational summary with analogies and code examples
-            DetailedSummaryText = value.DetailedSummary ?? "";
-            
-            // NEW: Detailed issues with full explanations
-            DetailedIssues = value.DetailedIssues != null ? 
-                new ObservableCollection<DetailedIssue>(value.DetailedIssues.OrderBy(i => i.Priority)) : 
-                new ObservableCollection<DetailedIssue>();
             
             // ISSUES - Only show real problems
             var simpleIssues = new List<string>();
@@ -550,6 +884,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // Hero section
             HeroEntryPoint = value.EntryPoint ?? "";
             HeroDuration = FormatDuration(value.DurationMs);
+
+            // Duration confidence indicator — tells admin how reliable this time figure is
+            (DurationPrefix, DurationConfidenceTooltip) = value.DurationSource switch
+            {
+                Models.DurationSource.NanosecondPrecise => ("",  "Precise — measured with nanosecond counters from the log."),
+                Models.DurationSource.DateTimeDerived   => ("~", "Estimated — this log uses second-precision timestamps. Actual time may differ slightly."),
+                Models.DurationSource.Incomplete        => (">", "Minimum — the log was truncated before finishing. The operation took at least this long."),
+                Models.DurationSource.Async             => ("",  "Async — this is the synchronous portion only. Async work continues after this log ends."),
+                _                                       => ("",  "")
+            };
             
             if (value.TransactionFailed)
                 HeroStatus = "FAILED";
@@ -560,15 +904,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
             else
                 HeroStatus = "SUCCESS";
             
-            // Stat cards
-            StatSoqlCount = value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
-            StatDmlCount = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+            // Governor limits snapshot — extracted first; authoritative source for all limit consumption data
+            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+
+            // Stat cards — prefer snapshot values (exact governor limit slots used) over raw op counts
+            StatSoqlCount = lastSnapshot?.SoqlQueries ?? value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
+            StatDmlCount  = lastSnapshot?.DmlStatements ?? value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
             StatMethodCount = value.MethodStats?.Count ?? 0;
             StatErrorCount = value.Errors?.Count ?? 0;
             StatWarningCount = value.HandledExceptions?.Count ?? 0;
-            
-            // Governor limits from snapshot
-            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+
+            // Managed-package breakdown: when governor total > event-parsed count, the delta
+            // is SOQL/DML from managed packages/platform code that doesn't appear in log events.
+            var parsedDml = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+            EventParsedDmlCount = parsedDml;
+            ManagedPackageSoqlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.SoqlQueries - value.RegularSoqlCount) : 0;
+            HasManagedPackageQueries = ManagedPackageSoqlCount > 0;
+            ManagedPackageDmlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.DmlStatements - parsedDml) : 0;
+            HasManagedPackageDml = ManagedPackageDmlCount > 0;
+
+            // Governor limits display
             if (lastSnapshot != null)
             {
                 StatSoqlLimit = lastSnapshot.SoqlQueriesLimit;
@@ -654,9 +1009,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 TotalEstimatedMinutes = value.Health.TotalEstimatedMinutes;
                 
                 // "Clean bill of health" when score is good and no serious issues
-                IsCleanBillOfHealth = value.Health.Score >= 80 
-                    && value.Health.CriticalIssues.Count == 0 
+                IsCleanBillOfHealth = value.Health.Score >= 80
+                    && value.Health.CriticalIssues.Count == 0
                     && value.Health.HighPriorityIssues.Count == 0;
+
+                // Plain-language health phrase (replaces academic letter grade)
+                HealthPlainStatement = value.Health.CriticalIssues.Count > 0
+                    ? "This log has critical problems"
+                    : value.Health.HighPriorityIssues.Count > 0
+                        ? "This log needs attention"
+                        : value.Health.Score >= 80
+                            ? "This log is healthy"
+                            : "Review recommended";
             }
             else
             {
@@ -671,7 +1035,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 HighPriorityIssues.Clear();
                 QuickWins.Clear();
                 TotalEstimatedMinutes = 0;
+                HealthPlainStatement = "";
             }
+
+            // Traffic-light status icons (computed after percentages and health are set)
+            SoqlStatusIcon  = SoqlPercent >= 80 ? "🔴" : SoqlPercent >= 50 ? "🟡" : "🟢";
+            DmlStatusIcon   = DmlPercent  >= 80 ? "🔴" : DmlPercent  >= 50 ? "🟡" : "🟢";
+            CpuStatusIcon   = CpuPercent  >= 80 ? "🔴" : CpuPercent  >= 50 ? "🟡" : "🟢";
+            ErrorStatusIcon = (value.Errors?.Count > 0 || value.TransactionFailed) ? "🔴" : "🟢";
             
             // ===== ALWAYS-USEFUL: TOP METHODS (even for clean logs) =====
             PopulateTopMethods(value);
@@ -679,6 +1050,62 @@ public partial class MainViewModel : ObservableObject, IDisposable
             PopulateExecutionTree(value);
             PopulateTimelineDetails(value);
             TranslateToPlainEnglish(value); // NEW: Generate plain-English insights
+
+            // ===== PLATFORM EVENTS =====
+            PlatformEventPublishes = new ObservableCollection<Models.PlatformEventPublish>(
+                value.PlatformEventPublishes ?? new List<Models.PlatformEventPublish>());
+            HasPlatformEvents = PlatformEventPublishes.Any();
+
+            // ===== NAMESPACE LIMITS =====
+            NamespaceLimitItems = new ObservableCollection<Models.GovernorLimitSnapshot>(
+                value.NamespaceLimitSnapshots ?? new List<Models.GovernorLimitSnapshot>());
+            HasNamespaceLimits = NamespaceLimitItems.Any();
+
+            // ===== FLOW FAULTS =====
+            FaultedFlows = new ObservableCollection<Models.FlowExecution>(
+                value.Flows?.Where(f => f.HasFault).ToList() ?? new List<Models.FlowExecution>());
+            HasFlowFaults = FaultedFlows.Any();
+
+            // ===== CALLOUTS =====
+            Callouts = new ObservableCollection<Models.CalloutOperation>(
+                value.Callouts ?? new List<Models.CalloutOperation>());
+            HasCallouts = Callouts.Any();
+
+            // ===== LOG CONTEXT FLAGS =====
+            IsLogTruncated = value.IsLogTruncated;
+            IsAsyncExecution = value.IsAsyncExecution;
+
+            // ===== BULK SAFETY =====
+            BulkSafetyGrade = value.BulkSafetyGrade ?? "";
+            BulkSafetyReason = value.BulkSafetyReason ?? "";
+
+            // ===== DUPLICATE QUERIES =====
+            DuplicateQueries = new ObservableCollection<Models.DuplicateQueryInfo>(
+                value.DuplicateQueries ?? new List<Models.DuplicateQueryInfo>());
+            HasDuplicateQueries = DuplicateQueries.Any();
+
+            // ===== WORKFLOW RULES =====
+            WorkflowRules = new ObservableCollection<Models.WorkflowRuleEvaluation>(
+                value.WorkflowRules ?? new List<Models.WorkflowRuleEvaluation>());
+            HasWorkflowRules = WorkflowRules.Any();
+
+            // ===== FLOW ERRORS (DML/validation failures inside flows) =====
+            FlowErrors = new ObservableCollection<Models.FlowError>(
+                value.FlowErrors ?? new List<Models.FlowError>());
+            HasFlowErrors = FlowErrors.Any();
+
+            // ===== HEAP & CMDT STATS =====
+            TotalHeapAllocated = value.TotalHeapAllocated;
+            CustomMetadataQueryCount = value.CustomMetadataQueryCount;
+            RegularSoqlCount = value.RegularSoqlCount;
+
+            // ===== TESTING LIMITS =====
+            TestingLimits = value.TestingLimits;
+            HasTestingLimits = value.TestingLimits != null;
+
+            // ===== PARSER DEBUG INFO =====
+            if (IsParserDebugMode)
+                ParserDebugInfo = BuildParserDebugInfo(value);
         }
         else
         {
@@ -710,6 +1137,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HealthScore = 0;
             HealthGrade = "";
             HealthStatus = "";
+            HealthPlainStatement = "";
+            SoqlStatusIcon = ""; DmlStatusIcon = ""; CpuStatusIcon = ""; ErrorStatusIcon = "";
             HasTimelineData = false;
             TimelineSegments.Clear();
             TimelineTotalDurationMs = 0;
@@ -729,6 +1158,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HasExecutionTree = false;
             TimelineDetails.Clear();
             HasTimelineDetails = false;
+            
+            // Reset deep explanation
+            CurrentExplanation = null;
+            HasExplanation = false;
+            DetailedIssues.Clear();
+            DetailedRecommendations.Clear();
+            LearningItems.Clear();
+            WhatYourCodeDid.Clear();
+            HasDetailedIssues = false;
+            HasDetailedRecommendations = false;
+            HasLearningItems = false;
+
+            // Reset new collections
+            PlatformEventPublishes.Clear();
+            HasPlatformEvents = false;
+            NamespaceLimitItems.Clear();
+            HasNamespaceLimits = false;
+            FaultedFlows.Clear();
+            HasFlowFaults = false;
+
+            // Reset expanded collections
+            Callouts.Clear(); HasCallouts = false;
+            IsLogTruncated = false; IsAsyncExecution = false;
+            BulkSafetyGrade = ""; BulkSafetyReason = "";
+            DuplicateQueries.Clear(); HasDuplicateQueries = false;
+            WorkflowRules.Clear(); HasWorkflowRules = false;
+            FlowErrors.Clear(); HasFlowErrors = false;
+            TotalHeapAllocated = 0; CustomMetadataQueryCount = 0; RegularSoqlCount = 0;
+            ManagedPackageSoqlCount = 0; HasManagedPackageQueries = false;
+            EventParsedDmlCount = 0; ManagedPackageDmlCount = 0; HasManagedPackageDml = false;
+            TestingLimits = null; HasTestingLimits = false;
+            ParserDebugInfo = "";
         }
     }
     
@@ -902,6 +1363,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     Icon = phase.Icon,
                     IsRecursive = phase.IsRecursive,
                     Depth = phase.Depth,
+                    OoePhase = phase.OoePhase,
                     PercentOfTotal = analysis.DurationMs > 0 ? (Math.Max(0, phase.DurationMs) * 100.0) / analysis.DurationMs : 0
                 });
                 cumulativeMs += Math.Max(0, phase.DurationMs);
@@ -1123,8 +1585,118 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         // 6. ALL CLEAR?
         IsAllClear = !HasProblems && !analysis.TransactionFailed && (lastLimit?.SoqlQueries ?? 0) < 50;
+        
+        // 7. DEEP EXPLANATION — rich analogies, before/after code, learning
+        try
+        {
+            var explanation = _explainerService.Explain(analysis);
+            CurrentExplanation = explanation;
+            HasExplanation = true;
+            
+            // Populate bindable collections
+            WhatYourCodeDid = new ObservableCollection<string>(explanation.WhatYourCodeDid);
+            DetailedIssues = new ObservableCollection<DetailedIssue>(explanation.Issues);
+            DetailedRecommendations = new ObservableCollection<DetailedRecommendation>(explanation.Recommendations);
+            LearningItems = new ObservableCollection<LearningItem>(explanation.WhatYouLearned);
+            
+            HasDetailedIssues = explanation.Issues.Any();
+            HasDetailedRecommendations = explanation.Recommendations.Any();
+            HasLearningItems = explanation.WhatYouLearned.Any();
+            
+            // Override the basic summary with the rich one
+            PlainEnglishSummary = explanation.WhatHappened;
+        }
+        catch
+        {
+            // Fallback: keep the basic plain English if explainer fails
+            HasExplanation = false;
+            DetailedIssues.Clear();
+            DetailedRecommendations.Clear();
+            LearningItems.Clear();
+            HasDetailedIssues = false;
+            HasDetailedRecommendations = false;
+            HasLearningItems = false;
+        }
     }
-    
+
+    /// <summary>
+    /// Builds a plain-text audit trail string showing where each displayed metric came from.
+    /// Used by the Parser Debug tab (visible only when IsParserDebugMode = true).
+    /// Activate by setting "IsDebugMode": true in %AppData%\BlackWidow\settings.json.
+    /// </summary>
+    private string BuildParserDebugInfo(LogAnalysis analysis)
+    {
+        var sb = new System.Text.StringBuilder();
+        var snap = analysis.LimitSnapshots?.LastOrDefault();
+
+        sb.AppendLine("=== DURATION ===");
+        sb.AppendLine($"DurationMs:        {analysis.DurationMs:N0} ms");
+        sb.AppendLine($"DurationSource:    {analysis.DurationSource}");
+        sb.AppendLine($"WallClockMs:       {analysis.WallClockMs:N0} ms");
+        sb.AppendLine($"CpuTimeMs:         {analysis.CpuTimeMs:N0} ms");
+        sb.AppendLine($"OverheadMs:        {Math.Max(0, analysis.WallClockMs - analysis.CpuTimeMs):N0} ms");
+        sb.AppendLine();
+
+        sb.AppendLine("=== SOQL COUNTS ===");
+        sb.AppendLine($"Governor total:    {snap?.SoqlQueries ?? 0} / {snap?.SoqlQueriesLimit ?? 100}  (from CUMULATIVE_LIMIT_USAGE)");
+        sb.AppendLine($"Event-parsed:      {analysis.RegularSoqlCount}  (SOQL_EXECUTE_BEGIN events — your code only)");
+        sb.AppendLine($"CMDT queries:      {analysis.CustomMetadataQueryCount}  (excluded from governor limit)");
+        sb.AppendLine($"Managed pkg delta: {Math.Max(0, (snap?.SoqlQueries ?? 0) - analysis.RegularSoqlCount)}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== DML COUNTS ===");
+        var parsedDml = analysis.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+        sb.AppendLine($"Governor total:    {snap?.DmlStatements ?? 0} / {snap?.DmlStatementsLimit ?? 150}  (from CUMULATIVE_LIMIT_USAGE)");
+        sb.AppendLine($"Event-parsed:      {parsedDml}  (DML_BEGIN events — your code only)");
+        sb.AppendLine($"Managed pkg delta: {Math.Max(0, (snap?.DmlStatements ?? 0) - parsedDml)}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== CPU / HEAP ===");
+        sb.AppendLine($"CPU time (snap):   {snap?.CpuTime ?? 0} ms / {snap?.CpuTimeLimit ?? 10000} ms");
+        sb.AppendLine($"Heap (snap):       {snap?.HeapSize ?? 0} / {snap?.HeapSizeLimit ?? 6000000}");
+        sb.AppendLine($"Heap alloc total:  {analysis.TotalHeapAllocated:N0} bytes  (sum of HEAP_ALLOCATE events)");
+        sb.AppendLine();
+
+        sb.AppendLine("=== LOG CONTEXT ===");
+        sb.AppendLine($"IsAsyncExecution:  {analysis.IsAsyncExecution}");
+        sb.AppendLine($"IsLogTruncated:    {analysis.IsLogTruncated}");
+        sb.AppendLine($"IsTestExecution:   {analysis.IsTestExecution}");
+        sb.AppendLine($"ExecutionUnits:    {analysis.ExecutionUnits?.Count ?? 0}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== PROFILING SECTION ===");
+        sb.AppendLine($"Found:             {analysis.CumulativeProfilingFound}  (CUMULATIVE_PROFILING_BEGIN marker present)");
+        sb.AppendLine($"Parsed OK:         {analysis.CumulativeProfiling != null}");
+        if (analysis.CumulativeProfiling != null)
+        {
+            sb.AppendLine($"  Top methods:     {analysis.CumulativeProfiling.TopMethods?.Count ?? 0}");
+            sb.AppendLine($"  Top queries:     {analysis.CumulativeProfiling.TopQueries?.Count ?? 0}");
+            sb.AppendLine($"  Top DML:         {analysis.CumulativeProfiling.TopDmlOperations?.Count ?? 0}");
+        }
+        sb.AppendLine();
+
+        sb.AppendLine("=== HEALTH SCORE ===");
+        sb.AppendLine($"Score:             {analysis.Health?.Score ?? 0} / 100  (grade: {analysis.Health?.Grade ?? "N/A"})");
+        sb.AppendLine($"Status:            {analysis.Health?.Status ?? "N/A"}");
+        sb.AppendLine($"Critical issues:   {analysis.Health?.CriticalIssues?.Count ?? 0}");
+        sb.AppendLine($"High priority:     {analysis.Health?.HighPriorityIssues?.Count ?? 0}");
+        sb.AppendLine($"Quick wins:        {analysis.Health?.QuickWins?.Count ?? 0}");
+        sb.AppendLine($"Reasoning:         {analysis.Health?.Reasoning ?? "N/A"}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== DUPLICATE / N+1 ===");
+        sb.AppendLine($"Duplicate queries: {analysis.DuplicateQueries?.Count ?? 0}");
+        sb.AppendLine($"Bulk safety grade: {analysis.BulkSafetyGrade}  — {analysis.BulkSafetyReason}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== LOG STATS ===");
+        sb.AppendLine($"Log lines parsed:  {analysis.LineCount}");
+        sb.AppendLine($"ParsedAt:          {analysis.ParsedAt:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"LogId:             {analysis.LogId}");
+
+        return sb.ToString();
+    }
+
     private string SimplifyQueryForDisplay(string query)
     {
         // Remove specific values to find similar queries
@@ -1184,6 +1756,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void SelectTab(int tabIndex)
     {
         SelectedTabIndex = tabIndex;
+    }
+
+    [RelayCommand]
+    private void DismissOnboardingTour()
+    {
+        ShowOnboardingTour = false;
+        var settings = _settingsService.Load();
+        settings.OnboardingShown = true;
+        _settingsService.Save(settings);
     }
     
     /// <summary>
@@ -1440,6 +2021,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
             
+            // ── License gate: Free tier has a 30 MB file size cap ──────────
+            if (!_licenseService.IsFeatureAvailable(LicenseFeature.UnlimitedFileSize))
+            {
+                var fileInfo = new FileInfo(filePath);
+                var fileMB   = fileInfo.Length / (1024.0 * 1024.0);
+                if (fileMB > LicenseService.FreeTierMaxFileSizeMB)
+                {
+                    var result = MessageBox.Show(
+                        $"This log is {fileMB:F0} MB, which exceeds the {LicenseService.FreeTierMaxFileSizeMB} MB limit for the Free tier.\n\n" +
+                        "Upgrade to Pro for unlimited file sizes.\n\n" +
+                        "Would you like to upgrade now?",
+                        "File Too Large — Upgrade to Pro",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                        ShowUpgradeDialog();
+
+                    StatusMessage = $"⚠️ File too large for Free tier ({fileMB:F0} MB > {LicenseService.FreeTierMaxFileSizeMB} MB)";
+                    IsLoading = false;
+                    return;
+                }
+            }
+            // ──────────────────────────────────────────────────────────────
+
             StatusMessage = "Reading log file...";
             IsLoading = true;
 
@@ -1490,26 +2096,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task LoadLogFolder()
     {
-        // Feature gating - Pro feature
-        if (!await _licenseService.CanUseProFeatureAsync("FolderImport"))
-        {
-            MessageBox.Show(
-                _licenseService.GetUpgradeMessage("FolderImport"),
-                "Upgrade to Pro",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-        
         StatusMessage = "Select folder containing debug logs...";
 
         try
         {
-            // Use FolderBrowserDialog for WPF compatibility
+            // Use Vista-style folder browser for better UX
             var folderDialog = new System.Windows.Forms.FolderBrowserDialog
             {
                 Description = "Select Folder with Debug Logs",
-                ShowNewFolderButton = false
+                ShowNewFolderButton = false,
+                UseDescriptionForTitle = true,
+                AutoUpgradeEnabled = true,
+                RootFolder = Environment.SpecialFolder.MyComputer
             };
 
             if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -1524,7 +2122,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                 if (metadata.Count == 0)
                 {
-                    StatusMessage = "No log files found in folder";
+                    StatusMessage = "⚠️ No log files found in folder";
+                    MessageBox.Show(
+                        $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
+                        "Black Widow looks for:\n" +
+                        "  • *.log files (standard Salesforce export)\n" +
+                        "  • *.txt files\n" +
+                        "  • Extension-less files starting with 07L...\n" +
+                        "  • Subfolders are also searched\n\n" +
+                        "Tip: Download logs from Setup → Debug Logs and export the .log files.",
+                        "No Logs Found",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                     return;
                 }
 
@@ -1539,6 +2148,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     LogGroups.Add(group);
                 }
 
+                ShowGroupedView = true;  // Auto-switch to grouped view
                 StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
 
                 // Auto-select first group
@@ -1555,6 +2165,58 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusMessage = $"Error loading folder: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task LoadLogFolderFromPath(string folderPath)
+    {
+        StatusMessage = "Scanning folder for logs...";
+        IsLoading = true;
+        try
+        {
+            var metadata = await Task.Run(() => _metadataExtractor.ExtractMetadataFromDirectory(folderPath));
+
+            if (metadata.Count == 0)
+            {
+                StatusMessage = "⚠️ No log files found in folder";
+                MessageBox.Show(
+                    $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
+                    "Black Widow looks for:\n" +
+                    "  • *.log files (standard Salesforce export)\n" +
+                    "  • *.txt files\n" +
+                    "  • Extension-less files starting with 07L...\n" +
+                    "  • Subfolders are also searched\n\n" +
+                    "Tip: Download logs from Setup → Debug Logs and export the .log files.",
+                    "No Logs Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            StatusMessage = $"Found {metadata.Count} logs, grouping by transaction...";
+            var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
+
+            // Force UI thread update
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                LogGroups.Clear();
+                foreach (var group in groups)
+                    LogGroups.Add(group);
+                ShowGroupedView = true;
+                StatusMessage = $"\u2713 Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
+                if (LogGroups.Any())
+                    SelectedLogGroup = LogGroups.First();
+            });
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading folder: {ex.Message}";
+            MessageBox.Show($"Failed to load logs:\n\n{ex.Message}",
+                "Error Loading Folder", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -1615,17 +2277,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ExportReport()
     {
-        // Feature gating - Pro feature
-        if (!await _licenseService.CanUseProFeatureAsync("ExportReports"))
-        {
-            MessageBox.Show(
-                _licenseService.GetUpgradeMessage("ExportReports"),
-                "Upgrade to Pro",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-        
         if (SelectedLog == null)
         {
             StatusMessage = "⚠️ Please select a log to export";
@@ -1764,25 +2415,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ToggleStreaming()
     {
-        // Feature gating - Pro feature
-        if (!await _licenseService.CanUseProFeatureAsync("CliStreaming"))
-        {
-            MessageBox.Show(
-                _licenseService.GetUpgradeMessage("CliStreaming"),
-                "Upgrade to Pro",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-        
         if (IsStreaming)
         {
             StopStreaming();
+            return;
         }
-        else
-        {
-            await StartStreamingAsync();
-        }
+
+        // Pro-gated feature
+        if (RequiresPro(LicenseFeature.LiveStreaming)) return;
+
+        await StartStreamingAsync();
     }
     
     [RelayCommand]
@@ -1971,7 +2613,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Marshal to UI thread
         Application.Current?.Dispatcher.Invoke(() =>
         {
-            // Add to streaming log
+            // Add to streaming log panel
             StreamingLogs.Insert(0, new StreamingLogEntry
             {
                 Timestamp = DateTime.Now,
@@ -1983,6 +2625,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
             while (StreamingLogs.Count > 100)
             {
                 StreamingLogs.RemoveAt(StreamingLogs.Count - 1);
+            }
+
+            // Mirror key events to the main status bar so users don't have to watch the side panel
+            if (status.Contains("✅ Streaming started") ||
+                status.Contains("Found") ||
+                status.Contains("Downloaded") ||
+                status.Contains("⚠️") ||
+                status.Contains("Failed") ||
+                status.Contains("No logs found"))
+            {
+                StatusMessage = status;
+            }
+
+            // After repeated "No logs found", suggest trace flag setup
+            var noLogCount = StreamingLogs.Count(e => e.Message.Contains("No logs found") || e.Message.Contains("No new logs"));
+            if (noLogCount == 5)
+            {
+                StatusMessage = "💡 No logs yet — make sure Debug Logging is enabled for your user in Salesforce Setup → Debug Logs";
             }
         });
     }
@@ -2529,61 +3189,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         dialog.ShowDialog();
     }
-    
-    [RelayCommand]
-    private void Upgrade()
-    {
-        var dialog = new UpgradeDialog(_licenseService, async () =>
-        {
-            // Refresh license after upgrade
-            await InitializeLicenseAsync();
-        })
-        {
-            Owner = Application.Current.MainWindow
-        };
-        
-        dialog.ShowDialog();
-    }
-    
-    private async Task InitializeLicenseAsync()
-    {
-        try
-        {
-            CurrentLicense = await _licenseService.GetCurrentLicenseAsync();
-            IsProUser = CurrentLicense.Tier != LicenseTier.Free;
-            
-            // Update license status display
-            if (CurrentLicense.Tier == LicenseTier.Free)
-            {
-                LicenseStatus = "Free";
-            }
-            else if (CurrentLicense.IsTrialLicense)
-            {
-                var daysLeft = CurrentLicense.DaysUntilExpiration;
-                LicenseStatus = $"Pro Trial ({daysLeft} days)";
-                
-                if (daysLeft <= 3)
-                {
-                    TrialWarning = $"⚠️ Trial expires in {daysLeft} days";
-                }
-            }
-            else
-            {
-                LicenseStatus = $"{CurrentLicense.Tier}";
-            }
-            
-            // Show trial expiration warning if needed
-            if (CurrentLicense.IsTrialLicense && CurrentLicense.DaysUntilExpiration <= 7)
-            {
-                var daysLeft = CurrentLicense.DaysUntilExpiration;
-                StatusMessage = $"⚠️ Pro trial: {daysLeft} days remaining";
-            }
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"❌ License check failed: {ex.Message}";
-        }
-    }
 
     public void Dispose()
     {
@@ -2671,6 +3276,26 @@ public class TimelineDetailItem
     public bool IsRecursive { get; set; }
     public int Depth { get; set; }
     public double PercentOfTotal { get; set; }
+
+    /// <summary>Salesforce OOE phase label — empty when not determinable.</summary>
+    public Models.OoePhase? OoePhase { get; set; }
+
+    /// <summary>Short label shown as a badge in the timeline UI. Empty when OoePhase is null or Other.</summary>
+    public string OoePhaseLabel => OoePhase switch
+    {
+        Models.OoePhase.BeforeTrigger    => "Before Trigger",
+        Models.OoePhase.SystemValidation => "Validation",
+        Models.OoePhase.AfterTrigger     => "After Trigger",
+        Models.OoePhase.Workflow         => "Workflow",
+        Models.OoePhase.AfterSaveFlow    => "After-Save Flow",
+        Models.OoePhase.Process          => "Process",
+        Models.OoePhase.FieldUpdate      => "Field Update",
+        Models.OoePhase.ReEntry          => "Re-Entry ⚠",
+        Models.OoePhase.Async            => "Async",
+        _                                => string.Empty
+    };
+
+    public bool HasOoePhaseLabel => !string.IsNullOrEmpty(OoePhaseLabel);
     
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
     public string PercentDisplay => $"{PercentOfTotal:N1}%";

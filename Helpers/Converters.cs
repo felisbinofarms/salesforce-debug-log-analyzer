@@ -339,10 +339,10 @@ public class HealthScoreToColorConverter : IValueConverter
         
         var hex = score switch
         {
-            >= 80 => "#57F287", // Green
-            >= 60 => "#FEE75C", // Yellow
-            >= 40 => "#FAA61A", // Orange
-            _ => "#ED4245"      // Red
+            >= 80 => "#76BA70", // Sage green  — calm, no glare
+            >= 60 => "#C09040", // Warm amber  — noticeable, not screaming
+            >= 40 => "#B87040", // Muted orange — caution without alarm
+            _ => "#CC6055"      // Muted coral  — clear problem, not panic
         };
         
         return new BrushConverter().ConvertFromString(hex) as Brush ?? Brushes.White;
@@ -404,27 +404,77 @@ public class UserToColorConverter : IValueConverter
 }
 
 /// <summary>
-/// Converts IssueSeverity enum to a color
+/// Returns true when a double value exceeds the threshold supplied as ConverterParameter.
+/// Usage: {Binding RelativeCost, Converter={StaticResource DoubleGreaterThanConverter}, ConverterParameter=1.0}
+/// Use in DataTrigger Value="True" to apply high-cost styling.
 /// </summary>
-public class SeverityToColorConverter : IValueConverter
+public class DoubleGreaterThanConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is Models.IssueSeverity severity)
-        {
-            return severity switch
-            {
-                Models.IssueSeverity.Critical => new SolidColorBrush(Color.FromRgb(237, 66, 69)), // Red
-                Models.IssueSeverity.High => new SolidColorBrush(Color.FromRgb(250, 166, 26)),    // Orange
-                Models.IssueSeverity.Medium => new SolidColorBrush(Color.FromRgb(254, 231, 92)),  // Yellow
-                Models.IssueSeverity.Low => new SolidColorBrush(Color.FromRgb(87, 242, 135)),     // Green
-                _ => new SolidColorBrush(Color.FromRgb(64, 65, 71))                               // Gray
-            };
-        }
-        return new SolidColorBrush(Color.FromRgb(64, 65, 71));
+        double threshold = 0;
+        if (parameter is string paramStr)
+            double.TryParse(paramStr, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out threshold);
+
+        if (value is double d) return d > threshold;
+        if (value is float f)  return f > threshold;
+        if (value is int i)    return i > threshold;
+        return false;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+/// <summary>
+/// Converts null to false, non-null to true (for use in MultiBinding)
+/// </summary>
+public class NullToBooleanConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value != null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Combines multiple boolean values with AND logic, then converts to Visibility
+/// Useful for showing elements only when multiple conditions are true
+/// Usage: <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
+///          <Binding Path="Condition1"/>
+///          <Binding Path="Condition2"/>
+///        </MultiBinding>
+/// </summary>
+public class MultiBooleanToVisibilityConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values == null || values.Length == 0)
+            return Visibility.Collapsed;
+
+        // All values must be boolean true
+        foreach (var value in values)
+        {
+            if (value is bool boolValue)
+            {
+                if (!boolValue) return Visibility.Collapsed;
+            }
+            else
+            {
+                // Non-boolean value, treat as false
+                return Visibility.Collapsed;
+            }
+        }
+
+        return Visibility.Visible;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

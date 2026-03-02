@@ -1,368 +1,254 @@
-# Salesforce Debug Log Analyzer (Black Widow 🕷️)
+﻿# Black Widow 🕷️ — Salesforce Debug Log Analyzer
 
 > **The only debug log tool that explains logs like a patient mentor, not a technical manual.**
 
-A revolutionary Windows desktop application that **translates** complex Salesforce debug logs into plain English that anyone can understand - whether you're a seasoned developer or an admin with little coding knowledge.
-
-## 🤖 For Contributors: Copilot PM Mode
-
-**This project uses GitHub Copilot as Project Manager** to keep the team focused and prevent scope creep.
-
-### Quick Start for Developers
-
-When working on this project, use these PM commands in Copilot Chat:
-
-```
-/pm standup           - Daily progress check + priority setting
-/pm scope-check       - "Should I build this feature?"
-/pm review           - Code review for over-engineering
-/pm timeline         - Sprint progress + deadline check
-/pm focus            - 2-hour deep work mode
-```
-
-**Auto-Intervention:** Copilot will automatically flag:
-- ⚠️ Scope creep (adding features not in current issue)
-- ⚠️ Over-engineering (unnecessary abstractions/patterns)
-- ⚠️ Rabbit holes (researching instead of shipping)
-- ⚠️ Analysis paralysis (comparing too many options)
-
-**Key Documents:**
-- [PROJECT_PLAN.md](./PROJECT_PLAN.md) - 6-week timeline, milestones, roles
-- [ISSUES_BACKLOG.md](./ISSUES_BACKLOG.md) - Detailed feature specs (22 issues)
-- [.github/copilot-pm-instructions.md](./.github/copilot-pm-instructions.md) - Full PM behavior guide
-
-**Launch Deadline:** March 15, 2026 (6 weeks)  
-**Current Sprint:** Monetization (License validation + Stripe integration)
+A Windows desktop application that **translates** complex Salesforce debug logs into plain English — from single-file analysis to full transaction chain investigation with governance insights.
 
 ---
 
 ## What Makes This Different?
 
-Traditional debug log tools show you raw technical data: timestamps, event types, stack traces, and governor limits with no context.
+Traditional debug log tools dump raw technical data at you: timestamps, event types, stack traces, and governor limits with zero context.
 
-**This tool explains what actually happened in conversational language:**
+**Black Widow explains what actually happened:**
 
-### Traditional Debug Tool:
-```
-Execution completed in 2500ms. Executed 5 methods. Performed 3 SOQL queries.
-SOQL queries: 87/100 (87%)
-⚠️ High number of SOQL queries: 87 (Consider bulkification)
-```
+| Traditional Tool | Black Widow |
+|---|---|
+| `SOQL queries: 87/100 (87%) — Consider bulkification` | *"You're asking the database for information 87 separate times. Think of it like making 87 phone calls instead of one call with a list. Here's how to combine them."* |
+| `Execution completed in 2500ms` | *"✅ This transaction completed successfully in 2.5 seconds — plenty of room before Salesforce's limit."* |
+| `EXCEPTION_THROWN: System.NullPointerException` | *"Your code tried to read a field on a record that doesn't exist yet. It's like asking for the price tag on an item that hasn't been put on the shelf."* |
 
-### Our Tool:
-```
-📋 What Happened:
-✅ This transaction completed successfully in 2.5 seconds.
+**No Salesforce expertise required** — understand your logs on day one.
 
-What Your Code Did:
-• Called 5 different methods (pieces of code)
-• Talked to the database 3 times to get or save information
-
-⚠️ Too Many Database Queries: 
-You're asking the database for information too many times (87 times). 
-Think of it like making 87 separate phone calls instead of one call 
-with a list of questions.
-
-💡 Recommendation: Try to combine multiple queries into one where possible.
-```
-
-**No Salesforce expertise required** - understand debug logs on your first day!
+---
 
 ## Key Features
 
-### �️ Transaction Chain Analysis (NEW!)
-- **Automatic Log Grouping** - Detects multiple related logs from a single user action
-- **Phase Detection** - Separates Backend (triggers/flows) from Frontend (component loading)
-- **Recursion Detection** - Identifies when triggers fire multiple times in one transaction
-- **Sequential vs Parallel Loading** - Spots component waterfall patterns and calculates savings
-- **Real User Experience Metrics** - Shows total wait time from button click to page rendered
-- **Transaction Timeline** - Visual representation of the entire user journey
-- **Aggregate Metrics** - Combined SOQL, CPU, and DML usage across all related logs
+### 🔗 Transaction Chain Analysis
+One user action (e.g. saving a Case) can generate 10–15 logs from triggers, flows, and component reloads. Black Widow groups them automatically and shows you the full picture:
 
-**Why This Matters:** In poorly-governed orgs, clicking "Save" on a Case might trigger 13 separate logs (triggers, flows, component reloads). Traditional tools show 13 disconnected logs. Black Widow groups them, shows the 11.9-second user wait time, and explains exactly why it's slow.
-### 🚨 Execution Context Detection (NEW!)
-- **Automatic Context Classification** - Distinguishes Interactive, Batch, Integration, Scheduled, and Async operations
-- **Mixed Context Warning** - Flags when one user account is doing multiple things (UI + Batch + Integration)
-- **Governance Recommendations** - Suggests creating dedicated users for each execution type
-- **Impact Analysis** - Shows if background jobs are interfering with interactive performance
+- **Automatic Log Grouping** — groups related logs by user and timing window
+- **Phase Detection** — separates Backend (triggers/flows) from Frontend (Lightning components)
+- **Re-entry Detection** — identifies when triggers fire multiple times in one transaction
+- **Sequential vs Parallel Loading** — spots waterfall component patterns and calculates time savings
+- **Aggregate Metrics** — combined SOQL, CPU, and DML usage across all related logs
+- **Total User Wait Time** — the real number: from button click to page rendered
 
-**Real-World Scenario:** Senior Architect with system admin credentials runs batch jobs, integrations, AND UI actions. When they click "Save Case", Black Widow shows:
-```
-🚨 GOVERNANCE ISSUE: 15 logs detected
-   • 3 logs from your Case save (Interactive)
-   • 5 logs from BatchApex job (Batch)
-   • 4 logs from SAP integration (Integration)
-   • 3 logs from Scheduled Flow (Scheduled)
-   
-💡 Recommendation: Only 3 of these 15 logs are YOUR action!
-   Create dedicated users:
-   - IntegrationUser-SAP for API calls
-   - BatchUser for scheduled jobs
-   - FlowUser for time-based automation
-```
+### 🔍 Governance Insights
+- **Execution Context Detection** — classifies each log as Interactive, Batch, Integration, Scheduled, or Async
+- **Mixed Context Warning** — friendly educational banner when one user account is handling multiple things at once
+- **Dedicated User Recommendations** — explains *why* to create `IntegrationUser-SAP` and `BatchUser-Nightly`, not just that you should
 
-### 🔌 Salesforce CLI Integration (NEW!)
-- **Real-Time Log Streaming** - Watch logs appear as they happen using `sf apex tail log`
-- **CLI Auto-Detection** - Finds `sf` or legacy `sfdx` automatically
-- **User-Specific Streaming** - Monitor logs for specific users (like yourself!)
-- **Batch Download** - Download all logs for a user within a time range
-- **No API Limits** - Uses CLI, doesn't count against API limits
-### 🗣️ Plain-English Translation
-- **Conversational summaries** that tell the story of your transaction
-- **Real-world analogies** for technical concepts (N+1 queries = "asking 'What's the weather?' 100 times")
-- **Contextual explanations** - "You're using 25% of allowed processing time - plenty of room to spare!"
-- **Actionable recommendations** with specific solutions, not just problems
+### 📋 Five Analysis Tabs
+1. **Summary** — health score, critical/high-priority issues, quick wins with severity badges
+2. **Explain** — full conversational narrative: what happened, what your code did, performance, result
+3. **Tree** — hierarchical execution tree with method calls, SOQL, DML, and exceptions
+4. **Timeline** — Gantt chart visualization of the transaction phases
+5. **Queries** — database operations grid (SOQL and DML) with row counts and duration
 
-### 🔌 Salesforce Integration
-- **OAuth 2.0 Authentication** - Connect securely to any Salesforce org
-- **API Integration** - Query and retrieve debug logs via Tooling API
-- **Trace Flag Management** - Set debug levels and configure logging for users
-- **Batch Folder Import** - Load entire folders of logs for transaction analysis
-- **Respects Permissions** - Works within your Salesforce security model
+### 🖥️ Salesforce CLI Integration
+- **Real-Time Log Streaming** — watch logs appear as they happen via `sf apex tail log`
+- **Auto-Detection** — finds `sf` or legacy `sfdx` automatically
+- **User-Specific Streaming** — monitor logs for any user in your org
 
-### 📊 Intelligent Analysis
-- **Execution Tree** - Hierarchical view of method calls and operations
-- **Timeline Visualization** - Gantt chart showing execution duration
-- **Database Operations** - Dedicated view for SOQL queries and DML operations
-- **Performance Dashboard** - Governor limits, CPU time, heap usage metrics
-- **Smart Issue Detection** - Identifies N+1 queries, recursive triggers, slow operations
-- **Component Loading Patterns** - Detects sequential vs parallel Lightning component loading
-- **Bottleneck Identification** - Pinpoints the slowest operation across entire transaction chain
+### 🔐 Salesforce API Integration
+- **OAuth 2.0 + PKCE** — secure browser-based authentication, no Connected App required
+- **Tooling API** — query and retrieve debug logs directly
+- **Trace Flag Management** — create/delete trace flags and configure debug levels per user
+- **Batch Folder Import** — drag a folder of log files, get a grouped transaction analysis instantly
 
-### 💡 Learning Tool
-- Perfect for **junior developers** learning Salesforce best practices
-- Helps **admins** understand what automation is doing without code knowledge
-- Enables **business analysts** to review system behavior
-- Gives **experienced developers** quick insights without wading through logs
+### 🗣️ Plain-English Translation Engine
+- Conversational summaries with "What Happened", "What Your Code Did", "Performance", "Result" sections
+- Real-world analogies for every technical concept
+- Actionable recommendations with before/after code examples
+- Governor limit explanations in plain terms ("You're using 45% of allowed CPU — comfortable range")
+
+---
 
 ## Who Is This For?
 
-✅ **Salesforce Administrators** - Understand workflow and Process Builder execution without coding knowledge  
-✅ **Junior Developers** - Learn best practices through clear explanations  
-✅ **Business Analysts** - Read what code is doing and communicate issues  
-✅ **Senior Developers** - Get quick plain-English summaries plus detailed technical data when needed  
-✅ **Architects** - Diagnose governance issues (mixed execution contexts, integration user patterns)  
-✅ **Consultants** - Quickly assess org health and identify performance bottlenecks  
-✅ **Technical Leads** - Prove the need for dedicated integration/batch users to management
+| User | How They Use It |
+|---|---|
+| **Salesforce Administrators** | Understand workflow and flow execution without needing to read code |
+| **Junior Developers** | Learn best practices through clear explanations and analogies |
+| **Business Analysts** | Read what automation is actually doing and communicate it to stakeholders |
+| **Senior Developers** | Quick plain-English summaries plus full technical detail on demand |
+| **Architects** | Diagnose governance issues — mixed execution contexts, integration user patterns |
+| **Consultants** | Quickly assess org health and identify performance bottlenecks |
+| **Technical Leads** | Prove the need for dedicated integration/batch users with evidence |
 
-## Technology Stack
-
-- **.NET 8.0** - Modern C# with latest features
-- **WPF** - Rich Windows desktop UI framework
-- **Material Design** - Modern, intuitive user interface
-- **MVVM Pattern** - Clean separation of concerns
-- **AvalonEdit** - Syntax-highlighted log viewer (coming soon)
+---
 
 ## Getting Started
 
 ### Prerequisites
+- Windows 10 or 11 (x64)
+- .NET 8.0 SDK (for building from source)
 
-- Windows 10/11
-- .NET 8.0 SDK or higher
-- Salesforce Developer/Admin account with appropriate permissions (for API features)
+### Option A: Pre-Built Executable
+Download the latest release from [GitHub Releases](https://github.com/felisbinofarms/salesforce-debug-log-analyzer/releases). No installation required — just run `BlackWidow.exe`.
 
-### Building the Project
-
+### Option B: Build From Source
 ```powershell
-# Clone or download the repository
-cd log_analyser
+git clone https://github.com/felisbinofarms/salesforce-debug-log-analyzer.git
+cd salesforce-debug-log-analyzer
 
-# Restore dependencies
 dotnet restore
-
-# Build the project
 dotnet build
-
-# Run the application
 dotnet run
 ```
 
-### Quick Start - Analyzing a Local Log
+### Analyzing a Single Log File
+1. Launch the application
+2. Click **Upload Log** in the toolbar
+3. Select a `.log` or `.txt` file
+4. Browse the five analysis tabs
 
-1. **Launch the application**: Run `dotnet run` or double-click the compiled .exe
-2. **Click "Upload Log"** in the top toolbar
-3. **Select a log file**: Choose a `.log` or `.txt` file from your computer
-4. **View the analysis**: The app will parse and display:
-   - **Summary**: English explanation of what happened
-   - **Issues**: Detected problems (N+1 queries, slow operations, errors)
-   - **Recommendations**: Suggestions for optimization
-   - **Tabs**: Browse execution tree, timeline, database operations, and more
+### Analyzing a Transaction Chain
+For investigating slow page loads or complex automation:
 
-### Quick Start - Analyzing Transaction Chains (NEW!)
+1. Enable debug logs for the affected user in Salesforce Setup
+2. Ask them to reproduce the issue (or reproduce it yourself)
+3. Download all logs from that time window — you may have 8–15 files
+4. Save them all to one folder
+5. **Drag the folder** into Black Widow (or click **Load Folder**)
+6. Black Widow groups related logs automatically
+7. Click any group to see the full transaction breakdown
 
-For investigating slow page loads or complex automation chains:
-
-1. **Download multiple logs** from the same user action (or use Salesforce Developer Console to export a series)
-2. **Save all logs to one folder** (e.g., `C:\Logs\CaseSaveIssue\`)
-3. **Click "Load Folder"** in Black Widow
-4. **View grouped analysis**:
-   - **Transaction Groups**: Logs automatically grouped by user and timing
-   - **Phase Breakdown**: Backend (triggers/flows) vs Frontend (components)
-   - **Total User Wait Time**: Complete duration from button click to page render
-   - **Re-entry Detection**: Which triggers/flows fired multiple times
-   - **Context Detection**: Which logs are UI vs Batch vs Integration
-   - **Recommendations**: Specific fixes for performance bottlenecks
-
-**Example Use Case:**
+**Example:**
 ```
 User reports: "Saving a Case takes forever!"
 
-Your Investigation:
-1. Enable debug logs for that user
-2. Ask them to save a Case
-3. Download all logs from that time period (might be 8-15 logs)
-4. Load folder into Black Widow
-5. See: "CaseTrigger fired 3 times, Flow took 2.5s, 
-   Components loaded sequentially adding 3.7s - Total: 11.9 seconds"
-6. Follow recommendations to fix recursion and parallel loading
-7. Retest: Now takes 3.3 seconds! ✅
+After loading folder:
+→ CaseTrigger fired 3x (recursion) .............. 1.2s wasted
+→ CaseValidation Flow ........................... 0.8s
+→ SendEmailNotification (@future) ............... 1.5s
+→ CaseDetails component (sequential load) ....... 1.7s
+─────────────────────────────────────────────────────
+Total user wait: 5.2 seconds
+
+Recommendations:
+• Add recursion guard to CaseTrigger — saves ~0.8s
+• Load Lightning components in parallel — saves ~0.9s
 ```
 
-### Quick Start - Governance Analysis (NEW!)
+### Real-Time Streaming
+1. Install Salesforce CLI: `winget install Salesforce.CLI`
+2. Authenticate: `sf org login web`
+3. In Black Widow, click **Stream Logs**
+4. Enter your org username or alias
+5. Logs appear live as you perform actions
 
-For Architects investigating mixed user contexts:
-
-1. **Load logs from your system admin account** (especially if you run integrations/batch jobs)
-2. **Black Widow detects execution contexts automatically**
-3. **Review Mixed Context Warning**:
-   ```
-   🚨 15 logs in 10 seconds:
-      • 3 Interactive (your button clicks)
-      • 5 Batch (scheduled apex)
-      • 4 Integration (SAP API calls)
-      • 3 Scheduled (time-based flows)
-   
-   💡 Recommendation: Create dedicated users:
-      - IntegrationUser-SAP (for external API calls)
-      - BatchUser (for all scheduled apex)
-      - FlowUser (for scheduled flows)
-   ```
-4. **Export governance report** to justify dedicated users to management
-5. **Follow Salesforce best practices** for user segmentation
-
-### Quick Start - Real-Time Monitoring with CLI (NEW!)
-
-For live debugging sessions:
-
-1. **Install Salesforce CLI** if not already installed:
-   ```powershell
-   winget install Salesforce.CLI
-   ```
-
-2. **Authenticate to your org**:
-   ```powershell
-   sf org login web
-   ```
-
-3. **In Black Widow, click "Stream Logs"**
-4. **Enter your username or org alias**
-5. **Watch logs appear in real-time** as you perform actions
-6. **Black Widow auto-groups** related logs as they come in
-
-**Pro Tip:** Stream logs for a specific user while they reproduce an issue, then immediately analyze the grouped transaction!
+### Connecting via OAuth
+1. Click **Connect to Salesforce** in the toolbar
+2. Log in through the embedded browser window
+3. Grant access — Black Widow uses the Platform CLI client ID (no Connected App setup needed)
+4. Browse and download logs directly from your org
 
 ### Sample Logs
+The `SampleLogs/` directory includes 231 sample log files for testing and exploration.
 
-Sample logs are included in the `SampleLogs/` directory:
-- `simple_account_insert.log` - Basic DML operation with validation
-- `simple_query_loop.log` - SOQL query with loop processing
-- `error_validation_failure.log` - Validation rule failure example
-
-Use these to test the parser and understand the analysis features!
-
-### Connecting to Salesforce (Optional)
-
-To retrieve logs directly from your Salesforce org:
-
-1. **Create a Connected App** in Salesforce:
-   - Setup → App Manager → New Connected App
-   - Enable OAuth Settings
-   - Callback URL: `http://localhost:8080/callback`
-   - Scopes: `api`, `refresh_token`
-   - Copy the Consumer Key and Consumer Secret
-
-2. **Update OAuth Configuration**:
-   - Open `Services/OAuthService.cs`
-   - Replace `ClientId` and `ClientSecret` with your values
-
-3. **Connect**:
-   - Click "Connect to Salesforce"
-   - Log in through your browser
-   - Grant access
-   - View and download logs from your org
+---
 
 ## Project Structure
 
 ```
-SalesforceDebugAnalyzer/
-├── Models/              # Data models and entities
-│   ├── LogModels.cs     # Debug log structures (includes LogGroup, LogPhase)
-│   └── SalesforceModels.cs  # Salesforce API objects
-├── ViewModels/          # MVVM ViewModels
-│   └── MainViewModel.cs # Main app logic with grouping support
-├── Views/               # WPF Views (XAML)
-│   ├── MainWindow.xaml
-│   ├── ConnectionDialog.xaml
-│   ├── TraceFlagDialog.xaml
-│   └── DebugSetupWizard.xaml
-├── Services/            # Business logic and API services
-│   ├── LogParserService.cs       # Parses individual logs
-│   ├── LogGroupService.cs        # Groups related logs (NEW!)
-│   ├── LogMetadataExtractor.cs   # Fast log scanning (NEW!)
-│   ├── SalesforceApiService.cs   # Salesforce API integration
-│   └── OAuthService.cs           # OAuth authentication
-└── Helpers/             # Utility classes
+salesforce-debug-log-analyzer/
+├── Models/
+│   ├── LogModels.cs              # All data models (LogAnalysis, LogGroup, ActionableIssue, etc.)
+│   └── SalesforceModels.cs       # Salesforce API DTOs
+├── ViewModels/
+│   └── MainViewModel.cs          # Main application logic (2,600+ lines, 19 commands)
+├── Views/
+│   ├── MainWindow.xaml           # Main UI — 5-tab analysis dashboard
+│   ├── ConnectionDialog.xaml     # Salesforce connection management
+│   ├── ConnectionsView.xaml      # Saved connections list
+│   ├── TraceFlagDialog.xaml      # Trace flag creation and management
+│   ├── DebugSetupWizard.xaml     # 4-step debug logging setup wizard
+│   ├── DebugLevelDialog.xaml     # Custom debug level configuration
+│   ├── OAuthBrowserDialog.xaml   # Embedded OAuth browser
+│   ├── InsightsPanel.xaml        # Governance insights panel
+│   ├── SettingsDialog.xaml       # App settings (6 tabs)
+│   ├── StreamingOptionsDialog.xaml # CLI streaming configuration
+│   └── UpgradeDialog.xaml        # Pro tier feature comparison
+├── Services/
+│   ├── LogParserService.cs       # Core log parser (3,500+ lines, all event types)
+│   ├── LogExplainerService.cs    # Plain-English generation engine (660+ lines)
+│   ├── LogGroupService.cs        # Transaction grouping and phase detection
+│   ├── LogMetadataExtractor.cs   # Fast log scanning without full parse
+│   ├── SalesforceApiService.cs   # Tooling API integration
+│   ├── SalesforceCliService.cs   # CLI streaming and batch download
+│   ├── OAuthService.cs           # OAuth 2.0 + PKCE authentication
+│   ├── OrgMetadataService.cs     # User and org enrichment
+│   ├── EditorBridgeService.cs    # VS Code editor integration
+│   ├── ReportExportService.cs    # Analysis export
+│   ├── LicenseService.cs         # License management (AES-256 encrypted)
+│   ├── SettingsService.cs        # Persistent application settings
+│   └── CacheService.cs           # Application-level caching
+├── Helpers/
+│   └── Converters.cs             # WPF value converters
+├── Themes/                       # Discord-themed resource dictionaries
+├── SampleLogs/                   # 231 sample log files for testing
+└── Tests/                        # xUnit test suite (9/9 passing)
 ```
 
-## Roadmap
+---
 
-### Phase 1: Foundation ✅
-- [x] Project structure and dependencies
-- [x] Material Design UI implementation (now Discord-themed!)
-- [x] Complete log parsing engine with all event types
-- [x] File upload and local log analysis
-- [x] Intelligent issue detection and recommendations
-- [x] ViewModel integration with services
+## Current Status
 
-### Phase 2: Transaction Analysis ✅ (COMPLETED!)
-- [x] Log metadata extraction for fast scanning
-- [x] Transaction grouping by user and timing
-- [x] Phase detection (Backend vs Frontend)
-- [x] Re-entry pattern detection (recursion)
-- [x] Sequential vs parallel component loading detection
-- [x] Aggregate metrics across log groups
-- [x] Smart recommendations for transaction-level optimization
-- [x] Folder-based batch import
+**Build:** ✅ 0 errors &nbsp;|&nbsp; **Tests:** ✅ 9/9 passing &nbsp;|&nbsp; **Version:** v0.9-beta
 
-### Phase 3: Salesforce Integration (In Progress)
-- [x] Salesforce OAuth authentication framework
-- [x] Salesforce API service for log retrieval
-- [x] Trace flag management UI
-- [x] Debug level configuration wizard
-- [ ] Real-time log streaming from Salesforce
-- [ ] Automated log download by date range
+### What Works Today
+- ✅ Single log file analysis with all 5 tabs
+- ✅ Folder drag-and-drop transaction chain analysis
+- ✅ Plain-English explanations with code examples
+- ✅ Governance / mixed-context warning and recommendations
+- ✅ CLI real-time log streaming
+- ✅ OAuth Salesforce connection and log download
+- ✅ Trace flag and debug level management
+- ✅ Persistent settings
 
-### Phase 4: Visualizations
-- [ ] Execution tree TreeView visualization
-- [ ] Database operations DataGrid with filtering
-- [ ] Performance dashboard with charts
-- [ ] Governor limits progress bars and gauges
-- [ ] Timeline/Gantt chart for transaction phases
-- [ ] Flowchart generation with MSAGL
-- [ ] Raw log viewer with syntax highlighting (AvalonEdit)
+### Coming Next
+- 🔄 Windows installer (.exe setup)
+- 🔄 Pro tier payment processing
+- 🔄 Raw log viewer with syntax highlighting
+- 🔄 Side-by-side log comparison
+- 🔄 Export to PDF / HTML
 
-### Phase 5: Advanced Analysis
-- [ ] N+1 query pattern detection with code location
-- [ ] SOQL query optimization suggestions
-- [ ] Comparative analysis (before/after)
-- [ ] Batch log comparison across multiple transactions
-- [ ] Custom rules engine for org-specific patterns
-- [ ] Export analysis to PDF/HTML/JSON
-- [ ] Integration with CI/CD pipelines
+See [ROADMAP.md](./ROADMAP.md) for the full plan.
+
+---
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Framework | .NET 8.0 + WPF |
+| Architecture | MVVM (CommunityToolkit.Mvvm) |
+| UI Theme | Discord-inspired dark theme |
+| Testing | xUnit |
+| Auth | OAuth 2.0 + PKCE (System.Net.Http) |
+| Encryption | AES-256 (System.Security.Cryptography) |
+| CLI Bridge | System.Diagnostics.Process |
+
+---
 
 ## Contributing
 
-Contributions are welcome! This project aims to bridge the gap between experienced Salesforce developers and junior admins by making debug logs accessible to everyone.
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full development guide — branch naming, commit conventions, and working with the Copilot PM workflow.
+
+**Quick start:**
+```powershell
+git clone https://github.com/felisbinofarms/salesforce-debug-log-analyzer.git
+cd salesforce-debug-log-analyzer
+dotnet build    # 0 errors expected
+dotnet test     # 9/9 passing
+dotnet run
+```
+
+Type `/pm timeline` in GitHub Copilot Chat to see the current sprint and pick an issue.
+
+---
 
 ## License
 
@@ -370,5 +256,4 @@ Contributions are welcome! This project aims to bridge the gap between experienc
 
 ## Acknowledgments
 
-- Inspired by the VSCode Salesforce Extensions debugger
-- Built for the Salesforce developer community
+Built for the Salesforce developer community. Inspired by the frustration of explaining what a debug log *actually means* to every new team member, every single time. 🕷️

@@ -7,27 +7,28 @@
         Width="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        TextElement.Foreground="#DBDEE1"
-        Background="#313338"
-        FontFamily="Segoe UI">
+        TextElement.Foreground="{StaticResource TextPrimary}"
+        Background="{StaticResource BgSecondary}"
+        FontFamily="Segoe UI"
+        TextElement.FontSize="{StaticResource FontBaseline}">
     
     <Window.Resources>
-        <!-- Discord Button Styles -->
+        <!-- Button Styles -->
         <Style x:Key="DiscordPrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#5865F2"/>
+            <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="{StaticResource Space4}"/>
+            <Setter Property="FontSize" Value="{StaticResource FontBaseline}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style x:Key="DiscordSecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#4E5058"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="{StaticResource Space4}"/>
+            <Setter Property="FontSize" Value="{StaticResource FontBaseline}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
@@ -44,8 +45,8 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="Connect to Salesforce" FontSize="24" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBlock Text="Choose how you want to authenticate" 
-                       FontSize="14" 
-                       Foreground="#B5BAC1"/>
+                       FontSize="{StaticResource FontBaseline}" 
+                       Foreground="{StaticResource TextSecondary}"/>
         </StackPanel>
 
         <!-- Connection Options -->
@@ -80,7 +81,7 @@
                             <TextBlock TextWrapping="Wrap" Margin="8,0,0,8">
                                 4. You'll be redirected back — that's it!
                             </TextBlock>
-                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,0" FontSize="11" Foreground="#72767D">
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,0" FontSize="{StaticResource FontSmall}" Foreground="{StaticResource TextMuted}">
                                 Your credentials are never stored by Black Widow. We use Salesforce's secure OAuth 2.0 flow.
                             </TextBlock>
                         </StackPanel>
@@ -116,7 +117,7 @@
                             <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,8">
                                 Option 1: Salesforce CLI
                             </TextBlock>
-                            <Border Background="#1E1E1E" Padding="8" Margin="0,0,0,8" CornerRadius="4">
+                            <Border Background="{StaticResource BgPrimary}" Padding="8" Margin="0,0,0,8" CornerRadius="4">
                                 <TextBlock Text="sf org display --target-org yourOrg" 
                                           Foreground="White" 
                                           FontFamily="Consolas"/>
@@ -152,7 +153,7 @@
             <TextBlock x:Name="StatusTextBlock" 
                        Text="Ready to connect" 
                        VerticalAlignment="Center"
-                       Foreground="#B5BAC1"/>
+                       Foreground="{StaticResource TextSecondary}"/>
 
             <Button Grid.Column="1" 
                     Content="Cancel" 

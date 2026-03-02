@@ -125,6 +125,12 @@ public class AppSettings
     public int EditorBridgePort { get; set; } = 7777;
     public bool VerboseLogging { get; set; } = false;
 
+    // Onboarding
+    public bool OnboardingShown { get; set; } = false;
+
+    // Developer / Power-User Settings
+    public bool IsDebugMode { get; set; } = false;
+
     // UI State
     public double WindowWidth { get; set; } = 1400;
     public double WindowHeight { get; set; } = 900;

@@ -7,11 +7,11 @@
         Height="700" 
         Width="900"
         WindowStartupLocation="CenterOwner"
-        Background="#313338">
+        Background="{StaticResource BgTertiary}">
     
     <Window.Resources>
         <Style x:Key="DiscordSecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#4E5058"/>
+            <Setter Property="Background" Value="{StaticResource BgInput}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="16,10"/>
@@ -29,7 +29,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#5865F2" Padding="16">
+        <Border Grid.Row="0" Background="{StaticResource AccentPrimary}" Padding="16">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="🔑" FontSize="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <TextBlock Text="Salesforce OAuth Login" FontSize="18" VerticalAlignment="Center" FontWeight="Medium" Foreground="White"/>
@@ -40,14 +40,14 @@
         <wv2:WebView2 x:Name="WebBrowser" Grid.Row="1"/>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#2B2D31" Padding="16,8">
+        <Border Grid.Row="2" Background="{StaticResource BgSecondary}" Padding="16,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center" Foreground="#DBDEE1" Grid.Column="0"/>
+                <TextBlock x:Name="StatusText" Text="Loading..." VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}" Grid.Column="0"/>
                 <Button Content="Open in Browser" 
                         Click="OpenInBrowser_Click"
                         Margin="0,0,8,0"

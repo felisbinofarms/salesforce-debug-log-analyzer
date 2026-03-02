@@ -16,21 +16,23 @@
     <Company>Black Widow Team</Company>
     <Copyright>Copyright © 2026 Black Widow Team</Copyright>
     <Description>The only Salesforce debug log analyzer that groups related logs and shows the complete user experience journey.</Description>
-    
-    <!-- Publishing Configuration -->
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!-- WPF generates a _wpftmp.csproj that shares the same output dir and inherits these properties,
+         causing duplicate assembly attributes. Suppress auto-generation; version info is still in the PE header. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+
+    <!-- Publishing: dotnet publish -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -->
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Exclude Tests folder from main project compilation -->
+    <!-- Exclude Tests and Tools subprojects from main project compilation -->
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+    <Compile Remove="Tools\**" />
+    <EmbeddedResource Remove="Tools\**" />
+    <None Remove="Tools\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -47,6 +47,7 @@ public class LogParserService
                 logLines.Add(new LogLine
                 {
                     Timestamp = ParseTimestamp(match.Groups[1].Value),
+                    NanosecondCounter = long.TryParse(match.Groups[2].Value, out var ns) ? ns : 0,
                     EventType = match.Groups[3].Value,
                     Details = match.Groups[4].Value.Split('|'),
                     LineNumber = i + 1,
@@ -75,9 +76,6 @@ public class LogParserService
         
         // Phase 3c: Extract Flow/Process Builder executions
         analysis.Flows = ExtractFlows(logLines);
-
-        // Phase 4: Extract governor limits
-        analysis.LimitSnapshots = ExtractGovernorLimits(logLines);
 
         // Phase 5: Extract entry point (trigger/flow that started this transaction)
         analysis.EntryPoint = ExtractEntryPoint(logLines);
@@ -109,11 +107,13 @@ public class LogParserService
         {
             analysis.DurationMs = (lastNs - firstNs) / 1_000_000.0;
             analysis.WallClockMs = analysis.DurationMs;
+            analysis.DurationSource = DurationSource.NanosecondPrecise;
         }
         else
         {
             analysis.DurationMs = analysis.RootNode.DurationMs;
             analysis.WallClockMs = analysis.RootNode.DurationMs;
+            analysis.DurationSource = DurationSource.DateTimeDerived;
         }
         
         // Extract CPU time from governor limits
@@ -124,7 +124,7 @@ public class LogParserService
         }
 
         // Phase 8: Parse cumulative profiling (before summary so data is available)
-        analysis.CumulativeProfiling = ParseCumulativeProfiling(lines);
+        (analysis.CumulativeProfiling, analysis.CumulativeProfilingFound) = ParseCumulativeProfiling(lines);
         
         // Phase 9: Parse CUMULATIVE_LIMIT_USAGE for accurate governor limits/CPU/Heap
         ParseCumulativeLimitUsage(lines, analysis);
@@ -162,6 +162,9 @@ public class LogParserService
         // Phase 10k: Grade bulk safety (will this code work when processing 200 records?)
         GradeBulkSafety(analysis);
 
+        // Phase 10l: Extract Platform Event publishes (EVENT_SERVICE_PUB_BEGIN/END)
+        analysis.PlatformEventPublishes = ExtractPlatformEvents(logLines);
+
         // Phase 11: Generate summary and recommendations (AFTER all data is extracted)
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
@@ -194,6 +197,12 @@ public class LogParserService
         }
         analysis.LogLength = lines.Length;
 
+        // Post-fix DurationSource: context flags set during later parse phases override the initial value
+        if (analysis.IsLogTruncated)
+            analysis.DurationSource = DurationSource.Incomplete;
+        else if (analysis.IsAsyncExecution)
+            analysis.DurationSource = DurationSource.Async;
+
         return analysis;
     }
 
@@ -225,7 +234,8 @@ public class LogParserService
         {
             Name = "Execution Root",
             Type = ExecutionNodeType.Execution,
-            StartTime = logLines.FirstOrDefault()?.Timestamp ?? DateTime.MinValue
+            StartTime = logLines.FirstOrDefault()?.Timestamp ?? DateTime.MinValue,
+            NanosecondStart = logLines.FirstOrDefault()?.NanosecondCounter ?? 0
         };
 
         var stack = new Stack<ExecutionNode>();
@@ -243,6 +253,7 @@ public class LogParserService
                             Name = GetCodeUnitName(line.Details),
                             Type = ExecutionNodeType.CodeUnit,
                             StartTime = line.Timestamp,
+                            NanosecondStart = line.NanosecondCounter,
                             StartLineNumber = line.LineNumber
                         };
                         stack.Peek().Children.Add(codeUnitNode);
@@ -254,6 +265,7 @@ public class LogParserService
                         {
                             var node = stack.Pop();
                             node.EndTime = line.Timestamp;
+                            node.NanosecondEnd = line.NanosecondCounter;
                             node.EndLineNumber = line.LineNumber;
                         }
                         break;
@@ -264,6 +276,7 @@ public class LogParserService
                             Name = GetMethodName(line.Details),
                             Type = ExecutionNodeType.Method,
                             StartTime = line.Timestamp,
+                            NanosecondStart = line.NanosecondCounter,
                             StartLineNumber = line.LineNumber
                         };
                         stack.Peek().Children.Add(methodNode);
@@ -275,6 +288,7 @@ public class LogParserService
                         {
                             var node = stack.Pop();
                             node.EndTime = line.Timestamp;
+                            node.NanosecondEnd = line.NanosecondCounter;
                             node.EndLineNumber = line.LineNumber;
                         }
                         break;
@@ -285,6 +299,7 @@ public class LogParserService
                             Name = line.Details.Length > 1 ? line.Details[1] : "System Method",
                             Type = ExecutionNodeType.SystemMethod,
                             StartTime = line.Timestamp,
+                            NanosecondStart = line.NanosecondCounter,
                             StartLineNumber = line.LineNumber
                         };
                         stack.Peek().Children.Add(sysMethodNode);
@@ -296,6 +311,7 @@ public class LogParserService
                         {
                             var node = stack.Pop();
                             node.EndTime = line.Timestamp;
+                            node.NanosecondEnd = line.NanosecondCounter;
                             node.EndLineNumber = line.LineNumber;
                         }
                         break;
@@ -358,6 +374,7 @@ public class LogParserService
                             Name = GetMethodName(line.Details),
                             Type = ExecutionNodeType.Constructor,
                             StartTime = line.Timestamp,
+                            NanosecondStart = line.NanosecondCounter,
                             StartLineNumber = line.LineNumber
                         };
                         stack.Peek().Children.Add(ctorNode);
@@ -369,6 +386,7 @@ public class LogParserService
                         {
                             var node = stack.Pop();
                             node.EndTime = line.Timestamp;
+                            node.NanosecondEnd = line.NanosecondCounter;
                             node.EndLineNumber = line.LineNumber;
                         }
                         break;
@@ -379,6 +397,7 @@ public class LogParserService
                             Name = line.Details.Length > 1 ? line.Details[1] : "System Constructor",
                             Type = ExecutionNodeType.Constructor,
                             StartTime = line.Timestamp,
+                            NanosecondStart = line.NanosecondCounter,
                             StartLineNumber = line.LineNumber
                         };
                         stack.Peek().Children.Add(sysCtorNode);
@@ -390,6 +409,7 @@ public class LogParserService
                         {
                             var node = stack.Pop();
                             node.EndTime = line.Timestamp;
+                            node.NanosecondEnd = line.NanosecondCounter;
                             node.EndLineNumber = line.LineNumber;
                         }
                         break;
@@ -403,6 +423,7 @@ public class LogParserService
         }
 
         root.EndTime = logLines.LastOrDefault()?.Timestamp ?? DateTime.MinValue;
+        root.NanosecondEnd = logLines.LastOrDefault()?.NanosecondCounter ?? 0;
         return root;
     }
 
@@ -472,9 +493,9 @@ public class LogParserService
     {
         var operations = new List<DatabaseOperation>();
         // Use a stack to handle nested operations (e.g., DML_BEGIN → triggers fire → SOQL inside trigger → DML_END)
-        var opStack = new Stack<(DatabaseOperation op, DateTime? startTime)>();
+        var opStack = new Stack<(DatabaseOperation op, long nsStart)>();
         DatabaseOperation? currentOp = null;
-        DateTime? startTime = null;
+        long nsStart = 0;
 
         foreach (var line in logLines)
         {
@@ -483,10 +504,10 @@ public class LogParserService
                 // Push any in-progress operation onto the stack (e.g., we're inside a DML that triggered this SOQL)
                 if (currentOp != null)
                 {
-                    opStack.Push((currentOp, startTime));
+                    opStack.Push((currentOp, nsStart));
                 }
-                
-                startTime = line.Timestamp;
+
+                nsStart = line.NanosecondCounter;
                 var query = line.Details.Length > 2 ? line.Details[2] : "";
                 currentOp = new DatabaseOperation
                 {
@@ -496,7 +517,7 @@ public class LogParserService
                     // Detect Custom Metadata Type queries (__mdt) — these don't count against SOQL limits
                     IsCustomMetadataQuery = query.Contains("__mdt", StringComparison.OrdinalIgnoreCase)
                 };
-                
+
                 if (line.Details.Length > 1 && line.Details[1].StartsWith("Aggregations:"))
                 {
                     var parts = line.Details[1].Split(':');
@@ -516,23 +537,22 @@ public class LogParserService
                         currentOp.RowsAffected = rows;
                     }
                 }
-                if (startTime.HasValue)
-                {
-                    currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
-                }
+                currentOp.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
+                    ? (line.NanosecondCounter - nsStart) / 1_000_000
+                    : 0;
                 operations.Add(currentOp);
-                
+
                 // Pop the parent operation from the stack (e.g., restore the DML we were inside of)
                 if (opStack.Count > 0)
                 {
                     var parent = opStack.Pop();
                     currentOp = parent.op;
-                    startTime = parent.startTime;
+                    nsStart = parent.nsStart;
                 }
                 else
                 {
                     currentOp = null;
-                    startTime = null;
+                    nsStart = 0;
                 }
             }
             else if (line.EventType == "SOQL_EXECUTE_EXPLAIN" && currentOp != null)
@@ -554,10 +574,10 @@ public class LogParserService
                 // Push any in-progress operation onto the stack
                 if (currentOp != null)
                 {
-                    opStack.Push((currentOp, startTime));
+                    opStack.Push((currentOp, nsStart));
                 }
-                
-                startTime = line.Timestamp;
+
+                nsStart = line.NanosecondCounter;
                 currentOp = new DatabaseOperation
                 {
                     OperationType = "DML",
@@ -588,32 +608,31 @@ public class LogParserService
             }
             else if (line.EventType == "DML_END" && currentOp != null && currentOp.OperationType == "DML")
             {
-                if (startTime.HasValue)
-                {
-                    currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
-                }
+                currentOp.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
+                    ? (line.NanosecondCounter - nsStart) / 1_000_000
+                    : 0;
                 operations.Add(currentOp);
-                
+
                 // Pop the parent operation from the stack
                 if (opStack.Count > 0)
                 {
                     var parent = opStack.Pop();
                     currentOp = parent.op;
-                    startTime = parent.startTime;
+                    nsStart = parent.nsStart;
                 }
                 else
                 {
                     currentOp = null;
-                    startTime = null;
+                    nsStart = 0;
                 }
             }
             else if (line.EventType == "SOSL_EXECUTE_BEGIN")
             {
                 if (currentOp != null)
                 {
-                    opStack.Push((currentOp, startTime));
+                    opStack.Push((currentOp, nsStart));
                 }
-                startTime = line.Timestamp;
+                nsStart = line.NanosecondCounter;
                 currentOp = new DatabaseOperation
                 {
                     OperationType = "SOSL",
@@ -631,21 +650,20 @@ public class LogParserService
                         currentOp.RowsAffected = rows;
                     }
                 }
-                if (startTime.HasValue)
-                {
-                    currentOp.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
-                }
+                currentOp.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
+                    ? (line.NanosecondCounter - nsStart) / 1_000_000
+                    : 0;
                 operations.Add(currentOp);
                 if (opStack.Count > 0)
                 {
                     var parent = opStack.Pop();
                     currentOp = parent.op;
-                    startTime = parent.startTime;
+                    nsStart = parent.nsStart;
                 }
                 else
                 {
                     currentOp = null;
-                    startTime = null;
+                    nsStart = 0;
                 }
             }
         }
@@ -662,7 +680,7 @@ public class LogParserService
     {
         var callouts = new List<CalloutOperation>();
         CalloutOperation? currentCallout = null;
-        DateTime? startTime = null;
+        long nsStart = 0;
 
         foreach (var line in logLines)
         {
@@ -671,75 +689,58 @@ public class LogParserService
                 // If there's a dangling callout from a previous request without response, save it
                 if (currentCallout != null)
                 {
-                    if (startTime.HasValue)
-                        currentCallout.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
+                    currentCallout.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
+                        ? (line.NanosecondCounter - nsStart) / 1_000_000 : 0;
                     callouts.Add(currentCallout);
                 }
-                
-                startTime = line.Timestamp;
-                currentCallout = new CalloutOperation
-                {
-                    LineNumber = line.LineNumber
-                };
+
+                nsStart = line.NanosecondCounter;
+                currentCallout = new CalloutOperation { LineNumber = line.LineNumber };
                 // Parse: System.HttpRequest[Endpoint=..., Method=POST]
                 var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                 var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
-                if (endpointMatch.Success) 
+                if (endpointMatch.Success)
                 {
                     currentCallout.Endpoint = endpointMatch.Groups[1].Value;
-                    // Extract Named Credential name from callout:// alias (e.g., "callout:RabbitMQ/api/messages")
                     var ncMatch = Regex.Match(currentCallout.Endpoint, @"^callout:/?/?([^/]+)");
                     if (ncMatch.Success)
-                    {
                         currentCallout.NamedCredentialName = ncMatch.Groups[1].Value;
-                    }
                 }
                 var methodMatch = Regex.Match(rawDetail, @"Method=([A-Z]+)");
                 if (methodMatch.Success) currentCallout.HttpMethod = methodMatch.Groups[1].Value;
             }
             else if (line.EventType == "CALLOUT_RESPONSE" && currentCallout != null)
             {
-                // Parse: System.HttpResponse[Status=OK, StatusCode=200]
                 var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                 var statusMatch = Regex.Match(rawDetail, @"Status=([^,\]]+)");
                 if (statusMatch.Success) currentCallout.StatusMessage = statusMatch.Groups[1].Value;
                 var codeMatch = Regex.Match(rawDetail, @"StatusCode=(\d+)");
                 if (codeMatch.Success && int.TryParse(codeMatch.Groups[1].Value, out var code))
                     currentCallout.StatusCode = code;
-                if (startTime.HasValue)
-                    currentCallout.DurationMs = (long)(line.Timestamp - startTime.Value).TotalMilliseconds;
+                currentCallout.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
+                    ? (line.NanosecondCounter - nsStart) / 1_000_000 : 0;
                 callouts.Add(currentCallout);
                 currentCallout = null;
-                startTime = null;
+                nsStart = 0;
             }
             else if (line.EventType == "NAMED_CREDENTIAL_REQUEST")
             {
-                // Named Credential events occur between CALLOUT_REQUEST and CALLOUT_RESPONSE
-                // They contain the resolved URL (after Named Credential alias resolution)
-                // Format: System.HttpRequest[Endpoint=https://actual-url.com, Method=POST]
                 if (currentCallout != null)
                 {
                     var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                     var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
                     if (endpointMatch.Success)
                     {
-                        // Store the resolved URL - this is the actual URL after credential resolution
                         currentCallout.Metadata["ResolvedEndpoint"] = endpointMatch.Groups[1].Value;
-                        // If the original endpoint was a callout: alias, replace with resolved URL
                         if (currentCallout.Endpoint.StartsWith("callout:", StringComparison.OrdinalIgnoreCase))
-                        {
                             currentCallout.Endpoint = endpointMatch.Groups[1].Value;
-                        }
                     }
                 }
                 else
                 {
                     // Standalone Named Credential callout (no preceding CALLOUT_REQUEST)
-                    startTime = line.Timestamp;
-                    currentCallout = new CalloutOperation
-                    {
-                        LineNumber = line.LineNumber
-                    };
+                    nsStart = line.NanosecondCounter;
+                    currentCallout = new CalloutOperation { LineNumber = line.LineNumber };
                     var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                     var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
                     if (endpointMatch.Success) currentCallout.Endpoint = endpointMatch.Groups[1].Value;
@@ -749,8 +750,6 @@ public class LogParserService
             }
             else if (line.EventType == "NAMED_CREDENTIAL_RESPONSE")
             {
-                // Named Credential response - may come before or instead of CALLOUT_RESPONSE
-                // If we have a current callout that hasn't been closed yet, this provides status info
                 if (currentCallout != null && currentCallout.StatusCode == 0)
                 {
                     var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
@@ -759,16 +758,13 @@ public class LogParserService
                     var codeMatch = Regex.Match(rawDetail, @"StatusCode=(\d+)");
                     if (codeMatch.Success && int.TryParse(codeMatch.Groups[1].Value, out var code))
                         currentCallout.StatusCode = code;
-                    // Don't close the callout yet - wait for CALLOUT_RESPONSE
                 }
             }
         }
 
         // Handle any dangling callout that never got a response (e.g., log truncated)
         if (currentCallout != null)
-        {
             callouts.Add(currentCallout);
-        }
 
         return callouts;
     }
@@ -850,87 +846,6 @@ public class LogParserService
 
         flows.AddRange(flowNames.Values);
         return flows;
-    }
-
-    private List<GovernorLimitSnapshot> ExtractGovernorLimits(List<LogLine> logLines)
-    {
-        var snapshots = new List<GovernorLimitSnapshot>();
-        GovernorLimitSnapshot? currentSnapshot = null;
-
-        for (int i = 0; i < logLines.Count; i++)
-        {
-            var line = logLines[i];
-            
-            if (line.EventType == "CUMULATIVE_LIMIT_USAGE" || line.EventType == "CUMULATIVE_LIMIT_USAGE_END")
-            {
-                currentSnapshot = new GovernorLimitSnapshot
-                {
-                    LineNumber = line.LineNumber,
-                    SoqlQueriesLimit = 100,
-                    QueryRowsLimit = 50000,
-                    CpuTimeLimit = 10000,
-                    HeapSizeLimit = 6000000,
-                    DmlStatementsLimit = 150,
-                    DmlRowsLimit = 10000
-                };
-
-                // Parse the next several lines for limit values
-                for (int j = i + 1; j < Math.Min(i + 20, logLines.Count); j++)
-                {
-                    var limitLine = logLines[j];
-                    if (limitLine.EventType != "CUMULATIVE_LIMIT_USAGE" && limitLine.EventType != "CUMULATIVE_LIMIT_USAGE_END")
-                        break;
-
-                    var limitText = limitLine.Details.Length > 0 ? limitLine.Details[0] : "";
-                    var match = LimitPattern.Match(limitText);
-                    
-                    if (match.Success)
-                    {
-                        var limitName = match.Groups[1].Value.ToLower();
-                        var current = int.Parse(match.Groups[2].Value);
-                        var max = int.Parse(match.Groups[3].Value);
-
-                        if (limitName.Contains("soql") && limitName.Contains("queries"))
-                        {
-                            currentSnapshot.SoqlQueries = current;
-                            currentSnapshot.SoqlQueriesLimit = max;
-                        }
-                        else if (limitName.Contains("query") && limitName.Contains("rows"))
-                        {
-                            currentSnapshot.QueryRows = current;
-                            currentSnapshot.QueryRowsLimit = max;
-                        }
-                        else if (limitName.Contains("cpu"))
-                        {
-                            currentSnapshot.CpuTime = current;
-                            currentSnapshot.CpuTimeLimit = max;
-                        }
-                        else if (limitName.Contains("heap"))
-                        {
-                            currentSnapshot.HeapSize = current;
-                            currentSnapshot.HeapSizeLimit = max;
-                        }
-                        else if (limitName.Contains("dml") && limitName.Contains("statements"))
-                        {
-                            currentSnapshot.DmlStatements = current;
-                            currentSnapshot.DmlStatementsLimit = max;
-                        }
-                        else if (limitName.Contains("dml") && limitName.Contains("rows"))
-                        {
-                            currentSnapshot.DmlRows = current;
-                            currentSnapshot.DmlRowsLimit = max;
-                        }
-                    }
-                }
-
-                if (currentSnapshot != null)
-                {
-                    snapshots.Add(currentSnapshot);
-                }
-            }
-        }
-
-        return snapshots;
     }
 
     private List<ExecutionNode> FindErrors(ExecutionNode root)
@@ -1600,14 +1515,14 @@ public class LogParserService
     private void DetectDuplicateQueries(LogAnalysis analysis)
     {
         var soqlOps = analysis.DatabaseOperations
-            .Where(d => d.OperationType == "SOQL" && !string.IsNullOrEmpty(d.Query))
+            .Where(d => d.OperationType == "SOQL" && !string.IsNullOrEmpty(d.Query) && !d.IsCustomMetadataQuery)
             .ToList();
-        
-        if (soqlOps.Count < 2) return;
-        
+
+        if (soqlOps.Count < 3) return;
+
         var grouped = soqlOps
             .GroupBy(d => SimplifyQuery(d.Query))
-            .Where(g => g.Count() >= 2) // 2+ executions of same query
+            .Where(g => g.Count() >= 3) // 3+ executions required — 2x can be intentional (before/after pattern)
             .OrderByDescending(g => g.Count())
             .ToList();
         
@@ -1909,6 +1824,13 @@ public class LogParserService
                 {
                     summary += $"    ({analysis.RegularSoqlCount} count against limits, " +
                         $"{analysis.CustomMetadataQueryCount} are free Custom Metadata queries)\n";
+                }
+                // Check if governor limits show more SOQL than we parsed (managed packages/hidden code)
+                var govSnapshot = analysis.LimitSnapshots.LastOrDefault();
+                if (govSnapshot != null && govSnapshot.SoqlQueries > analysis.RegularSoqlCount)
+                {
+                    var hiddenSoql = govSnapshot.SoqlQueries - analysis.RegularSoqlCount;
+                    summary += $"    ℹ️ {hiddenSoql} additional quer{(hiddenSoql > 1 ? "ies" : "y")} from managed packages/platform code (not visible in log)\n";
                 }
             }
             if (soslCount > 0)
@@ -2428,17 +2350,26 @@ public class LogParserService
 
     private string SimplifyQuery(string query)
     {
-        // Remove specific values to detect similar queries
+        // Normalize quoted string/ID literals so queries fetching different record IDs
+        // are treated as structurally identical. We intentionally do NOT replace bare
+        // numbers because that would conflate LIMIT 1 with LIMIT 200, cause
+        // field-name digits to be stripped, and produce false N+1 alarms.
         query = Regex.Replace(query, @"'[^']*'", "'?'");
-        query = Regex.Replace(query, @"\d+", "?");
         return query;
     }
 
     private List<string> GenerateRecommendations(LogAnalysis analysis)
     {
         var recommendations = new List<string>();
-        var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
-        var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
+        // Use governor limit SOQL count as authoritative (includes managed package queries not in log).
+        // Fall back to parsed event count if governor limits are unavailable.
+        var govLimits = analysis.LimitSnapshots.LastOrDefault();
+        var soqlCount = govLimits?.SoqlQueries > 0
+            ? govLimits.SoqlQueries
+            : analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
+        var dmlCount = govLimits?.DmlStatements > 0
+            ? govLimits.DmlStatements
+            : analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
 
         // 🚨 NEW: Stack depth recommendations FIRST - this is often the critical issue!
         if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical || 
@@ -2690,7 +2621,7 @@ public class LogParserService
     /// <summary>
     /// Parse CUMULATIVE_PROFILING section at end of log
     /// </summary>
-    private CumulativeProfiling? ParseCumulativeProfiling(string[] lines)
+    private (CumulativeProfiling? profiling, bool found) ParseCumulativeProfiling(string[] lines)
     {
         var profiling = new CumulativeProfiling();
         bool inProfilingSection = false;
@@ -2715,7 +2646,7 @@ public class LogParserService
             }
         }
         
-        if (startIndex < 0) return null;
+        if (startIndex < 0) return (null, false);
         
         // Now iterate FORWARD from BEGIN to END
         for (int i = startIndex; i < lines.Length; i++)
@@ -2844,10 +2775,9 @@ public class LogParserService
         profiling.TopQueries = profiling.TopQueries.OrderByDescending(q => q.ExecutionCount).Take(10).ToList();
         profiling.TopDmlOperations = profiling.TopDmlOperations.OrderByDescending(d => d.TotalDurationMs).Take(10).ToList();
         profiling.TopMethods = profiling.TopMethods.OrderByDescending(m => m.TotalDurationMs).Take(10).ToList();
-        
-        return profiling.TopQueries.Any() || profiling.TopDmlOperations.Any() || profiling.TopMethods.Any() 
-            ? profiling 
-            : null;
+
+        var hasData = profiling.TopQueries.Any() || profiling.TopDmlOperations.Any() || profiling.TopMethods.Any();
+        return (hasData ? profiling : null, true); // found=true because CUMULATIVE_PROFILING_BEGIN was present
     }
     
     private (string className, string methodName) ParseLocation(string location)
@@ -3110,12 +3040,81 @@ public class LogParserService
     }
     
     /// <summary>
+    /// Parse EVENT_SERVICE_PUB_BEGIN / EVENT_SERVICE_PUB_END pairs into PlatformEventPublish records.
+    /// These appear when code calls EventBus.publish() and the PlatformEvent log level is enabled.
+    /// Format: EVENT_SERVICE_PUB_BEGIN|[lineRef]|{publishId}|{EventTypeName}
+    ///         EVENT_SERVICE_PUB_END  |[lineRef]|{publishId}|{EventTypeName}
+    /// </summary>
+    private List<Models.PlatformEventPublish> ExtractPlatformEvents(List<LogLine> logLines)
+    {
+        var results = new List<Models.PlatformEventPublish>();
+        var openPublishes = new Dictionary<string, Models.PlatformEventPublish>();
+
+        foreach (var line in logLines)
+        {
+            if (line.EventType == "EVENT_SERVICE_PUB_BEGIN")
+            {
+                // Details layout varies: sometimes [lineRef, publishId, eventTypeName]
+                // sometimes [publishId, eventTypeName] — be defensive
+                string publishId, eventTypeName;
+                if (line.Details.Length >= 3)
+                {
+                    // [0] = lineRef like "[30]", [1] = publishId, [2] = typeName
+                    publishId    = line.Details[1];
+                    eventTypeName = line.Details[2];
+                }
+                else if (line.Details.Length == 2)
+                {
+                    publishId    = line.Details[0];
+                    eventTypeName = line.Details[1];
+                }
+                else
+                {
+                    publishId    = line.Details.Length > 0 ? line.Details[0] : $"pub_{line.LineNumber}";
+                    eventTypeName = string.Empty;
+                }
+
+                var pub = new Models.PlatformEventPublish
+                {
+                    PublishId     = publishId,
+                    EventTypeName = eventTypeName,
+                    LineNumber    = line.LineNumber,
+                    StartTime     = line.Timestamp
+                };
+                openPublishes[publishId] = pub;
+                results.Add(pub);
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_END")
+            {
+                string publishId;
+                if (line.Details.Length >= 3)
+                    publishId = line.Details[1];
+                else if (line.Details.Length >= 1)
+                    publishId = line.Details[0];
+                else
+                    continue;
+
+                if (openPublishes.TryGetValue(publishId, out var pub))
+                {
+                    pub.DurationMs = (long)(line.Timestamp - pub.StartTime).TotalMilliseconds;
+                    pub.Completed  = true;
+                    openPublishes.Remove(publishId);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    /// <summary>
     /// Build order of execution timeline showing major phases
     /// </summary>
     private ExecutionTimeline BuildExecutionTimeline(List<LogLine> logLines, LogAnalysis analysis)
     {
         var timeline = new ExecutionTimeline();
         var phaseStack = new Stack<TimelinePhase>();
+        var dmlPhaseStack = new Stack<TimelinePhase>();          // open DML_BEGIN phases awaiting DML_END
+        var openEventTimelinePhases = new Dictionary<string, TimelinePhase>(); // publishId → open platform-event phase for duration
         var allPhases = new List<TimelinePhase>();
         var triggerCounts = new Dictionary<string, int>();
         
@@ -3143,6 +3142,16 @@ public class LogParserService
                         phase.Type = "Trigger";
                         phase.Icon = "🔧";
                         
+                        // Assign OOE phase from trigger event name: "CaseTrigger on Case (Before Insert)"
+                        var nameLower = fullName.ToLowerInvariant();
+                        if (nameLower.Contains("(before ") || nameLower.Contains("before insert") ||
+                            nameLower.Contains("before update") || nameLower.Contains("before delete"))
+                            phase.OoePhase = Models.OoePhase.BeforeTrigger;
+                        else if (nameLower.Contains("(after ") || nameLower.Contains("after insert") ||
+                                 nameLower.Contains("after update") || nameLower.Contains("after delete") ||
+                                 nameLower.Contains("after undelete"))
+                            phase.OoePhase = Models.OoePhase.AfterTrigger;
+                        
                         // Track trigger recursion
                         var triggerName = fullName.Split('.')[0];
                         if (!triggerCounts.ContainsKey(triggerName))
@@ -3152,6 +3161,7 @@ public class LogParserService
                         if (triggerCounts[triggerName] > 1)
                         {
                             phase.IsRecursive = true;
+                            phase.OoePhase = Models.OoePhase.ReEntry; // Override with ReEntry on recursion
                             timeline.RecursionCount++;
                         }
                     }
@@ -3159,16 +3169,57 @@ public class LogParserService
                     {
                         phase.Type = "Flow";
                         phase.Icon = "🌊";
+                        // After-Save / Record-Triggered flows fire after after-triggers
+                        var nameLower = fullName.ToLowerInvariant();
+                        phase.OoePhase = (nameLower.Contains("after save") || nameLower.Contains("record-triggered"))
+                            ? Models.OoePhase.AfterSaveFlow
+                            : Models.OoePhase.Other;
                     }
                     else if (fullName.Contains("Validation:"))
                     {
                         phase.Type = "Validation";
                         phase.Icon = "✅";
+                        phase.OoePhase = Models.OoePhase.SystemValidation;
                     }
                     else if (fullName.Contains("Workflow:"))
                     {
                         phase.Type = "Workflow";
                         phase.Icon = "⚙️";
+                        phase.OoePhase = Models.OoePhase.Workflow;
+                    }
+                    else if (fullName.Contains("Process:") || fullName.Contains("ProcessBuilder"))
+                    {
+                        phase.Type = "Process";
+                        phase.Icon = "⚙️";
+                        phase.OoePhase = Models.OoePhase.Process;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("queueable"))
+                    {
+                        phase.Type = "Queueable";
+                        phase.Icon = "⏳";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("batchable") ||
+                             fullName.ToLowerInvariant().Contains("batchapex"))
+                    {
+                        phase.Type = "Batch";
+                        phase.Icon = "📊";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("schedulable") ||
+                             fullName.ToLowerInvariant().Contains("scheduled apex"))
+                    {
+                        phase.Type = "Scheduled";
+                        phase.Icon = "⏰";
+                        phase.OoePhase = Models.OoePhase.Async;
+                    }
+                    else if (fullName.ToLowerInvariant().Contains("future invocation") ||
+                             fullName.ToLowerInvariant().Contains("futureinvocation") ||
+                             fullName.ToLowerInvariant().Contains("@future"))
+                    {
+                        phase.Type = "Future";
+                        phase.Icon = "🔮";
+                        phase.OoePhase = Models.OoePhase.Async;
                     }
                     else if (fullName.EndsWith("_Test") || fullName.EndsWith("Test"))
                     {
@@ -3225,6 +3276,78 @@ public class LogParserService
                     phaseStack.Peek().Children.Add(phase);
                 }
                 
+                dmlPhaseStack.Push(phase); // track for DML_END duration
+                allPhases.Add(phase);
+            }
+            else if (line.EventType == "DML_END")
+            {
+                if (dmlPhaseStack.Any())
+                {
+                    var phase = dmlPhaseStack.Pop();
+                    phase.DurationMs = (long)(line.Timestamp - phase.StartTime).TotalMilliseconds;
+                }
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_BEGIN")
+            {
+                // Platform Event publish starts — Details: [lineRef, publishId, eventTypeName]
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Type = "PlatformEvent",
+                    Icon = "📡",
+                    Depth = phaseStack.Count,
+                    OoePhase = Models.OoePhase.Other
+                };
+                var eventTypeName = line.Details.Length >= 3 ? line.Details[2]
+                                  : line.Details.Length >= 2 ? line.Details[1]
+                                  : "Platform Event";
+                phase.Name = $"Publish: {eventTypeName}";
+                if (phaseStack.Any())
+                    phaseStack.Peek().Children.Add(phase);
+                else
+                    timeline.Phases.Add(phase);
+                // Track by publishId for duration calc in EVENT_SERVICE_PUB_END
+                var pubIdTimeline = line.Details.Length >= 3 ? line.Details[1]
+                                  : line.Details.Length >= 2 ? line.Details[0]
+                                  : string.Empty;
+                if (!string.IsNullOrEmpty(pubIdTimeline))
+                    openEventTimelinePhases[pubIdTimeline] = phase;
+                allPhases.Add(phase);
+            }
+            else if (line.EventType == "EVENT_SERVICE_PUB_END")
+            {
+                var pubIdEnd = line.Details.Length >= 3 ? line.Details[1]
+                             : line.Details.Length >= 1 ? line.Details[0]
+                             : string.Empty;
+                if (!string.IsNullOrEmpty(pubIdEnd) &&
+                    openEventTimelinePhases.TryGetValue(pubIdEnd, out var pubPhase))
+                {
+                    pubPhase.DurationMs = (long)(line.Timestamp - pubPhase.StartTime).TotalMilliseconds;
+                    openEventTimelinePhases.Remove(pubIdEnd);
+                }
+            }
+            else if (line.EventType == "WF_FIELD_UPDATE")
+            {
+                // Workflow field update — point-in-time marker; no paired END event
+                var phase = new TimelinePhase
+                {
+                    StartTime = line.Timestamp,
+                    LineNumber = line.LineNumber,
+                    Type = "FieldUpdate",
+                    Icon = "📝",
+                    Depth = phaseStack.Count,
+                    OoePhase = Models.OoePhase.FieldUpdate,
+                    DurationMs = 0
+                };
+                // Details format varies: [LINE]|[FIELD_NAME]|[RULE_NAME]|...
+                phase.Name = line.Details.Length >= 3
+                    ? $"Field Update: {line.Details[1]} (rule: {line.Details[2]})"
+                    : line.Details.Length >= 2
+                    ? $"Field Update: {line.Details[1]}"
+                    : "Workflow Field Update";
+                if (phaseStack.Any())
+                    phaseStack.Peek().Children.Add(phase);
                 allPhases.Add(phase);
             }
         }
@@ -3253,71 +3376,87 @@ public class LogParserService
         var health = new HealthScore();
         var score = 100.0;
         var reasons = new List<string>();
-        
-        // Factor 1: Transaction Outcome (instant fail penalty)
+
+        // Factor 1: Transaction Outcome
         if (analysis.TransactionFailed)
         {
             score -= 25;
-            reasons.Add("Transaction failed with errors");
+            reasons.Add("Transaction failed (-25 pts)");
         }
         else if (analysis.Errors.Count > 0)
         {
-            // Unhandled exceptions that didn't kill the transaction
-            score -= 15;
-            reasons.Add($"{analysis.Errors.Count} unhandled exception(s) detected");
+            // Proportional: -5 per unhandled exception, capped at -15
+            var d = Math.Min(15, analysis.Errors.Count * 5);
+            score -= d;
+            reasons.Add($"{analysis.Errors.Count} unhandled exception(s) (-{d} pts)");
         }
-        else if (analysis.HandledExceptions.Count > 5)
+        else if (analysis.HandledExceptions.Count > 10)
         {
-            // Many handled exceptions suggest fragile code
             score -= 5;
-            reasons.Add($"{analysis.HandledExceptions.Count} caught exceptions (code may be fragile)");
+            reasons.Add($"{analysis.HandledExceptions.Count} caught exceptions — fragile code (-5 pts)");
         }
-        
-        // Factor 2: Governor Limits (40 points)
+
+        // Factor 2: Governor Limits — SOQL, DML, CPU, Query Rows
         var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
         if (lastSnapshot != null)
         {
-            var soqlPct = (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit;
-            var cpuPct = (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit;
-            var heapPct = (lastSnapshot.HeapSize * 100.0) / lastSnapshot.HeapSizeLimit;
-            var rowsPct = (lastSnapshot.QueryRows * 100.0) / lastSnapshot.QueryRowsLimit;
-            
-            // Deduct points based on usage
-            if (soqlPct > 90) { score -= 15; reasons.Add("SOQL usage critical (>90%)"); }
-            else if (soqlPct > 80) { score -= 10; reasons.Add("SOQL usage high (>80%)"); }
+            var soqlPct = lastSnapshot.SoqlQueriesLimit > 0
+                ? (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit : 0;
+            var dmlPct = lastSnapshot.DmlStatementsLimit > 0
+                ? (lastSnapshot.DmlStatements * 100.0) / lastSnapshot.DmlStatementsLimit : 0;
+            var cpuPct = lastSnapshot.CpuTimeLimit > 0
+                ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit : 0;
+            var rowsPct = lastSnapshot.QueryRowsLimit > 0
+                ? (lastSnapshot.QueryRows * 100.0) / lastSnapshot.QueryRowsLimit : 0;
+
+            // SOQL: 0 pts below 50%, scale 50-80% (-5), 80-90% (-10), >90% (-15)
+            if (soqlPct > 90)      { score -= 15; reasons.Add($"SOQL at {soqlPct:F0}% of limit (-15 pts)"); }
+            else if (soqlPct > 80) { score -= 10; reasons.Add($"SOQL at {soqlPct:F0}% of limit (-10 pts)"); }
             else if (soqlPct > 50) { score -= 5; }
-            
-            if (cpuPct > 90) { score -= 15; reasons.Add("CPU time critical (>90%)"); }
-            else if (cpuPct > 80) { score -= 10; reasons.Add("CPU time high (>80%)"); }
+
+            // DML: same scale (was missing entirely before)
+            if (dmlPct > 90)      { score -= 15; reasons.Add($"DML at {dmlPct:F0}% of limit (-15 pts)"); }
+            else if (dmlPct > 80) { score -= 10; reasons.Add($"DML at {dmlPct:F0}% of limit (-10 pts)"); }
+            else if (dmlPct > 50) { score -= 5; }
+
+            // CPU: same scale
+            if (cpuPct > 90)      { score -= 15; reasons.Add($"CPU at {cpuPct:F0}% of limit (-15 pts)"); }
+            else if (cpuPct > 80) { score -= 10; reasons.Add($"CPU at {cpuPct:F0}% of limit (-10 pts)"); }
             else if (cpuPct > 50) { score -= 5; }
-            
-            if (rowsPct > 90) { score -= 10; reasons.Add("Query rows critical (>90%)"); }
+
+            // Query rows
+            if (rowsPct > 90)      { score -= 10; reasons.Add($"Query rows at {rowsPct:F0}% of limit (-10 pts)"); }
             else if (rowsPct > 80) { score -= 5; }
         }
-        
-        // Factor 2: Performance (30 points)
+
+        // Factor 3: Performance (wall-clock)
         var durationSec = analysis.DurationMs / 1000.0;
-        if (durationSec > 20) { score -= 15; reasons.Add("Execution time >20 seconds"); }
-        else if (durationSec > 10) { score -= 10; reasons.Add("Execution time >10 seconds"); }
+        if (durationSec > 20)     { score -= 15; reasons.Add($"Execution {durationSec:F1}s — very slow (-15 pts)"); }
+        else if (durationSec > 10){ score -= 10; reasons.Add($"Execution {durationSec:F1}s — slow (-10 pts)"); }
         else if (durationSec > 5) { score -= 5; }
-        
-        // Factor 3: Code Quality (30 points)
+
+        // Factor 4: Code Quality — recursion
         if (analysis.Timeline?.RecursionCount > 0)
         {
-            score -= Math.Min(15, analysis.Timeline.RecursionCount * 3);
-            reasons.Add($"{analysis.Timeline.RecursionCount} recursive trigger calls");
+            var d = Math.Min(15, analysis.Timeline.RecursionCount * 3);
+            score -= d;
+            reasons.Add($"{analysis.Timeline.RecursionCount} recursive trigger re-entries (-{d} pts)");
         }
-        
-        if (analysis.CumulativeProfiling != null)
+
+        // Factor 5: Duplicate / N+1 queries — proportional by frequency (min 3x to flag)
+        var dupQueries = analysis.DuplicateQueries?.Where(d => d.ExecutionCount >= 3).ToList();
+        if (dupQueries?.Count > 0)
         {
-            var excessiveQueries = analysis.CumulativeProfiling.TopQueries.Count(q => q.ExecutionCount > 1000);
-            if (excessiveQueries > 0)
-            {
-                score -= Math.Min(15, excessiveQueries * 5);
-                reasons.Add($"{excessiveQueries} queries executed >1000 times (N+1 pattern)");
-            }
+            var worstCount = dupQueries.Max(d => d.ExecutionCount);
+            // Scale by worst-case frequency: 3x=2, 10x=5, 50x=10, 100x+=15
+            var baseDeduction = worstCount >= 100 ? 15 : worstCount >= 50 ? 10 : worstCount >= 10 ? 5 : 2;
+            // Each additional duplicate query costs 2 more pts (capped at 15 total)
+            var totalDeduction = Math.Min(15, baseDeduction + (dupQueries.Count - 1) * 2);
+            score -= totalDeduction;
+            reasons.Add($"{dupQueries.Count} duplicate quer{(dupQueries.Count > 1 ? "ies" : "y")} " +
+                        $"(worst: {worstCount}x) (-{totalDeduction} pts)");
         }
-        
+
         health.Score = Math.Max(0, (int)score);
         health.Reasoning = reasons.Any() ? string.Join(", ", reasons) : "No major issues detected";
         
