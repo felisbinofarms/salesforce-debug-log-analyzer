@@ -201,6 +201,8 @@ public class LogAnalysis
 {
     public string LogId { get; set; } = string.Empty;
     public string LogName { get; set; } = string.Empty;
+    /// <summary>Local file path when loaded from disk; empty when downloaded from API.</summary>
+    public string SourcePath { get; set; } = string.Empty;
     public DateTime ParsedAt { get; set; }
     public double DurationMs { get; set; }
     /// <summary>How the DurationMs figure was derived. Affects the display prefix (~, >, etc.) and tooltip.</summary>

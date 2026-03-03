@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using SalesforceDebugAnalyzer.ViewModels;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
@@ -31,6 +32,9 @@ public partial class MainWindow : Window
         AllowDrop = true;
         Drop += MainWindow_Drop;
         DragOver += MainWindow_DragOver;
+
+        // Keyboard shortcuts (Ctrl+K, Ctrl+F, Escape, etc.)
+        KeyDown += Window_KeyDown;
 
         // Show connections view initially
         ShowConnectionsView(salesforceApi);
@@ -293,5 +297,69 @@ public partial class MainWindow : Window
                 return false;
             };
         }
+    }
+
+    // ─── Keyboard shortcut helpers (called from XAML InputBindings / KeyDown) ──
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        // Ctrl+K → command palette
+        if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        {
+            _viewModel.ToggleCommandPaletteCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+F → focus search box
+        if (e.Key == Key.F && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        {
+            if (SearchBox != null)
+            {
+                SearchBox.Focus();
+                SearchBox.SelectAll();
+                _ = _viewModel.ShowToastAsync("Search focused (Ctrl+F)", "info", 1200);
+            }
+            e.Handled = true;
+            return;
+        }
+        // Escape → close command palette, or clear selection
+        if (e.Key == Key.Escape)
+        {
+            if (_viewModel.IsCommandPaletteOpen)
+            {
+                _viewModel.CloseCommandPaletteCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+    }
+
+    private void CommandPaletteBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            _viewModel.CloseCommandPaletteCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter)
+        {
+            var first = _viewModel.PaletteResults.FirstOrDefault();
+            if (first != null)
+                _viewModel.ExecutePaletteItemCommand.Execute(first);
+            e.Handled = true;
+        }
+    }
+
+    private void CommandPaletteBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb)
+            _viewModel.CommandPaletteQuery = tb.Text;
+    }
+
+    private void CommandPaletteBackdrop_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        // Close palette when clicking the dark backdrop (outside the palette box)
+        if (e.OriginalSource == sender)
+            _viewModel.CloseCommandPaletteCommand.Execute(null);
     }
 }

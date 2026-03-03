@@ -610,6 +610,84 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _tierDisplayName = "Free";
 
+    // ===== TOAST NOTIFICATION SYSTEM =====
+    [ObservableProperty] private string _toastMessage = "";
+    [ObservableProperty] private string _toastType = "info";   // "info" | "success" | "error" | "warning"
+    [ObservableProperty] private bool _isToastVisible = false;
+    private System.Threading.CancellationTokenSource? _toastCts;
+
+    public async Task ShowToastAsync(string message, string type = "info", int durationMs = 3000)
+    {
+        _toastCts?.Cancel();
+        _toastCts = new System.Threading.CancellationTokenSource();
+        var token = _toastCts.Token;
+        ToastMessage = message;
+        ToastType = type;
+        IsToastVisible = true;
+        try { await Task.Delay(durationMs, token); } catch (TaskCanceledException) { return; }
+        IsToastVisible = false;
+    }
+
+    // ===== LOG LIST SORT =====
+    [ObservableProperty] private string _logSortProperty = "Date";    // "Date" | "Duration" | "Status"
+    [ObservableProperty] private bool _logSortAscending = false;
+
+    // ===== ANIMATED HEALTH SCORE =====
+    [ObservableProperty] private int _animatedHealthScore = 0;
+    private System.Windows.Threading.DispatcherTimer? _healthAnimTimer;
+
+    public void AnimateHealthScore(int targetScore)
+    {
+        _healthAnimTimer?.Stop();
+        AnimatedHealthScore = 0;
+        _healthAnimTimer = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromMilliseconds(12) };
+        _healthAnimTimer.Tick += (_, _) =>
+        {
+            if (AnimatedHealthScore < targetScore)
+                AnimatedHealthScore = Math.Min(AnimatedHealthScore + 2, targetScore);
+            else
+                _healthAnimTimer.Stop();
+        };
+        _healthAnimTimer.Start();
+    }
+
+    // ===== COMMAND PALETTE =====
+    [ObservableProperty] private bool _isCommandPaletteOpen = false;
+    [ObservableProperty] private string _commandPaletteQuery = "";
+    [ObservableProperty] private ObservableCollection<PaletteCommand> _paletteResults = new();
+
+    private readonly List<PaletteCommand> _allCommands = new()
+    {
+        new("Upload Log File",   "Open a .log file from disk",          "Upload",       "upload"),
+        new("Load Folder",       "Scan a folder of log files",          "FolderOpen",   "folder"),
+        new("Download Logs",     "Fetch logs from connected Salesforce org", "CloudDownload","download"),
+        new("Go Live",           "Stream logs from org in real-time",   "AccessPoint",  "live"),
+        new("Export Report",     "Export current analysis to PDF/CSV",  "FileExport",   "export"),
+        new("Connect to Org",    "Open the Salesforce connection dialog","Link",         "connect"),
+        new("Manage Trace Flags","Manage debug log trace flags",        "Flag",         "manage"),
+        new("Switch to Summary", "Show the Summary tab",                "ViewDashboard","tab0"),
+        new("Switch to Tree",    "Show the Execution Tree tab",         "FileTree",     "tab1"),
+        new("Switch to Timeline","Show the Timeline tab",               "Timeline",     "tab2"),
+        new("Switch to Queries", "Show the Queries tab",                "DatabaseSearch","tab3"),
+        new("Explain in Plain English","Show plain-English explanation","Lightbulb",    "tab4"),
+        new("Sort by Duration",  "Sort logs by execution time",         "SortDescending","sort-duration"),
+        new("Sort by Date",      "Sort logs by date (newest first)",    "CalendarToday","sort-date"),
+        new("Clear Selection",   "Deselect current log",                "Close",        "clear"),
+    };
+
+    partial void OnCommandPaletteQueryChanged(string value)
+    {
+        PaletteResults.Clear();
+        var q = value.Trim().ToLowerInvariant();
+        var results = string.IsNullOrEmpty(q)
+            ? _allCommands.Take(8)
+            : _allCommands.Where(c =>
+                c.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                c.Description.Contains(q, StringComparison.OrdinalIgnoreCase));
+        foreach (var cmd in results) PaletteResults.Add(cmd);
+    }
+
     public MainViewModel(SalesforceApiService salesforceApi, LogParserService parserService, OAuthService oauthService)
     {
         _apiService = salesforceApi;
@@ -998,6 +1076,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 HasHealthData = true;
                 HealthScore = value.Health.Score;
+                AnimateHealthScore(value.Health.Score);
                 HealthGrade = value.Health.Grade;
                 HealthStatus = value.Health.Status;
                 HealthStatusIcon = value.Health.StatusIcon;
@@ -2074,6 +2153,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             StatusMessage = "Parsing log...";
             var analysis = await Task.Run(() => _parserService.ParseLog(logContent, fileName));
+            analysis.SourcePath = filePath;
             
             // Enrich with org metadata (user names, trigger locations, etc.)
             await EnrichLogWithMetadataAsync(analysis);
@@ -3190,6 +3270,154 @@ public partial class MainViewModel : ObservableObject, IDisposable
         dialog.ShowDialog();
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Toast
+    // ─────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void DismissToast() => IsToastVisible = false;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Log list sort
+    // ─────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void SortLogs(string property)
+    {
+        if (LogSortProperty == property)
+            LogSortAscending = !LogSortAscending;
+        else
+        {
+            LogSortProperty = property;
+            LogSortAscending = property != "Duration"; // Duration defaults desc
+        }
+
+        var sorted = property switch
+        {
+            "Duration" => LogSortAscending
+                ? Logs.OrderBy(l => l.DurationMs).ToList()
+                : Logs.OrderByDescending(l => l.DurationMs).ToList(),
+            "Status" => LogSortAscending
+                ? Logs.OrderBy(l => l.HasErrors).ToList()
+                : Logs.OrderByDescending(l => l.HasErrors).ToList(),
+            _ => LogSortAscending
+                ? Logs.OrderBy(l => l.ParsedAt).ToList()
+                : Logs.OrderByDescending(l => l.ParsedAt).ToList()
+        };
+
+        Logs.Clear();
+        foreach (var log in sorted) Logs.Add(log);
+        _ = ShowToastAsync($"Sorted by {property}", "info", 1500);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Log context menu
+    // ─────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void ClearSelectedLog()
+    {
+        SelectedLog = null;
+    }
+
+    [RelayCommand]
+    private void DeleteSelectedLog()
+    {
+        if (SelectedLog == null) return;
+        var name = SelectedLog.LogName;
+        Logs.Remove(SelectedLog);
+        SelectedLog = Logs.FirstOrDefault();
+        _ = ShowToastAsync($"Removed {name} from list", "info", 2000);
+    }
+
+    [RelayCommand]
+    private void CopyLogPath()
+    {
+        var path = SelectedLog?.SourcePath;
+        if (!string.IsNullOrEmpty(path))
+        {
+            Clipboard.SetText(path);
+            _ = ShowToastAsync("Path copied to clipboard", "success", 2000);
+        }
+        else
+        {
+            _ = ShowToastAsync("Path not available (log loaded from API)", "info", 2000);
+        }
+    }
+
+    [RelayCommand]
+    private void CopyLogName()
+    {
+        if (SelectedLog?.LogName != null)
+        {
+            Clipboard.SetText(SelectedLog.LogName);
+            _ = ShowToastAsync("Log name copied", "success", 1500);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenLogInExplorer()
+    {
+        var path = SelectedLog?.SourcePath;
+        if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        {
+            Process.Start("explorer.exe", $"/select,\"{path}\"");
+        }
+        else
+        {
+            _ = ShowToastAsync("File path not available", "info", 2000);
+        }
+    }
+
+    [RelayCommand]
+    private void CopyIssueFix(string fixText)
+    {
+        if (!string.IsNullOrEmpty(fixText))
+        {
+            Clipboard.SetText(fixText);
+            _ = ShowToastAsync("Fix copied to clipboard", "success", 2000);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Command Palette
+    // ─────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void ToggleCommandPalette()
+    {
+        IsCommandPaletteOpen = !IsCommandPaletteOpen;
+        if (IsCommandPaletteOpen)
+        {
+            CommandPaletteQuery = "";
+            OnCommandPaletteQueryChanged("");
+        }
+    }
+
+    [RelayCommand]
+    private void CloseCommandPalette() => IsCommandPaletteOpen = false;
+
+    [RelayCommand]
+    private void ExecutePaletteItem(PaletteCommand? item)
+    {
+        if (item == null) return;
+        IsCommandPaletteOpen = false;
+        switch (item.Action)
+        {
+            case "upload":   _ = UploadLog(); break;
+            case "folder":   _ = LoadLogFolder(); break;
+            case "download": _ = LoadRecentLogsAsync(); break;
+            case "live":     _ = ToggleStreaming(); break;
+            case "export":   ExportReport(); break;
+            case "connect":  ShowUpgradeDialog(); break;
+            case "manage":   ManageDebugLogs(); break;
+            case "tab0":     SelectTab(0); break;
+            case "tab1":     SelectTab(1); break;
+            case "tab2":     SelectTab(2); break;
+            case "tab3":     SelectTab(3); break;
+            case "tab4":     SelectTab(4); break;
+            case "sort-duration": SortLogs("Duration"); break;
+            case "sort-date":     SortLogs("Date"); break;
+            case "clear":    ClearSelectedLog(); break;
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -3331,4 +3559,15 @@ public class StreamingLogEntry
     public string Status { get; set; } = "";
     public string Insight { get; set; } = ""; // Plain English summary for non-experts
     public string InsightIcon { get; set; } = "✓"; // Icon representing the insight type
+}
+
+/// <summary>A command item shown in the Ctrl+K command palette</summary>
+public class PaletteCommand
+{
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public string Icon { get; set; }   // MDI icon key
+    public string Action { get; set; } // internal action token
+    public PaletteCommand(string title, string description, string icon, string action)
+    { Title = title; Description = description; Icon = icon; Action = action; }
 }

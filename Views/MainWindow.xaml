@@ -815,6 +815,20 @@
                                     <Setter Property="Padding" Value="0"/>
                                     <Setter Property="Margin" Value="0"/>
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <!-- Pass ViewModel to ContextMenu via Tag (PlacementTarget pattern) -->
+                                    <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                <MenuItem Header="🗑️ Remove from list" Command="{Binding DeleteSelectedLogCommand}"/>
+                                                <MenuItem Header="📋 Copy file path"    Command="{Binding CopyLogPathCommand}"/>
+                                                <MenuItem Header="✂️ Copy log name"     Command="{Binding CopyLogNameCommand}"/>
+                                                <MenuItem Header="📁 Show in Explorer"  Command="{Binding OpenLogInExplorerCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="✖ Deselect"           Command="{Binding ClearSelectedLogCommand}"/>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
@@ -1227,14 +1241,114 @@
                         </StackPanel>
 
                         <Border Background="{StaticResource BgInput}" CornerRadius="6" 
-                                Grid.Row="3" Padding="10,8" Margin="0,0,0,8"
+                                Grid.Row="3" Padding="8,6" Margin="0,0,0,8"
                                 Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}">
-                            <WrapPanel>
-                                <CheckBox Content="Reads (SOQL)" IsChecked="{Binding ShowSoqlOperations}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11" ToolTip="Database read operations (SOQL queries)"/>
-                                <CheckBox Content="Writes (DML)" IsChecked="{Binding ShowDmlOperations}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11" ToolTip="Database write operations (inserts, updates, deletes)"/>
-                                <CheckBox Content="Errors" IsChecked="{Binding ShowErrorsOnly}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11"/>
-                                <CheckBox Content="Debug" IsChecked="{Binding ShowDebugStatements}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11"/>
-                            </WrapPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <WrapPanel>
+                                    <CheckBox Content="Reads (SOQL)" IsChecked="{Binding ShowSoqlOperations}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11" ToolTip="Database read operations (SOQL queries)"/>
+                                    <CheckBox Content="Writes (DML)" IsChecked="{Binding ShowDmlOperations}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11" ToolTip="Database write operations (inserts, updates, deletes)"/>
+                                    <CheckBox Content="Errors" IsChecked="{Binding ShowErrorsOnly}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11"/>
+                                    <CheckBox Content="Debug" IsChecked="{Binding ShowDebugStatements}" Foreground="{StaticResource TextSecondary}" Margin="0,2,12,2" FontSize="11"/>
+                                </WrapPanel>
+                                <!-- Sort buttons (right side) -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                    <TextBlock Text="Sort:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <Button Command="{Binding SortLogsCommand}" CommandParameter="Date"
+                                            ToolTip="Sort by date (newest first)" Cursor="Hand"
+                                            Background="Transparent" BorderThickness="0" Padding="4,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarToday" Width="11" Height="11" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Date">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Text="Date" FontSize="10" Margin="3,0,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Date">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding SortLogsCommand}" CommandParameter="Duration"
+                                            ToolTip="Sort by execution time (slowest first)" Cursor="Hand"
+                                            Background="Transparent" BorderThickness="0" Padding="4,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Timer" Width="11" Height="11" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Duration">
+                                                                <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Text="Speed" FontSize="10" Margin="3,0,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Duration">
+                                                                <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding SortLogsCommand}" CommandParameter="Status"
+                                            ToolTip="Sort by status (errors first)" Cursor="Hand"
+                                            Background="Transparent" BorderThickness="0" Padding="4,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="AlertCircle" Width="11" Height="11" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Status">
+                                                                <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Text="Errors" FontSize="10" Margin="3,0,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LogSortProperty}" Value="Status">
+                                                                <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
                         </Border>
                         
                         <!-- Live Streaming Panel (shown when streaming) -->
@@ -1984,6 +2098,24 @@
                                 </ScrollViewer>
                             </Border>
 
+                            <!-- Skeleton Loader (shown while log is being parsed) -->
+                            <Border Panel.ZIndex="10" Background="{StaticResource BgPrimary}" CornerRadius="8"
+                                    Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel Margin="24" VerticalAlignment="Top">
+                                    <Rectangle Height="48" Style="{StaticResource SkeletonLoader}" Margin="0,0,0,12"/>
+                                    <Rectangle Height="24" Width="200" HorizontalAlignment="Left" Style="{StaticResource SkeletonLoader}" Margin="0,0,0,8"/>
+                                    <UniformGrid Columns="4" Margin="0,0,0,12">
+                                        <Rectangle Height="80" Style="{StaticResource SkeletonLoader}" Margin="0,0,8,0"/>
+                                        <Rectangle Height="80" Style="{StaticResource SkeletonLoader}" Margin="0,0,8,0"/>
+                                        <Rectangle Height="80" Style="{StaticResource SkeletonLoader}" Margin="0,0,8,0"/>
+                                        <Rectangle Height="80" Style="{StaticResource SkeletonLoader}"/>
+                                    </UniformGrid>
+                                    <Rectangle Height="120" Style="{StaticResource SkeletonLoader}" Margin="0,0,0,12"/>
+                                    <Rectangle Height="80" Style="{StaticResource SkeletonLoader}" Margin="0,0,0,8"/>
+                                    <Rectangle Height="80" Style="{StaticResource SkeletonLoader}"/>
+                                </StackPanel>
+                            </Border>
+
                             <!-- First-Log Onboarding Tour Overlay (shown on first analysis, dismissed to settings) -->
                             <Border Background="#CC000000" Panel.ZIndex="9"
                                     Visibility="{Binding ShowOnboardingTour, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -2545,9 +2677,9 @@
                                                 <!-- Background ring -->
                                                 <Ellipse Width="140" Height="140" Stroke="{StaticResource BorderDefault}" StrokeThickness="10"/>
 
-                                                <!-- Foreground arc -->
+                                                <!-- Foreground arc (animated 0 → score on load) -->
                                                 <Path StrokeThickness="10" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                                      Data="{Binding HealthScore, Converter={StaticResource ArcPathConverter}}"
+                                                      Data="{Binding AnimatedHealthScore, Converter={StaticResource ArcPathConverter}}"
                                                       Stroke="{Binding HealthScore, Converter={StaticResource HealthScoreToColorConverter}}">
                                                     <Path.Triggers>
                                                         <EventTrigger RoutedEvent="Loaded">
@@ -2794,15 +2926,32 @@
                                                                 
                                                                 <!-- Fix Recommendation -->
                                                                 <Border Grid.Row="3" Background="{StaticResource BgHover}" CornerRadius="4" Padding="12">
-                                                                    <StackPanel>
-                                                                        <TextBlock Text="💡 How to Fix:" FontSize="12" Foreground="{StaticResource Success}" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                                                                        <TextBlock Text="{Binding Fix}" FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" LineHeight="20"/>
-                                                                        <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
-                                                                                   Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                                                        <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
-                                                                            <Run Text="⏱️ Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
-                                                                        </TextBlock>
-                                                                    </StackPanel>
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="💡 How to Fix:" FontSize="12" Foreground="{StaticResource Success}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                                                            <TextBlock Text="{Binding Fix}" FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" LineHeight="20"/>
+                                                                            <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                                                       Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                                            <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
+                                                                                <Run Text="⏱️ Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+                                                                        <Button Grid.Column="1" VerticalAlignment="Top" Margin="8,0,0,0"
+                                                                                Command="{Binding DataContext.CopyIssueFixCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                CommandParameter="{Binding Fix}"
+                                                                                ToolTip="Copy fix recommendation to clipboard"
+                                                                                Background="{StaticResource SuccessSubtle}" BorderThickness="0"
+                                                                                Padding="6,4" Cursor="Hand">
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <materialDesign:PackIcon Kind="ContentCopy" Width="12" Height="12" VerticalAlignment="Center" Foreground="{StaticResource Success}"/>
+                                                                                <TextBlock Text="Copy Fix" FontSize="10" Foreground="{StaticResource Success}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </Grid>
                                                                 </Border>
                                                             </Grid>
                                                         </Border>
@@ -2870,15 +3019,32 @@
                                                                 
                                                                 <!-- Fix Recommendation -->
                                                                 <Border Grid.Row="3" Background="{StaticResource BgHover}" CornerRadius="4" Padding="12">
-                                                                    <StackPanel>
-                                                                        <TextBlock Text="💡 How to Fix:" FontSize="12" Foreground="{StaticResource Success}" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                                                                        <TextBlock Text="{Binding Fix}" FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" LineHeight="20"/>
-                                                                        <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
-                                                                                   Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                                                        <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
-                                                                            <Run Text="⏱️ Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
-                                                                        </TextBlock>
-                                                                    </StackPanel>
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="💡 How to Fix:" FontSize="12" Foreground="{StaticResource Success}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                                                            <TextBlock Text="{Binding Fix}" FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" LineHeight="20"/>
+                                                                            <TextBlock Text="{Binding CodeExample}" FontSize="11" Foreground="{StaticResource Info}" FontFamily="Consolas" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                                                       Visibility="{Binding CodeExample, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                                            <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
+                                                                                <Run Text="⏱️ Estimated fix time: "/><Run Text="{Binding EstimatedFixTimeMinutes, Mode=OneWay}"/><Run Text=" minutes"/>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+                                                                        <Button Grid.Column="1" VerticalAlignment="Top" Margin="8,0,0,0"
+                                                                                Command="{Binding DataContext.CopyIssueFixCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                CommandParameter="{Binding Fix}"
+                                                                                ToolTip="Copy fix recommendation to clipboard"
+                                                                                Background="{StaticResource SuccessSubtle}" BorderThickness="0"
+                                                                                Padding="6,4" Cursor="Hand">
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <materialDesign:PackIcon Kind="ContentCopy" Width="12" Height="12" VerticalAlignment="Center" Foreground="{StaticResource Success}"/>
+                                                                                <TextBlock Text="Copy Fix" FontSize="10" Foreground="{StaticResource Success}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </Grid>
                                                                 </Border>
                                                             </Grid>
                                                         </Border>
@@ -4870,6 +5036,153 @@
                     <TextBlock Text="Black Widow v1.0" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- ===== TOAST NOTIFICATION (floating top-right, auto-dismiss) ===== -->
+        <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,60,24,0" MaxWidth="380" Panel.ZIndex="99"
+                Visibility="{Binding IsToastVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                CornerRadius="8" BorderThickness="1">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="{StaticResource BgSecondary}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ToastType}" Value="success">
+                            <Setter Property="BorderBrush" Value="{StaticResource Success}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ToastType}" Value="error">
+                            <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ToastType}" Value="warning">
+                            <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Colored left accent bar -->
+                <Border Grid.Column="0" CornerRadius="8,0,0,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ToastType}" Value="success">
+                                    <Setter Property="Background" Value="{StaticResource Success}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ToastType}" Value="error">
+                                    <Setter Property="Background" Value="{StaticResource Danger}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ToastType}" Value="warning">
+                                    <Setter Property="Background" Value="{StaticResource Warning}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+                <!-- Message -->
+                <TextBlock Grid.Column="1" Text="{Binding ToastMessage}" Padding="12,10"
+                           FontSize="13" Foreground="{StaticResource TextPrimary}"
+                           VerticalAlignment="Center" TextWrapping="Wrap"/>
+                <!-- Dismiss button -->
+                <Button Grid.Column="2" Command="{Binding DismissToastCommand}"
+                        Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand"
+                        VerticalAlignment="Center" Margin="0,0,6,0">
+                    <materialDesign:PackIcon Kind="Close" Width="14" Height="14"
+                                             Foreground="{StaticResource TextMuted}"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ===== COMMAND PALETTE (Ctrl+K) ===== -->
+        <Border Background="#AA000000" Panel.ZIndex="100"
+                Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
+                MouseDown="CommandPaletteBackdrop_MouseDown">
+            <Border Background="{StaticResource BgSecondary}" CornerRadius="12"
+                    Width="620" MaxHeight="520" VerticalAlignment="Top" Margin="0,80,0,0"
+                    BorderBrush="{StaticResource AccentPrimary}" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <!-- Search box -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,1" Padding="14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Kind="Magnify" Width="18" Height="18"
+                                                     Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBox Grid.Column="1" x:Name="CommandPaletteBox"
+                                     Text="{Binding CommandPaletteQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent" BorderThickness="0"
+                                     FontSize="14" Foreground="{StaticResource TextPrimary}"
+                                     Padding="0" CaretBrush="{StaticResource AccentPrimary}"
+                                     TextChanged="CommandPaletteBox_TextChanged"
+                                     KeyDown="CommandPaletteBox_KeyDown"
+                                     VerticalContentAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <!-- Results list -->
+                    <ListBox Grid.Row="1" x:Name="PaletteResultsList"
+                             ItemsSource="{Binding PaletteResults}"
+                             Background="Transparent" BorderThickness="0"
+                             MaxHeight="380" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="14,10"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentSubtle}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Kind="{Binding Icon}" Width="16" Height="16"
+                                                             Foreground="{StaticResource AccentPrimary}"
+                                                             VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Title}" FontSize="13" Foreground="{StaticResource TextPrimary}" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <!-- Keyboard hints -->
+                    <Border Grid.Row="2" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,1,0,0" Padding="14,8">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                <Run Text="↵ run"/> <Run Text=" ·  " Foreground="{StaticResource BorderDefault}"/>
+                                <Run Text="↑↓ navigate"/> <Run Text=" ·  " Foreground="{StaticResource BorderDefault}"/>
+                                <Run Text="Esc close"/> <Run Text=" ·  " Foreground="{StaticResource BorderDefault}"/>
+                                <Run Text="Ctrl+K toggle"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
         </Border>
 
     </Grid>
