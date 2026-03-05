@@ -70,46 +70,39 @@ public partial class App : Application
 
     private void OnShowWindowRequested(object? sender, EventArgs e)
     {
-        Dispatcher.BeginInvoke(() =>
+        // Events are already marshaled to the WPF dispatcher by SystemTrayService.
+        if (MainWindow == null)
         {
-            if (MainWindow == null)
-            {
-                var mainWindow = new MainWindow();
-                mainWindow.SetTrayService(_trayService!);
-                MainWindow = mainWindow;
-            }
+            var mainWindow = new MainWindow();
+            mainWindow.SetTrayService(_trayService!);
+            MainWindow = mainWindow;
+        }
 
-            MainWindow.Show();
-            MainWindow.WindowState = WindowState.Normal;
-            MainWindow.Activate();
-        });
+        MainWindow.Show();
+        MainWindow.WindowState = WindowState.Normal;
+        MainWindow.Activate();
     }
 
     private void OnExitRequested(object? sender, EventArgs e)
     {
-        Dispatcher.BeginInvoke(() =>
-        {
-            // Disable tray-minimize so Close() actually closes
-            if (MainWindow is MainWindow mw)
-                mw.ForceClose = true;
+        // Events are already marshaled to the WPF dispatcher by SystemTrayService.
+        if (MainWindow is MainWindow mw)
+            mw.ForceClose = true;
 
-            _trayService?.Dispose();
-            _trayService = null;
+        _trayService?.Dispose();
+        _trayService = null;
 
-            Shutdown();
-        });
+        Shutdown();
     }
 
     private void OnMonitoringToggled(object? sender, bool active)
     {
-        Dispatcher.BeginInvoke(() =>
+        // Events are already marshaled to the WPF dispatcher by SystemTrayService.
+        if (MainWindow?.DataContext is ViewModels.MainViewModel vm)
         {
-            if (MainWindow?.DataContext is ViewModels.MainViewModel vm)
-            {
-                if (vm.ToggleMonitoringCommand.CanExecute(null))
-                    vm.ToggleMonitoringCommand.Execute(null);
-            }
-        });
+            if (vm.ToggleMonitoringCommand.CanExecute(null))
+                vm.ToggleMonitoringCommand.Execute(null);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

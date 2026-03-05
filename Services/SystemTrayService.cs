@@ -1,12 +1,14 @@
 using Serilog;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Windows.Threading;
 
 namespace SalesforceDebugAnalyzer.Services;
 
 /// <summary>
 /// Manages a Windows system tray icon with context menu for background monitoring.
-/// Uses System.Windows.Forms.NotifyIcon for tray functionality.
+/// NotifyIcon + ContextMenuStrip require their own WinForms STA thread message pump;
+/// running them on the WPF UI thread causes right-click context menu deadlocks.
 /// </summary>
 public class SystemTrayService : IDisposable
 {
@@ -17,6 +19,11 @@ public class SystemTrayService : IDisposable
     private bool _isMonitoringActive;
     private int _alertCount;
 
+    // Captured once on the WPF UI thread; used to marshal events back to WPF.
+    private Dispatcher? _wpfDispatcher;
+    // SynchronizationContext of the dedicated tray thread; used to post UI updates to it.
+    private SynchronizationContext? _trayContext;
+
     public event EventHandler? ShowWindowRequested;
     public event EventHandler? ExitRequested;
     public event EventHandler<bool>? MonitoringToggled;
@@ -24,15 +31,51 @@ public class SystemTrayService : IDisposable
 
     public void Initialize()
     {
-        _notifyIcon = new NotifyIcon
-        {
-            Icon = CreateTrayIcon(),
-            Text = "Black Widow — Salesforce Monitor",
-            Visible = true,
-            ContextMenuStrip = CreateContextMenu()
-        };
+        // Capture the WPF dispatcher on the calling (WPF UI) thread.
+        _wpfDispatcher = Dispatcher.CurrentDispatcher;
 
-        _notifyIcon.DoubleClick += (_, _) => ShowWindowRequested?.Invoke(this, EventArgs.Empty);
+        var ready = new ManualResetEventSlim(false);
+
+        var trayThread = new Thread(() =>
+        {
+            System.Windows.Forms.Application.EnableVisualStyles();
+
+            // Capture a WindowsFormsSynchronizationContext so other threads can
+            // post work back onto this message pump.
+            _trayContext = new WindowsFormsSynchronizationContext();
+            SynchronizationContext.SetSynchronizationContext(_trayContext);
+
+            _notifyIcon = new NotifyIcon
+            {
+                Icon = CreateTrayIcon(),
+                Text = "Black Widow — Salesforce Monitor",
+                Visible = true,
+                ContextMenuStrip = CreateContextMenu()
+            };
+
+            _notifyIcon.DoubleClick += (_, _) =>
+                _wpfDispatcher.BeginInvoke(() => ShowWindowRequested?.Invoke(this, EventArgs.Empty));
+
+            ready.Set();
+
+            // Run a WinForms message pump on this thread so the tray icon
+            // and its ContextMenuStrip receive and process Windows messages.
+            System.Windows.Forms.Application.Run();
+        });
+
+        trayThread.SetApartmentState(ApartmentState.STA);
+        trayThread.IsBackground = true;
+        trayThread.Name = "TrayIconThread";
+        trayThread.Start();
+
+        // Wait until the tray icon is fully set up before returning.
+        ready.Wait(TimeSpan.FromSeconds(5));
+    }
+
+    // Posts an action onto the tray thread's message pump.
+    private void PostToTray(Action action)
+    {
+        _trayContext?.Post(_ => action(), null);
     }
 
     /// <summary>
@@ -89,7 +132,8 @@ public class SystemTrayService : IDisposable
 
         var showItem = new ToolStripMenuItem("Show Black Widow");
         showItem.Font = new Font(menu.Font, FontStyle.Bold);
-        showItem.Click += (_, _) => ShowWindowRequested?.Invoke(this, EventArgs.Empty);
+        showItem.Click += (_, _) =>
+            _wpfDispatcher?.BeginInvoke(() => ShowWindowRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(showItem);
 
         menu.Items.Add(new ToolStripSeparator());
@@ -99,18 +143,21 @@ public class SystemTrayService : IDisposable
         {
             _isMonitoringActive = !_isMonitoringActive;
             UpdateMonitoringDisplay();
-            MonitoringToggled?.Invoke(this, _isMonitoringActive);
+            var active = _isMonitoringActive;
+            _wpfDispatcher?.BeginInvoke(() => MonitoringToggled?.Invoke(this, active));
         };
         menu.Items.Add(_monitoringMenuItem);
 
         _alertsMenuItem = new ToolStripMenuItem("Alerts (0)");
-        _alertsMenuItem.Click += (_, _) => AlertCenterRequested?.Invoke(this, EventArgs.Empty);
+        _alertsMenuItem.Click += (_, _) =>
+            _wpfDispatcher?.BeginInvoke(() => AlertCenterRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(_alertsMenuItem);
 
         menu.Items.Add(new ToolStripSeparator());
 
         var exitItem = new ToolStripMenuItem("Exit Black Widow");
-        exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
+        exitItem.Click += (_, _) =>
+            _wpfDispatcher?.BeginInvoke(() => ExitRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(exitItem);
 
         return menu;
@@ -122,7 +169,7 @@ public class SystemTrayService : IDisposable
     public void SetMonitoringActive(bool active)
     {
         _isMonitoringActive = active;
-        UpdateMonitoringDisplay();
+        PostToTray(UpdateMonitoringDisplay);
     }
 
     /// <summary>
@@ -131,11 +178,12 @@ public class SystemTrayService : IDisposable
     public void SetAlertCount(int count)
     {
         _alertCount = count;
-        if (_alertsMenuItem != null)
+        PostToTray(() =>
         {
-            _alertsMenuItem.Text = count > 0 ? $"Alerts ({count})" : "Alerts (0)";
-        }
-        UpdateTooltip();
+            if (_alertsMenuItem != null)
+                _alertsMenuItem.Text = count > 0 ? $"Alerts ({count})" : "Alerts (0)";
+            UpdateTooltip();
+        });
     }
 
     /// <summary>
@@ -143,7 +191,7 @@ public class SystemTrayService : IDisposable
     /// </summary>
     public void ShowBalloonTip(string title, string text, ToolTipIcon icon = ToolTipIcon.Info, int timeoutMs = 5000)
     {
-        _notifyIcon?.ShowBalloonTip(timeoutMs, title, text, icon);
+        PostToTray(() => _notifyIcon?.ShowBalloonTip(timeoutMs, title, text, icon));
     }
 
     private void UpdateMonitoringDisplay()
@@ -173,11 +221,15 @@ public class SystemTrayService : IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        if (_notifyIcon != null)
+        PostToTray(() =>
         {
-            _notifyIcon.Visible = false;
-            _notifyIcon.Dispose();
-            _notifyIcon = null;
-        }
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = false;
+                _notifyIcon.Dispose();
+                _notifyIcon = null;
+            }
+            System.Windows.Forms.Application.ExitThread();
+        });
     }
 }
