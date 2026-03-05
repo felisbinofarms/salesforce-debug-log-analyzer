@@ -1,86 +1,77 @@
-﻿namespace SalesforceDebugAnalyzer.Models;
+namespace SalesforceDebugAnalyzer.Models;
 
 /// <summary>
-/// License tiers available in Black Widow
+/// License tier (Free, Pro, Team, Enterprise)
 /// </summary>
 public enum LicenseTier
 {
     Free,
-    Trial,     // 14-day free trial, full Pro features
-    Pro,       // $29/month
-    Team,      // $99/month (5 users)
-    Enterprise // Contact sales
+    Trial,
+    Pro,
+    Team,
+    Enterprise
 }
 
 /// <summary>
-/// Features that are gated behind Pro/Team tier
+/// Current license status
+/// </summary>
+public enum LicenseStatus
+{
+    Active,      // Valid and within date
+    Trial,       // Free trial active
+    Expired,     // Past expiration date
+    Invalid,     // Signature/format invalid
+    Offline,     // Couldn't validate online, using grace period
+    Revoked      // Manually revoked
+}
+
+/// <summary>
+/// Features that can be gated by license tier
 /// </summary>
 public enum LicenseFeature
 {
-    /// <summary>Group related logs from a single user action into a transaction</summary>
-    TransactionGrouping,
-
-    /// <summary>Analyze log files larger than 30MB</summary>
     UnlimitedFileSize,
-
-    /// <summary>Real-time log streaming via Salesforce CLI</summary>
     LiveStreaming,
-
-    /// <summary>Export governance reports to PDF</summary>
-    ReportExport,
-
-    /// <summary>VSCode editor bridge integration</summary>
-    EditorBridge,
-
-    /// <summary>Team collaboration features (comments, assignments)</summary>
-    TeamFeatures
+    TransactionGrouping,
+    FolderImport,
+    ExportReports,
+    MarketplaceSubmit
 }
 
 /// <summary>
-/// The locally-stored license record (AES-256 encrypted on disk)
+/// License information stored locally (encrypted)
 /// </summary>
-public class LicenseInfo
+public class License
 {
+    public string LicenseKey { get; set; } = string.Empty;
     public LicenseTier Tier { get; set; } = LicenseTier.Free;
-    public string? LicenseKey { get; set; }
-    public string? Email { get; set; }
-
-    /// <summary>When a paid license expires (null = never for active subscriptions)</summary>
-    public DateTime? ExpiresAt { get; set; }
-
-    /// <summary>When the 14-day trial started (null if not on Trial tier)</summary>
-    public DateTime? TrialStartedAt { get; set; }
-
-    /// <summary>Last time we successfully validated with the API (used for 30-day check + grace period)</summary>
-    public DateTime LastValidatedAt { get; set; } = DateTime.MinValue;
-
-    /// <summary>Device fingerprint at time of activation (for 2-device enforcement)</summary>
-    public string? DeviceFingerprint { get; set; }
-
-    public bool IsValid { get; set; }
+    public LicenseStatus Status { get; set; } = LicenseStatus.Active;
+    public string Email { get; set; } = string.Empty;
+    public DateTime IssuedDate { get; set; }
+    public DateTime ExpiresDate { get; set; }
+    public DateTime LastValidated { get; set; }
+    public bool IsTrialLicense { get; set; }
+    public int MaxDevices { get; set; } = 1;
+    public string DeviceFingerprint { get; set; } = string.Empty;
+    public int DaysUntilExpiration => (ExpiresDate - DateTime.UtcNow).Days;
+    
+    // Feature flags based on tier
+    public bool CanGroupTransactions => Tier != LicenseTier.Free;
+    public bool CanUseCliStreaming => Tier != LicenseTier.Free;
+    public bool CanExportReports => Tier != LicenseTier.Free;
+    public bool CanSubmitToMarketplace => Tier != LicenseTier.Free;
+    public int MaxLogSizeMB => Tier == LicenseTier.Free ? 30 : int.MaxValue;
+    
+    // Validation helpers
+    public bool IsExpired => DateTime.UtcNow > ExpiresDate;
+    public bool NeedsOnlineValidation => (DateTime.UtcNow - LastValidated).Days >= 30;
+    public bool InGracePeriod => Status == LicenseStatus.Offline && (DateTime.UtcNow - LastValidated).Days <= 7;
 }
 
-/// <summary>
-/// Result returned from validation operations
-/// </summary>
+/// <summary>Result returned by LicenseService.RevalidateIfNeededAsync()</summary>
 public class LicenseValidationResult
 {
     public bool IsValid { get; set; }
-    public LicenseTier Tier { get; set; }
-    public DateTime? ExpiresAt { get; set; }
-    public string? ErrorMessage { get; set; }
-
-    /// <summary>True when network was unreachable but we're within the 7-day offline grace period</summary>
     public bool IsOfflineGracePeriod { get; set; }
-}
-
-/// <summary>
-/// DTO for API responses from the Black Widow license server
-/// </summary>
-internal class ValidationApiResponse
-{
-    public bool IsValid { get; set; }
-    public string Tier { get; set; } = "Free";
-    public DateTime? ExpiresAt { get; set; }
-    public string? Message { get; set; }
+    public string? ErrorMessage { get; set; }
 }

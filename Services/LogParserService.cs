@@ -10,6 +10,8 @@ public class LogParserService
 {
     private static readonly Regex LogLinePattern = new(@"^(\d{2}:\d{2}:\d{2}\.\d+)\s+\((\d+)\)\|([A-Z_]+)\|(.*)$", RegexOptions.Compiled);
     private static readonly Regex LimitPattern = new(@"Number of (\w+(?:\s+\w+)*?):\s*(\d+)\s+out of\s+(\d+)", RegexOptions.Compiled);
+    
+    private readonly LogExplainerService _explainer = new();
 
     /// <summary>
     /// Parse a complete debug log into structured analysis
@@ -167,6 +169,10 @@ public class LogParserService
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
         analysis.Recommendations = GenerateRecommendations(analysis);
+        
+        // NEW: Generate detailed, educational explanations with code examples
+        analysis.DetailedSummary = _explainer.GenerateDetailedSummary(analysis);
+        analysis.DetailedIssues = _explainer.GenerateDetailedIssues(analysis);
         
         // Phase 12: Build order of execution timeline
         analysis.Timeline = BuildExecutionTimeline(logLines, analysis);
