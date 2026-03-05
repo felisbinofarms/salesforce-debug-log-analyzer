@@ -42,29 +42,35 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        // Load settings
-        _settingsService = new SettingsService();
-        var settings = _settingsService.Load();
-
-        // Initialize system tray
-        _trayService = new SystemTrayService();
-        _trayService.Initialize();
-        _trayService.ShowWindowRequested += OnShowWindowRequested;
-        _trayService.ExitRequested += OnExitRequested;
-        _trayService.MonitoringToggled += OnMonitoringToggled;
-
-        // Create and show main window (unless StartMinimized)
-        var mainWindow = new MainWindow();
-        mainWindow.SetTrayService(_trayService);
-        MainWindow = mainWindow;
-
-        if (settings.StartMinimized)
+        try
         {
-            Log.Information("Starting minimized to tray");
-        }
-        else
-        {
+            _settingsService = new SettingsService();
+            var settings = _settingsService.Load();
+
+            // Initialize system tray
+            _trayService = new SystemTrayService();
+            _trayService.Initialize();
+            _trayService.ShowWindowRequested += OnShowWindowRequested;
+            _trayService.ExitRequested += OnExitRequested;
+            _trayService.MonitoringToggled += OnMonitoringToggled;
+
+            // Create and show main window
+            var mainWindow = new MainWindow();
+            mainWindow.SetTrayService(_trayService);
+            MainWindow = mainWindow;
             mainWindow.Show();
+
+            if (settings.StartMinimized)
+            {
+                Log.Information("Starting minimized to tray");
+                mainWindow.Hide();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "FATAL: Exception during Application_Startup");
+            Log.CloseAndFlush();
+            throw;
         }
     }
 
@@ -155,8 +161,31 @@ public partial class App : Application
 
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
+        // Build full exception detail including inner exceptions
+        var sb = new System.Text.StringBuilder();
+        var ex = e.Exception;
+        int depth = 0;
+        while (ex != null)
+        {
+            sb.AppendLine($"[{depth++}] {ex.GetType().Name}: {ex.Message}");
+            sb.AppendLine(ex.StackTrace);
+            ex = ex.InnerException;
+        }
+        var detail = sb.ToString();
+
+        // Write to a crash file so it survives even if UI is broken
+        try
+        {
+            var crashPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "SalesforceDebugAnalyzer", "crash.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(crashPath)!);
+            File.WriteAllText(crashPath, detail);
+        }
+        catch { /* best-effort */ }
+
         Log.Error(e.Exception, "Unhandled UI exception occurred");
-        MessageBox.Show($"An error occurred: {e.Exception.Message}\n\nCheck logs for details.",
+        MessageBox.Show($"An error occurred:\n\n{detail}\n\nCheck logs for details.",
             "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
     }

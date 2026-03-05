@@ -41,7 +41,7 @@ public class LicenseService
             return _currentLicense;
         
         // Try to load from disk
-        _currentLicense = await LoadLicenseFromDiskAsync();
+        _currentLicense = await LoadLicenseFromDiskAsync().ConfigureAwait(false);
         
         // If no license, create free tier default
         if (_currentLicense == null)
@@ -57,7 +57,7 @@ public class LicenseService
                 Email = "free@user.local",
                 DeviceFingerprint = GenerateDeviceFingerprint()
             };
-            await SaveLicenseToDiskAsync(_currentLicense);
+            await SaveLicenseToDiskAsync(_currentLicense).ConfigureAwait(false);
         }
         
         // Check if validation needed
@@ -74,7 +74,7 @@ public class LicenseService
     /// </summary>
     public async Task<bool> CanUseProFeatureAsync(string featureName)
     {
-        var license = await GetCurrentLicenseAsync();
+        var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
         
         // Free tier can't use Pro features
         if (license.Tier == LicenseTier.Free)
@@ -129,7 +129,7 @@ public class LicenseService
             };
             
             // Save to disk
-            await SaveLicenseToDiskAsync(license);
+            await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
             _currentLicense = license;
             
             return (true, $"Pro trial activated! Expires {license.ExpiresDate:MMM dd, yyyy}");
@@ -145,7 +145,7 @@ public class LicenseService
     /// </summary>
     public async Task<LicenseStatus> ValidateOnlineAsync()
     {
-        var license = await GetCurrentLicenseAsync();
+        var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
         
         if (license.Tier == LicenseTier.Free)
         {
@@ -160,13 +160,13 @@ public class LicenseService
             // Response: { valid, tier, expiresDate, message }
             
             // For now, simulate with a delay
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
             
             // Update last validated timestamp
             license.LastValidated = DateTime.UtcNow;
             license.Status = license.IsExpired ? LicenseStatus.Expired : LicenseStatus.Active;
             
-            await SaveLicenseToDiskAsync(license);
+            await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
             _currentLicense = license;
             
             return license.Status;
@@ -215,7 +215,7 @@ public class LicenseService
     /// </summary>
     public async Task<(bool Success, string Message)> StartTrialAsync(string email)
     {
-        var currentLicense = await GetCurrentLicenseAsync();
+        var currentLicense = await GetCurrentLicenseAsync().ConfigureAwait(false);
         
         // Already on trial or paid
         if (currentLicense.Tier != LicenseTier.Free)
@@ -226,7 +226,7 @@ public class LicenseService
         // Generate trial license key
         var trialKey = $"TRIAL-{Guid.NewGuid():N}";
         
-        return await ApplyLicenseAsync(trialKey, email);
+        return await ApplyLicenseAsync(trialKey, email).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -286,13 +286,13 @@ public class LicenseService
     {
         try
         {
-            var license = await GetCurrentLicenseAsync();
+            var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
             if (license.Tier == LicenseTier.Free)
                 return new LicenseValidationResult { IsValid = true };
             if (!license.NeedsOnlineValidation)
                 return new LicenseValidationResult { IsValid = true };
 
-            var status = await ValidateOnlineAsync();
+            var status = await ValidateOnlineAsync().ConfigureAwait(false);
             return new LicenseValidationResult
             {
                 IsValid = status == LicenseStatus.Active || status == LicenseStatus.Trial,
@@ -317,7 +317,7 @@ public class LicenseService
         
         try
         {
-            var encryptedBytes = await File.ReadAllBytesAsync(_licensePath);
+            var encryptedBytes = await File.ReadAllBytesAsync(_licensePath).ConfigureAwait(false);
             var decryptedJson = DecryptData(encryptedBytes);
             return JsonSerializer.Deserialize<License>(decryptedJson);
         }
@@ -338,7 +338,7 @@ public class LicenseService
                 WriteIndented = true 
             });
             var encryptedBytes = EncryptData(json);
-            await File.WriteAllBytesAsync(_licensePath, encryptedBytes);
+            await File.WriteAllBytesAsync(_licensePath, encryptedBytes).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
