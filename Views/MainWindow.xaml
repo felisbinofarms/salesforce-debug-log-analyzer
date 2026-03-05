@@ -2293,7 +2293,7 @@
                                                                     <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding HeroStatus}" Value="TEST">
-                                                                    <Setter Property="Kind" Value="TestTubeOutline"/>
+                                                                    <Setter Property="Kind" Value="TestTube"/>
                                                                     <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
