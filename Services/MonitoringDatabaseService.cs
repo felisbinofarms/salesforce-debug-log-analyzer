@@ -162,7 +162,9 @@ public class MonitoringDatabaseService : IDisposable
                     dismissed_at     TEXT,
                     action_taken     TEXT,
                     related_log_id   TEXT,
-                    notified_via     TEXT
+                    notified_via     TEXT,
+                    user_feedback    TEXT,
+                    feedback_at      TEXT
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_alerts_org_time
@@ -791,6 +793,32 @@ public class MonitoringDatabaseService : IDisposable
     }
 
     /// <summary>
+    /// Update user feedback for an alert (accurate or false_alarm).
+    /// </summary>
+    public async Task UpdateAlertFeedbackAsync(long alertId, string feedback)
+    {
+        await _writeLock.WaitAsync();
+        try
+        {
+            using var connection = new SqliteConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE alerts SET user_feedback = @feedback, feedback_at = @feedbackAt
+                WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", alertId);
+            cmd.Parameters.AddWithValue("@feedback", feedback);
+            cmd.Parameters.AddWithValue("@feedbackAt", DateTime.UtcNow.ToString("O"));
+            await cmd.ExecuteNonQueryAsync();
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    /// <summary>
     /// Mark all alerts as read.
     /// </summary>
     public async Task MarkAllReadAsync()
@@ -1115,7 +1143,9 @@ public class MonitoringDatabaseService : IDisposable
             DismissedAt = reader.IsDBNull(reader.GetOrdinal("dismissed_at")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("dismissed_at")), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind),
             ActionTaken = reader.IsDBNull(reader.GetOrdinal("action_taken")) ? null : reader.GetString(reader.GetOrdinal("action_taken")),
             RelatedLogId = reader.IsDBNull(reader.GetOrdinal("related_log_id")) ? null : reader.GetString(reader.GetOrdinal("related_log_id")),
-            NotifiedVia = reader.IsDBNull(reader.GetOrdinal("notified_via")) ? null : reader.GetString(reader.GetOrdinal("notified_via"))
+            NotifiedVia = reader.IsDBNull(reader.GetOrdinal("notified_via")) ? null : reader.GetString(reader.GetOrdinal("notified_via")),
+            UserFeedback = reader.IsDBNull(reader.GetOrdinal("user_feedback")) ? null : reader.GetString(reader.GetOrdinal("user_feedback")),
+            FeedbackAt = reader.IsDBNull(reader.GetOrdinal("feedback_at")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("feedback_at")), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind)
         };
     }
 

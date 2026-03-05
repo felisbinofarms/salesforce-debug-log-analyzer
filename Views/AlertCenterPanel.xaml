@@ -63,7 +63,19 @@
                             <Border Background="{StaticResource BgTertiary}" CornerRadius="8"
                                     Margin="4,3" Padding="12,10"
                                     BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
-                                    Opacity="{Binding Opacity}">
+                                    Opacity="{Binding Opacity}"
+                                    Cursor="Hand"
+                                    MouseDown="AlertItem_MouseDown"
+                                    Tag="{Binding}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="4"/>

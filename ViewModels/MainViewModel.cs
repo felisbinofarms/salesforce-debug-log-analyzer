@@ -938,6 +938,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>
+    /// Submit user feedback for an alert (accurate or false_alarm).
+    /// </summary>
+    public async Task SubmitAlertFeedback(long alertId, string feedback)
+    {
+        if (_monitoringDb == null) return;
+        try
+        {
+            await _monitoringDb.UpdateAlertFeedbackAsync(alertId, feedback);
+            var alert = MonitoringAlerts.FirstOrDefault(a => a.Id == alertId);
+            if (alert != null)
+            {
+                alert.UserFeedback = feedback;
+                alert.FeedbackAt = DateTime.UtcNow;
+            }
+            Log.Information("User feedback submitted for alert {AlertId}: {Feedback}", alertId, feedback);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to submit feedback for alert {AlertId}", alertId);
+            throw;
+        }
+    }
+
     partial void OnSelectedLogChanged(LogAnalysis? value)
     {
         if (value != null)

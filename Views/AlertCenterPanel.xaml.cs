@@ -49,6 +49,19 @@ public partial class AlertCenterPanel : UserControl
             _viewModel.ShowAlertCenter = false;
     }
 
+    private void AlertItem_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border border && border.Tag is MonitoringAlert alert && _viewModel != null)
+        {
+            var dialog = new AlertDetailDialog(alert, _viewModel)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.ShowDialog();
+            RefreshAlerts(); // Refresh in case feedback was submitted
+        }
+    }
+
     private void MarkAllRead_Click(object sender, RoutedEventArgs e)
     {
         _viewModel?.MarkAllAlertsReadCommand.Execute(null);

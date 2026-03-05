@@ -145,6 +145,9 @@ public class MonitoringAlert
     public string? ActionTaken { get; set; }
     public string? RelatedLogId { get; set; }
     public string? NotifiedVia { get; set; }
+    public string? UserFeedback { get; set; } // "accurate" or "false_alarm"
+    public DateTime? FeedbackAt { get; set; }
+    public double Opacity => IsRead ? 0.7 : 1.0;
 
     /// <summary>
     /// Severity color indicator for UI.
