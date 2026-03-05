@@ -70,17 +70,33 @@ public partial class App : Application
 
     private void OnShowWindowRequested(object? sender, EventArgs e)
     {
-        // Events are already marshaled to the WPF dispatcher by SystemTrayService.
-        if (MainWindow == null)
+        // Re-create the window if it was actually closed (not just hidden).
+        if (MainWindow is not MainWindow mw || !mw.IsLoaded)
         {
-            var mainWindow = new MainWindow();
-            mainWindow.SetTrayService(_trayService!);
-            MainWindow = mainWindow;
+            var newWindow = new MainWindow();
+            newWindow.SetTrayService(_trayService!);
+            MainWindow = newWindow;
+            mw = newWindow;
         }
 
-        MainWindow.Show();
-        MainWindow.WindowState = WindowState.Normal;
-        MainWindow.Activate();
+        // Make visible and restore from minimized state.
+        mw.Show();
+        if (mw.WindowState == WindowState.Minimized)
+            mw.WindowState = WindowState.Normal;
+
+        // If the window is off-screen (e.g. monitor was disconnected), re-centre it.
+        var area = System.Windows.SystemParameters.WorkArea;
+        if (mw.Left + mw.Width < 0 || mw.Left > area.Right ||
+            mw.Top + mw.Height < 0 || mw.Top > area.Bottom)
+        {
+            mw.Left = (area.Width - mw.Width) / 2 + area.Left;
+            mw.Top  = (area.Height - mw.Height) / 2 + area.Top;
+        }
+
+        // Force to front — Topmost trick bypasses Windows focus-stealing prevention.
+        mw.Topmost = true;
+        mw.Activate();
+        mw.Topmost = false;
     }
 
     private void OnExitRequested(object? sender, EventArgs e)
