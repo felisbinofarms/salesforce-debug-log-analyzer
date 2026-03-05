@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -15,11 +16,9 @@ public class OAuthService
 {
     // Using Salesforce's public client ID for desktop apps (PKCE flow - no secret needed)
     private const string ClientId = "PlatformCLI";
-    private const string RedirectUri = "http://localhost:8080/callback";
-    
     private const string AuthorizationEndpoint = "https://login.salesforce.com/services/oauth2/authorize";
     private const string TokenEndpoint = "https://login.salesforce.com/services/oauth2/token";
-    
+
     private HttpListener? _httpListener;
 
     /// <summary>
@@ -27,33 +26,37 @@ public class OAuthService
     /// </summary>
     public async Task<OAuthResult> AuthenticateAsync(bool useSandbox = false)
     {
-        var authEndpoint = useSandbox 
-            ? "https://test.salesforce.com/services/oauth2/authorize" 
+        var authEndpoint = useSandbox
+            ? "https://test.salesforce.com/services/oauth2/authorize"
             : AuthorizationEndpoint;
-        
-        var tokenEndpoint = useSandbox 
-            ? "https://test.salesforce.com/services/oauth2/token" 
+
+        var tokenEndpoint = useSandbox
+            ? "https://test.salesforce.com/services/oauth2/token"
             : TokenEndpoint;
+
+        // Find available port first so the redirect URI is built correctly from the start
+        var port = FindAvailablePort();
+        var redirectUri = $"http://localhost:{port}/callback";
 
         // Generate state for CSRF protection
         var state = Guid.NewGuid().ToString("N");
-        
+
         // Generate PKCE code verifier and challenge
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
 
-        // Build authorization URL with PKCE
+        // Build authorization URL with PKCE (using the actual dynamic port)
         var authUrl = $"{authEndpoint}?" +
                      $"response_type=code&" +
                      $"client_id={Uri.EscapeDataString(ClientId)}&" +
-                     $"redirect_uri={Uri.EscapeDataString(RedirectUri)}&" +
+                     $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
                      $"scope={Uri.EscapeDataString("api refresh_token web")}&" +
                      $"code_challenge={codeChallenge}&" +
                      $"code_challenge_method=S256&" +
                      $"state={state}";
 
         // Start local HTTP server to receive callback
-        var (authCode, actualRedirectUri) = await StartLocalServerAndWaitForCallback(authUrl, state);
+        var (authCode, actualRedirectUri) = await StartLocalServerAndWaitForCallback(authUrl, state, port);
 
         if (string.IsNullOrEmpty(authCode))
         {
@@ -78,22 +81,19 @@ public class OAuthService
         };
     }
 
-    private async Task<(string? code, string redirectUri)> StartLocalServerAndWaitForCallback(string authUrl, string expectedState)
+    private async Task<(string? code, string redirectUri)> StartLocalServerAndWaitForCallback(string authUrl, string expectedState, int port)
     {
-        // Find available port
-        var port = FindAvailablePort();
         var redirectUri = $"http://localhost:{port}/callback";
 
         _httpListener = new HttpListener();
         _httpListener.Prefixes.Add($"http://localhost:{port}/");
-        
+
         try
         {
             _httpListener.Start();
 
-            // Open browser to authorization URL (updated with actual port)
-            var actualAuthUrl = authUrl.Replace("8080", port.ToString());
-            OpenBrowser(actualAuthUrl);
+            // Open browser to authorization URL (already built with the correct port)
+            OpenBrowser(authUrl);
 
             // Wait for callback
             var tcs = new TaskCompletionSource<string?>();
@@ -118,7 +118,8 @@ public class OAuthService
                     string responseString;
                     if (!string.IsNullOrEmpty(error))
                     {
-                        responseString = $"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p><p>You can close this window.</p></body></html>";
+                        var safeError = System.Net.WebUtility.HtmlEncode(error);
+                        responseString = $"<html><body><h1>Authentication Failed</h1><p>Error: {safeError}</p><p>You can close this window.</p></body></html>";
                         tcs.SetResult(null);
                     }
                     else if (state != expectedState)
@@ -276,7 +277,7 @@ public class OAuthService
             catch
             {
                 // Last resort - log the URL for manual opening
-                Console.WriteLine($"Please open this URL manually: {url}");
+                Log.Warning("Please open this URL manually: {Url}", url);
             }
         }
     }

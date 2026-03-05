@@ -119,8 +119,9 @@ public class LogParserTests
     [Fact]
     public void ParseLog_LargeRealWorldLog_CompletesWithinTimeout()
     {
-        // Test with a real 19MB log file from Downloads if it exists
-        var logPath = @"C:\Users\felis\Downloads\apex-07LWH00000OGWxV2AX.log";
+        // Test with a large log file; set BW_TEST_LOG_PATH env var or skip
+        var logPath = Environment.GetEnvironmentVariable("BW_TEST_LOG_PATH")
+                      ?? @"C:\Users\felis\Downloads\apex-07LWH00000OGWxV2AX.log";
         
         if (!File.Exists(logPath))
         {
@@ -629,8 +630,9 @@ public class LogParserTests
     {
         // This test verifies the ViewModel correctly processes a log file
         // without needing to launch the actual UI
-        var logPath = @"C:\Users\felis\Downloads\apex-07LWH00000OGWxV2AX.log";
-        
+        var logPath = Environment.GetEnvironmentVariable("BW_TEST_LOG_PATH")
+                      ?? @"C:\Users\felis\Downloads\apex-07LWH00000OGWxV2AX.log";
+
         if (!File.Exists(logPath))
         {
             _output.WriteLine($"SKIP: Test log file not found at: {logPath}");

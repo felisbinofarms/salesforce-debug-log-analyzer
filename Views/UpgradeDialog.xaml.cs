@@ -39,15 +39,22 @@ public partial class UpgradeDialog : Window
 
     private void BuyMonthlyButton_Click(object sender, RoutedEventArgs e)
     {
-        // Opens the Stripe Checkout page in the default browser.
-        // The success URL will carry a session_id that the app can use
-        // to auto-download the license (Issue #3: Stripe integration).
-        OpenUrl("https://buy.stripe.com/blackwidow-pro-monthly");
+        MessageBox.Show(
+            "Online purchasing is not yet available.\n\n" +
+            "Please contact sales@blackwidow.dev for a license key.",
+            "Coming Soon",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void BuyYearlyButton_Click(object sender, RoutedEventArgs e)
     {
-        OpenUrl("https://buy.stripe.com/blackwidow-pro-yearly");
+        MessageBox.Show(
+            "Online purchasing is not yet available.\n\n" +
+            "Please contact sales@blackwidow.dev for a license key.",
+            "Coming Soon",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     // ── License key activation ─────────────────────────────────────────
@@ -103,21 +110,5 @@ public partial class UpgradeDialog : Window
         ActivationStatusText.Visibility = string.IsNullOrEmpty(message)
             ? Visibility.Collapsed
             : Visibility.Visible;
-    }
-
-    private static void OpenUrl(string url)
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Could not open browser.\n\nPlease visit manually:\n{url}\n\nError: {ex.Message}",
-                "Browser Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-        }
     }
 }

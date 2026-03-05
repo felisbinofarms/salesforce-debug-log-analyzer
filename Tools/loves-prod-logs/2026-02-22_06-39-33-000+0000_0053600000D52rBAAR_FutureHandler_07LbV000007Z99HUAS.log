@@ -1,0 +1,387 @@
+﻿64.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+00:39:33.1 (1213503)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:39:33.1 (1289881)|EXECUTION_STARTED
+00:39:33.1 (1309034)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+00:39:33.1 (2959931)|CODE_UNIT_FINISHED|FutureHandler - state load
+00:39:33.1 (2977137)|EXECUTION_FINISHED
+00:39:33.29 (29559964)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:39:33.29 (29584824)|EXECUTION_STARTED
+00:39:33.29 (29608536)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JmIn3|Contact_AccountSync.handleAtFuture(String, String)
+00:39:33.29 (29906521)|HEAP_ALLOCATE|[95]|Bytes:3
+00:39:33.29 (30002082)|HEAP_ALLOCATE|[100]|Bytes:152
+00:39:33.29 (30017830)|HEAP_ALLOCATE|[417]|Bytes:408
+00:39:33.29 (30029883)|HEAP_ALLOCATE|[430]|Bytes:408
+00:39:33.29 (30051896)|HEAP_ALLOCATE|[317]|Bytes:6
+00:39:33.29 (30095841)|VARIABLE_SCOPE_BEGIN|[20]|Contact_AccountSync.RECTYPE_INDIV|String|false|true
+00:39:33.29 (30235069)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+00:39:33.29 (30238736)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+00:39:33.29 (30322241)|VARIABLE_ASSIGNMENT|[EXTERNAL]|Contact_AccountSync.RECTYPE_INDIV|"Individual"
+00:39:33.29 (30345559)|METHOD_ENTRY|[19]|01p1R00000JmIn3|Contact_AccountSync.Contact_AccountSync()
+00:39:33.29 (30350188)|STATEMENT_EXECUTE|[19]
+00:39:33.29 (30354044)|STATEMENT_EXECUTE|[19]
+00:39:33.29 (30359910)|METHOD_EXIT|[19]|Contact_AccountSync
+00:39:33.29 (30363572)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3028
+00:39:33.29 (30365403)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3049
+00:39:33.29 (30373930)|VARIABLE_SCOPE_BEGIN|[43]|contactListJson|String|false|false
+00:39:33.29 (30386678)|VARIABLE_ASSIGNMENT|[43]|contactListJson|"[{\"attributes\":{\"typ (3008 more) ..."
+00:39:33.29 (30389923)|VARIABLE_SCOPE_BEGIN|[43]|oldMapJson|String|false|false
+00:39:33.29 (30395303)|VARIABLE_ASSIGNMENT|[43]|oldMapJson|"{\"0031R00002uPtqUQAS (3029 more) ..."
+00:39:33.29 (30402799)|STATEMENT_EXECUTE|[43]
+00:39:33.29 (30403619)|STATEMENT_EXECUTE|[44]
+00:39:33.29 (30406323)|HEAP_ALLOCATE|[44]|Bytes:67
+00:39:33.29 (30430870)|HEAP_ALLOCATE|[68]|Bytes:5
+00:39:33.29 (30458605)|HEAP_ALLOCATE|[74]|Bytes:5
+00:39:33.29 (30463996)|HEAP_ALLOCATE|[82]|Bytes:7
+00:39:33.29 (30634726)|HEAP_ALLOCATE|[44]|Bytes:33
+00:39:33.29 (30644196)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+00:39:33.29 (30646488)|STATEMENT_EXECUTE|[1]
+00:39:33.29 (30653328)|SYSTEM_METHOD_EXIT|[1]|Type
+00:39:33.29 (30656711)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:33.29 (30814228)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:33.29 (30819133)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:39:33.29 (30881095)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x515e3841
+00:39:33.29 (30885281)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:39:33.29 (31006676)|VARIABLE_ASSIGNMENT|[4]|apextype|"List<Contact>"|0x68175e1f
+00:39:33.29 (33949633)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:33.29 (34035954)|HEAP_ALLOCATE|[44]|Bytes:24
+00:39:33.29 (34057357)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+00:39:33.29 (34064115)|STATEMENT_EXECUTE|[1]
+00:39:33.29 (34073276)|SYSTEM_METHOD_EXIT|[1]|JSON
+00:39:33.29 (34100066)|METHOD_ENTRY|[44]||System.JSON.deserialize(String, System.Type)
+00:39:33.29 (38400406)|METHOD_EXIT|[44]||System.JSON.deserialize(String, System.Type)
+00:39:33.29 (38428994)|VARIABLE_SCOPE_BEGIN|[44]|contactList|List<Contact>|true|false
+00:39:33.29 (38449590)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+00:39:33.29 (38946649)|VARIABLE_ASSIGNMENT|[44]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:32.000Z","AccountId":"0011R0000322Qt0QAE","Email":"nicole.louis70@gmail (4 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"af28db8b-f35a-4d08-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000LTM1WAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2023-06-19T01:41:23.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"0031R00002uPtqUQAS","Contractor_Review_Date__c":"2023-01-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","CreatedDate":"2022-08-03T16:23:36.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Louis","Id":"0031R00002uPtqUQAS","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","AgeRestrictedContentPreference__c":false,"Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17279220192","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Nicole","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:32.000Z","NASCAR__c":false,"LastActivityDate":"2024-05-15T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000001YGIxQAO","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x3191de23
+00:39:33.29 (38973406)|STATEMENT_EXECUTE|[45]
+00:39:33.29 (38991861)|METHOD_ENTRY|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:39:33.29 (39020055)|VARIABLE_SCOPE_BEGIN|[48]|contactList|List<Contact>|true|false
+00:39:33.29 (39231826)|VARIABLE_ASSIGNMENT|[48]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:32.000Z","AccountId":"0011R0000322Qt0QAE","Email":"nicole.louis70@gmail (4 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"af28db8b-f35a-4d08-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000LTM1WAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2023-06-19T01:41:23.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"0031R00002uPtqUQAS","Contractor_Review_Date__c":"2023-01-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","CreatedDate":"2022-08-03T16:23:36.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Louis","Id":"0031R00002uPtqUQAS","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","AgeRestrictedContentPreference__c":false,"Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17279220192","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Nicole","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:32.000Z","NASCAR__c":false,"LastActivityDate":"2024-05-15T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000001YGIxQAO","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x3191de23
+00:39:33.29 (39249486)|VARIABLE_SCOPE_BEGIN|[48]|oldMapJson|String|false|false
+00:39:33.29 (39257898)|VARIABLE_ASSIGNMENT|[48]|oldMapJson|"{\"0031R00002uPtqUQAS (3029 more) ..."
+00:39:33.29 (39263652)|STATEMENT_EXECUTE|[48]
+00:39:33.29 (39264808)|STATEMENT_EXECUTE|[49]
+00:39:33.29 (39286013)|HEAP_ALLOCATE|[49]|Bytes:4
+00:39:33.29 (39306239)|SYSTEM_CONSTRUCTOR_ENTRY|[49]|<init>()
+00:39:33.29 (39344665)|SYSTEM_CONSTRUCTOR_EXIT|[49]|<init>()
+00:39:33.29 (39348813)|VARIABLE_SCOPE_BEGIN|[49]|conIdList|List<String>|true|false
+00:39:33.29 (39390480)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (39398288)|VARIABLE_ASSIGNMENT|[49]|conIdList|[]|0x1161d9d8
+00:39:33.29 (39401613)|STATEMENT_EXECUTE|[50]
+00:39:33.29 (39405163)|HEAP_ALLOCATE|[50]|Bytes:4
+00:39:33.29 (39408593)|SYSTEM_CONSTRUCTOR_ENTRY|[50]|<init>()
+00:39:33.29 (39413478)|SYSTEM_CONSTRUCTOR_EXIT|[50]|<init>()
+00:39:33.29 (39415658)|VARIABLE_SCOPE_BEGIN|[50]|accIdList|List<String>|true|false
+00:39:33.29 (39423491)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (39426364)|VARIABLE_ASSIGNMENT|[50]|accIdList|[]|0x21abb05d
+00:39:33.29 (39429219)|STATEMENT_EXECUTE|[51]
+00:39:33.29 (39467064)|HEAP_ALLOCATE|[51]|Bytes:4
+00:39:33.29 (39507566)|SYSTEM_CONSTRUCTOR_ENTRY|[51]|<init>()
+00:39:33.29 (39514536)|SYSTEM_CONSTRUCTOR_EXIT|[51]|<init>()
+00:39:33.29 (39517296)|VARIABLE_SCOPE_BEGIN|[51]|upsAcctList|List<Account>|true|false
+00:39:33.29 (39522326)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (39526032)|VARIABLE_ASSIGNMENT|[51]|upsAcctList|[]|0x32d446d1
+00:39:33.29 (39546273)|SYSTEM_METHOD_ENTRY|[54]|List<Contact>.iterator()
+00:39:33.29 (39655794)|SYSTEM_METHOD_EXIT|[54]|List<Contact>.iterator()
+00:39:33.29 (39674223)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:39:33.29 (39691534)|HEAP_ALLOCATE|[54]|Bytes:5
+00:39:33.29 (39696809)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:39:33.29 (39711599)|HEAP_ALLOCATE|[54]|Bytes:324
+00:39:33.29 (39719466)|VARIABLE_SCOPE_BEGIN|[54]|con|Contact|true|false
+00:39:33.29 (39957927)|VARIABLE_ASSIGNMENT|[54]|con|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:32.000Z","AccountId":"0011R0000322Qt0QAE","Email":"nicole.louis70@gmail (4 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"af28db8b-f35a-4d08-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000LTM1WAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2023-06-19T01:41:23.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"0031R00002uPtqUQAS","Contractor_Review_Date__c":"2023-01-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","CreatedDate":"2022-08-03T16:23:36.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Louis","Id":"0031R00002uPtqUQAS","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","AgeRestrictedContentPreference__c":false,"Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17279220192","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Nicole","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:32.000Z","NASCAR__c":false,"LastActivityDate":"2024-05-15T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000001YGIxQAO","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x7e1c139e
+00:39:33.29 (39976603)|STATEMENT_EXECUTE|[54]
+00:39:33.29 (39977955)|STATEMENT_EXECUTE|[55]
+00:39:33.29 (40015686)|SYSTEM_METHOD_ENTRY|[55]|List<String>.add(Object)
+00:39:33.29 (40044041)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (40048656)|SYSTEM_METHOD_EXIT|[55]|List<String>.add(Object)
+00:39:33.29 (40060365)|STATEMENT_EXECUTE|[56]
+00:39:33.29 (40066166)|SYSTEM_METHOD_ENTRY|[56]|List<String>.add(Object)
+00:39:33.29 (40073806)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (40077185)|SYSTEM_METHOD_EXIT|[56]|List<String>.add(Object)
+00:39:33.29 (40081771)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:39:33.29 (40086556)|HEAP_ALLOCATE|[54]|Bytes:5
+00:39:33.29 (40089675)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:39:33.29 (40097034)|VARIABLE_ASSIGNMENT|[54]|con|null|
+00:39:33.29 (40100778)|STATEMENT_EXECUTE|[60]
+00:39:33.29 (40108197)|METHOD_ENTRY|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:39:33.29 (40117851)|VARIABLE_SCOPE_BEGIN|[105]|accIdList|List<String>|true|false
+00:39:33.29 (40125329)|VARIABLE_ASSIGNMENT|[105]|accIdList|["0011R0000322Qt0QAE"]|0x21abb05d
+00:39:33.29 (40128490)|VARIABLE_SCOPE_BEGIN|[105]|conIdList|List<String>|true|false
+00:39:33.29 (40133485)|VARIABLE_ASSIGNMENT|[105]|conIdList|["0031R00002uPtqUQAS"]|0x1161d9d8
+00:39:33.29 (40137718)|STATEMENT_EXECUTE|[105]
+00:39:33.29 (40138545)|STATEMENT_EXECUTE|[106]
+00:39:33.29 (40167972)|HEAP_ALLOCATE|[106]|Bytes:4
+00:39:33.29 (40194886)|VARIABLE_SCOPE_BEGIN|[106]|acctMap|Map<String,Account>|true|false
+00:39:33.29 (40206751)|VARIABLE_ASSIGNMENT|[106]|acctMap|{}|0x2cf6a2b5
+00:39:33.29 (40211800)|HEAP_ALLOCATE|[107]|Bytes:237
+00:39:33.29 (40219391)|HEAP_ALLOCATE|[107]|Bytes:4
+00:39:33.29 (40223999)|HEAP_ALLOCATE|[107]|Bytes:7
+00:39:33.29 (40232938)|HEAP_ALLOCATE|[107]|Bytes:7
+00:39:33.29 (42020831)|SOQL_EXECUTE_BEGIN|[107]|Aggregations:0|SELECT Id, Name, BillingCity, BillingCountry, BillingPostalCode, BillingState, BillingStreet, Phone, Person_Email__c, Auth0Id__c, SMA_SMAId__c, RecordTypeId, RecordType.Name FROM Account WHERE (Id IN :tmpVar1 OR SMA_SMAId__c IN :tmpVar2)
+00:39:33.29 (42054602)|LIMIT_USAGE|[107]|SOQL|1|200
+00:39:33.29 (42061316)|LIMIT_USAGE|[107]|AGGS|0|600
+00:39:33.29 (59284887)|SOQL_EXECUTE_EXPLAIN|[107]|Index on ApexExecutionOverlayAction : [ScopeId], cardinality: 0, sobjectCardinality: 1, relativeCost 0
+00:39:33.29 (59309857)|SOQL_EXECUTE_END|[107]|Rows:1
+00:39:33.29 (59334014)|LIMIT_USAGE|[107]|SOQL_ROWS|1|50000
+00:39:33.29 (59348944)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+00:39:33.29 (59429922)|SYSTEM_METHOD_ENTRY|[107]|Database.QueryLocator.iterator()
+00:39:33.29 (59601213)|HEAP_ALLOCATE|[107]|Bytes:54
+00:39:33.29 (59609932)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:33.29 (59636163)|SYSTEM_METHOD_ENTRY|[7]|QueryLocatorIterator.QueryLocatorIterator()
+00:39:33.29 (59640725)|STATEMENT_EXECUTE|[7]
+00:39:33.29 (59653467)|SYSTEM_METHOD_EXIT|[7]|QueryLocatorIterator
+00:39:33.29 (59660733)|HEAP_ALLOCATE|[107]|Bytes:28
+00:39:33.29 (59698682)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:33.29 (59707177)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:33.29 (59709057)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:33.29 (59719418)|VARIABLE_SCOPE_BEGIN|[15]|this|Database.QueryLocatorIterator|true|false
+00:39:33.29 (59803284)|VARIABLE_ASSIGNMENT|[15]|this|{}|0x4f280f80
+00:39:33.29 (59808022)|VARIABLE_SCOPE_BEGIN|[15]|values|List<SObject>|true|false
+00:39:33.29 (61677377)|VARIABLE_ASSIGNMENT|[15]|values|[{"BillingCountry":"United States","SMA_SMAId__c":"0031R00002uPtqUQAS","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7279220192","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0011R0000322Qt0QAE","Person_Email__c":"nicole.louis70@gmail (4 more) ...","Name":"Nicole Louis"}]|0x293af14b
+00:39:33.29 (61698245)|VARIABLE_SCOPE_BEGIN|[15]|ql|Database.QueryLocator|true|false
+00:39:33.29 (61724472)|VARIABLE_ASSIGNMENT|[15]|ql|{"query":"SELECT Id, Name, Bil (217 more) ..."}|0x23e82ee5
+00:39:33.29 (61728265)|VARIABLE_SCOPE_BEGIN|[15]|totalNumRecords|Integer|false|false
+00:39:33.29 (61737127)|VARIABLE_ASSIGNMENT|[15]|totalNumRecords|1
+00:39:33.29 (61739751)|VARIABLE_SCOPE_BEGIN|[15]|queryMoreSize|Integer|false|false
+00:39:33.29 (61743909)|VARIABLE_ASSIGNMENT|[15]|queryMoreSize|49999
+00:39:33.29 (61851654)|HEAP_ALLOCATE|[107]|Bytes:28
+00:39:33.29 (61865582)|SYSTEM_METHOD_EXIT|[107]|Database.QueryLocator.iterator()
+00:39:33.29 (61900634)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:33.29 (61964779)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:33.29 (61973149)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.next()
+00:39:33.29 (62060394)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.next()
+00:39:33.29 (62068641)|VARIABLE_SCOPE_BEGIN|[107]|acc|Account|true|false
+00:39:33.29 (62153169)|VARIABLE_ASSIGNMENT|[107]|acc|{"BillingCountry":"United States","SMA_SMAId__c":"0031R00002uPtqUQAS","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7279220192","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0011R0000322Qt0QAE","Person_Email__c":"nicole.louis70@gmail (4 more) ...","Name":"Nicole Louis"}|0x64c85be2
+00:39:33.29 (62160973)|STATEMENT_EXECUTE|[110]
+00:39:33.29 (62221133)|SYSTEM_METHOD_ENTRY|[111]|String.isBlank(String)
+00:39:33.29 (62244480)|SYSTEM_METHOD_EXIT|[111]|String.isBlank(String)
+00:39:33.29 (62248221)|STATEMENT_EXECUTE|[111]
+00:39:33.29 (62249251)|STATEMENT_EXECUTE|[112]
+00:39:33.29 (62279367)|SYSTEM_METHOD_ENTRY|[112]|Map<String,Account>.put(Object, Object)
+00:39:33.29 (62295934)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:39:33.29 (62301072)|SYSTEM_METHOD_EXIT|[112]|Map<String,Account>.put(Object, Object)
+00:39:33.29 (62303417)|STATEMENT_EXECUTE|[114]
+00:39:33.29 (62335265)|SYSTEM_METHOD_ENTRY|[114]|Map<String,Account>.put(Object, Object)
+00:39:33.29 (62359777)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:39:33.29 (62364425)|SYSTEM_METHOD_EXIT|[114]|Map<String,Account>.put(Object, Object)
+00:39:33.29 (62368176)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:33.29 (62379917)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:33.29 (62386524)|VARIABLE_ASSIGNMENT|[107]|acc|null|
+00:39:33.29 (62405577)|STATEMENT_EXECUTE|[116]
+00:39:33.29 (62408881)|METHOD_EXIT|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:39:33.29 (62413187)|VARIABLE_SCOPE_BEGIN|[60]|accountMap|Map<String,Account>|true|false
+00:39:33.29 (62500285)|VARIABLE_ASSIGNMENT|[60]|accountMap|{"0031R00002uPtqUQAS":{"BillingCountry":"United States","SMA_SMAId__c":"0031R00002uPtqUQAS","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7279220192","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0011R0000322Qt0QAE","Person_Email__c":"nicole.louis70@gmail (4 more) ...","Name":"Nicole Louis"},"0011R0000322Qt0QAE":{"BillingCountry":"United States","SMA_SMAId__c":"0031R00002uPtqUQAS","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7279220192","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0011R0000322Qt0QAE","Person_Email__c":"nicole.louis70@gmail (4 more) ...","Name":"Nicole Louis"}}|0x2cf6a2b5
+00:39:33.29 (62508183)|STATEMENT_EXECUTE|[61]
+00:39:33.29 (62514802)|METHOD_ENTRY|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:39:33.29 (62523541)|VARIABLE_SCOPE_BEGIN|[119]|conIdList|List<String>|true|false
+00:39:33.29 (62535315)|VARIABLE_ASSIGNMENT|[119]|conIdList|["0031R00002uPtqUQAS"]|0x1161d9d8
+00:39:33.29 (62540195)|STATEMENT_EXECUTE|[119]
+00:39:33.29 (62541120)|STATEMENT_EXECUTE|[120]
+00:39:33.29 (62545130)|HEAP_ALLOCATE|[120]|Bytes:264
+00:39:33.29 (62567312)|HEAP_ALLOCATE|[120]|Bytes:4
+00:39:33.29 (63086086)|SOQL_EXECUTE_BEGIN|[120]|Aggregations:0|SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, RecordTypeId, AccountId, CS_Birth_Date__c, MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c FROM Contact WHERE Id IN :tmpVar1
+00:39:33.29 (63112739)|LIMIT_USAGE|[120]|SOQL|2|200
+00:39:33.29 (63118632)|LIMIT_USAGE|[120]|AGGS|0|600
+00:39:33.29 (69794947)|SOQL_EXECUTE_EXPLAIN|[120]|Index on Contact : [Id], cardinality: 1, sobjectCardinality: 10303891, relativeCost 0
+00:39:33.29 (69815080)|SOQL_EXECUTE_END|[120]|Rows:1
+00:39:33.29 (69841242)|LIMIT_USAGE|[120]|SOQL_ROWS|2|50000
+00:39:33.29 (69852209)|HEAP_ALLOCATE|[120]|Bytes:8
+00:39:33.29 (69871021)|HEAP_ALLOCATE|[120]|Bytes:407
+00:39:33.29 (69917897)|HEAP_ALLOCATE|[120]|Bytes:8
+00:39:33.29 (69936687)|METHOD_EXIT|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:39:33.29 (69948778)|VARIABLE_SCOPE_BEGIN|[61]|conList|List<Contact>|true|false
+00:39:33.29 (70104117)|VARIABLE_ASSIGNMENT|[61]|conList|[{"Email":"nicole.louis70@gmail (4 more) ...","AccountId":"0011R0000322Qt0QAE","FirstName":"Nicole","MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Name":"Nicole Louis","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0031R00002uPtqUQAS","LastName":"Louis"}]|0x25df4c05
+00:39:33.29 (70128996)|SYSTEM_METHOD_ENTRY|[64]|List<Contact>.iterator()
+00:39:33.29 (70159853)|SYSTEM_METHOD_EXIT|[64]|List<Contact>.iterator()
+00:39:33.29 (70170362)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:39:33.29 (70185498)|HEAP_ALLOCATE|[64]|Bytes:5
+00:39:33.29 (70190777)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:39:33.29 (70203452)|HEAP_ALLOCATE|[64]|Bytes:60
+00:39:33.29 (70214827)|VARIABLE_SCOPE_BEGIN|[64]|con|Contact|true|false
+00:39:33.29 (70275992)|VARIABLE_ASSIGNMENT|[64]|con|{"Email":"nicole.louis70@gmail (4 more) ...","AccountId":"0011R0000322Qt0QAE","FirstName":"Nicole","MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Name":"Nicole Louis","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0031R00002uPtqUQAS","LastName":"Louis"}|0x586227c5
+00:39:33.29 (70283729)|STATEMENT_EXECUTE|[64]
+00:39:33.29 (70285015)|STATEMENT_EXECUTE|[65]
+00:39:33.29 (70288319)|VARIABLE_SCOPE_BEGIN|[65]|acct|Account|true|false
+00:39:33.29 (70294640)|VARIABLE_ASSIGNMENT|[65]|acct|null|
+00:39:33.29 (70326561)|STATEMENT_EXECUTE|[66]
+00:39:33.29 (70352287)|SYSTEM_METHOD_ENTRY|[66]|Map<String,Account>.get(Object)
+00:39:33.29 (70385591)|SYSTEM_METHOD_EXIT|[66]|Map<String,Account>.get(Object)
+00:39:33.29 (70478237)|VARIABLE_ASSIGNMENT|[66]|acct|{"BillingCountry":"United States","SMA_SMAId__c":"0031R00002uPtqUQAS","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7279220192","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0011R0000322Qt0QAE","Person_Email__c":"nicole.louis70@gmail (4 more) ...","Name":"Nicole Louis"}|0x64c85be2
+00:39:33.29 (70490692)|STATEMENT_EXECUTE|[67]
+00:39:33.29 (70504584)|METHOD_ENTRY|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:39:33.29 (70518944)|VARIABLE_SCOPE_BEGIN|[142]|con|Contact|true|false
+00:39:33.29 (70602122)|VARIABLE_ASSIGNMENT|[142]|con|{"Email":"nicole.louis70@gmail (4 more) ...","AccountId":"0011R0000322Qt0QAE","FirstName":"Nicole","MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Name":"Nicole Louis","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0031R00002uPtqUQAS","LastName":"Louis"}|0x586227c5
+00:39:33.29 (70609198)|VARIABLE_SCOPE_BEGIN|[142]|oldMapJson|String|false|false
+00:39:33.29 (70616428)|VARIABLE_ASSIGNMENT|[142]|oldMapJson|"{\"0031R00002uPtqUQAS (3029 more) ..."
+00:39:33.29 (70622162)|STATEMENT_EXECUTE|[142]
+00:39:33.29 (70623022)|STATEMENT_EXECUTE|[143]
+00:39:33.29 (70627487)|VARIABLE_SCOPE_BEGIN|[143]|changed|Boolean|false|false
+00:39:33.29 (70634648)|HEAP_ALLOCATE|[143]|Bytes:5
+00:39:33.29 (70639880)|VARIABLE_ASSIGNMENT|[143]|changed|false
+00:39:33.29 (70659367)|SYSTEM_METHOD_ENTRY|[145]|String.isBlank(String)
+00:39:33.29 (70674854)|SYSTEM_METHOD_EXIT|[145]|String.isBlank(String)
+00:39:33.29 (70681002)|HEAP_ALLOCATE|[145]|Bytes:4
+00:39:33.29 (70719002)|STATEMENT_EXECUTE|[145]
+00:39:33.29 (70720075)|STATEMENT_EXECUTE|[146]
+00:39:33.29 (70721616)|HEAP_ALLOCATE|[146]|Bytes:89
+00:39:33.29 (70801559)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:33.29 (70809070)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:33.29 (70812699)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:39:33.29 (70857215)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x3a0618ed
+00:39:33.29 (70861022)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:39:33.29 (70911510)|VARIABLE_ASSIGNMENT|[4]|apextype|"Map<Id,SObject>"|0x2e05a1e2
+00:39:33.29 (70958598)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:33.29 (70967187)|METHOD_ENTRY|[146]||System.JSON.deserialize(String, System.Type)
+00:39:33.29 (71710935)|METHOD_EXIT|[146]||System.JSON.deserialize(String, System.Type)
+00:39:33.29 (71727239)|VARIABLE_SCOPE_BEGIN|[146]|oldMap|Map<Id,SObject>|true|false
+00:39:33.29 (72019213)|VARIABLE_ASSIGNMENT|[146]|oldMap|{"0031R00002uPtqUQAS":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:23.000Z","AccountId":"0011R0000322Qt0QAE","Email":"nicole.louis70@gmail (4 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"af28db8b-f35a-4d08-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000LTM1WAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2023-06-19T01:41:23.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"0031R00002uPtqUQAS","Contractor_Review_Date__c":"2023-01-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","CreatedDate":"2022-08-03T16:23:36.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Louis","Id":"0031R00002uPtqUQAS","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","AgeRestrictedContentPreference__c":false,"Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17279220192","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Nicole","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:23.000Z","NASCAR__c":false,"LastActivityDate":"2024-05-15T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000001YGIxQAO","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}}|0x64db54eb
+00:39:33.29 (72041366)|STATEMENT_EXECUTE|[147]
+00:39:33.29 (72042854)|STATEMENT_EXECUTE|[148]
+00:39:33.29 (72069721)|SYSTEM_METHOD_ENTRY|[148]|Map<Id,SObject>.get(Object)
+00:39:33.29 (72094766)|SYSTEM_METHOD_EXIT|[148]|Map<Id,SObject>.get(Object)
+00:39:33.29 (72109704)|VARIABLE_SCOPE_BEGIN|[148]|oldCon|Contact|true|false
+00:39:33.29 (72395277)|VARIABLE_ASSIGNMENT|[148]|oldCon|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:23.000Z","AccountId":"0011R0000322Qt0QAE","Email":"nicole.louis70@gmail (4 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"af28db8b-f35a-4d08-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000LTM1WAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2023-06-19T01:41:23.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"0031R00002uPtqUQAS","Contractor_Review_Date__c":"2023-01-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","CreatedDate":"2022-08-03T16:23:36.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Louis","Id":"0031R00002uPtqUQAS","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","AgeRestrictedContentPreference__c":false,"Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17279220192","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Nicole","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:23.000Z","NASCAR__c":false,"LastActivityDate":"2024-05-15T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000001YGIxQAO","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x3b3b8311
+00:39:33.29 (72414910)|STATEMENT_EXECUTE|[149]
+00:39:33.29 (72445259)|STATEMENT_EXECUTE|[151]
+00:39:33.29 (72454112)|STATEMENT_EXECUTE|[152]
+00:39:33.29 (72463609)|STATEMENT_EXECUTE|[153]
+00:39:33.29 (72471409)|STATEMENT_EXECUTE|[154]
+00:39:33.29 (72515912)|SYSTEM_METHOD_ENTRY|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:39:33.29 (72540986)|SYSTEM_METHOD_EXIT|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:39:33.29 (72544702)|STATEMENT_EXECUTE|[155]
+00:39:33.29 (72549887)|STATEMENT_EXECUTE|[156]
+00:39:33.29 (72553007)|STATEMENT_EXECUTE|[157]
+00:39:33.29 (72555759)|STATEMENT_EXECUTE|[158]
+00:39:33.29 (72558662)|STATEMENT_EXECUTE|[159]
+00:39:33.29 (72573737)|STATEMENT_EXECUTE|[160]
+00:39:33.29 (72582147)|STATEMENT_EXECUTE|[161]
+00:39:33.29 (72589829)|STATEMENT_EXECUTE|[162]
+00:39:33.29 (72590772)|STATEMENT_EXECUTE|[163]
+00:39:33.29 (72595206)|METHOD_EXIT|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:39:33.29 (72600868)|STATEMENT_EXECUTE|[69]
+00:39:33.29 (72607298)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:39:33.29 (72617241)|HEAP_ALLOCATE|[64]|Bytes:5
+00:39:33.29 (72622589)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:39:33.29 (72631992)|VARIABLE_ASSIGNMENT|[64]|con|null|
+00:39:33.29 (72635812)|STATEMENT_EXECUTE|[78]
+00:39:33.29 (72636582)|STATEMENT_EXECUTE|[78]
+00:39:33.29 (72637313)|STATEMENT_EXECUTE|[79]
+00:39:33.29 (72715822)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (72721092)|STATEMENT_EXECUTE|[83]
+00:39:33.29 (72736388)|HEAP_ALLOCATE|[83]|Bytes:4
+00:39:33.29 (72747869)|VARIABLE_SCOPE_BEGIN|[83]|conIdAccIdMap|Map<String,String>|true|false
+00:39:33.29 (72760532)|VARIABLE_ASSIGNMENT|[83]|conIdAccIdMap|{}|0x25f497e6
+00:39:33.29 (72769308)|SYSTEM_METHOD_ENTRY|[84]|List<Account>.iterator()
+00:39:33.29 (72852127)|SYSTEM_METHOD_EXIT|[84]|List<Account>.iterator()
+00:39:33.29 (72867692)|SYSTEM_METHOD_ENTRY|[84]|system.ListIterator.hasNext()
+00:39:33.29 (72873047)|HEAP_ALLOCATE|[84]|Bytes:5
+00:39:33.29 (72876133)|SYSTEM_METHOD_EXIT|[84]|system.ListIterator.hasNext()
+00:39:33.29 (72881266)|VARIABLE_ASSIGNMENT|[84]|updAcct|null|
+00:39:33.29 (72884034)|STATEMENT_EXECUTE|[84]
+00:39:33.29 (72885065)|STATEMENT_EXECUTE|[87]
+00:39:33.29 (72892055)|HEAP_ALLOCATE|[87]|Bytes:4
+00:39:33.29 (72902832)|SYSTEM_CONSTRUCTOR_ENTRY|[87]|<init>()
+00:39:33.29 (72916457)|SYSTEM_CONSTRUCTOR_EXIT|[87]|<init>()
+00:39:33.29 (72919506)|VARIABLE_SCOPE_BEGIN|[87]|updateList|List<Contact>|true|false
+00:39:33.29 (72926254)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:33.29 (72932652)|VARIABLE_ASSIGNMENT|[87]|updateList|[]|0x8e40744
+00:39:33.29 (72937666)|SYSTEM_METHOD_ENTRY|[88]|List<Contact>.iterator()
+00:39:33.29 (72943144)|SYSTEM_METHOD_EXIT|[88]|List<Contact>.iterator()
+00:39:33.29 (72946472)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:39:33.29 (72949180)|HEAP_ALLOCATE|[88]|Bytes:5
+00:39:33.29 (72951489)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:39:33.29 (72958700)|HEAP_ALLOCATE|[88]|Bytes:60
+00:39:33.29 (72964270)|VARIABLE_SCOPE_BEGIN|[88]|con|Contact|true|false
+00:39:33.29 (73043389)|VARIABLE_ASSIGNMENT|[88]|con|{"Email":"nicole.louis70@gmail (4 more) ...","AccountId":"0011R0000322Qt0QAE","FirstName":"Nicole","MailingCountry":"United States","Loyalty_Card__c":"77785087380063","Name":"Nicole Louis","IDM_ID__c":"5011bd49-be01-416d-8 (16 more) ...","Phone":"7279220192","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1996-07-01T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;62eaa0fbfb4fe5 (10 more) ...","Id":"0031R00002uPtqUQAS","LastName":"Louis"}|0x586227c5
+00:39:33.29 (73050828)|STATEMENT_EXECUTE|[88]
+00:39:33.29 (73055606)|STATEMENT_EXECUTE|[89]
+00:39:33.29 (73058409)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:39:33.29 (73061502)|HEAP_ALLOCATE|[88]|Bytes:5
+00:39:33.29 (73064170)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:39:33.29 (73068462)|VARIABLE_ASSIGNMENT|[88]|con|null|
+00:39:33.29 (73073221)|SYSTEM_METHOD_ENTRY|[96]|List<Contact>.size()
+00:39:33.29 (73080457)|SYSTEM_METHOD_EXIT|[96]|List<Contact>.size()
+00:39:33.29 (73084318)|STATEMENT_EXECUTE|[96]
+00:39:33.29 (73087747)|METHOD_EXIT|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:39:33.73 (73110352)|CUMULATIVE_LIMIT_USAGE
+00:39:33.73 (73110352)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 2 out of 200
+  Number of query rows: 2 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+00:39:33.73 (73110352)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+00:39:33.73 (73110352)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcParameterizedTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_static_RECTYPE_INDIV:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+00:39:33.73 (73110352)|CUMULATIVE_LIMIT_USAGE_END
+
+00:39:33.29 (73357186)|CODE_UNIT_FINISHED|Contact_AccountSync.handleAtFuture(String, String)
+00:39:33.29 (73371602)|EXECUTION_FINISHED
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING_BEGIN
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING|SOQL operations|
+Class.Contact_AccountSync.getAccountData: line 107, column 1: [SELECT Id, Name,BillingCity,BillingCountry,BillingPostalCode,BillingState,BillingStreet,Phone,
+                                  Person_Email__c,Auth0Id__c,SMA_SMAId__c,RecordTypeId,RecordType.Name
+                             FROM Account 
+                            WHERE Id IN :accIdList or SMA_SMAId__c in :conIdList]: executed 5 times in 22 ms
+Class.Contact_AccountSync.getContactData: line 120, column 1: [SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, 
+                       RecordTypeId, AccountId, CS_Birth_Date__c, 
+                       MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c
+                  FROM Contact 
+                 WHERE Id IN: conIdList]: executed 1 time in 8 ms
+
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING|DML operations|
+Class.Contact_AccountSync.handle: line 79, column 1: Upsert: List<Account>: executed 1 time in 1 ms
+
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static void handleAtFuture(String, String): executed 1 time in 43 ms
+Class.Contact_AccountSync.handleAtFuture: line 45, column 1: public static void handle(List<Contact>, String): executed 1 time in 34 ms
+Class.Contact_AccountSync.handle: line 60, column 1: private static Map<String,Account> getAccountData(List<String>, List<String>): executed 1 time in 22 ms
+Class.Contact_AccountSync.handle: line 61, column 1: private static List<Contact> getContactData(List<String>): executed 1 time in 8 ms
+Class.Contact_AccountSync.handleAtFuture: line 44, column 1: global static Object deserialize(String, System.Type): executed 1 time in 4 ms
+Class.Contact_AccountSync.handle: line 72, column 1: private static Boolean wasContactDataChanged(Contact, String): executed 1 time in 2 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 146, column 1: global static Object deserialize(String, System.Type): executed 1 time in 1 ms
+Class.Contact_AccountSync.handle: line 54, column 1: global public System.Iterator iterator(): executed 3 times in 1 ms
+Class.Contact_AccountSync.handle: line 64, column 1: global public System.Iterator iterator(): executed 3 times in 0 ms
+Class.Contact_AccountSync.handle: line 66, column 1: global public Object get(Object): executed 1 time in 0 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 145, column 1: public static Boolean isBlank(String): executed 1 time in 0 ms
+
+00:39:33.145 (145603544)|CUMULATIVE_PROFILING_END

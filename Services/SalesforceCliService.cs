@@ -23,11 +23,15 @@ public class SalesforceCliService
     private string? _streamingUsername;
     private SalesforceApiService? _apiService;
     private DateTime _streamingStartTime;
+    private bool? _isInstalledCache;
 
     public event EventHandler<LogReceivedEventArgs>? LogReceived;
     public event EventHandler<string>? StatusChanged;
 
-    public bool IsInstalled => CheckCliInstalled();
+    /// <summary>
+    /// Cached CLI installation check. Only spawns processes on first access.
+    /// </summary>
+    public bool IsInstalled => _isInstalledCache ??= CheckCliInstalled();
     public bool IsStreaming => _isStreaming;
 
     public SalesforceCliService()
@@ -98,10 +102,6 @@ public class SalesforceCliService
 
         // Fall back to legacy CLI (sfdx) with force:apex commands
         if (CheckCommand("sfdx"))
-            return ("sfdx", true);
-        
-        // If sf exists but no apex commands, still use sfdx for log operations
-        if (CheckCommand("sf") && CheckCommand("sfdx"))
             return ("sfdx", true);
 
         return (string.Empty, false);
@@ -316,12 +316,12 @@ public class SalesforceCliService
             }
             else
             {
-                StatusChanged?.Invoke(this, $"⚠️ Log {logId.Substring(0, 8)}... doesn't look like Apex log content");
+                StatusChanged?.Invoke(this, $"⚠️ Log {(logId.Length > 8 ? logId[..8] : logId)}... doesn't look like Apex log content");
             }
         }
         catch (Exception ex)
         {
-            StatusChanged?.Invoke(this, $"❌ Error downloading log {logId.Substring(0, 8)}...: {ex.Message}");
+            StatusChanged?.Invoke(this, $"❌ Error downloading log {(logId.Length > 8 ? logId[..8] : logId)}...: {ex.Message}");
         }
     }
 
@@ -360,8 +360,10 @@ public class SalesforceCliService
             Directory.CreateDirectory(outputFolder);
 
             // Build CLI command to list logs
+            // Sanitize username to prevent SOQL injection (only letters, digits, @, ., _, -)
+            var safeUsername = new string(username.Where(c => char.IsLetterOrDigit(c) || c == '@' || c == '.' || c == '_' || c == '-').ToArray());
             var queryCommand = _useLegacyCommands ? "force:data:soql:query" : "data query";
-            var listCommand = $"{_cliPath} {queryCommand} --query \"SELECT Id, LogUserId, LogLength, StartTime FROM ApexLog WHERE LogUserId IN (SELECT Id FROM User WHERE Username = '{username}') AND StartTime >= {startTime:yyyy-MM-ddTHH:mm:ss.fffZ} AND StartTime <= {endTime:yyyy-MM-ddTHH:mm:ss.fffZ} ORDER BY StartTime DESC\" --json";
+            var listCommand = $"{_cliPath} {queryCommand} --query \"SELECT Id, LogUserId, LogLength, StartTime FROM ApexLog WHERE LogUserId IN (SELECT Id FROM User WHERE Username = '{safeUsername}') AND StartTime >= {startTime:yyyy-MM-ddTHH:mm:ss.fffZ} AND StartTime <= {endTime:yyyy-MM-ddTHH:mm:ss.fffZ} ORDER BY StartTime DESC\" --json";
 
             var logIds = await ExecuteCliCommandAsync(listCommand);
 

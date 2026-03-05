@@ -228,7 +228,8 @@ public class ArcPathConverter : IValueConverter
         const double radius = 56;
         const double center = 60;
         double startAngle = -90; // start at top
-        double sweepAngle = percent / 100.0 * 360.0;
+        // Cap at 359.99° to prevent zero-length arc when value is exactly 100%
+        double sweepAngle = Math.Min(percent / 100.0 * 360.0, 359.99);
 
         // End point
         double endAngle = startAngle + sweepAngle;
@@ -328,6 +329,20 @@ public class ZeroToVisibilityConverter : IValueConverter
 /// </summary>
 public class HealthScoreToColorConverter : IValueConverter
 {
+    // Pre-cached brushes to avoid creating BrushConverter + parsing hex on every call
+    private static readonly Brush GreenBrush = CreateFrozenBrush("#76BA70");
+    private static readonly Brush AmberBrush = CreateFrozenBrush("#C09040");
+    private static readonly Brush OrangeBrush = CreateFrozenBrush("#B87040");
+    private static readonly Brush CoralBrush = CreateFrozenBrush("#CC6055");
+
+    private static Brush CreateFrozenBrush(string hex)
+    {
+        var brush = new System.Windows.Media.SolidColorBrush(
+            (Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+        brush.Freeze();
+        return brush;
+    }
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         int score = value switch
@@ -337,15 +352,13 @@ public class HealthScoreToColorConverter : IValueConverter
             _ => 100
         };
         
-        var hex = score switch
+        return score switch
         {
-            >= 80 => "#76BA70", // Sage green  — calm, no glare
-            >= 60 => "#C09040", // Warm amber  — noticeable, not screaming
-            >= 40 => "#B87040", // Muted orange — caution without alarm
-            _ => "#CC6055"      // Muted coral  — clear problem, not panic
+            >= 80 => GreenBrush,  // Sage green  — calm, no glare
+            >= 60 => AmberBrush,  // Warm amber  — noticeable, not screaming
+            >= 40 => OrangeBrush, // Muted orange — caution without alarm
+            _ => CoralBrush       // Muted coral  — clear problem, not panic
         };
-        
-        return new BrushConverter().ConvertFromString(hex) as Brush ?? Brushes.White;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -384,8 +397,8 @@ public class UserToColorConverter : IValueConverter
             foreach (char c in username)
             {
                 hash = ((hash << 5) - hash) + c;
-                hash = hash & hash; // Convert to 32bit integer
             }
+            hash &= 0x7FFFFFFF; // Ensure positive 32-bit integer
             
             // Use absolute value and modulo to get index
             int index = Math.Abs(hash) % UserColors.Length;

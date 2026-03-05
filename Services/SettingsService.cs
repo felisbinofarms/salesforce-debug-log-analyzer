@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Serilog;
 using System.IO;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -42,7 +43,7 @@ public class SettingsService
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to load settings: {ex.Message}");
+                Log.Warning(ex, "Failed to load settings from {Path}", _settingsPath);
             }
         }
 
@@ -65,7 +66,7 @@ public class SettingsService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to save settings: {ex.Message}");
+            Log.Warning(ex, "Failed to save settings to {Path}", _settingsPath);
             throw new InvalidOperationException($"Failed to save settings: {ex.Message}", ex);
         }
     }
@@ -136,4 +137,29 @@ public class AppSettings
     public double WindowHeight { get; set; } = 900;
     public bool WindowMaximized { get; set; } = false;
     public double SidebarWidth { get; set; } = 250;
+
+    // System Tray & Monitoring
+    public bool MinimizeToTray { get; set; } = true;
+    public bool StartMinimized { get; set; } = false;
+    public bool MonitoringEnabled { get; set; } = true;
+    public bool MonitoringAutoStart { get; set; } = true;
+    public int MonitoringPollIntervalSeconds { get; set; } = 60;
+
+    // Notifications
+    public bool ToastNotificationsEnabled { get; set; } = true;
+    public bool CriticalAlertsOnly { get; set; } = false;
+    public bool QuietHoursEnabled { get; set; } = true;
+    public int QuietHoursStart { get; set; } = 22;
+    public int QuietHoursEnd { get; set; } = 7;
+
+    // Shield
+    public bool ShieldMonitoringEnabled { get; set; } = true;
+
+    // Threshold overrides (percentages 0-100)
+    public int GovernorWarningPct { get; set; } = 80;
+    public int GovernorCriticalPct { get; set; } = 90;
+    public int DurationWarningMs { get; set; } = 10000;
+    public int DurationCriticalMs { get; set; } = 20000;
+    public int HealthScoreWarning { get; set; } = 60;
+    public int HealthScoreCritical { get; set; } = 40;
 }

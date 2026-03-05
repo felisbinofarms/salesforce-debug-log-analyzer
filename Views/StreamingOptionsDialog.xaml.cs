@@ -55,7 +55,7 @@ public partial class StreamingOptionsDialog : Window
         Options.IncludeBatch = IncludeBatchCheckBox.IsChecked == true;
         Options.OnlyErrors = OnlyErrorsCheckBox.IsChecked == true;
         Options.SkipSlowLogs = SkipSlowLogsCheckBox.IsChecked == true;
-        Options.AutoSwitchToNewest = AutoSwitchCheckBox.IsChecked == false; // Default OFF for safety
+        Options.AutoSwitchToNewest = AutoSwitchCheckBox.IsChecked == true;
         
         DialogResult = true;
         Close();

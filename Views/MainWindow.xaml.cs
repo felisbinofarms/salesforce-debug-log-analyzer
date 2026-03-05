@@ -1,7 +1,9 @@
 ﻿using System.Windows;
 using System.IO;
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Threading;
 using SalesforceDebugAnalyzer.ViewModels;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
@@ -15,18 +17,35 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private ConnectionsView? _connectionsView;
+    private SystemTrayService? _trayService;
+    private readonly SettingsService _settingsService = new();
+    private readonly DispatcherTimer _searchDebounce;
+
+    /// <summary>
+    /// When true, Close() actually closes the window instead of hiding to tray.
+    /// Set by App.xaml.cs when "Exit Black Widow" is chosen from the tray menu.
+    /// </summary>
+    public bool ForceClose { get; set; }
 
     public MainWindow()
     {
         InitializeComponent();
-        
+
         var logParser = new LogParserService();
         var salesforceApi = new SalesforceApiService();
         var oauthService = new OAuthService();
-        
+
         _viewModel = new MainViewModel(salesforceApi, logParser, oauthService);
         DataContext = _viewModel;
-        
+
+        // Set up search debounce (300ms delay)
+        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _searchDebounce.Tick += SearchDebounce_Tick;
+
+        // Wire up the alert center panel
+        AlertCenterPanel.SetViewModel(_viewModel);
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
         // Enable drag-and-drop on entire window
         AllowDrop = true;
         Drop += MainWindow_Drop;
@@ -34,6 +53,34 @@ public partial class MainWindow : Window
 
         // Show connections view initially
         ShowConnectionsView(salesforceApi);
+    }
+
+    /// <summary>
+    /// Called by App.xaml.cs to provide the system tray service reference.
+    /// </summary>
+    public void SetTrayService(SystemTrayService trayService)
+    {
+        _trayService = trayService;
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (!ForceClose && _settingsService.Load().MinimizeToTray && _trayService != null)
+        {
+            // Hide to tray instead of closing
+            e.Cancel = true;
+            Hide();
+        }
+        else
+        {
+            // Actually closing — clean up resources
+            _searchDebounce.Stop();
+            _searchDebounce.Tick -= SearchDebounce_Tick;
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _viewModel.Dispose();
+
+            base.OnClosing(e);
+        }
     }
     
     private void MainWindow_DragOver(object sender, DragEventArgs e)
@@ -222,26 +269,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CopyIssues_Click(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Issues?.Count > 0)
-        {
-            var text = string.Join("\n\n", _viewModel.Issues);
-            Clipboard.SetText(text);
-            ShowCopyFeedback(sender as System.Windows.Controls.Button);
-        }
-    }
-
-    private void CopyRecommendations_Click(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Recommendations?.Count > 0)
-        {
-            var text = string.Join("\n\n", _viewModel.Recommendations);
-            Clipboard.SetText(text);
-            ShowCopyFeedback(sender as System.Windows.Controls.Button);
-        }
-    }
-
     private async void ShowCopyFeedback(System.Windows.Controls.Button? button)
     {
         if (button == null) return;
@@ -272,7 +299,17 @@ public partial class MainWindow : Window
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var searchText = (sender as TextBox)?.Text?.Trim() ?? "";
+        // Reset the debounce timer on each keystroke
+        _searchDebounce.Stop();
+        _searchDebounce.Tag = (sender as TextBox)?.Text?.Trim() ?? "";
+        _searchDebounce.Start();
+    }
+
+    private void SearchDebounce_Tick(object? sender, EventArgs e)
+    {
+        _searchDebounce.Stop();
+
+        var searchText = _searchDebounce.Tag as string ?? "";
         var view = CollectionViewSource.GetDefaultView(_viewModel.Logs);
         if (view == null) return;
 
@@ -292,6 +329,14 @@ public partial class MainWindow : Window
                 }
                 return false;
             };
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is "ShowAlertCenter" or "UnreadAlertCount" or "MonitoringAlerts")
+        {
+            AlertCenterPanel.RefreshAlerts();
         }
     }
 }

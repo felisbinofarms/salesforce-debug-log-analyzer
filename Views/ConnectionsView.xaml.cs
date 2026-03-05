@@ -259,8 +259,8 @@ public partial class ConnectionsView : UserControl
                 if (isFolder || allLogFiles)
                 {
                     e.Effects = DragDropEffects.Copy;
-                    DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
-                    DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x10, 0x3A, 0x2D));
+                    DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                    DropZoneBorder.Background = new SolidColorBrush(Color.FromArgb(0x18, 0x3F, 0xB9, 0x50));
                     DropZoneText.Text = isFolder ? "Drop folder to load all logs!" :
                                         paths.Length > 1 ? $"Drop {paths.Length} files to analyze!" :
                                         "Drop to analyze!";
@@ -288,9 +288,9 @@ public partial class ConnectionsView : UserControl
         var pos = e.GetPosition(this);
         if (pos.X < 0 || pos.Y < 0 || pos.X > ActualWidth || pos.Y > ActualHeight)
         {
-            DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2));
-            DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22));
-            DropZoneText.Text = "Drop a folder or .log file here";
+            DropZoneBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x2D, 0x33, 0x3B));
+            DropZoneBorder.Background = new SolidColorBrush(Color.FromRgb(0x1C, 0x21, 0x28));
+            DropZoneText.Text = "Drop a .log file or folder here";
         }
     }
 
@@ -342,7 +342,7 @@ public partial class ConnectionsView : UserControl
             Height = 180,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = Window.GetWindow(this),
-            Background = new SolidColorBrush(Color.FromRgb(0x31, 0x33, 0x38)),
+            Background = new SolidColorBrush(Color.FromRgb(0x14, 0x18, 0x20)),
             ResizeMode = ResizeMode.NoResize,
             WindowStyle = WindowStyle.ToolWindow
         };
@@ -363,9 +363,9 @@ public partial class ConnectionsView : UserControl
 
         var textBox = new TextBox
         {
-            Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1F, 0x22)),
+            Background = new SolidColorBrush(Color.FromRgb(0x27, 0x2D, 0x36)),
             Foreground = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0x4E, 0x50, 0x58)),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(0x2D, 0x33, 0x3B)),
             Padding = new Thickness(10),
             FontSize = 13
         };
@@ -383,7 +383,7 @@ public partial class ConnectionsView : UserControl
         {
             Content = "Load File",
             Padding = new Thickness(20, 8, 20, 8),
-            Background = new SolidColorBrush(Color.FromRgb(0x58, 0x65, 0xF2)),
+            Background = new SolidColorBrush(Color.FromRgb(0x44, 0x93, 0xF8)),
             Foreground = Brushes.White,
             BorderThickness = new Thickness(0),
             Margin = new Thickness(0, 0, 10, 0)
@@ -408,7 +408,7 @@ public partial class ConnectionsView : UserControl
         {
             Content = "Cancel",
             Padding = new Thickness(20, 8, 20, 8),
-            Background = new SolidColorBrush(Color.FromRgb(0x4E, 0x50, 0x58)),
+            Background = new SolidColorBrush(Color.FromRgb(0x27, 0x2D, 0x36)),
             Foreground = Brushes.White,
             BorderThickness = new Thickness(0)
         };

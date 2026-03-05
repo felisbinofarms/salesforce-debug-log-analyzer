@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
 using Microsoft.Web.WebView2.Core;
+using Serilog;
 using SalesforceDebugAnalyzer.Services;
 
 namespace SalesforceDebugAnalyzer.Views;
@@ -44,10 +44,10 @@ public partial class OAuthBrowserDialog : Window
                 _completionSource.SetResult(new OAuthResult
                 {
                     Success = false,
-                    Error = $"WebView2 Runtime is not installed. Please download it from: https://developer.microsoft.com/en-us/microsoft-edge/webview2/\\n\\nError: {webViewEx.Message}"
+                    Error = $"WebView2 Runtime is not installed. Please download it from: https://developer.microsoft.com/en-us/microsoft-edge/webview2/\n\nError: {webViewEx.Message}"
                 });
                 MessageBox.Show(
-                    "WebView2 Runtime is not installed.\\n\\nPlease download and install it from:\\nhttps://developer.microsoft.com/en-us/microsoft-edge/webview2/\\n\\nClick OK to open the download page.",
+                    "WebView2 Runtime is not installed.\n\nPlease download and install it from:\nhttps://developer.microsoft.com/en-us/microsoft-edge/webview2/\n\nClick OK to open the download page.",
                     "WebView2 Required",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -59,7 +59,10 @@ public partial class OAuthBrowserDialog : Window
                         UseShellExecute = true
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to launch WebView2 download page");
+                }
                 Close();
                 return;
             }
@@ -82,10 +85,10 @@ public partial class OAuthBrowserDialog : Window
                 _completionSource.SetResult(new OAuthResult
                 {
                     Success = false,
-                    Error = $"Port 1717 is already in use (maybe Salesforce CLI is running?).\\n\\nPlease close other applications using port 1717 and try again.\\n\\nError: {ex.Message}"
+                    Error = $"Port 1717 is already in use (maybe Salesforce CLI is running?).\n\nPlease close other applications using port 1717 and try again.\n\nError: {ex.Message}"
                 });
                 MessageBox.Show(
-                    $"Port 1717 is already in use.\\n\\nThis port is required for Salesforce OAuth.\\nPlease close Salesforce CLI or other apps using this port and try again.\\n\\nError: {ex.Message}",
+                    $"Port 1717 is already in use.\n\nThis port is required for Salesforce OAuth.\nPlease close Salesforce CLI or other apps using this port and try again.\n\nError: {ex.Message}",
                     "Port In Use",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -154,7 +157,8 @@ public partial class OAuthBrowserDialog : Window
             string responseString;
             if (!string.IsNullOrEmpty(error))
             {
-                responseString = $"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p><p>You can close this window.</p></body></html>";
+                var safeError = System.Net.WebUtility.HtmlEncode(error);
+                responseString = $"<html><body><h1>Authentication Failed</h1><p>Error: {safeError}</p><p>You can close this window.</p></body></html>";
                 
                 await Dispatcher.InvokeAsync(() =>
                 {
@@ -283,7 +287,7 @@ public partial class OAuthBrowserDialog : Window
                 };
             }
 
-            var tokenResponse = System.Text.Json.JsonDocument.Parse(responseContent);
+            using var tokenResponse = System.Text.Json.JsonDocument.Parse(responseContent);
             var root = tokenResponse.RootElement;
 
             return new OAuthResult
@@ -330,15 +334,6 @@ public partial class OAuthBrowserDialog : Window
             .Replace("=", "");
     }
 
-    private int FindAvailablePort()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
-
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         base.OnClosing(e);
@@ -349,7 +344,10 @@ public partial class OAuthBrowserDialog : Window
             _httpListener?.Stop();
             _httpListener?.Close();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to clean up OAuth callback listener");
+        }
         
         // Ensure the TaskCompletionSource is always completed so callers don't hang
         _completionSource.TrySetResult(new OAuthResult

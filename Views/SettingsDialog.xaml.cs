@@ -1,4 +1,5 @@
 using SalesforceDebugAnalyzer.Services;
+using Serilog;
 using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
@@ -54,6 +55,12 @@ public partial class SettingsDialog : Window
         HighlightTab(AdvancedTabButton);
     }
 
+    private void MonitoringTabButton_Click(object sender, RoutedEventArgs e)
+    {
+        LoadMonitoringTab();
+        HighlightTab(MonitoringTabButton);
+    }
+
     private void AboutTabButton_Click(object sender, RoutedEventArgs e)
     {
         LoadAboutTab();
@@ -72,7 +79,7 @@ public partial class SettingsDialog : Window
         }
 
         // Highlight selected
-        selectedButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5865F2")!);
+        selectedButton.Background = (Brush)FindResource("AccentPrimary");
     }
 
     private void LoadGeneralTab()
@@ -356,12 +363,267 @@ public partial class SettingsDialog : Window
         {
             Content = "Clear Cache Now",
             Style = (Style)FindResource("MaterialDesignOutlinedButton"),
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FAA61A")!),
+            Foreground = (Brush)FindResource("Warning"),
             Margin = new Thickness(0, 20, 0, 0),
             Padding = new Thickness(15, 8, 15, 8)
         };
         clearButton.Click += ClearCache_Click;
         ContentPanel.Children.Add(clearButton);
+    }
+
+    private void LoadMonitoringTab()
+    {
+        _currentTab = "Monitoring";
+        ContentPanel.Children.Clear();
+
+        AddHeader("Background Monitoring");
+
+        // Enable monitoring
+        var enableCheck = new CheckBox
+        {
+            Content = "Enable background monitoring",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.MonitoringEnabled
+        };
+        enableCheck.Checked += (s, e) => _currentSettings.MonitoringEnabled = true;
+        enableCheck.Unchecked += (s, e) => _currentSettings.MonitoringEnabled = false;
+        ContentPanel.Children.Add(enableCheck);
+
+        // Auto-start monitoring
+        var autoStartCheck = new CheckBox
+        {
+            Content = "Auto-start monitoring when connected to an org",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.MonitoringAutoStart
+        };
+        autoStartCheck.Checked += (s, e) => _currentSettings.MonitoringAutoStart = true;
+        autoStartCheck.Unchecked += (s, e) => _currentSettings.MonitoringAutoStart = false;
+        ContentPanel.Children.Add(autoStartCheck);
+
+        // Poll interval
+        AddLabel("Poll interval (seconds)");
+        var pollText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.MonitoringPollIntervalSeconds.ToString()
+        };
+        pollText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(pollText.Text, out int value))
+                _currentSettings.MonitoringPollIntervalSeconds = Math.Max(15, Math.Min(600, value));
+        };
+        ContentPanel.Children.Add(pollText);
+        AddHelperText("How often to check for new debug logs (15-600 seconds)");
+
+        // Shield monitoring
+        var shieldCheck = new CheckBox
+        {
+            Content = "Enable Shield EventLogFile monitoring (when available)",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.ShieldMonitoringEnabled,
+            Margin = new Thickness(0, 15, 0, 5)
+        };
+        shieldCheck.Checked += (s, e) => _currentSettings.ShieldMonitoringEnabled = true;
+        shieldCheck.Unchecked += (s, e) => _currentSettings.ShieldMonitoringEnabled = false;
+        ContentPanel.Children.Add(shieldCheck);
+        AddHelperText("Shield provides Login, API, Page Performance, and Apex Exception monitoring");
+
+        // --- System Tray Section ---
+        AddSectionSeparator();
+        AddHeader("System Tray");
+
+        var trayCheck = new CheckBox
+        {
+            Content = "Minimize to system tray on close",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.MinimizeToTray
+        };
+        trayCheck.Checked += (s, e) => _currentSettings.MinimizeToTray = true;
+        trayCheck.Unchecked += (s, e) => _currentSettings.MinimizeToTray = false;
+        ContentPanel.Children.Add(trayCheck);
+
+        var startMinCheck = new CheckBox
+        {
+            Content = "Start minimized to tray",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.StartMinimized
+        };
+        startMinCheck.Checked += (s, e) => _currentSettings.StartMinimized = true;
+        startMinCheck.Unchecked += (s, e) => _currentSettings.StartMinimized = false;
+        ContentPanel.Children.Add(startMinCheck);
+
+        // --- Notifications Section ---
+        AddSectionSeparator();
+        AddHeader("Notifications");
+
+        var toastCheck = new CheckBox
+        {
+            Content = "Enable desktop notifications",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.ToastNotificationsEnabled
+        };
+        toastCheck.Checked += (s, e) => _currentSettings.ToastNotificationsEnabled = true;
+        toastCheck.Unchecked += (s, e) => _currentSettings.ToastNotificationsEnabled = false;
+        ContentPanel.Children.Add(toastCheck);
+
+        var criticalOnlyCheck = new CheckBox
+        {
+            Content = "Only notify for critical alerts",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.CriticalAlertsOnly
+        };
+        criticalOnlyCheck.Checked += (s, e) => _currentSettings.CriticalAlertsOnly = true;
+        criticalOnlyCheck.Unchecked += (s, e) => _currentSettings.CriticalAlertsOnly = false;
+        ContentPanel.Children.Add(criticalOnlyCheck);
+
+        var quietCheck = new CheckBox
+        {
+            Content = "Enable quiet hours (suppress non-critical notifications)",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.QuietHoursEnabled
+        };
+        quietCheck.Checked += (s, e) => _currentSettings.QuietHoursEnabled = true;
+        quietCheck.Unchecked += (s, e) => _currentSettings.QuietHoursEnabled = false;
+        ContentPanel.Children.Add(quietCheck);
+
+        // Quiet hours range
+        var quietPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 5) };
+        quietPanel.Children.Add(new TextBlock
+        {
+            Text = "Quiet hours: ",
+            FontSize = 13,
+            Foreground = (Brush)FindResource("TextSecondary"),
+            VerticalAlignment = System.Windows.VerticalAlignment.Center
+        });
+
+        var startCombo = new ComboBox
+        {
+            Style = (Style)FindResource("SettingComboBox"),
+            Width = 70,
+            ItemsSource = Enumerable.Range(0, 24).Select(h => $"{h:D2}:00").ToArray(),
+            SelectedIndex = _currentSettings.QuietHoursStart
+        };
+        startCombo.SelectionChanged += (s, e) => _currentSettings.QuietHoursStart = startCombo.SelectedIndex;
+        quietPanel.Children.Add(startCombo);
+
+        quietPanel.Children.Add(new TextBlock
+        {
+            Text = "  to  ",
+            FontSize = 13,
+            Foreground = (Brush)FindResource("TextSecondary"),
+            VerticalAlignment = System.Windows.VerticalAlignment.Center
+        });
+
+        var endCombo = new ComboBox
+        {
+            Style = (Style)FindResource("SettingComboBox"),
+            Width = 70,
+            ItemsSource = Enumerable.Range(0, 24).Select(h => $"{h:D2}:00").ToArray(),
+            SelectedIndex = _currentSettings.QuietHoursEnd
+        };
+        endCombo.SelectionChanged += (s, e) => _currentSettings.QuietHoursEnd = endCombo.SelectedIndex;
+        quietPanel.Children.Add(endCombo);
+
+        ContentPanel.Children.Add(quietPanel);
+        AddHelperText("Critical alerts will still notify during quiet hours");
+
+        // --- Alert Thresholds Section ---
+        AddSectionSeparator();
+        AddHeader("Alert Thresholds");
+        AddHelperText("Adjust when alerts are triggered. Lower values = more sensitive.");
+
+        // Governor warning
+        AddLabel("Governor limit warning (% of limit)");
+        var govWarnText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.GovernorWarningPct.ToString()
+        };
+        govWarnText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(govWarnText.Text, out int value))
+                _currentSettings.GovernorWarningPct = Math.Max(50, Math.Min(99, value));
+        };
+        ContentPanel.Children.Add(govWarnText);
+
+        // Governor critical
+        AddLabel("Governor limit critical (% of limit)");
+        var govCritText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.GovernorCriticalPct.ToString()
+        };
+        govCritText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(govCritText.Text, out int value))
+                _currentSettings.GovernorCriticalPct = Math.Max(70, Math.Min(100, value));
+        };
+        ContentPanel.Children.Add(govCritText);
+
+        // Duration warning
+        AddLabel("Execution time warning (ms)");
+        var durWarnText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.DurationWarningMs.ToString()
+        };
+        durWarnText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(durWarnText.Text, out int value))
+                _currentSettings.DurationWarningMs = Math.Max(1000, Math.Min(60000, value));
+        };
+        ContentPanel.Children.Add(durWarnText);
+
+        // Duration critical
+        AddLabel("Execution time critical (ms)");
+        var durCritText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.DurationCriticalMs.ToString()
+        };
+        durCritText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(durCritText.Text, out int value))
+                _currentSettings.DurationCriticalMs = Math.Max(2000, Math.Min(120000, value));
+        };
+        ContentPanel.Children.Add(durCritText);
+
+        // Health score
+        AddLabel("Health score warning (score below)");
+        var healthWarnText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.HealthScoreWarning.ToString()
+        };
+        healthWarnText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(healthWarnText.Text, out int value))
+                _currentSettings.HealthScoreWarning = Math.Max(20, Math.Min(90, value));
+        };
+        ContentPanel.Children.Add(healthWarnText);
+
+        AddLabel("Health score critical (score below)");
+        var healthCritText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.HealthScoreCritical.ToString()
+        };
+        healthCritText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(healthCritText.Text, out int value))
+                _currentSettings.HealthScoreCritical = Math.Max(10, Math.Min(80, value));
+        };
+        ContentPanel.Children.Add(healthCritText);
+    }
+
+    private void AddSectionSeparator()
+    {
+        ContentPanel.Children.Add(new Border
+        {
+            Height = 1,
+            Background = (Brush)FindResource("BorderSubtle"),
+            Margin = new Thickness(0, 20, 0, 10)
+        });
     }
 
     private void LoadAboutTab()
@@ -387,7 +649,7 @@ public partial class SettingsDialog : Window
         {
             Text = $"Version {version?.Major}.{version?.Minor}.{version?.Build}",
             FontSize = 16,
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCDDDE")!),
+            Foreground = (Brush)FindResource("TextPrimary"),
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 0, 0, 10)
         };
@@ -398,7 +660,7 @@ public partial class SettingsDialog : Window
         {
             Text = "The only Salesforce debug log analyzer that groups related logs\nand shows the complete user experience journey.",
             FontSize = 13,
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B9BBBE")!),
+            Foreground = (Brush)FindResource("TextSecondary"),
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             Margin = new Thickness(0, 0, 0, 30)
@@ -416,7 +678,7 @@ public partial class SettingsDialog : Window
         {
             Text = $"Copyright © {DateTime.Now.Year} Black Widow Team\nMade with ❤️ for the Salesforce community",
             FontSize = 11,
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#72767D")!),
+            Foreground = (Brush)FindResource("TextMuted"),
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             Margin = new Thickness(0, 30, 0, 0)
@@ -450,7 +712,7 @@ public partial class SettingsDialog : Window
         {
             Text = text,
             FontSize = 11,
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#72767D")!),
+            Foreground = (Brush)FindResource("TextMuted"),
             Margin = new Thickness(0, 2, 0, 2),
             TextWrapping = TextWrapping.Wrap
         };
@@ -463,7 +725,7 @@ public partial class SettingsDialog : Window
         {
             Content = text,
             Style = (Style)FindResource("MaterialDesignFlatButton"),
-            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5865F2")!),
+            Foreground = (Brush)FindResource("AccentPrimary"),
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 5, 0, 5),
             Tag = url
@@ -476,7 +738,10 @@ public partial class SettingsDialog : Window
                 {
                     Process.Start(new ProcessStartInfo(linkUrl) { UseShellExecute = true });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to open settings link: {LinkUrl}", linkUrl);
+                }
             }
         };
         ContentPanel.Children.Add(link);
@@ -544,6 +809,7 @@ public partial class SettingsDialog : Window
                 case "Parser": LoadParserTab(); break;
                 case "Privacy": LoadPrivacyTab(); break;
                 case "Advanced": LoadAdvancedTab(); break;
+                case "Monitoring": LoadMonitoringTab(); break;
                 case "About": LoadAboutTab(); break;
             }
 

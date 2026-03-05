@@ -1,0 +1,490 @@
+﻿64.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+00:40:56.1 (1290509)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:40:56.1 (1374962)|EXECUTION_STARTED
+00:40:56.1 (1402907)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+00:40:56.1 (2580136)|CODE_UNIT_FINISHED|FutureHandler - state load
+00:40:56.1 (2602272)|EXECUTION_FINISHED
+00:40:56.19 (19267619)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:40:56.19 (19292750)|EXECUTION_STARTED
+00:40:56.19 (19322773)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JmIn3|Contact_AccountSync.handleAtFuture(String, String)
+00:40:56.19 (19524551)|HEAP_ALLOCATE|[95]|Bytes:3
+00:40:56.19 (19629189)|HEAP_ALLOCATE|[100]|Bytes:152
+00:40:56.19 (19642795)|HEAP_ALLOCATE|[417]|Bytes:408
+00:40:56.19 (19653060)|HEAP_ALLOCATE|[430]|Bytes:408
+00:40:56.19 (19673231)|HEAP_ALLOCATE|[317]|Bytes:6
+00:40:56.19 (19754874)|VARIABLE_SCOPE_BEGIN|[20]|Contact_AccountSync.RECTYPE_INDIV|String|false|true
+00:40:56.19 (19895438)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+00:40:56.19 (19898768)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+00:40:56.19 (19992715)|VARIABLE_ASSIGNMENT|[EXTERNAL]|Contact_AccountSync.RECTYPE_INDIV|"Individual"
+00:40:56.19 (20017747)|METHOD_ENTRY|[19]|01p1R00000JmIn3|Contact_AccountSync.Contact_AccountSync()
+00:40:56.19 (20027008)|STATEMENT_EXECUTE|[19]
+00:40:56.19 (20034456)|STATEMENT_EXECUTE|[19]
+00:40:56.19 (20039956)|METHOD_EXIT|[19]|Contact_AccountSync
+00:40:56.19 (20043279)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:6461
+00:40:56.19 (20044965)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:6503
+00:40:56.19 (20057581)|VARIABLE_SCOPE_BEGIN|[43]|contactListJson|String|false|false
+00:40:56.19 (20073432)|VARIABLE_ASSIGNMENT|[43]|contactListJson|"[{\"attributes\":{\"typ (6441 more) ..."
+00:40:56.19 (20076146)|VARIABLE_SCOPE_BEGIN|[43]|oldMapJson|String|false|false
+00:40:56.19 (20081893)|VARIABLE_ASSIGNMENT|[43]|oldMapJson|"{\"0033600001ZBe3rAAD (6483 more) ..."
+00:40:56.19 (20088230)|STATEMENT_EXECUTE|[43]
+00:40:56.19 (20089195)|STATEMENT_EXECUTE|[44]
+00:40:56.19 (20092141)|HEAP_ALLOCATE|[44]|Bytes:67
+00:40:56.19 (20112985)|HEAP_ALLOCATE|[68]|Bytes:5
+00:40:56.19 (20138361)|HEAP_ALLOCATE|[74]|Bytes:5
+00:40:56.19 (20142917)|HEAP_ALLOCATE|[82]|Bytes:7
+00:40:56.19 (20318757)|HEAP_ALLOCATE|[44]|Bytes:33
+00:40:56.19 (20332137)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+00:40:56.19 (20335592)|STATEMENT_EXECUTE|[1]
+00:40:56.19 (20345310)|SYSTEM_METHOD_EXIT|[1]|Type
+00:40:56.19 (20350475)|HEAP_ALLOCATE|[44]|Bytes:8
+00:40:56.19 (20540421)|HEAP_ALLOCATE|[44]|Bytes:8
+00:40:56.19 (20545208)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:40:56.19 (20617515)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x6ffd0776
+00:40:56.19 (20621219)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:40:56.19 (20740431)|VARIABLE_ASSIGNMENT|[4]|apextype|"List<Contact>"|0x1c30ece4
+00:40:56.19 (22662541)|HEAP_ALLOCATE|[44]|Bytes:8
+00:40:56.19 (22719858)|HEAP_ALLOCATE|[44]|Bytes:24
+00:40:56.19 (22734988)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+00:40:56.19 (22738777)|STATEMENT_EXECUTE|[1]
+00:40:56.19 (22744344)|SYSTEM_METHOD_EXIT|[1]|JSON
+00:40:56.19 (22777611)|METHOD_ENTRY|[44]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (26916708)|METHOD_EXIT|[44]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (26935605)|VARIABLE_SCOPE_BEGIN|[44]|contactList|List<Contact>|true|false
+00:40:56.19 (26951442)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+00:40:56.19 (27519783)|VARIABLE_ASSIGNMENT|[44]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0},{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x776a4fa4
+00:40:56.19 (27557862)|STATEMENT_EXECUTE|[45]
+00:40:56.19 (27573012)|METHOD_ENTRY|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:40:56.19 (27596787)|VARIABLE_SCOPE_BEGIN|[48]|contactList|List<Contact>|true|false
+00:40:56.19 (27967266)|VARIABLE_ASSIGNMENT|[48]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0},{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x776a4fa4
+00:40:56.19 (27998503)|VARIABLE_SCOPE_BEGIN|[48]|oldMapJson|String|false|false
+00:40:56.19 (28004894)|VARIABLE_ASSIGNMENT|[48]|oldMapJson|"{\"0033600001ZBe3rAAD (6483 more) ..."
+00:40:56.19 (28010297)|STATEMENT_EXECUTE|[48]
+00:40:56.19 (28011299)|STATEMENT_EXECUTE|[49]
+00:40:56.19 (28028634)|HEAP_ALLOCATE|[49]|Bytes:4
+00:40:56.19 (28065263)|SYSTEM_CONSTRUCTOR_ENTRY|[49]|<init>()
+00:40:56.19 (28101177)|SYSTEM_CONSTRUCTOR_EXIT|[49]|<init>()
+00:40:56.19 (28104258)|VARIABLE_SCOPE_BEGIN|[49]|conIdList|List<String>|true|false
+00:40:56.19 (28134189)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (28141314)|VARIABLE_ASSIGNMENT|[49]|conIdList|[]|0x5be2553f
+00:40:56.19 (28144239)|STATEMENT_EXECUTE|[50]
+00:40:56.19 (28147763)|HEAP_ALLOCATE|[50]|Bytes:4
+00:40:56.19 (28151445)|SYSTEM_CONSTRUCTOR_ENTRY|[50]|<init>()
+00:40:56.19 (28157294)|SYSTEM_CONSTRUCTOR_EXIT|[50]|<init>()
+00:40:56.19 (28159344)|VARIABLE_SCOPE_BEGIN|[50]|accIdList|List<String>|true|false
+00:40:56.19 (28166547)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (28169189)|VARIABLE_ASSIGNMENT|[50]|accIdList|[]|0x5a8cfb4c
+00:40:56.19 (28171912)|STATEMENT_EXECUTE|[51]
+00:40:56.19 (28206704)|HEAP_ALLOCATE|[51]|Bytes:4
+00:40:56.19 (28244888)|SYSTEM_CONSTRUCTOR_ENTRY|[51]|<init>()
+00:40:56.19 (28253775)|SYSTEM_CONSTRUCTOR_EXIT|[51]|<init>()
+00:40:56.19 (28255885)|VARIABLE_SCOPE_BEGIN|[51]|upsAcctList|List<Account>|true|false
+00:40:56.19 (28260413)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (28263894)|VARIABLE_ASSIGNMENT|[51]|upsAcctList|[]|0x2d10c9ed
+00:40:56.19 (28323268)|SYSTEM_METHOD_ENTRY|[54]|List<Contact>.iterator()
+00:40:56.19 (28460417)|SYSTEM_METHOD_EXIT|[54]|List<Contact>.iterator()
+00:40:56.19 (28479238)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:40:56.19 (28493822)|HEAP_ALLOCATE|[54]|Bytes:5
+00:40:56.19 (28499878)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:40:56.19 (28513092)|HEAP_ALLOCATE|[54]|Bytes:348
+00:40:56.19 (28519354)|VARIABLE_SCOPE_BEGIN|[54]|con|Contact|true|false
+00:40:56.19 (28805967)|VARIABLE_ASSIGNMENT|[54]|con|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x57bf7734
+00:40:56.19 (28825270)|STATEMENT_EXECUTE|[54]
+00:40:56.19 (28826756)|STATEMENT_EXECUTE|[55]
+00:40:56.19 (28865374)|SYSTEM_METHOD_ENTRY|[55]|List<String>.add(Object)
+00:40:56.19 (28903149)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (28908762)|SYSTEM_METHOD_EXIT|[55]|List<String>.add(Object)
+00:40:56.19 (28949229)|STATEMENT_EXECUTE|[56]
+00:40:56.19 (28956422)|SYSTEM_METHOD_ENTRY|[56]|List<String>.add(Object)
+00:40:56.19 (28965847)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (28969319)|SYSTEM_METHOD_EXIT|[56]|List<String>.add(Object)
+00:40:56.19 (28974231)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:40:56.19 (28980016)|HEAP_ALLOCATE|[54]|Bytes:5
+00:40:56.19 (28983392)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:40:56.19 (28988484)|HEAP_ALLOCATE|[54]|Bytes:368
+00:40:56.19 (28992652)|VARIABLE_SCOPE_BEGIN|[54]|con|Contact|true|false
+00:40:56.19 (29222549)|VARIABLE_ASSIGNMENT|[54]|con|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:40:55.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:40:55.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x4a24ffc3
+00:40:56.19 (29254953)|STATEMENT_EXECUTE|[54]
+00:40:56.19 (29256006)|STATEMENT_EXECUTE|[55]
+00:40:56.19 (29264038)|SYSTEM_METHOD_ENTRY|[55]|List<String>.add(Object)
+00:40:56.19 (29269774)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (29273541)|SYSTEM_METHOD_EXIT|[55]|List<String>.add(Object)
+00:40:56.19 (29276339)|STATEMENT_EXECUTE|[56]
+00:40:56.19 (29279403)|SYSTEM_METHOD_ENTRY|[56]|List<String>.add(Object)
+00:40:56.19 (29282300)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (29285067)|SYSTEM_METHOD_EXIT|[56]|List<String>.add(Object)
+00:40:56.19 (29287987)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:40:56.19 (29291848)|HEAP_ALLOCATE|[54]|Bytes:5
+00:40:56.19 (29294514)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:40:56.19 (29299867)|VARIABLE_ASSIGNMENT|[54]|con|null|
+00:40:56.19 (29303082)|STATEMENT_EXECUTE|[60]
+00:40:56.19 (29311577)|METHOD_ENTRY|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:40:56.19 (29321904)|VARIABLE_SCOPE_BEGIN|[105]|accIdList|List<String>|true|false
+00:40:56.19 (29331420)|VARIABLE_ASSIGNMENT|[105]|accIdList|["0011R000034XvV7QAK","0013600001eQLMRAA4"]|0x5a8cfb4c
+00:40:56.19 (29334255)|VARIABLE_SCOPE_BEGIN|[105]|conIdList|List<String>|true|false
+00:40:56.19 (29345304)|VARIABLE_ASSIGNMENT|[105]|conIdList|["0031R00002xa0rzQAA","0033600001ZBe3rAAD"]|0x5be2553f
+00:40:56.19 (29349503)|STATEMENT_EXECUTE|[105]
+00:40:56.19 (29350307)|STATEMENT_EXECUTE|[106]
+00:40:56.19 (29383065)|HEAP_ALLOCATE|[106]|Bytes:4
+00:40:56.19 (29412891)|VARIABLE_SCOPE_BEGIN|[106]|acctMap|Map<String,Account>|true|false
+00:40:56.19 (29427614)|VARIABLE_ASSIGNMENT|[106]|acctMap|{}|0x95f9d56
+00:40:56.19 (29432132)|HEAP_ALLOCATE|[107]|Bytes:237
+00:40:56.19 (29438954)|HEAP_ALLOCATE|[107]|Bytes:4
+00:40:56.19 (29443644)|HEAP_ALLOCATE|[107]|Bytes:7
+00:40:56.19 (29453930)|HEAP_ALLOCATE|[107]|Bytes:7
+00:40:56.19 (31406562)|SOQL_EXECUTE_BEGIN|[107]|Aggregations:0|SELECT Id, Name, BillingCity, BillingCountry, BillingPostalCode, BillingState, BillingStreet, Phone, Person_Email__c, Auth0Id__c, SMA_SMAId__c, RecordTypeId, RecordType.Name FROM Account WHERE (Id IN :tmpVar1 OR SMA_SMAId__c IN :tmpVar2)
+00:40:56.19 (31445071)|LIMIT_USAGE|[107]|SOQL|1|200
+00:40:56.19 (31454797)|LIMIT_USAGE|[107]|AGGS|0|600
+00:40:56.19 (54636281)|SOQL_EXECUTE_EXPLAIN|[107]|Index on ApexExecutionOverlayAction : [ScopeId], cardinality: 0, sobjectCardinality: 1, relativeCost 0
+00:40:56.19 (54662001)|SOQL_EXECUTE_END|[107]|Rows:2
+00:40:56.19 (54685685)|LIMIT_USAGE|[107]|SOQL_ROWS|2|50000
+00:40:56.19 (54698969)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+00:40:56.19 (54772920)|SYSTEM_METHOD_ENTRY|[107]|Database.QueryLocator.iterator()
+00:40:56.19 (54939792)|HEAP_ALLOCATE|[107]|Bytes:54
+00:40:56.19 (54945666)|HEAP_ALLOCATE|[107]|Bytes:8
+00:40:56.19 (54966477)|SYSTEM_METHOD_ENTRY|[7]|QueryLocatorIterator.QueryLocatorIterator()
+00:40:56.19 (54970005)|STATEMENT_EXECUTE|[7]
+00:40:56.19 (54981707)|SYSTEM_METHOD_EXIT|[7]|QueryLocatorIterator
+00:40:56.19 (54989452)|HEAP_ALLOCATE|[107]|Bytes:28
+00:40:56.19 (55017203)|HEAP_ALLOCATE|[107]|Bytes:12
+00:40:56.19 (55025128)|HEAP_ALLOCATE|[107]|Bytes:8
+00:40:56.19 (55026760)|HEAP_ALLOCATE|[107]|Bytes:8
+00:40:56.19 (55030967)|VARIABLE_SCOPE_BEGIN|[15]|this|Database.QueryLocatorIterator|true|false
+00:40:56.19 (55087003)|VARIABLE_ASSIGNMENT|[15]|this|{}|0x1ef9d05b
+00:40:56.19 (55090697)|VARIABLE_SCOPE_BEGIN|[15]|values|List<SObject>|true|false
+00:40:56.19 (57241663)|VARIABLE_ASSIGNMENT|[15]|values|[{"BillingCountry":"Canada","BillingCity":"Toronto","SMA_SMAId__c":"0033600001ZBe3rAAD","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"4165699813","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","BillingPostalCode":"M2A 2J7","Id":"0013600001eQLMRAA4","Person_Email__c":"irfantariq88@gmail.c (2 more) ...","BillingState":"Ontario","Name":"Irfan Tariq"},{"BillingCountry":"United States","BillingCity":"Forney","SMA_SMAId__c":"0031R00002xa0rzQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","BillingPostalCode":"75126","Id":"0011R000034XvV7QAK","Person_Email__c":"dgordon330@yahoo.com","BillingState":"Texas","Name":"Derrick Gordon"}]|0x7e064b7e
+00:40:56.19 (57260681)|VARIABLE_SCOPE_BEGIN|[15]|ql|Database.QueryLocator|true|false
+00:40:56.19 (57287511)|VARIABLE_ASSIGNMENT|[15]|ql|{"query":"SELECT Id, Name, Bil (217 more) ..."}|0x5de7e5dd
+00:40:56.19 (57290590)|VARIABLE_SCOPE_BEGIN|[15]|totalNumRecords|Integer|false|false
+00:40:56.19 (57298398)|VARIABLE_ASSIGNMENT|[15]|totalNumRecords|2
+00:40:56.19 (57300518)|VARIABLE_SCOPE_BEGIN|[15]|queryMoreSize|Integer|false|false
+00:40:56.19 (57304431)|VARIABLE_ASSIGNMENT|[15]|queryMoreSize|49998
+00:40:56.19 (57406732)|HEAP_ALLOCATE|[107]|Bytes:28
+00:40:56.19 (57419062)|SYSTEM_METHOD_EXIT|[107]|Database.QueryLocator.iterator()
+00:40:56.19 (57458305)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (57514385)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (57521192)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.next()
+00:40:56.19 (57590817)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.next()
+00:40:56.19 (57596612)|VARIABLE_SCOPE_BEGIN|[107]|acc|Account|true|false
+00:40:56.19 (57662919)|VARIABLE_ASSIGNMENT|[107]|acc|{"BillingCountry":"Canada","BillingCity":"Toronto","SMA_SMAId__c":"0033600001ZBe3rAAD","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"4165699813","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","BillingPostalCode":"M2A 2J7","Id":"0013600001eQLMRAA4","Person_Email__c":"irfantariq88@gmail.c (2 more) ...","BillingState":"Ontario","Name":"Irfan Tariq"}|0x2542b8ac
+00:40:56.19 (57669992)|STATEMENT_EXECUTE|[110]
+00:40:56.19 (57726264)|SYSTEM_METHOD_ENTRY|[111]|String.isBlank(String)
+00:40:56.19 (57755191)|SYSTEM_METHOD_EXIT|[111]|String.isBlank(String)
+00:40:56.19 (57758749)|STATEMENT_EXECUTE|[111]
+00:40:56.19 (57759883)|STATEMENT_EXECUTE|[112]
+00:40:56.19 (57780375)|SYSTEM_METHOD_ENTRY|[112]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57793874)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:56.19 (57799385)|SYSTEM_METHOD_EXIT|[112]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57801610)|STATEMENT_EXECUTE|[114]
+00:40:56.19 (57817407)|SYSTEM_METHOD_ENTRY|[114]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57841526)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:56.19 (57845708)|SYSTEM_METHOD_EXIT|[114]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57848960)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (57860340)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (57863151)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.next()
+00:40:56.19 (57893864)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.next()
+00:40:56.19 (57897053)|VARIABLE_SCOPE_BEGIN|[107]|acc|Account|true|false
+00:40:56.19 (57946486)|VARIABLE_ASSIGNMENT|[107]|acc|{"BillingCountry":"United States","BillingCity":"Forney","SMA_SMAId__c":"0031R00002xa0rzQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","BillingPostalCode":"75126","Id":"0011R000034XvV7QAK","Person_Email__c":"dgordon330@yahoo.com","BillingState":"Texas","Name":"Derrick Gordon"}|0x30801443
+00:40:56.19 (57951925)|STATEMENT_EXECUTE|[110]
+00:40:56.19 (57960877)|SYSTEM_METHOD_ENTRY|[111]|String.isBlank(String)
+00:40:56.19 (57965390)|SYSTEM_METHOD_EXIT|[111]|String.isBlank(String)
+00:40:56.19 (57967514)|STATEMENT_EXECUTE|[111]
+00:40:56.19 (57968306)|STATEMENT_EXECUTE|[112]
+00:40:56.19 (57973176)|SYSTEM_METHOD_ENTRY|[112]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57975533)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:56.19 (57979471)|SYSTEM_METHOD_EXIT|[112]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57981309)|STATEMENT_EXECUTE|[114]
+00:40:56.19 (57985699)|SYSTEM_METHOD_ENTRY|[114]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57990093)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:56.19 (57993659)|SYSTEM_METHOD_EXIT|[114]|Map<String,Account>.put(Object, Object)
+00:40:56.19 (57996182)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (58003079)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:40:56.19 (58008224)|VARIABLE_ASSIGNMENT|[107]|acc|null|
+00:40:56.19 (58024849)|STATEMENT_EXECUTE|[116]
+00:40:56.19 (58028059)|METHOD_EXIT|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:40:56.19 (58031842)|VARIABLE_SCOPE_BEGIN|[60]|accountMap|Map<String,Account>|true|false
+00:40:56.19 (58181007)|VARIABLE_ASSIGNMENT|[60]|accountMap|{"0033600001ZBe3rAAD":{"BillingCountry":"Canada","BillingCity":"Toronto","SMA_SMAId__c":"0033600001ZBe3rAAD","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"4165699813","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","BillingPostalCode":"M2A 2J7","Id":"0013600001eQLMRAA4","Person_Email__c":"irfantariq88@gmail.c (2 more) ...","BillingState":"Ontario","Name":"Irfan Tariq"},"0013600001eQLMRAA4":{"BillingCountry":"Canada","BillingCity":"Toronto","SMA_SMAId__c":"0033600001ZBe3rAAD","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"4165699813","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","BillingPostalCode":"M2A 2J7","Id":"0013600001eQLMRAA4","Person_Email__c":"irfantariq88@gmail.c (2 more) ...","BillingState":"Ontario","Name":"Irfan Tariq"},"0031R00002xa0rzQAA":{"BillingCountry":"United States","BillingCity":"Forney","SMA_SMAId__c":"0031R00002xa0rzQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","BillingPostalCode":"75126","Id":"0011R000034XvV7QAK","Person_Email__c":"dgordon330@yahoo.com","BillingState":"Texas","Name":"Derrick Gordon"},"0011R000034XvV7QAK":{"BillingCountry":"United States","BillingCity":"Forney","SMA_SMAId__c":"0031R00002xa0rzQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","BillingPostalCode":"75126","Id":"0011R000034XvV7QAK","Person_Email__c":"dgordon330@yahoo.com","BillingState":"Texas","Name":"Derrick Gordon"}}|0x95f9d56
+00:40:56.19 (58193112)|STATEMENT_EXECUTE|[61]
+00:40:56.19 (58198134)|METHOD_ENTRY|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:40:56.19 (58208102)|VARIABLE_SCOPE_BEGIN|[119]|conIdList|List<String>|true|false
+00:40:56.19 (58219832)|VARIABLE_ASSIGNMENT|[119]|conIdList|["0031R00002xa0rzQAA","0033600001ZBe3rAAD"]|0x5be2553f
+00:40:56.19 (58223712)|STATEMENT_EXECUTE|[119]
+00:40:56.19 (58224533)|STATEMENT_EXECUTE|[120]
+00:40:56.19 (58226771)|HEAP_ALLOCATE|[120]|Bytes:264
+00:40:56.19 (58242744)|HEAP_ALLOCATE|[120]|Bytes:4
+00:40:56.19 (58759937)|SOQL_EXECUTE_BEGIN|[120]|Aggregations:0|SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, RecordTypeId, AccountId, CS_Birth_Date__c, MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c FROM Contact WHERE Id IN :tmpVar1
+00:40:56.19 (58791286)|LIMIT_USAGE|[120]|SOQL|2|200
+00:40:56.19 (58798489)|LIMIT_USAGE|[120]|AGGS|0|600
+00:40:56.19 (70549281)|SOQL_EXECUTE_EXPLAIN|[120]|Index on Contact : [Id], cardinality: 2, sobjectCardinality: 10303891, relativeCost 0
+00:40:56.19 (70573065)|SOQL_EXECUTE_END|[120]|Rows:2
+00:40:56.19 (70595273)|LIMIT_USAGE|[120]|SOQL_ROWS|4|50000
+00:40:56.19 (70608036)|HEAP_ALLOCATE|[120]|Bytes:12
+00:40:56.19 (70634315)|HEAP_ALLOCATE|[120]|Bytes:922
+00:40:56.19 (70682684)|HEAP_ALLOCATE|[120]|Bytes:12
+00:40:56.19 (70703142)|METHOD_EXIT|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:40:56.19 (70714988)|VARIABLE_SCOPE_BEGIN|[61]|conList|List<Contact>|true|false
+00:40:56.19 (70944017)|VARIABLE_ASSIGNMENT|[61]|conList|[{"Email":"dgordon330@yahoo.com","AccountId":"0011R000034XvV7QAK","FirstName":"Derrick","MailingCountry":"United States","Loyalty_Card__c":"77785088594753","MailingCity":"Forney","MailingState":"Texas","Name":"Derrick Gordon","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Id":"0031R00002xa0rzQAA","LastName":"Gordon"},{"Email":"irfantariq88@gmail.c (2 more) ...","AccountId":"0013600001eQLMRAA4","FirstName":"Irfan","MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","MailingCity":"Toronto","MailingState":"Ontario","Name":"Irfan Tariq","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","MailingCountryCode":"CA","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Id":"0033600001ZBe3rAAD","LastName":"Tariq"}]|0x3b387e1c
+00:40:56.19 (70970583)|SYSTEM_METHOD_ENTRY|[64]|List<Contact>.iterator()
+00:40:56.19 (71008343)|SYSTEM_METHOD_EXIT|[64]|List<Contact>.iterator()
+00:40:56.19 (71018301)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:40:56.19 (71030885)|HEAP_ALLOCATE|[64]|Bytes:5
+00:40:56.19 (71035474)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:40:56.19 (71048189)|HEAP_ALLOCATE|[64]|Bytes:68
+00:40:56.19 (71076219)|VARIABLE_SCOPE_BEGIN|[64]|con|Contact|true|false
+00:40:56.19 (71134954)|VARIABLE_ASSIGNMENT|[64]|con|{"Email":"dgordon330@yahoo.com","AccountId":"0011R000034XvV7QAK","FirstName":"Derrick","MailingCountry":"United States","Loyalty_Card__c":"77785088594753","MailingCity":"Forney","MailingState":"Texas","Name":"Derrick Gordon","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Id":"0031R00002xa0rzQAA","LastName":"Gordon"}|0x7bf11241
+00:40:56.19 (71142329)|STATEMENT_EXECUTE|[64]
+00:40:56.19 (71143624)|STATEMENT_EXECUTE|[65]
+00:40:56.19 (71146663)|VARIABLE_SCOPE_BEGIN|[65]|acct|Account|true|false
+00:40:56.19 (71152517)|VARIABLE_ASSIGNMENT|[65]|acct|null|
+00:40:56.19 (71168422)|STATEMENT_EXECUTE|[66]
+00:40:56.19 (71192034)|SYSTEM_METHOD_ENTRY|[66]|Map<String,Account>.get(Object)
+00:40:56.19 (71226242)|SYSTEM_METHOD_EXIT|[66]|Map<String,Account>.get(Object)
+00:40:56.19 (71309021)|VARIABLE_ASSIGNMENT|[66]|acct|{"BillingCountry":"United States","BillingCity":"Forney","SMA_SMAId__c":"0031R00002xa0rzQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","BillingPostalCode":"75126","Id":"0011R000034XvV7QAK","Person_Email__c":"dgordon330@yahoo.com","BillingState":"Texas","Name":"Derrick Gordon"}|0x30801443
+00:40:56.19 (71316953)|STATEMENT_EXECUTE|[67]
+00:40:56.19 (71330715)|METHOD_ENTRY|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:40:56.19 (71342658)|VARIABLE_SCOPE_BEGIN|[142]|con|Contact|true|false
+00:40:56.19 (71391709)|VARIABLE_ASSIGNMENT|[142]|con|{"Email":"dgordon330@yahoo.com","AccountId":"0011R000034XvV7QAK","FirstName":"Derrick","MailingCountry":"United States","Loyalty_Card__c":"77785088594753","MailingCity":"Forney","MailingState":"Texas","Name":"Derrick Gordon","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Id":"0031R00002xa0rzQAA","LastName":"Gordon"}|0x7bf11241
+00:40:56.19 (71397480)|VARIABLE_SCOPE_BEGIN|[142]|oldMapJson|String|false|false
+00:40:56.19 (71403559)|VARIABLE_ASSIGNMENT|[142]|oldMapJson|"{\"0033600001ZBe3rAAD (6483 more) ..."
+00:40:56.19 (71408245)|STATEMENT_EXECUTE|[142]
+00:40:56.19 (71409095)|STATEMENT_EXECUTE|[143]
+00:40:56.19 (71412037)|VARIABLE_SCOPE_BEGIN|[143]|changed|Boolean|false|false
+00:40:56.19 (71434288)|HEAP_ALLOCATE|[143]|Bytes:5
+00:40:56.19 (71439401)|VARIABLE_ASSIGNMENT|[143]|changed|false
+00:40:56.19 (71456119)|SYSTEM_METHOD_ENTRY|[145]|String.isBlank(String)
+00:40:56.19 (71473046)|SYSTEM_METHOD_EXIT|[145]|String.isBlank(String)
+00:40:56.19 (71477810)|HEAP_ALLOCATE|[145]|Bytes:4
+00:40:56.19 (71527341)|STATEMENT_EXECUTE|[145]
+00:40:56.19 (71528292)|STATEMENT_EXECUTE|[146]
+00:40:56.19 (71529922)|HEAP_ALLOCATE|[146]|Bytes:89
+00:40:56.19 (71623105)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (71630384)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (71633755)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:40:56.19 (71674891)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x293c39a7
+00:40:56.19 (71677934)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:40:56.19 (71730314)|VARIABLE_ASSIGNMENT|[4]|apextype|"Map<Id,SObject>"|0x242575f2
+00:40:56.19 (71773037)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (71780009)|METHOD_ENTRY|[146]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (73031953)|METHOD_EXIT|[146]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (73046089)|VARIABLE_SCOPE_BEGIN|[146]|oldMap|Map<Id,SObject>|true|false
+00:40:56.19 (73589842)|VARIABLE_ASSIGNMENT|[146]|oldMap|{"0033600001ZBe3rAAD":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-17T21:23:36.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-17T21:23:36.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0},"0031R00002xa0rzQAA":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-20T04:46:08.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-20T04:46:08.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}}|0x778f702
+00:40:56.19 (73627614)|STATEMENT_EXECUTE|[147]
+00:40:56.19 (73629321)|STATEMENT_EXECUTE|[148]
+00:40:56.19 (73660791)|SYSTEM_METHOD_ENTRY|[148]|Map<Id,SObject>.get(Object)
+00:40:56.19 (73686474)|SYSTEM_METHOD_EXIT|[148]|Map<Id,SObject>.get(Object)
+00:40:56.19 (73697901)|VARIABLE_SCOPE_BEGIN|[148]|oldCon|Contact|true|false
+00:40:56.19 (73905684)|VARIABLE_ASSIGNMENT|[148]|oldCon|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-20T04:46:08.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-20T04:46:08.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x7f48a16f
+00:40:56.19 (73922640)|STATEMENT_EXECUTE|[149]
+00:40:56.19 (73950428)|STATEMENT_EXECUTE|[151]
+00:40:56.19 (73979200)|STATEMENT_EXECUTE|[152]
+00:40:56.19 (73989114)|STATEMENT_EXECUTE|[153]
+00:40:56.19 (73997200)|STATEMENT_EXECUTE|[154]
+00:40:56.19 (74001930)|STATEMENT_EXECUTE|[155]
+00:40:56.19 (74005735)|STATEMENT_EXECUTE|[156]
+00:40:56.19 (74013463)|STATEMENT_EXECUTE|[157]
+00:40:56.19 (74020310)|STATEMENT_EXECUTE|[158]
+00:40:56.19 (74044660)|STATEMENT_EXECUTE|[159]
+00:40:56.19 (74052268)|STATEMENT_EXECUTE|[160]
+00:40:56.19 (74060168)|STATEMENT_EXECUTE|[161]
+00:40:56.19 (74067233)|STATEMENT_EXECUTE|[162]
+00:40:56.19 (74068205)|STATEMENT_EXECUTE|[163]
+00:40:56.19 (74073058)|METHOD_EXIT|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:40:56.19 (74080146)|STATEMENT_EXECUTE|[69]
+00:40:56.19 (74086705)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:40:56.19 (74096798)|HEAP_ALLOCATE|[64]|Bytes:5
+00:40:56.19 (74101475)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:40:56.19 (74108314)|HEAP_ALLOCATE|[64]|Bytes:72
+00:40:56.19 (74112554)|VARIABLE_SCOPE_BEGIN|[64]|con|Contact|true|false
+00:40:56.19 (74177446)|VARIABLE_ASSIGNMENT|[64]|con|{"Email":"irfantariq88@gmail.c (2 more) ...","AccountId":"0013600001eQLMRAA4","FirstName":"Irfan","MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","MailingCity":"Toronto","MailingState":"Ontario","Name":"Irfan Tariq","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","MailingCountryCode":"CA","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Id":"0033600001ZBe3rAAD","LastName":"Tariq"}|0xcd8c7dd
+00:40:56.19 (74184005)|STATEMENT_EXECUTE|[64]
+00:40:56.19 (74184936)|STATEMENT_EXECUTE|[65]
+00:40:56.19 (74187111)|VARIABLE_SCOPE_BEGIN|[65]|acct|Account|true|false
+00:40:56.19 (74191685)|VARIABLE_ASSIGNMENT|[65]|acct|null|
+00:40:56.19 (74199241)|STATEMENT_EXECUTE|[66]
+00:40:56.19 (74209288)|SYSTEM_METHOD_ENTRY|[66]|Map<String,Account>.get(Object)
+00:40:56.19 (74227744)|SYSTEM_METHOD_EXIT|[66]|Map<String,Account>.get(Object)
+00:40:56.19 (74341901)|VARIABLE_ASSIGNMENT|[66]|acct|{"BillingCountry":"Canada","BillingCity":"Toronto","SMA_SMAId__c":"0033600001ZBe3rAAD","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"4165699813","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","BillingPostalCode":"M2A 2J7","Id":"0013600001eQLMRAA4","Person_Email__c":"irfantariq88@gmail.c (2 more) ...","BillingState":"Ontario","Name":"Irfan Tariq"}|0x2542b8ac
+00:40:56.19 (74349685)|STATEMENT_EXECUTE|[67]
+00:40:56.19 (74354056)|METHOD_ENTRY|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:40:56.19 (74358471)|VARIABLE_SCOPE_BEGIN|[142]|con|Contact|true|false
+00:40:56.19 (74410567)|VARIABLE_ASSIGNMENT|[142]|con|{"Email":"irfantariq88@gmail.c (2 more) ...","AccountId":"0013600001eQLMRAA4","FirstName":"Irfan","MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","MailingCity":"Toronto","MailingState":"Ontario","Name":"Irfan Tariq","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","MailingCountryCode":"CA","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Id":"0033600001ZBe3rAAD","LastName":"Tariq"}|0xcd8c7dd
+00:40:56.19 (74416047)|VARIABLE_SCOPE_BEGIN|[142]|oldMapJson|String|false|false
+00:40:56.19 (74421302)|VARIABLE_ASSIGNMENT|[142]|oldMapJson|"{\"0033600001ZBe3rAAD (6483 more) ..."
+00:40:56.19 (74424685)|STATEMENT_EXECUTE|[142]
+00:40:56.19 (74425450)|STATEMENT_EXECUTE|[143]
+00:40:56.19 (74427482)|VARIABLE_SCOPE_BEGIN|[143]|changed|Boolean|false|false
+00:40:56.19 (74433129)|HEAP_ALLOCATE|[143]|Bytes:5
+00:40:56.19 (74436538)|VARIABLE_ASSIGNMENT|[143]|changed|false
+00:40:56.19 (74448097)|SYSTEM_METHOD_ENTRY|[145]|String.isBlank(String)
+00:40:56.19 (74454150)|SYSTEM_METHOD_EXIT|[145]|String.isBlank(String)
+00:40:56.19 (74486886)|STATEMENT_EXECUTE|[145]
+00:40:56.19 (74487721)|STATEMENT_EXECUTE|[146]
+00:40:56.19 (74554215)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (74559520)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (74562209)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:40:56.19 (74594497)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x446136e0
+00:40:56.19 (74597354)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:40:56.19 (74640691)|VARIABLE_ASSIGNMENT|[4]|apextype|"Map<Id,SObject>"|0x242575f2
+00:40:56.19 (74673925)|HEAP_ALLOCATE|[146]|Bytes:8
+00:40:56.19 (74679546)|METHOD_ENTRY|[146]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (75566117)|METHOD_EXIT|[146]||System.JSON.deserialize(String, System.Type)
+00:40:56.19 (75576240)|VARIABLE_SCOPE_BEGIN|[146]|oldMap|Map<Id,SObject>|true|false
+00:40:56.19 (76000549)|VARIABLE_ASSIGNMENT|[146]|oldMap|{"0033600001ZBe3rAAD":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-17T21:23:36.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-17T21:23:36.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0},"0031R00002xa0rzQAA":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-20T04:46:08.000Z","AccountId":"0011R000034XvV7QAK","Email":"dgordon330@yahoo.com","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"9530dfd1-d04e-4288-9 (16 more) ...","CreatedById":"00536000004ABAgAAO","MailingLatitude":32.7461,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000MgE8WAK","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2024-08-25T22:50:35.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Forney","SF_ID__c":"0031R00002xa0rzQAA","Contractor_Review_Date__c":"2018-07-04T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"TX","Phone_Opt_in__c":false,"CreatedDate":"2018-01-05T03:03:41.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"Gordon","Id":"0031R00002xa0rzQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785088594753","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Texas","ManagerName__c":" ","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0051R00000JeE4nQAF","MailingLongitude":-96.4487,"AgeRestrictedContentPreference__c":false,"Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14693861512","SFMC_Test_Record__c":false,"Guarantor__c":false,"FirstName":"Derrick","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-20T04:46:08.000Z","NASCAR__c":false,"LastActivityDate":"2023-06-28T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a411R000002CRPUQA4","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}}|0x4611989
+00:40:56.19 (76034941)|STATEMENT_EXECUTE|[147]
+00:40:56.19 (76036238)|STATEMENT_EXECUTE|[148]
+00:40:56.19 (76049795)|SYSTEM_METHOD_ENTRY|[148]|Map<Id,SObject>.get(Object)
+00:40:56.19 (76057816)|SYSTEM_METHOD_EXIT|[148]|Map<Id,SObject>.get(Object)
+00:40:56.19 (76066096)|VARIABLE_SCOPE_BEGIN|[148]|oldCon|Contact|true|false
+00:40:56.19 (76304739)|VARIABLE_ASSIGNMENT|[148]|oldCon|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-17T21:23:36.000Z","AccountId":"0013600001eQLMRAA4","Email":"irfantariq88@gmail.c (2 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2018-03-03T10:13:46.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"MobilePhone":"4165699813","HC_ID__c":"1d93fe97-af82-4947-a (16 more) ...","CreatedById":"00536000008GjYZAA0","MailingLatitude":43.65189,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[{\"context\":\"fuel\",\" (68 more) ...","IndividualId":"0PKbV000000RCWzWAO","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"OtherCountryCode":"US","Loyalty_Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"MailingCity":"Toronto","SF_ID__c":"0033600001ZBe3rAAD","Birthdate":"1988-01-18T00:00:00.000Z","Contractor_Review_Date__c":"2018-08-30T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"MailingStateCode":"ON","Phone_Opt_in__c":false,"CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","CreatedDate":"2018-03-03T10:13:47.000Z","MailingCountryCode":"CA","Hunting__c":false,"LastName":"Tariq","Id":"0033600001ZBe3rAAD","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","Text_Preference__c":false,"Push_Preference__c":false,"MailingState":"Ontario","ManagerName__c":" ","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","MobilePlus1__c":"+14165699813","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"00536000008GjYZAA0","MailingLongitude":-79.38171,"AgeRestrictedContentPreference__c":false,"Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"City","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+14165699813","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2018-03-03T10:13:46.000Z","Guarantor__c":false,"FirstName":"Irfan","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (202 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-17T21:23:36.000Z","NASCAR__c":false,"LastActivityDate":"2025-03-19T00:00:00.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"Primary_Loyalty_Account__c":"a41360000018omhAAA","LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x3e9893b3
+00:40:56.19 (76323820)|STATEMENT_EXECUTE|[149]
+00:40:56.19 (76336114)|STATEMENT_EXECUTE|[151]
+00:40:56.19 (76341064)|STATEMENT_EXECUTE|[152]
+00:40:56.19 (76344535)|STATEMENT_EXECUTE|[153]
+00:40:56.19 (76348214)|STATEMENT_EXECUTE|[154]
+00:40:56.19 (76392057)|SYSTEM_METHOD_ENTRY|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:40:56.19 (76416359)|SYSTEM_METHOD_EXIT|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:40:56.19 (76420254)|STATEMENT_EXECUTE|[155]
+00:40:56.19 (76424277)|STATEMENT_EXECUTE|[156]
+00:40:56.19 (76428912)|STATEMENT_EXECUTE|[157]
+00:40:56.19 (76432190)|STATEMENT_EXECUTE|[158]
+00:40:56.19 (76435799)|STATEMENT_EXECUTE|[159]
+00:40:56.19 (76439565)|STATEMENT_EXECUTE|[160]
+00:40:56.19 (76443249)|STATEMENT_EXECUTE|[161]
+00:40:56.19 (76446183)|STATEMENT_EXECUTE|[162]
+00:40:56.19 (76447004)|STATEMENT_EXECUTE|[163]
+00:40:56.19 (76451289)|METHOD_EXIT|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:40:56.19 (76456457)|STATEMENT_EXECUTE|[69]
+00:40:56.19 (76461009)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:40:56.19 (76468353)|HEAP_ALLOCATE|[64]|Bytes:5
+00:40:56.19 (76472655)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:40:56.19 (76479055)|VARIABLE_ASSIGNMENT|[64]|con|null|
+00:40:56.19 (76482386)|STATEMENT_EXECUTE|[78]
+00:40:56.19 (76483199)|STATEMENT_EXECUTE|[78]
+00:40:56.19 (76483981)|STATEMENT_EXECUTE|[79]
+00:40:56.19 (76554453)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (76559164)|STATEMENT_EXECUTE|[83]
+00:40:56.19 (76571880)|HEAP_ALLOCATE|[83]|Bytes:4
+00:40:56.19 (76606074)|VARIABLE_SCOPE_BEGIN|[83]|conIdAccIdMap|Map<String,String>|true|false
+00:40:56.19 (76616557)|VARIABLE_ASSIGNMENT|[83]|conIdAccIdMap|{}|0x350e482f
+00:40:56.19 (76627010)|SYSTEM_METHOD_ENTRY|[84]|List<Account>.iterator()
+00:40:56.19 (76709875)|SYSTEM_METHOD_EXIT|[84]|List<Account>.iterator()
+00:40:56.19 (76727166)|SYSTEM_METHOD_ENTRY|[84]|system.ListIterator.hasNext()
+00:40:56.19 (76732903)|HEAP_ALLOCATE|[84]|Bytes:5
+00:40:56.19 (76735811)|SYSTEM_METHOD_EXIT|[84]|system.ListIterator.hasNext()
+00:40:56.19 (76740407)|VARIABLE_ASSIGNMENT|[84]|updAcct|null|
+00:40:56.19 (76743234)|STATEMENT_EXECUTE|[84]
+00:40:56.19 (76744239)|STATEMENT_EXECUTE|[87]
+00:40:56.19 (76751287)|HEAP_ALLOCATE|[87]|Bytes:4
+00:40:56.19 (76786527)|SYSTEM_CONSTRUCTOR_ENTRY|[87]|<init>()
+00:40:56.19 (76802426)|SYSTEM_CONSTRUCTOR_EXIT|[87]|<init>()
+00:40:56.19 (76805186)|VARIABLE_SCOPE_BEGIN|[87]|updateList|List<Contact>|true|false
+00:40:56.19 (76811014)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:40:56.19 (76819706)|VARIABLE_ASSIGNMENT|[87]|updateList|[]|0x19ffcc97
+00:40:56.19 (76825282)|SYSTEM_METHOD_ENTRY|[88]|List<Contact>.iterator()
+00:40:56.19 (76831394)|SYSTEM_METHOD_EXIT|[88]|List<Contact>.iterator()
+00:40:56.19 (76834863)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:40:56.19 (76837913)|HEAP_ALLOCATE|[88]|Bytes:5
+00:40:56.19 (76840327)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:40:56.19 (76846873)|HEAP_ALLOCATE|[88]|Bytes:68
+00:40:56.19 (76851058)|VARIABLE_SCOPE_BEGIN|[88]|con|Contact|true|false
+00:40:56.19 (76985086)|VARIABLE_ASSIGNMENT|[88]|con|{"Email":"dgordon330@yahoo.com","AccountId":"0011R000034XvV7QAK","FirstName":"Derrick","MailingCountry":"United States","Loyalty_Card__c":"77785088594753","MailingCity":"Forney","MailingState":"Texas","Name":"Derrick Gordon","IDM_ID__c":"bab63a4f-559d-4b8a-a (16 more) ...","Phone":"469-386-1512","MailingPostalCode":"75126","RecordTypeId":"01236000001HthEAAS","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;63aea2ee35e97a (10 more) ...","Id":"0031R00002xa0rzQAA","LastName":"Gordon"}|0x7bf11241
+00:40:56.19 (76992952)|STATEMENT_EXECUTE|[88]
+00:40:56.19 (76998980)|STATEMENT_EXECUTE|[89]
+00:40:56.19 (77002468)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:40:56.19 (77007187)|HEAP_ALLOCATE|[88]|Bytes:5
+00:40:56.19 (77009772)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:40:56.19 (77017990)|HEAP_ALLOCATE|[88]|Bytes:72
+00:40:56.19 (77021207)|VARIABLE_SCOPE_BEGIN|[88]|con|Contact|true|false
+00:40:56.19 (77079855)|VARIABLE_ASSIGNMENT|[88]|con|{"Email":"irfantariq88@gmail.c (2 more) ...","AccountId":"0013600001eQLMRAA4","FirstName":"Irfan","MailingCountry":"Canada","Loyalty_Card__c":"77785035463722","MailingCity":"Toronto","MailingState":"Ontario","Name":"Irfan Tariq","IDM_ID__c":"d302171b-90ae-4ab1-9 (16 more) ...","Phone":"4165699813","MailingPostalCode":"M2A 2J7","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1988-01-18T00:00:00.000Z","MailingCountryCode":"CA","Auth0Id__c":"auth0&#124;5a9a755b2d8450 (10 more) ...","Id":"0033600001ZBe3rAAD","LastName":"Tariq"}|0xcd8c7dd
+00:40:56.19 (77085569)|STATEMENT_EXECUTE|[88]
+00:40:56.19 (77087992)|STATEMENT_EXECUTE|[89]
+00:40:56.19 (77089961)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:40:56.19 (77092862)|HEAP_ALLOCATE|[88]|Bytes:5
+00:40:56.19 (77095177)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:40:56.19 (77098626)|VARIABLE_ASSIGNMENT|[88]|con|null|
+00:40:56.19 (77103575)|SYSTEM_METHOD_ENTRY|[96]|List<Contact>.size()
+00:40:56.19 (77111850)|SYSTEM_METHOD_EXIT|[96]|List<Contact>.size()
+00:40:56.19 (77115539)|STATEMENT_EXECUTE|[96]
+00:40:56.19 (77119587)|METHOD_EXIT|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:40:56.77 (77140127)|CUMULATIVE_LIMIT_USAGE
+00:40:56.77 (77140127)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 2 out of 200
+  Number of query rows: 4 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+00:40:56.77 (77140127)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+00:40:56.77 (77140127)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcParameterizedTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_static_RECTYPE_INDIV:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+00:40:56.77 (77140127)|CUMULATIVE_LIMIT_USAGE_END
+
+00:40:56.19 (77357451)|CODE_UNIT_FINISHED|Contact_AccountSync.handleAtFuture(String, String)
+00:40:56.19 (77371693)|EXECUTION_FINISHED
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING_BEGIN
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING|SOQL operations|
+Class.Contact_AccountSync.getAccountData: line 107, column 1: [SELECT Id, Name,BillingCity,BillingCountry,BillingPostalCode,BillingState,BillingStreet,Phone,
+                                  Person_Email__c,Auth0Id__c,SMA_SMAId__c,RecordTypeId,RecordType.Name
+                             FROM Account 
+                            WHERE Id IN :accIdList or SMA_SMAId__c in :conIdList]: executed 7 times in 28 ms
+Class.Contact_AccountSync.getContactData: line 120, column 1: [SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, 
+                       RecordTypeId, AccountId, CS_Birth_Date__c, 
+                       MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c
+                  FROM Contact 
+                 WHERE Id IN: conIdList]: executed 1 time in 13 ms
+
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING|DML operations|
+Class.Contact_AccountSync.handle: line 79, column 1: Upsert: List<Account>: executed 1 time in 0 ms
+
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static void handleAtFuture(String, String): executed 1 time in 57 ms
+Class.Contact_AccountSync.handleAtFuture: line 45, column 1: public static void handle(List<Contact>, String): executed 1 time in 49 ms
+Class.Contact_AccountSync.handle: line 60, column 1: private static Map<String,Account> getAccountData(List<String>, List<String>): executed 1 time in 29 ms
+Class.Contact_AccountSync.handle: line 61, column 1: private static List<Contact> getContactData(List<String>): executed 1 time in 13 ms
+Class.Contact_AccountSync.handle: line 72, column 1: private static Boolean wasContactDataChanged(Contact, String): executed 2 times in 6 ms
+Class.Contact_AccountSync.handleAtFuture: line 44, column 1: global static Object deserialize(String, System.Type): executed 1 time in 4 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 146, column 1: global static Object deserialize(String, System.Type): executed 2 times in 2 ms
+Class.Contact_AccountSync.handle: line 64, column 1: global public System.Iterator iterator(): executed 4 times in 0 ms
+Class.Contact_AccountSync.handle: line 66, column 1: global public Object get(Object): executed 2 times in 0 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 145, column 1: public static Boolean isBlank(String): executed 2 times in 0 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 148, column 1: global public Object get(Object): executed 2 times in 0 ms
+
+00:40:56.117 (117914779)|CUMULATIVE_PROFILING_END

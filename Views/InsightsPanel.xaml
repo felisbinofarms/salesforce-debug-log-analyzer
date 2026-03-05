@@ -10,9 +10,8 @@
              Background="Transparent">
     
     <UserControl.Resources>
-        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <helpers:PercentToSeverityConverter x:Key="PercentToSeverityConverter"/>
-        
+        <!-- Converters inherited from App.xaml -->
+
         <!-- Discord Card Style -->
         <Style x:Key="InsightCard" TargetType="Border" BasedOn="{StaticResource ModernCard}">
             <Setter Property="Padding" Value="20"/>

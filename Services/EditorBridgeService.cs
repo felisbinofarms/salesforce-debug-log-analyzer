@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -44,14 +45,14 @@ public class EditorBridgeService : IDisposable
             _isRunning = true;
             _cancellationTokenSource = new CancellationTokenSource();
 
-            Console.WriteLine("✓ Editor Bridge Service started on http://localhost:7777");
+            Log.Information("Editor Bridge Service started on http://localhost:7777");
 
             // Start accepting connections
             _ = Task.Run(async () => await AcceptConnectionsAsync(_cancellationTokenSource.Token));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Failed to start Editor Bridge Service: {ex.Message}");
+            Log.Error(ex, "Failed to start Editor Bridge Service");
             throw;
         }
 
@@ -75,7 +76,7 @@ public class EditorBridgeService : IDisposable
                     var wsContext = await context.AcceptWebSocketAsync(null);
                     _connectedClient = wsContext.WebSocket;
                     ConnectionStatusChanged?.Invoke(this, true);
-                    Console.WriteLine("✓ VSCode extension connected");
+                    Log.Information("VSCode extension connected");
 
                     // Handle messages from VSCode
                     _ = Task.Run(async () => await ReceiveMessagesAsync(wsContext.WebSocket, cancellationToken));
@@ -94,7 +95,7 @@ public class EditorBridgeService : IDisposable
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    Console.WriteLine($"Error accepting connection: {ex.Message}");
+                    Log.Warning("Error accepting WebSocket connection: {Error}", ex.Message);
                 }
             }
         }
@@ -119,7 +120,7 @@ public class EditorBridgeService : IDisposable
                     await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cancellationToken);
                     _connectedClient = null;
                     ConnectionStatusChanged?.Invoke(this, false);
-                    Console.WriteLine("✗ VSCode extension disconnected");
+                    Log.Information("VSCode extension disconnected");
                 }
                 else if (result.MessageType == WebSocketMessageType.Text)
                 {
@@ -136,7 +137,7 @@ public class EditorBridgeService : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error receiving message: {ex.Message}");
+            Log.Warning("Error receiving WebSocket message: {Error}", ex.Message);
             _connectedClient = null;
             ConnectionStatusChanged?.Invoke(this, false);
         }
@@ -153,7 +154,7 @@ public class EditorBridgeService : IDisposable
     {
         try
         {
-            var json = JsonDocument.Parse(message);
+            using var json = JsonDocument.Parse(message);
             var root = json.RootElement;
 
             if (root.TryGetProperty("type", out var typeElement))
@@ -167,18 +168,18 @@ public class EditorBridgeService : IDisposable
                         {
                             _workspacePath = pathElement.GetString();
                             WorkspacePathReceived?.Invoke(this, _workspacePath ?? "");
-                            Console.WriteLine($"✓ Received workspace path: {_workspacePath}");
+                            Log.Debug("Received workspace path: {Path}", _workspacePath);
                         }
                         break;
 
                     case "pong":
-                        Console.WriteLine("✓ VSCode extension is alive");
+                        Log.Debug("VSCode extension pong received");
                         break;
 
                     case "error":
                         if (root.TryGetProperty("message", out var errorElement))
                         {
-                            Console.WriteLine($"✗ VSCode error: {errorElement.GetString()}");
+                            Log.Warning("VSCode error: {Error}", errorElement.GetString());
                         }
                         break;
                 }
@@ -186,7 +187,7 @@ public class EditorBridgeService : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error parsing VSCode message: {ex.Message}");
+            Log.Warning("Error parsing VSCode message: {Error}", ex.Message);
         }
     }
 
@@ -197,7 +198,7 @@ public class EditorBridgeService : IDisposable
     {
         if (!IsConnected)
         {
-            Console.WriteLine("✗ VSCode extension not connected");
+            Log.Debug("VSCode extension not connected");
             return false;
         }
 
@@ -220,12 +221,12 @@ public class EditorBridgeService : IDisposable
                 CancellationToken.None
             );
 
-            Console.WriteLine($"✓ Sent openFile command: {Path.GetFileName(filePath)}:{line}");
+            Log.Debug("Sent openFile command: {FileName}:{Line}", Path.GetFileName(filePath), line);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Failed to send openFile command: {ex.Message}");
+            Log.Warning("Failed to send openFile command: {Error}", ex.Message);
             return false;
         }
     }
@@ -257,7 +258,7 @@ public class EditorBridgeService : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Failed to request workspace path: {ex.Message}");
+            Log.Warning("Failed to request workspace path: {Error}", ex.Message);
             return false;
         }
     }
@@ -361,11 +362,11 @@ public class EditorBridgeService : IDisposable
             _httpListener?.Stop();
             _httpListener?.Close();
 
-            Console.WriteLine("✓ Editor Bridge Service stopped");
+            Log.Information("Editor Bridge Service stopped");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error stopping Editor Bridge Service: {ex.Message}");
+            Log.Warning("Error stopping Editor Bridge Service: {Error}", ex.Message);
         }
     }
 

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Views;
+using Serilog;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -28,6 +29,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly OrgMetadataService _metadataService;
     private readonly LogExplainerService _explainerService;
     private readonly LicenseService _licenseService;
+    private MonitoringDatabaseService? _monitoringDb;
+    private BackgroundMonitoringService? _monitoringService;
     private bool _disposed;
 
     [ObservableProperty]
@@ -73,7 +76,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     [ObservableProperty]
     private ObservableCollection<string> _contextBreakdown = new();
-    
+
+    // Background monitoring state
+    [ObservableProperty]
+    private bool _isMonitoringActive = false;
+
+    [ObservableProperty]
+    private string _monitoringStatusText = "Monitoring: Off";
+
+    // Alert center
+    [ObservableProperty]
+    private bool _showAlertCenter = false;
+
+    [ObservableProperty]
+    private int _unreadAlertCount = 0;
+
+    [ObservableProperty]
+    private ObservableCollection<MonitoringAlert> _monitoringAlerts = new();
+
     partial void OnSelectedLogGroupChanged(LogGroup? value)
     {
         if (value == null) 
@@ -100,7 +120,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (value.Phases != null && value.Phases.Any())
         {
             var phaseLines = value.Phases.Select(p => 
-                $"  • {p.Name}: {p.DurationMs:F0}ms ({(p.DurationMs / totalDuration * 100):F1}%)");
+                $"  • {p.Name}: {p.DurationMs:F0}ms ({(totalDuration > 0 ? p.DurationMs / totalDuration * 100 : 0):F1}%)");
             GroupPhaseBreakdown = $"Execution Phases:\n{string.Join("\n", phaseLines)}";
         }
         else
@@ -696,11 +716,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var result = await _licenseService.RevalidateIfNeededAsync().ConfigureAwait(false);
 
         // Re-apply display on the UI thread
-        App.Current.Dispatcher.Invoke(RefreshLicenseDisplay);
+        Application.Current?.Dispatcher?.Invoke(RefreshLicenseDisplay);
 
         if (!result.IsValid && result.ErrorMessage != null)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
                 // Non-blocking notification — don't interrupt startup with a dialog
                 StatusMessage = $"⚠️ License: {result.ErrorMessage}";
@@ -708,7 +728,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         else if (result.IsOfflineGracePeriod)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
                 StatusMessage = "ℹ️ License: offline — will revalidate when connected";
             });
@@ -761,6 +781,161 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         ConnectionDisplayName = orgName;
         StatusMessage = $"✓ Connected to {orgName}";
+
+        // Initialize monitoring database for the connected org
+        InitializeMonitoringDb(orgName);
+
+        // Auto-start background monitoring if enabled
+        var settings = _settingsService.Load();
+        if (settings.MonitoringEnabled && settings.MonitoringAutoStart)
+        {
+            _ = StartMonitoringAsync();
+        }
+    }
+
+    /// <summary>
+    /// Initializes (or re-initializes) the monitoring database for the given org.
+    /// </summary>
+    private void InitializeMonitoringDb(string orgId)
+    {
+        try
+        {
+            _monitoringDb?.Dispose();
+            _monitoringDb = new MonitoringDatabaseService(orgId);
+            Log.Information("Monitoring database initialized for org {OrgId}", orgId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to initialize monitoring database for org {OrgId}", orgId);
+            _monitoringDb = null;
+        }
+    }
+
+    /// <summary>
+    /// Persists a parsed log analysis to the monitoring database (fire-and-forget, never blocks UI).
+    /// </summary>
+    private async Task PersistLogSnapshotAsync(LogAnalysis analysis)
+    {
+        if (_monitoringDb == null) return;
+
+        try
+        {
+            var orgId = _monitoringDb.OrgId;
+            var snapshot = LogSnapshot.FromAnalysis(analysis, orgId);
+            await _monitoringDb.InsertSnapshotAsync(snapshot);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to persist log snapshot for {LogId}", analysis.LogId);
+        }
+    }
+
+    /// <summary>
+    /// Starts the background monitoring service.
+    /// </summary>
+    private async Task StartMonitoringAsync()
+    {
+        try
+        {
+            // Detach handlers from old instance before disposing
+            if (_monitoringService != null)
+            {
+                _monitoringService.AlertGenerated -= OnMonitoringAlertGenerated;
+                _monitoringService.Dispose();
+            }
+
+            _monitoringService = new BackgroundMonitoringService(_apiService, _parserService, _settingsService);
+            _monitoringService.StatusChanged += OnMonitoringStatusChanged;
+            _monitoringService.AlertGenerated += OnMonitoringAlertGenerated;
+
+            await _monitoringService.StartAsync();
+            IsMonitoringActive = true;
+            MonitoringStatusText = "Monitoring active";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to start background monitoring");
+            IsMonitoringActive = false;
+            MonitoringStatusText = $"Monitoring error: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Stops the background monitoring service.
+    /// </summary>
+    private void StopMonitoring()
+    {
+        _monitoringService?.Stop();
+        IsMonitoringActive = false;
+        MonitoringStatusText = "Monitoring paused";
+    }
+
+    /// <summary>
+    /// Toggles background monitoring on/off. Called from tray menu or UI.
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleMonitoring()
+    {
+        if (IsMonitoringActive)
+            StopMonitoring();
+        else
+            await StartMonitoringAsync();
+    }
+
+    private void OnMonitoringStatusChanged(object? sender, string status)
+    {
+        Application.Current?.Dispatcher?.Invoke(() => MonitoringStatusText = status);
+    }
+
+    private void OnMonitoringAlertGenerated(object? sender, MonitoringAlert alert)
+    {
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            Log.Information("Monitoring alert: [{Severity}] {Title}", alert.Severity, alert.Title);
+            MonitoringAlerts.Insert(0, alert);
+            UnreadAlertCount = MonitoringAlerts.Count(a => !a.IsRead);
+        });
+    }
+
+    [RelayCommand]
+    private void ToggleAlertCenter()
+    {
+        ShowAlertCenter = !ShowAlertCenter;
+    }
+
+    [RelayCommand]
+    private async Task MarkAllAlertsRead()
+    {
+        if (_monitoringDb == null) return;
+        try
+        {
+            await _monitoringDb.MarkAllReadAsync();
+            foreach (var alert in MonitoringAlerts)
+                alert.IsRead = true;
+            UnreadAlertCount = 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to mark all alerts read");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DismissAlert(long alertId)
+    {
+        if (_monitoringDb == null) return;
+        try
+        {
+            await _monitoringDb.DismissAlertAsync(alertId);
+            var alert = MonitoringAlerts.FirstOrDefault(a => a.Id == alertId);
+            if (alert != null)
+                MonitoringAlerts.Remove(alert);
+            UnreadAlertCount = MonitoringAlerts.Count(a => !a.IsRead);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to dismiss alert {AlertId}", alertId);
+        }
     }
 
     partial void OnSelectedLogChanged(LogAnalysis? value)
@@ -1733,15 +1908,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return methodName;
     }
     
-    /// <summary>
-    /// Truncate string to max length with ellipsis
-    /// </summary>
-    private string TruncateString(string str, int maxLength)
-    {
-        if (string.IsNullOrEmpty(str) || str.Length <= maxLength) return str;
-        return str.Substring(0, maxLength - 3) + "...";
-    }
-
     [RelayCommand]
     private void SelectLog(LogAnalysis? log)
     {
@@ -2077,7 +2243,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             
             // Enrich with org metadata (user names, trigger locations, etc.)
             await EnrichLogWithMetadataAsync(analysis);
-            
+
+            // Persist to monitoring database (fire-and-forget, won't block UI)
+            _ = PersistLogSnapshotAsync(analysis);
+
             Logs.Insert(0, analysis);
             SelectedLog = analysis;
 
@@ -2709,7 +2878,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     private void OnLogReceived(object? sender, LogReceivedEventArgs e)
     {
-        Application.Current?.Dispatcher.Invoke(async () =>
+        // Use InvokeAsync to properly handle async lambda (Invoke(async ...) causes async-void fire-and-forget)
+        Application.Current?.Dispatcher.InvokeAsync(async () =>
         {
             try
             {
@@ -2733,7 +2903,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 
                 // Enrich with org metadata
                 await EnrichLogWithMetadataAsync(analysis);
-                
+
+                // Persist to monitoring database (before filters — we track all logs for trends)
+                _ = PersistLogSnapshotAsync(analysis);
+
                 // FILTER: Only errors (if enabled)
                 if (_streamingOptions?.OnlyErrors == true)
                 {
@@ -2997,7 +3170,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             // Silent fail - enrichment is nice-to-have, not critical
-            Console.WriteLine($"Failed to enrich log with metadata: {ex.Message}");
+            Log.Debug("Failed to enrich log with metadata: {Error}", ex.Message);
         }
     }
     
@@ -3178,16 +3351,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ManageConnections()
     {
-        // TODO: Open ConnectionDialog to manage connections
-        StatusMessage = "⚙️ Connection management coming soon...";
-        
-        // For now, just open the connection dialog
+        StatusMessage = "Opening connection manager...";
+
         var dialog = new ConnectionDialog(_oauthService, _apiService)
         {
             Owner = Application.Current.MainWindow
         };
-        
+
         dialog.ShowDialog();
+        StatusMessage = "Connection manager closed";
     }
 
     public void Dispose()
@@ -3195,6 +3367,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (_disposed) return;
         _disposed = true;
 
+        // Unsubscribe event handlers to prevent leaks
+        try
+        {
+            _cliService.StatusChanged -= OnCliStatusChanged;
+            _cliService.LogReceived -= OnLogReceived;
+            _editorBridge.ConnectionStatusChanged -= OnEditorConnectionChanged;
+            _editorBridge.WorkspacePathReceived -= OnWorkspacePathReceived;
+            if (_streamingThrottleTimer != null)
+                _streamingThrottleTimer.Tick -= OnStreamingThrottleTick;
+        }
+        catch { }
+
+        try { _monitoringService?.Dispose(); } catch { }
+        try { _monitoringDb?.Dispose(); } catch { }
         try { _editorBridge.Dispose(); } catch { }
         try { _apiService.Dispose(); } catch { }
     }

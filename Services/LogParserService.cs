@@ -103,7 +103,7 @@ public class LogParserService
         
         if (lastNs > firstNs && firstNs >= 0)
         {
-            analysis.DurationMs = (lastNs - firstNs) / 1_000_000.0;
+            analysis.DurationMs = (lastNs - firstNs) / 1_000_000;
             analysis.WallClockMs = analysis.DurationMs;
             analysis.DurationSource = DurationSource.NanosecondPrecise;
         }

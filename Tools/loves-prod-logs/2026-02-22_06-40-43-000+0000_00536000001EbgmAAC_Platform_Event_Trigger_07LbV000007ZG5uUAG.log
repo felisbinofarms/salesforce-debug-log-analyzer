@@ -1,0 +1,392 @@
+﻿66.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+22:40:43.0 (482267)|USER_INFO|[EXTERNAL]|00536000001Ebgm|autoproc@00d36000000kq3ueac|(GMT-08:00) Pacific Standard Time (America/Los_Angeles)|GMT-08:00
+22:40:43.0 (588472)|EXECUTION_STARTED
+22:40:43.0 (619230)|CODE_UNIT_STARTED|[EXTERNAL]|01qbV000003N9GX|ServiceLogEventTrigger on Service_Log_Event trigger event AfterInsert|__sfdc_trigger/ServiceLogEventTrigger
+22:40:43.0 (707658)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+22:40:43.0 (1502664)|HEAP_ALLOCATE|[95]|Bytes:3
+22:40:43.0 (1551684)|HEAP_ALLOCATE|[100]|Bytes:152
+22:40:43.0 (1565382)|HEAP_ALLOCATE|[417]|Bytes:408
+22:40:43.0 (1578552)|HEAP_ALLOCATE|[430]|Bytes:408
+22:40:43.0 (1606276)|HEAP_ALLOCATE|[317]|Bytes:6
+22:40:43.0 (1629092)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+22:40:43.0 (1637707)|VARIABLE_SCOPE_BEGIN|[12]|this|ServiceLogEventTrigger|true|false
+22:40:43.0 (1746286)|VARIABLE_ASSIGNMENT|[12]|this|{}|0x52bff7cf
+22:40:43.0 (1779052)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+22:40:43.0 (1782521)|VARIABLE_SCOPE_BEGIN|[12]|this|ServiceLogEventTrigger|true|false
+22:40:43.0 (1844026)|VARIABLE_ASSIGNMENT|[12]|this|{}|0x52bff7cf
+22:40:43.0 (1850867)|STATEMENT_EXECUTE|[12]
+22:40:43.0 (1851843)|STATEMENT_EXECUTE|[13]
+22:40:43.0 (1993865)|HEAP_ALLOCATE|[13]|Bytes:4
+22:40:43.0 (2093692)|SYSTEM_CONSTRUCTOR_ENTRY|[13]|<init>()
+22:40:43.0 (2131017)|SYSTEM_CONSTRUCTOR_EXIT|[13]|<init>()
+22:40:43.0 (2153943)|HEAP_ALLOCATE|[68]|Bytes:5
+22:40:43.0 (2187916)|HEAP_ALLOCATE|[74]|Bytes:5
+22:40:43.0 (2194733)|HEAP_ALLOCATE|[82]|Bytes:7
+22:40:43.0 (2380702)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (2397917)|VARIABLE_ASSIGNMENT|[13]|this.serviceLogs|[]|0x52bff7cf
+22:40:43.0 (2498940)|SYSTEM_METHOD_ENTRY|[16]|List<Service_Log_Event__e>.iterator()
+22:40:43.0 (2601780)|SYSTEM_METHOD_EXIT|[16]|List<Service_Log_Event__e>.iterator()
+22:40:43.0 (2617727)|SYSTEM_METHOD_ENTRY|[16]|system.ListIterator.hasNext()
+22:40:43.0 (2630455)|HEAP_ALLOCATE|[16]|Bytes:5
+22:40:43.0 (2634700)|SYSTEM_METHOD_EXIT|[16]|system.ListIterator.hasNext()
+22:40:43.0 (2669000)|VARIABLE_SCOPE_BEGIN|[16]|evt|Service_Log_Event__e|true|false
+22:40:43.0 (2817179)|VARIABLE_ASSIGNMENT|[16]|evt|{"CreatedById":"00536000006CafHAAS","Payload__c":"{\"attributes\":{\"type (3327 more) ...","ReplayId":"28144736","EventUuid":"6bf299e1-9143-4eef-a (16 more) ...","CreatedDate":"2026-02-22T06:40:43.000Z","OwnerId__c":"00536000006CafHAAS","Id":"e0Fxx000001u5jMEAQ"}|0x729a344
+22:40:43.0 (2823490)|STATEMENT_EXECUTE|[16]
+22:40:43.0 (2824800)|STATEMENT_EXECUTE|[17]
+22:40:43.0 (2885839)|SYSTEM_METHOD_ENTRY|[17]|String.isNotBlank(String)
+22:40:43.0 (2911754)|SYSTEM_METHOD_EXIT|[17]|String.isNotBlank(String)
+22:40:43.0 (2934725)|VARIABLE_SCOPE_BEGIN|[17]|log|String|false|false
+22:40:43.0 (2942952)|VARIABLE_ASSIGNMENT|[17]|log|"{\"attributes\":{\"type (3327 more) ..."
+22:40:43.0 (2945076)|STATEMENT_EXECUTE|[18]
+22:40:43.0 (2947308)|HEAP_ALLOCATE|[18]|Bytes:40
+22:40:43.0 (3057374)|HEAP_ALLOCATE|[18]|Bytes:33
+22:40:43.0 (3078344)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+22:40:43.0 (3080813)|STATEMENT_EXECUTE|[1]
+22:40:43.0 (3089314)|SYSTEM_METHOD_EXIT|[1]|Type
+22:40:43.0 (3092791)|HEAP_ALLOCATE|[18]|Bytes:8
+22:40:43.0 (3105800)|HEAP_ALLOCATE|[18]|Bytes:8
+22:40:43.0 (3108400)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+22:40:43.0 (3186392)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x36c6c167
+22:40:43.0 (3189724)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+22:40:43.0 (3301869)|VARIABLE_ASSIGNMENT|[4]|apextype|"Service_Log__c"|0x35028863
+22:40:43.0 (6466686)|HEAP_ALLOCATE|[18]|Bytes:8
+22:40:43.0 (6546506)|HEAP_ALLOCATE|[18]|Bytes:24
+22:40:43.0 (6565325)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+22:40:43.0 (6570663)|STATEMENT_EXECUTE|[1]
+22:40:43.0 (6577046)|SYSTEM_METHOD_EXIT|[1]|JSON
+22:40:43.0 (6589319)|METHOD_ENTRY|[18]||System.JSON.deserializeStrict(String, System.Type)
+22:40:43.0 (7430181)|METHOD_EXIT|[18]||System.JSON.deserializeStrict(String, System.Type)
+22:40:43.0 (7445220)|VARIABLE_SCOPE_BEGIN|[18]|newLog|Service_Log__c|true|false
+22:40:43.0 (7528573)|VARIABLE_ASSIGNMENT|[18]|newLog|{"Service_Name__c":"Google Maps - Get La (5 more) ...","Method__c":"GET","Direction__c":"Outbound","Service_Start__c":"2026-02-22T06:40:43.493Z","Category__c":"Google Maps","RequestBody__c":"","ResponseBody__c":"{\n   \"results\" : \n   (2445 more) ...","attributes":{"type":"Service_Log__c"},"Service_End__c":"2026-02-22T06:40:43.583Z","RequestURI__c":"callout:GoogleMaps/g (111 more) ...","ResponseStatusCode__c":200.0,"ResponseHeaders__c":"(Alt-Svc, Server, Ac (143 more) ..."}|0x528ec2e1
+22:40:43.0 (7548563)|STATEMENT_EXECUTE|[19]
+22:40:43.0 (7597758)|HEAP_ALLOCATE|[19]|Bytes:4
+22:40:43.0 (7769188)|HEAP_ALLOCATE|[19]|Bytes:-4
+22:40:43.0 (7810300)|VARIABLE_ASSIGNMENT|[19]|this.OwnerId|"00536000006CafHAAS"|0x528ec2e1
+22:40:43.0 (7814744)|STATEMENT_EXECUTE|[20]
+22:40:43.0 (7862486)|SYSTEM_METHOD_ENTRY|[20]|List<Service_Log__c>.add(Object)
+22:40:43.0 (7884984)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (7891130)|SYSTEM_METHOD_EXIT|[20]|List<Service_Log__c>.add(Object)
+22:40:43.0 (7898980)|SYSTEM_METHOD_ENTRY|[16]|system.ListIterator.hasNext()
+22:40:43.0 (7908527)|HEAP_ALLOCATE|[16]|Bytes:5
+22:40:43.0 (7912450)|SYSTEM_METHOD_EXIT|[16]|system.ListIterator.hasNext()
+22:40:43.0 (7922280)|VARIABLE_ASSIGNMENT|[16]|evt|null|
+22:40:43.0 (7929262)|SYSTEM_METHOD_ENTRY|[23]|List<Service_Log__c>.isEmpty()
+22:40:43.0 (7936607)|SYSTEM_METHOD_EXIT|[23]|List<Service_Log__c>.isEmpty()
+22:40:43.0 (7941198)|STATEMENT_EXECUTE|[23]
+22:40:43.0 (7942206)|STATEMENT_EXECUTE|[24]
+22:40:43.0 (8032489)|VARIABLE_SCOPE_BEGIN|[17]|ServiceLog.Error_Message_MAX_SIZE|Integer|false|true
+22:40:43.0 (8037874)|VARIABLE_SCOPE_BEGIN|[24]|ServiceLog.MAX_PAYLOAD_SIZE|Integer|false|true
+22:40:43.0 (8041380)|VARIABLE_SCOPE_BEGIN|[21]|ServiceLog.RequestBody_MAX_SIZE|Integer|false|true
+22:40:43.0 (8044690)|VARIABLE_SCOPE_BEGIN|[19]|ServiceLog.RequestHeaders_MAX_SIZE|Integer|false|true
+22:40:43.0 (8047807)|VARIABLE_SCOPE_BEGIN|[20]|ServiceLog.RequestParameters_MAX_SIZE|Integer|false|true
+22:40:43.0 (8050919)|VARIABLE_SCOPE_BEGIN|[18]|ServiceLog.RequestURI_MAX_SIZE|Integer|false|true
+22:40:43.0 (8054347)|VARIABLE_SCOPE_BEGIN|[22]|ServiceLog.ResponseBody_MAX_SIZE|Integer|false|true
+22:40:43.0 (8057632)|VARIABLE_SCOPE_BEGIN|[23]|ServiceLog.ResponseHeaders_MAX_SIZE|Integer|false|true
+22:40:43.0 (8060794)|VARIABLE_SCOPE_BEGIN|[15]|ServiceLog.includeRequestBody|Boolean|false|true
+22:40:43.0 (8064174)|VARIABLE_SCOPE_BEGIN|[13]|ServiceLog.log|ServiceLog|true|true
+22:40:43.0 (8068177)|VARIABLE_SCOPE_BEGIN|[11]|ServiceLog.logList|List<Service_Log__c>|true|true
+22:40:43.0 (8071970)|VARIABLE_SCOPE_BEGIN|[14]|ServiceLog.serviceLogName|String|false|true
+22:40:43.0 (8075794)|VARIABLE_SCOPE_BEGIN|[9]|ServiceLog.settings|AppSettings|true|true
+22:40:43.0 (8086228)|HEAP_ALLOCATE|[24]|Bytes:88
+22:40:43.0 (8090255)|HEAP_ALLOCATE|[24]|Bytes:84
+22:40:43.0 (8092386)|HEAP_ALLOCATE|[24]|Bytes:19
+22:40:43.0 (8136370)|METHOD_ENTRY|[8]|01p3600000JZQWB|ServiceLog.ServiceLog()
+22:40:43.0 (8139888)|STATEMENT_EXECUTE|[8]
+22:40:43.0 (8142388)|STATEMENT_EXECUTE|[8]
+22:40:43.0 (8151522)|HEAP_ALLOCATE|[9]|Bytes:5
+22:40:43.0 (8154123)|STATEMENT_EXECUTE|[9]
+22:40:43.0 (8156652)|HEAP_ALLOCATE|[9]|Bytes:29
+22:40:43.0 (8159516)|HEAP_ALLOCATE|[9]|Bytes:44
+22:40:43.0 (8164035)|METHOD_ENTRY|[11]|01pbV0000002xX3|AppSettings.AppSettings()
+22:40:43.0 (8166390)|STATEMENT_EXECUTE|[11]
+22:40:43.0 (8168273)|STATEMENT_EXECUTE|[11]
+22:40:43.0 (9478223)|SYSTEM_MODE_ENTER|false
+22:40:43.0 (9490713)|HEAP_ALLOCATE|[9]|Bytes:5
+22:40:43.0 (9494885)|STATEMENT_EXECUTE|[131]
+22:40:43.0 (9501029)|SYSTEM_MODE_EXIT|false
+22:40:43.0 (9515057)|METHOD_EXIT|[11]|AppSettings
+22:40:43.0 (9521777)|HEAP_ALLOCATE|[9]|Bytes:12
+22:40:43.0 (9525332)|HEAP_ALLOCATE|[9]|Bytes:10
+22:40:43.0 (9542730)|CONSTRUCTOR_ENTRY|[9]|01pbV0000002xX3|<init>(String)|AppSettings
+22:40:43.0 (9563382)|VARIABLE_SCOPE_BEGIN|[16]|this|AppSettings|true|false
+22:40:43.0 (9715106)|VARIABLE_ASSIGNMENT|[16]|this|{}|0x3704245a
+22:40:43.0 (9723322)|VARIABLE_SCOPE_BEGIN|[16]|applicationName|String|false|false
+22:40:43.0 (9730829)|VARIABLE_ASSIGNMENT|[16]|applicationName|"ServiceLog"
+22:40:43.0 (9741010)|SYSTEM_MODE_ENTER|false
+22:40:43.0 (9744727)|HEAP_ALLOCATE|[17]|Bytes:5
+22:40:43.0 (9842518)|STATEMENT_EXECUTE|[11]
+22:40:43.0 (9844949)|HEAP_ALLOCATE|[17]|Bytes:5
+22:40:43.0 (9847151)|STATEMENT_EXECUTE|[12]
+22:40:43.0 (9848013)|STATEMENT_EXECUTE|[13]
+22:40:43.0 (9866550)|STATEMENT_EXECUTE|[16]
+22:40:43.0 (9867670)|STATEMENT_EXECUTE|[17]
+22:40:43.0 (9875959)|VARIABLE_ASSIGNMENT|[17]|this.applicationName|"ServiceLog"|0x3704245a
+22:40:43.0 (9878836)|STATEMENT_EXECUTE|[18]
+22:40:43.0 (9954019)|HEAP_ALLOCATE|[18]|Bytes:22
+22:40:43.0 (9971280)|METHOD_ENTRY|[1]|01pbV0000000ZVh|ApplicationSettings_Util.ApplicationSettings_Util()
+22:40:43.0 (9975464)|STATEMENT_EXECUTE|[1]
+22:40:43.0 (9977613)|STATEMENT_EXECUTE|[1]
+22:40:43.0 (9980644)|HEAP_ALLOCATE|[18]|Bytes:5
+22:40:43.0 (9986394)|METHOD_EXIT|[1]|ApplicationSettings_Util
+22:40:43.0 (9994971)|METHOD_ENTRY|[18]|01pbV0000000ZVh|ApplicationSettings_Util.getApplicationConfigurationsByAppName(String)
+22:40:43.0 (10061602)|VARIABLE_SCOPE_BEGIN|[33]|applicationName|String|false|false
+22:40:43.0 (10068514)|VARIABLE_ASSIGNMENT|[33]|applicationName|"ServiceLog"
+22:40:43.0 (10074218)|HEAP_ALLOCATE|[34]|Bytes:5
+22:40:43.0 (10077413)|STATEMENT_EXECUTE|[33]
+22:40:43.0 (10078206)|STATEMENT_EXECUTE|[34]
+22:40:43.0 (10096724)|HEAP_ALLOCATE|[34]|Bytes:4
+22:40:43.0 (10114621)|VARIABLE_SCOPE_BEGIN|[34]|applicationConfigMap|Map<String,String>|true|false
+22:40:43.0 (10131260)|VARIABLE_ASSIGNMENT|[34]|applicationConfigMap|{}|0x4913950e
+22:40:43.0 (10138871)|METHOD_ENTRY|[35]|01pbV0000000ZVh|ApplicationSettings_Util.getApplicationDefaultConfigurations(String)
+22:40:43.0 (10146723)|VARIABLE_SCOPE_BEGIN|[65]|applicationName|String|false|false
+22:40:43.0 (10150825)|VARIABLE_ASSIGNMENT|[65]|applicationName|"ServiceLog"
+22:40:43.0 (10162278)|HEAP_ALLOCATE|[66]|Bytes:5
+22:40:43.0 (10164488)|STATEMENT_EXECUTE|[65]
+22:40:43.0 (10165494)|STATEMENT_EXECUTE|[66]
+22:40:43.0 (10167385)|HEAP_ALLOCATE|[66]|Bytes:380
+22:40:43.0 (10173764)|HEAP_ALLOCATE|[66]|Bytes:4
+22:40:43.0 (10177518)|HEAP_ALLOCATE|[66]|Bytes:7
+22:40:43.0 (11245158)|SOQL_EXECUTE_BEGIN|[66]|Aggregations:0|SELECT Label, value__c, ApplicationSettings__c, ApplicationSettings__r.Label, ApplicationSettings__r.DeveloperName, ApplicationSettings__r.Active__c, ApplicationSettings__r.APIConsumer__r.Username__c FROM Application_Configuration__mdt WHERE (ApplicationSettings__r.Active__c = TRUE AND ApplicationSettings__r.MasterLabel = :tmpVar1 AND ApplicationSettings__r.APIConsumer__c = '')
+22:40:43.0 (26384588)|SOQL_EXECUTE_EXPLAIN|[66]|No explain plan is available
+22:40:43.0 (26413002)|SOQL_EXECUTE_END|[66]|Rows:1
+22:40:43.0 (26439306)|LIMIT_USAGE|[66]|SOQL_ROWS|1|50000
+22:40:43.0 (26453003)|HEAP_ALLOCATE|[66]|Bytes:8
+22:40:43.0 (26495779)|HEAP_ALLOCATE|[66]|Bytes:237
+22:40:43.0 (26617527)|HEAP_ALLOCATE|[66]|Bytes:8
+22:40:43.0 (26654697)|METHOD_EXIT|[35]|01pbV0000000ZVh|ApplicationSettings_Util.getApplicationDefaultConfigurations(String)
+22:40:43.0 (26732295)|SYSTEM_METHOD_ENTRY|[35]|List<Application_Configuration__mdt>.iterator()
+22:40:43.0 (26816251)|SYSTEM_METHOD_EXIT|[35]|List<Application_Configuration__mdt>.iterator()
+22:40:43.0 (26833326)|SYSTEM_METHOD_ENTRY|[35]|system.ListIterator.hasNext()
+22:40:43.0 (26849480)|HEAP_ALLOCATE|[35]|Bytes:5
+22:40:43.0 (26854396)|SYSTEM_METHOD_EXIT|[35]|system.ListIterator.hasNext()
+22:40:43.0 (26877901)|HEAP_ALLOCATE|[35]|Bytes:24
+22:40:43.0 (26888995)|VARIABLE_SCOPE_BEGIN|[35]|config|Application_Configuration__mdt|true|false
+22:40:43.0 (27066135)|VARIABLE_ASSIGNMENT|[35]|config|{"Label":"platformEvents.enabl (2 more) ...","value__c":"true","ApplicationSettings__c":"m1NbV0000003cIUUAY","Id":"m0pbV000002vnO8QAI","ApplicationSettings__r":{"Label":"ServiceLog","Id":"m1NbV0000003cIUUAY","DeveloperName":"ServiceLog","Active__c":true}}|0x552ee7b9
+22:40:43.0 (27074554)|STATEMENT_EXECUTE|[35]
+22:40:43.0 (27075693)|STATEMENT_EXECUTE|[36]
+22:40:43.0 (27133213)|SYSTEM_METHOD_ENTRY|[36]|Map<String,String>.put(Object, Object)
+22:40:43.0 (27165279)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+22:40:43.0 (27172032)|SYSTEM_METHOD_EXIT|[36]|Map<String,String>.put(Object, Object)
+22:40:43.0 (27176654)|SYSTEM_METHOD_ENTRY|[35]|system.ListIterator.hasNext()
+22:40:43.0 (27181726)|HEAP_ALLOCATE|[35]|Bytes:5
+22:40:43.0 (27184718)|SYSTEM_METHOD_EXIT|[35]|system.ListIterator.hasNext()
+22:40:43.0 (27191064)|VARIABLE_ASSIGNMENT|[35]|config|null|
+22:40:43.0 (27194766)|STATEMENT_EXECUTE|[38]
+22:40:43.0 (27202002)|METHOD_EXIT|[18]|01pbV0000000ZVh|ApplicationSettings_Util.getApplicationConfigurationsByAppName(String)
+22:40:43.0 (27231480)|VARIABLE_ASSIGNMENT|[18]|this.settingsMap|{"platformEvents.enabled":"true"}|0x3704245a
+22:40:43.0 (27241483)|SYSTEM_MODE_EXIT|false
+22:40:43.0 (27259547)|CONSTRUCTOR_EXIT|[9]|01pbV0000002xX3|<init>(String)|AppSettings
+22:40:43.0 (27337928)|VARIABLE_ASSIGNMENT|[9]|ServiceLog.settings|{"applicationName":"ServiceLog","settingsMap":"0x4913950e"}|0x3704245a
+22:40:43.0 (27341354)|STATEMENT_EXECUTE|[15]
+22:40:43.0 (27345777)|HEAP_ALLOCATE|[15]|Bytes:5
+22:40:43.0 (27351876)|VARIABLE_ASSIGNMENT|[15]|ServiceLog.includeRequestBody|true
+22:40:43.0 (27354448)|STATEMENT_EXECUTE|[17]
+22:40:43.0 (27357563)|HEAP_ALLOCATE|[15]|Bytes:14
+22:40:43.0 (27360327)|HEAP_ALLOCATE|[15]|Bytes:16
+22:40:43.0 (27440758)|SYSTEM_METHOD_ENTRY|[17]|Schema.SObjectField.getDescribe()
+22:40:43.0 (27773019)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (27848804)|HEAP_ALLOCATE|[17]|Bytes:8
+22:40:43.0 (27854984)|SYSTEM_METHOD_EXIT|[17]|Schema.SObjectField.getDescribe()
+22:40:43.0 (27872839)|HEAP_ALLOCATE|[17]|Bytes:4
+22:40:43.0 (27882820)|VARIABLE_ASSIGNMENT|[17]|ServiceLog.Error_Message_MAX_SIZE|50000
+22:40:43.0 (27885582)|STATEMENT_EXECUTE|[18]
+22:40:43.0 (27887658)|HEAP_ALLOCATE|[17]|Bytes:13
+22:40:43.0 (27913356)|SYSTEM_METHOD_ENTRY|[18]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28027668)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28045176)|HEAP_ALLOCATE|[18]|Bytes:8
+22:40:43.0 (28048450)|SYSTEM_METHOD_EXIT|[18]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28053726)|HEAP_ALLOCATE|[18]|Bytes:4
+22:40:43.0 (28060547)|VARIABLE_ASSIGNMENT|[18]|ServiceLog.RequestURI_MAX_SIZE|200
+22:40:43.0 (28063233)|STATEMENT_EXECUTE|[19]
+22:40:43.0 (28064426)|HEAP_ALLOCATE|[18]|Bytes:17
+22:40:43.0 (28080703)|SYSTEM_METHOD_ENTRY|[19]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28157189)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28170176)|HEAP_ALLOCATE|[19]|Bytes:8
+22:40:43.0 (28172976)|SYSTEM_METHOD_EXIT|[19]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28177184)|HEAP_ALLOCATE|[19]|Bytes:4
+22:40:43.0 (28182211)|VARIABLE_ASSIGNMENT|[19]|ServiceLog.RequestHeaders_MAX_SIZE|10000
+22:40:43.0 (28184516)|STATEMENT_EXECUTE|[20]
+22:40:43.0 (28186376)|HEAP_ALLOCATE|[19]|Bytes:20
+22:40:43.0 (28205856)|SYSTEM_METHOD_ENTRY|[20]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28276369)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28306022)|HEAP_ALLOCATE|[20]|Bytes:8
+22:40:43.0 (28309574)|SYSTEM_METHOD_EXIT|[20]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28314683)|HEAP_ALLOCATE|[20]|Bytes:4
+22:40:43.0 (28320518)|VARIABLE_ASSIGNMENT|[20]|ServiceLog.RequestParameters_MAX_SIZE|1000
+22:40:43.0 (28322955)|STATEMENT_EXECUTE|[21]
+22:40:43.0 (28324624)|HEAP_ALLOCATE|[20]|Bytes:14
+22:40:43.0 (28340028)|SYSTEM_METHOD_ENTRY|[21]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28411350)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28424065)|HEAP_ALLOCATE|[21]|Bytes:8
+22:40:43.0 (28426719)|SYSTEM_METHOD_EXIT|[21]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28430643)|HEAP_ALLOCATE|[21]|Bytes:4
+22:40:43.0 (28435234)|VARIABLE_ASSIGNMENT|[21]|ServiceLog.RequestBody_MAX_SIZE|50000
+22:40:43.0 (28437549)|STATEMENT_EXECUTE|[22]
+22:40:43.0 (28513227)|HEAP_ALLOCATE|[21]|Bytes:15
+22:40:43.0 (28531410)|SYSTEM_METHOD_ENTRY|[22]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28605471)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28619727)|HEAP_ALLOCATE|[22]|Bytes:8
+22:40:43.0 (28622404)|SYSTEM_METHOD_EXIT|[22]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28626558)|HEAP_ALLOCATE|[22]|Bytes:4
+22:40:43.0 (28632359)|VARIABLE_ASSIGNMENT|[22]|ServiceLog.ResponseBody_MAX_SIZE|131072
+22:40:43.0 (28634932)|STATEMENT_EXECUTE|[23]
+22:40:43.0 (28636392)|HEAP_ALLOCATE|[22]|Bytes:18
+22:40:43.0 (28650184)|SYSTEM_METHOD_ENTRY|[23]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28715440)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+22:40:43.0 (28726726)|HEAP_ALLOCATE|[23]|Bytes:8
+22:40:43.0 (28729340)|SYSTEM_METHOD_EXIT|[23]|Schema.SObjectField.getDescribe()
+22:40:43.0 (28733175)|HEAP_ALLOCATE|[23]|Bytes:4
+22:40:43.0 (28737900)|VARIABLE_ASSIGNMENT|[23]|ServiceLog.ResponseHeaders_MAX_SIZE|1000
+22:40:43.0 (28740028)|STATEMENT_EXECUTE|[24]
+22:40:43.0 (28743958)|HEAP_ALLOCATE|[24]|Bytes:4
+22:40:43.0 (28747236)|VARIABLE_ASSIGNMENT|[24]|ServiceLog.MAX_PAYLOAD_SIZE|131072
+22:40:43.0 (28773542)|METHOD_EXIT|[8]|ServiceLog
+22:40:43.0 (28787020)|METHOD_ENTRY|[24]|01p3600000JZQWB|ServiceLog.commitLogsViaEvents(List<Service_Log__c>)
+22:40:43.0 (28802186)|VARIABLE_SCOPE_BEGIN|[227]|serviceLogs|List<Service_Log__c>|true|false
+22:40:43.0 (28909111)|VARIABLE_ASSIGNMENT|[227]|serviceLogs|[{"Method__c":"GET","Service_Start__c":"2026-02-22T06:40:43.493Z","ResponseBody__c":"{\n   \"results\" : \n   (2445 more) ...","Service_End__c":"2026-02-22T06:40:43.583Z","ResponseStatusCode__c":200.0,"Service_Name__c":"Google Maps - Get La (5 more) ...","Direction__c":"Outbound","OwnerId":"00536000006CafHAAS","Category__c":"Google Maps","RequestBody__c":"","attributes":{"type":"Service_Log__c"},"RequestURI__c":"callout:GoogleMaps/g (111 more) ...","ResponseHeaders__c":"(Alt-Svc, Server, Ac (143 more) ..."}]|0x2b1e6a6a
+22:40:43.0 (28924506)|HEAP_ALLOCATE|[228]|Bytes:5
+22:40:43.0 (28927409)|STATEMENT_EXECUTE|[227]
+22:40:43.0 (28928600)|STATEMENT_EXECUTE|[228]
+22:40:43.0 (28929352)|STATEMENT_EXECUTE|[228]
+22:40:43.0 (28930379)|STATEMENT_EXECUTE|[229]
+22:40:43.0 (28992578)|DML_BEGIN|[229]|Op:Insert|Type:Service_Log__c|Rows:1
+22:40:43.0 (29016243)|LIMIT_USAGE|[229]|DML|1|150
+22:40:43.0 (29021956)|LIMIT_USAGE|[229]|DML_ROWS|1|10000
+22:40:43.0 (29038190)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+22:40:43.0 (74149383)|CODE_UNIT_STARTED|[EXTERNAL]|Workflow:01I36000002oP20
+22:40:43.0 (84505081)|WF_RULE_EVAL_BEGIN|Workflow
+22:40:43.0 (84633472)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Purchase Policy Submission Failure Emails|01Q1R000000VC5h|ON_CREATE_ONLY|0
+22:40:43.0 (84746456)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreatePurchasePolicies] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (84833236)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (84841468)|WF_CRITERIA_END|false
+22:40:43.0 (84865060)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Credit Setup Failure Emails|01Q1R000000VBpf|ON_CREATE_ONLY|0
+22:40:43.0 (84893783)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreditCutoff, QuikQ_CreditLimit] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (84909730)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (84918524)|WF_CRITERIA_END|false
+22:40:43.0 (84930306)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Create Carrier Failure Emails|01Q1R000000VBpe|ON_CREATE_ONLY|0
+22:40:43.0 (84953642)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreateCarrier] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (84962165)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (84972159)|WF_CRITERIA_END|false
+22:40:43.0 (84982695)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Trailer Submission Failure Emails|01Q1R000000VBph|ON_CREATE_ONLY|0
+22:40:43.0 (85004158)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreateTrailer] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (85021426)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (85024987)|WF_CRITERIA_END|false
+22:40:43.0 (85034288)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Driver Submission Failure Emails|01Q1R000000VBpg|ON_CREATE_ONLY|0
+22:40:43.0 (85056842)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreateDriver] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (85072569)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (85076075)|WF_CRITERIA_END|false
+22:40:43.0 (85085217)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Truck Submission Failure Emails|01Q1R000000VBpi|ON_CREATE_ONLY|0
+22:40:43.0 (85107376)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreateTruck] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (85147907)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (85151928)|WF_CRITERIA_END|false
+22:40:43.0 (85166250)|WF_CRITERIA_BEGIN|[Service Log: SL-0077135300 a4BbV00000LFUwP]|QuikQ Credit Alert Failure Emails|01Q1R000000Rtya|ON_CREATE_ONLY|0
+22:40:43.0 (85190863)|WF_RULE_FILTER|[Service Log : Service Name contains QuikQ_CreditAlert] 
+AND [Service Log : Error Exists equals true]
+22:40:43.0 (85201798)|WF_RULE_EVAL_VALUE|12494
+22:40:43.0 (85204933)|WF_CRITERIA_END|false
+22:40:43.0 (85223698)|WF_SPOOL_ACTION_BEGIN|Workflow
+22:40:43.0 (85241482)|WF_ACTION| None
+22:40:43.0 (85246653)|WF_RULE_EVAL_END
+22:40:43.0 (85341160)|WF_ACTIONS_END| None
+22:40:43.0 (85351693)|CODE_UNIT_FINISHED|Workflow:01I36000002oP20
+22:40:43.0 (94135927)|DML_END|[229]
+22:40:43.0 (94159830)|HEAP_ALLOCATE|[229]|Bytes:-4
+22:40:43.0 (95068427)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+22:40:43.0 (95119584)|METHOD_EXIT|[24]|01p3600000JZQWB|ServiceLog.commitLogsViaEvents(List<Service_Log__c>)
+22:40:43.95 (95146882)|CUMULATIVE_LIMIT_USAGE
+22:40:43.95 (95146882)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 0 out of 100
+  Number of query rows: 1 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 1 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 1 out of 10000
+  Maximum CPU time: 0 out of 10000
+  Maximum heap size: 0 out of 6000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 50
+  Number of Mobile Apex push calls: 0 out of 10
+
+22:40:43.95 (95146882)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+22:40:43.95 (95146882)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:__sfdcProperties:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  Integer:_static_Error_Message_MAX_SIZE:0
+  Integer:_static_MAX_PAYLOAD_SIZE:0
+  Integer:_static_RequestBody_MAX_SIZE:0
+  Integer:_static_RequestHeaders_MAX_SIZE:0
+  Integer:_static_RequestParameters_MAX_SIZE:0
+  Integer:_static_RequestURI_MAX_SIZE:0
+  Integer:_static_ResponseBody_MAX_SIZE:0
+  Integer:_static_ResponseHeaders_MAX_SIZE:0
+  Boolean:_static_includeRequestBody:0
+  AppSettings:_static_settings:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+22:40:43.95 (95146882)|CUMULATIVE_LIMIT_USAGE_END
+
+22:40:43.0 (95482659)|CODE_UNIT_FINISHED|ServiceLogEventTrigger on Service_Log_Event trigger event AfterInsert|__sfdc_trigger/ServiceLogEventTrigger
+22:40:43.0 (95504810)|EXECUTION_FINISHED
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING_BEGIN
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING|SOQL operations|
+Class.ApplicationSettings_Util.getApplicationDefaultConfigurations: line 66, column 1: [Select Label, value__c, ApplicationSettings__c, ApplicationSettings__r.Label,ApplicationSettings__r.DeveloperName,ApplicationSettings__r.Active__c, ApplicationSettings__r.APIConsumer__r.Username__c
+            from Application_Configuration__mdt where 
+            ApplicationSettings__r.Active__c = true and 
+            ApplicationSettings__r.MasterLabel = :applicationName and 
+            ApplicationSettings__r.APIConsumer__c = '']: executed 1 time in 16 ms
+
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING|DML operations|
+Class.ServiceLog.commitLogsViaEvents: line 229, column 1: Insert: List<Service_Log__c>: executed 1 time in 67 ms
+
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public void invoke(): executed 1 time in 94 ms
+Trigger.ServiceLogEventTrigger: line 24, column 1: public static void commitLogsViaEvents(List<Service_Log__c>): executed 1 time in 67 ms
+Class.ServiceLog: line 9, column 1: public AppSettings(String): executed 1 time in 18 ms
+Class.AppSettings.<init>: line 18, column 1: public static Map<String,String> getApplicationConfigurationsByAppName(String): executed 1 time in 17 ms
+Class.ApplicationSettings_Util.getApplicationConfigurationsByAppName: line 35, column 1: public static List<Application_Configuration__mdt> getApplicationDefaultConfigurations(String): executed 4 times in 16 ms
+Trigger.ServiceLogEventTrigger: line 18, column 1: global static Object deserializeStrict(String, System.Type): executed 1 time in 1 ms
+Class.ServiceLog: line 18, column 1: global Schema.DescribeFieldResult getDescribe(): executed 1 time in 1 ms
+Trigger.ServiceLogEventTrigger: line 16, column 1: global public System.Iterator iterator(): executed 3 times in 0 ms
+Trigger.ServiceLogEventTrigger: line 17, column 1: public static Boolean isNotBlank(String): executed 1 time in 0 ms
+Trigger.ServiceLogEventTrigger: line 20, column 1: global public Object add(Object): executed 1 time in 0 ms
+Trigger.ServiceLogEventTrigger: line 23, column 1: global public Boolean isEmpty(): executed 1 time in 0 ms
+
+22:40:43.97 (97476358)|CUMULATIVE_PROFILING_END

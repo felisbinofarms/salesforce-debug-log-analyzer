@@ -32,10 +32,21 @@ public class LogMetadataExtractor
 
         try
         {
-            // Read only the first 5000 and last 1000 lines for performance
-            var lines = File.ReadAllLines(logFilePath);
-            var headerLines = lines.Take(5000).ToList();
-            var footerLines = lines.Skip(Math.Max(0, lines.Length - 1000)).ToList();
+            // Stream only the lines we need instead of loading entire file into memory.
+            // For a 19MB log this avoids allocating the full string[] array.
+            var allLines = File.ReadLines(logFilePath); // lazy IEnumerable — no full load
+            var headerLines = allLines.Take(5000).ToList();
+
+            // For the footer we need the last 1000 lines. Since ReadLines is forward-only,
+            // use a ring buffer (Queue) to keep only the tail.
+            var footerQueue = new Queue<string>(1001);
+            foreach (var line in File.ReadLines(logFilePath))
+            {
+                footerQueue.Enqueue(line);
+                if (footerQueue.Count > 1000)
+                    footerQueue.Dequeue();
+            }
+            var footerLines = footerQueue.ToList();
             var allSampleLines = headerLines.Concat(footerLines).ToList();
 
             // Extract user info

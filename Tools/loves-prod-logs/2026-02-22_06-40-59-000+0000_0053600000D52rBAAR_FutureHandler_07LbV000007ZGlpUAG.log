@@ -1,0 +1,992 @@
+﻿62.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+00:40:59.1 (1590443)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:40:59.1 (1701995)|EXECUTION_STARTED
+00:40:59.1 (1734074)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+00:40:59.1 (3391515)|CODE_UNIT_FINISHED|FutureHandler - state load
+00:40:59.1 (3423460)|EXECUTION_FINISHED
+00:40:59.31 (31551057)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:40:59.31 (31574807)|EXECUTION_STARTED
+00:40:59.31 (31606854)|CODE_UNIT_STARTED|[EXTERNAL]|01p3600000JXGPT|MktgCloud_Updater.sendSmsOptsRequests(String)
+00:40:59.31 (31780604)|VARIABLE_SCOPE_BEGIN|[15]|MktgCloud_Updater.EMAIL|String|false|true
+00:40:59.31 (31848193)|VARIABLE_SCOPE_BEGIN|[16]|MktgCloud_Updater.SMS|String|false|true
+00:40:59.31 (31941546)|VARIABLE_SCOPE_BEGIN|[18]|MktgCloud_Updater.emailOpts|MktgCloud_Updater.EmailRequest|true|true
+00:40:59.31 (31960452)|VARIABLE_SCOPE_BEGIN|[21]|MktgCloud_Updater.optTypes|List<String>|true|true
+00:40:59.31 (31965309)|VARIABLE_SCOPE_BEGIN|[17]|MktgCloud_Updater.requestBody|String|false|true
+00:40:59.31 (31979021)|VARIABLE_SCOPE_BEGIN|[19]|MktgCloud_Updater.smsOptIns|MktgCloud_Updater.SmsRequest|true|true
+00:40:59.31 (31984448)|VARIABLE_SCOPE_BEGIN|[20]|MktgCloud_Updater.smsOptOuts|MktgCloud_Updater.SmsRequest|true|true
+00:40:59.31 (32093875)|HEAP_ALLOCATE|[95]|Bytes:3
+00:40:59.31 (32162176)|HEAP_ALLOCATE|[100]|Bytes:152
+00:40:59.31 (32176557)|HEAP_ALLOCATE|[417]|Bytes:408
+00:40:59.31 (32188199)|HEAP_ALLOCATE|[430]|Bytes:408
+00:40:59.31 (32207940)|HEAP_ALLOCATE|[317]|Bytes:6
+00:40:59.31 (32218972)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:43
+00:40:59.31 (32221955)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:17
+00:40:59.31 (32223864)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:14
+00:40:59.31 (32226505)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:5
+00:40:59.31 (32391776)|VARIABLE_ASSIGNMENT|[EXTERNAL]|MktgCloud_Updater.EMAIL|"Email"
+00:40:59.31 (32400054)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3
+00:40:59.31 (32461599)|VARIABLE_ASSIGNMENT|[EXTERNAL]|MktgCloud_Updater.SMS|"SMS"
+00:40:59.31 (32485335)|METHOD_ENTRY|[14]|01p3600000JXGPT|MktgCloud_Updater.MktgCloud_Updater()
+00:40:59.31 (32497238)|STATEMENT_EXECUTE|[14]
+00:40:59.31 (32506269)|STATEMENT_EXECUTE|[14]
+00:40:59.31 (32507308)|STATEMENT_EXECUTE|[17]
+00:40:59.31 (32520459)|VARIABLE_ASSIGNMENT|[17]|MktgCloud_Updater.requestBody|""
+00:40:59.31 (32523081)|STATEMENT_EXECUTE|[18]
+00:40:59.31 (32528861)|HEAP_ALLOCATE|[18]|Bytes:8
+00:40:59.31 (32569996)|CONSTRUCTOR_ENTRY|[18]|01p3600000JXGPT|<init>()|MktgCloud_Updater.EmailRequest
+00:40:59.31 (32632350)|VARIABLE_SCOPE_BEGIN|[99]|this|MktgCloud_Updater.EmailRequest|true|false
+00:40:59.31 (32765361)|VARIABLE_ASSIGNMENT|[99]|this|{}|0x55557438
+00:40:59.31 (32774023)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:6
+00:40:59.31 (35452082)|STATEMENT_EXECUTE|[99]
+00:40:59.31 (35460019)|STATEMENT_EXECUTE|[100]
+00:40:59.31 (35482989)|CONSTRUCTOR_EXIT|[18]|01p3600000JXGPT|<init>()|MktgCloud_Updater.EmailRequest
+00:40:59.31 (35622539)|VARIABLE_ASSIGNMENT|[18]|MktgCloud_Updater.emailOpts|{}|0x55557438
+00:40:59.31 (35627584)|STATEMENT_EXECUTE|[19]
+00:40:59.31 (35635166)|HEAP_ALLOCATE|[19]|Bytes:16
+00:40:59.31 (35648412)|CONSTRUCTOR_ENTRY|[19]|01p3600000JXGPT|<init>()|MktgCloud_Updater.SmsRequest
+00:40:59.31 (35688473)|VARIABLE_SCOPE_BEGIN|[109]|this|MktgCloud_Updater.SmsRequest|true|false
+00:40:59.31 (35731869)|VARIABLE_ASSIGNMENT|[109]|this|{}|0x7e7593a3
+00:40:59.31 (35744714)|STATEMENT_EXECUTE|[109]
+00:40:59.31 (35745813)|STATEMENT_EXECUTE|[110]
+00:40:59.31 (35746857)|STATEMENT_EXECUTE|[111]
+00:40:59.31 (35747780)|STATEMENT_EXECUTE|[112]
+00:40:59.31 (35750238)|CONSTRUCTOR_EXIT|[19]|01p3600000JXGPT|<init>()|MktgCloud_Updater.SmsRequest
+00:40:59.31 (35771685)|VARIABLE_ASSIGNMENT|[19]|MktgCloud_Updater.smsOptIns|{}|0x7e7593a3
+00:40:59.31 (35774616)|STATEMENT_EXECUTE|[20]
+00:40:59.31 (35776416)|HEAP_ALLOCATE|[20]|Bytes:16
+00:40:59.31 (35780608)|CONSTRUCTOR_ENTRY|[20]|01p3600000JXGPT|<init>()|MktgCloud_Updater.SmsRequest
+00:40:59.31 (35786811)|VARIABLE_SCOPE_BEGIN|[109]|this|MktgCloud_Updater.SmsRequest|true|false
+00:40:59.31 (35796136)|VARIABLE_ASSIGNMENT|[109]|this|{}|0x563158d9
+00:40:59.31 (35802349)|STATEMENT_EXECUTE|[109]
+00:40:59.31 (35803191)|STATEMENT_EXECUTE|[110]
+00:40:59.31 (35803966)|STATEMENT_EXECUTE|[111]
+00:40:59.31 (35804783)|STATEMENT_EXECUTE|[112]
+00:40:59.31 (35806442)|CONSTRUCTOR_EXIT|[20]|01p3600000JXGPT|<init>()|MktgCloud_Updater.SmsRequest
+00:40:59.31 (35820548)|VARIABLE_ASSIGNMENT|[20]|MktgCloud_Updater.smsOptOuts|{}|0x563158d9
+00:40:59.31 (35823279)|STATEMENT_EXECUTE|[21]
+00:40:59.31 (35834429)|HEAP_ALLOCATE|[21]|Bytes:4
+00:40:59.31 (35844512)|SYSTEM_CONSTRUCTOR_ENTRY|[21]|<init>()
+00:40:59.31 (35855143)|SYSTEM_CONSTRUCTOR_EXIT|[21]|<init>()
+00:40:59.31 (35905756)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:12
+00:40:59.31 (35960661)|VARIABLE_ASSIGNMENT|[21]|MktgCloud_Updater.optTypes|["Email","SMS"]|0x283b1293
+00:40:59.31 (35963974)|STATEMENT_EXECUTE|[99]
+00:40:59.31 (35965190)|STATEMENT_EXECUTE|[103]
+00:40:59.31 (35965956)|STATEMENT_EXECUTE|[109]
+00:40:59.31 (35966982)|STATEMENT_EXECUTE|[115]
+00:40:59.31 (35979229)|METHOD_EXIT|[14]|MktgCloud_Updater
+00:40:59.31 (35985755)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:59
+00:40:59.31 (35993297)|VARIABLE_SCOPE_BEGIN|[87]|smsSubs|String|false|false
+00:40:59.31 (36006426)|VARIABLE_ASSIGNMENT|[87]|smsSubs|"{\"subscribers\":[],\"s (39 more) ..."
+00:40:59.31 (36014725)|STATEMENT_EXECUTE|[87]
+00:40:59.31 (36015852)|STATEMENT_EXECUTE|[88]
+00:40:59.31 (36068531)|HEAP_ALLOCATE|[88]|Bytes:118
+00:40:59.31 (36080295)|SYSTEM_METHOD_ENTRY|[1]|Test.Test()
+00:40:59.31 (36083775)|STATEMENT_EXECUTE|[1]
+00:40:59.31 (36087884)|SYSTEM_METHOD_EXIT|[1]|Test
+00:40:59.31 (36105647)|METHOD_ENTRY|[88]||System.Test.isRunningTest()
+00:40:59.31 (36195964)|METHOD_EXIT|[88]||System.Test.isRunningTest()
+00:40:59.31 (39393077)|VARIABLE_SCOPE_BEGIN|[88]|mock|MarketingCloudSOAP.Mock|true|false
+00:40:59.31 (39425987)|VARIABLE_ASSIGNMENT|[88]|mock|null|
+00:40:59.31 (39431442)|STATEMENT_EXECUTE|[89]
+00:40:59.31 (39438021)|HEAP_ALLOCATE|[89]|Bytes:28
+00:40:59.31 (39582242)|HEAP_ALLOCATE|[89]|Bytes:33
+00:40:59.31 (39616441)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+00:40:59.31 (39623491)|STATEMENT_EXECUTE|[1]
+00:40:59.31 (39633391)|SYSTEM_METHOD_EXIT|[1]|Type
+00:40:59.31 (39638931)|HEAP_ALLOCATE|[89]|Bytes:8
+00:40:59.31 (39809035)|HEAP_ALLOCATE|[89]|Bytes:8
+00:40:59.31 (39813415)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:40:59.31 (39870277)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x7179c0ff
+00:40:59.31 (39873610)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:40:59.31 (40009840)|VARIABLE_ASSIGNMENT|[4]|apextype|"MktgCloud_Updater.SmsRequest"|0x41a17d6f
+00:40:59.31 (40060459)|HEAP_ALLOCATE|[89]|Bytes:8
+00:40:59.31 (40095187)|HEAP_ALLOCATE|[89]|Bytes:24
+00:40:59.31 (40106096)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+00:40:59.31 (40109638)|STATEMENT_EXECUTE|[1]
+00:40:59.31 (40113835)|SYSTEM_METHOD_EXIT|[1]|JSON
+00:40:59.31 (40132610)|METHOD_ENTRY|[89]||System.JSON.deserialize(String, System.Type)
+00:40:59.31 (40485430)|METHOD_EXIT|[89]||System.JSON.deserialize(String, System.Type)
+00:40:59.31 (40496298)|VARIABLE_SCOPE_BEGIN|[89]|smsStuff|MktgCloud_Updater.SmsRequest|true|false
+00:40:59.31 (40552213)|VARIABLE_ASSIGNMENT|[89]|smsStuff|{"messageText":"STOP","shortCode":"56837","subscribers":"0x70d4e8b8"}|0x466a9b15
+00:40:59.31 (40557912)|STATEMENT_EXECUTE|[90]
+00:40:59.31 (40559059)|STATEMENT_EXECUTE|[90]
+00:40:59.31 (40560298)|STATEMENT_EXECUTE|[91]
+00:40:59.31 (40658677)|VARIABLE_SCOPE_BEGIN|[21]|MarketingCloudREST.apiEndpoint|String|false|true
+00:40:59.31 (40664792)|VARIABLE_SCOPE_BEGIN|[20]|MarketingCloudREST.authCreds|String|false|true
+00:40:59.31 (40686562)|VARIABLE_SCOPE_BEGIN|[17]|MarketingCloudREST.authResponse|MarketingCloudREST.AuthResponse|true|true
+00:40:59.31 (40708994)|VARIABLE_SCOPE_BEGIN|[18]|MarketingCloudREST.expiresDateTime|Datetime|false|true
+00:40:59.31 (40714846)|VARIABLE_SCOPE_BEGIN|[22]|MarketingCloudREST.isSmsOverrideActive|Boolean|false|true
+00:40:59.31 (40719193)|VARIABLE_SCOPE_BEGIN|[19]|MarketingCloudREST.requestUrl|String|false|true
+00:40:59.31 (40729944)|HEAP_ALLOCATE|[91]|Bytes:17
+00:40:59.31 (40738139)|HEAP_ALLOCATE|[91]|Bytes:8
+00:40:59.31 (40741200)|HEAP_ALLOCATE|[91]|Bytes:12
+00:40:59.31 (40743895)|HEAP_ALLOCATE|[91]|Bytes:18
+00:40:59.31 (40770784)|VARIABLE_ASSIGNMENT|[91]|MarketingCloudREST.apiEndpoint|"MarketingCloudREST"
+00:40:59.31 (40773326)|HEAP_ALLOCATE|[91]|Bytes:18
+00:40:59.31 (40779774)|VARIABLE_ASSIGNMENT|[91]|MarketingCloudREST.authCreds|"MarketingCloudAuth"
+00:40:59.31 (40802316)|METHOD_ENTRY|[16]|01p3600000JXGPQ|MarketingCloudREST.MarketingCloudREST()
+00:40:59.31 (40807255)|STATEMENT_EXECUTE|[16]
+00:40:59.31 (40809917)|STATEMENT_EXECUTE|[16]
+00:40:59.31 (40810712)|STATEMENT_EXECUTE|[17]
+00:40:59.31 (40815243)|HEAP_ALLOCATE|[17]|Bytes:24
+00:40:59.31 (40826341)|CONSTRUCTOR_ENTRY|[17]|01p3600000JXGPQ|<init>()|MarketingCloudREST.AuthResponse
+00:40:59.31 (40851363)|VARIABLE_SCOPE_BEGIN|[136]|this|MarketingCloudREST.AuthResponse|true|false
+00:40:59.31 (40883372)|VARIABLE_ASSIGNMENT|[136]|this|{}|0x792bd51f
+00:40:59.31 (40897786)|STATEMENT_EXECUTE|[136]
+00:40:59.31 (40898957)|STATEMENT_EXECUTE|[137]
+00:40:59.31 (40900107)|STATEMENT_EXECUTE|[138]
+00:40:59.31 (40901111)|STATEMENT_EXECUTE|[139]
+00:40:59.31 (40902020)|STATEMENT_EXECUTE|[140]
+00:40:59.31 (40902701)|STATEMENT_EXECUTE|[141]
+00:40:59.31 (40906456)|CONSTRUCTOR_EXIT|[17]|01p3600000JXGPQ|<init>()|MarketingCloudREST.AuthResponse
+00:40:59.31 (40927646)|VARIABLE_ASSIGNMENT|[17]|MarketingCloudREST.authResponse|{}|0x792bd51f
+00:40:59.31 (40930946)|STATEMENT_EXECUTE|[19]
+00:40:59.31 (40932873)|HEAP_ALLOCATE|[19]|Bytes:15
+00:40:59.31 (40941401)|VARIABLE_ASSIGNMENT|[19]|MarketingCloudREST.requestUrl|"/sms/v1/queueMO"
+00:40:59.31 (40943941)|STATEMENT_EXECUTE|[22]
+00:40:59.31 (40945288)|HEAP_ALLOCATE|[22]|Bytes:19
+00:40:59.31 (41070182)|VARIABLE_SCOPE_BEGIN|[25]|EnvVariable.envMap|Map<String,Env_Variable__c>|true|true
+00:40:59.31 (41078645)|HEAP_ALLOCATE|[22]|Bytes:5
+00:40:59.31 (41094224)|METHOD_ENTRY|[24]|01p3600000JZYJv|EnvVariable.EnvVariable()
+00:40:59.31 (41097574)|STATEMENT_EXECUTE|[24]
+00:40:59.31 (41099436)|STATEMENT_EXECUTE|[24]
+00:40:59.31 (41100340)|STATEMENT_EXECUTE|[25]
+00:40:59.31 (41108991)|HEAP_ALLOCATE|[25]|Bytes:4
+00:40:59.31 (41162755)|VARIABLE_ASSIGNMENT|[25]|EnvVariable.envMap|{}|0x33ab9550
+00:40:59.31 (41170058)|METHOD_EXIT|[24]|EnvVariable
+00:40:59.31 (41187715)|METHOD_ENTRY|[22]|01p3600000JZYJv|EnvVariable.getValue(String)
+00:40:59.31 (41201887)|VARIABLE_SCOPE_BEGIN|[27]|varName|String|false|false
+00:40:59.31 (41207451)|VARIABLE_ASSIGNMENT|[27]|varName|"Mktg_SmsSubOverride"
+00:40:59.31 (41211382)|STATEMENT_EXECUTE|[27]
+00:40:59.31 (41223697)|SYSTEM_METHOD_ENTRY|[28]|Map<String,Env_Variable__c>.size()
+00:40:59.31 (41242802)|SYSTEM_METHOD_EXIT|[28]|Map<String,Env_Variable__c>.size()
+00:40:59.31 (41249061)|STATEMENT_EXECUTE|[28]
+00:40:59.31 (41251966)|METHOD_ENTRY|[28]|01p3600000JZYJv|EnvVariable.buildMap()
+00:40:59.31 (41257232)|STATEMENT_EXECUTE|[49]
+00:40:59.31 (41260170)|HEAP_ALLOCATE|[50]|Bytes:110
+00:40:59.31 (41267961)|HEAP_ALLOCATE|[50]|Bytes:4
+00:40:59.31 (41658208)|SOQL_EXECUTE_BEGIN|[50]|Aggregations:0|SELECT Name, Value__c, Active__c, User_Specific_Value__c, User_Switch_Active__c, Users__c FROM Env_Variable__c
+00:40:59.31 (41687749)|LIMIT_USAGE|[50]|SOQL|1|200
+00:40:59.31 (41698625)|LIMIT_USAGE|[50]|AGGS|0|600
+00:40:59.31 (45565442)|SOQL_EXECUTE_EXPLAIN|[50]|TableScan on Env_Variable__c : [], cardinality: 61, sobjectCardinality: 61, relativeCost 2.869
+00:40:59.31 (45590870)|SOQL_EXECUTE_END|[50]|Rows:61
+00:40:59.31 (45618558)|LIMIT_USAGE|[50]|SOQL_ROWS|61|50000
+00:40:59.31 (45632621)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:248
+00:40:59.31 (45722714)|SYSTEM_METHOD_ENTRY|[50]|Database.QueryLocator.iterator()
+00:40:59.31 (45923698)|HEAP_ALLOCATE|[50]|Bytes:54
+00:40:59.31 (45948994)|HEAP_ALLOCATE|[50]|Bytes:8
+00:40:59.31 (45989478)|SYSTEM_METHOD_ENTRY|[7]|QueryLocatorIterator.QueryLocatorIterator()
+00:40:59.31 (45996268)|STATEMENT_EXECUTE|[7]
+00:40:59.31 (46009844)|SYSTEM_METHOD_EXIT|[7]|QueryLocatorIterator
+00:40:59.31 (46020046)|HEAP_ALLOCATE|[50]|Bytes:28
+00:40:59.31 (46074671)|HEAP_ALLOCATE|[50]|Bytes:248
+00:40:59.31 (46085426)|HEAP_ALLOCATE|[50]|Bytes:8
+00:40:59.31 (46087812)|HEAP_ALLOCATE|[50]|Bytes:8
+00:40:59.31 (46092616)|VARIABLE_SCOPE_BEGIN|[15]|this|Database.QueryLocatorIterator|true|false
+00:40:59.31 (46176721)|VARIABLE_ASSIGNMENT|[15]|this|{}|0x6841f707
+00:40:59.31 (46181359)|VARIABLE_SCOPE_BEGIN|[15]|values|List<SObject>|true|false
+00:40:59.31 (46233325)|VARIABLE_ASSIGNMENT|[15]|values|"List of size 61 too large to display"|0x76df4e33
+00:40:59.31 (46237861)|VARIABLE_SCOPE_BEGIN|[15]|ql|Database.QueryLocator|true|false
+00:40:59.31 (46271769)|VARIABLE_ASSIGNMENT|[15]|ql|{"query":"SELECT Name, Value__ (90 more) ..."}|0x7a30924c
+00:40:59.31 (46276197)|VARIABLE_SCOPE_BEGIN|[15]|totalNumRecords|Integer|false|false
+00:40:59.31 (46284892)|VARIABLE_ASSIGNMENT|[15]|totalNumRecords|61
+00:40:59.31 (46288345)|VARIABLE_SCOPE_BEGIN|[15]|queryMoreSize|Integer|false|false
+00:40:59.31 (46294140)|VARIABLE_ASSIGNMENT|[15]|queryMoreSize|49939
+00:40:59.31 (46372208)|HEAP_ALLOCATE|[50]|Bytes:28
+00:40:59.31 (46379440)|SYSTEM_METHOD_EXIT|[50]|Database.QueryLocator.iterator()
+00:40:59.31 (46409344)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (46543404)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (46559199)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (46660581)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (46668034)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (46781892)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R0000004llFQAQ","Name":"BatchOutboundSAPTime (5 more) ...","Value__c":"-90","Active__c":true}|0x3df58961
+00:40:59.31 (46790005)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (46791563)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (46853513)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (46883488)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (46896068)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (46901439)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (46931690)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (46939774)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47001752)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47013157)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47062596)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R0000004llKQAQ","Name":"IntegrationProfile","Value__c":"00e36000001KzC1AAK","Active__c":true}|0x3157f63a
+00:40:59.31 (47067354)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47071165)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47086512)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47090709)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47097394)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47101627)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47116822)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47120022)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47184912)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47189691)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47229259)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5ncQAC","Name":"EmailMessage_TireDis (13 more) ...","Value__c":"CS_TireCare_Case_Tem (8 more) ...","Active__c":true}|0x4f0ba0ae
+00:40:59.31 (47239398)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47240519)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47257410)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47264044)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47271301)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47277156)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47289986)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47293167)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47323588)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47326789)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47356771)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5p4QAC","Name":"CustomerProfile_Gene (15 more) ...","Value__c":"Update to SAP Failed (37 more) ...","Active__c":true}|0x484071bf
+00:40:59.31 (47360664)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47361757)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47369626)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47373261)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47379283)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47382377)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47393401)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47397518)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47431839)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47435854)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47462815)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5tQQAS","Name":"TCD Request ETA Buff (10 more) ...","Value__c":"10","Active__c":true}|0x596f4757
+00:40:59.31 (47466701)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47467610)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47475832)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47478680)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47484085)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47487195)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47498880)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47502144)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47533884)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47536985)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47560470)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5vWQAS","Name":"EmailMessage_MissedR (15 more) ...","Value__c":"Missed_RoadCall_Temp (4 more) ...","Active__c":true}|0x57079c66
+00:40:59.31 (47563825)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47564618)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47570908)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47573221)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47576985)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47579978)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47587939)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47591085)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47621247)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47623623)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47717644)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5z9QAC","Name":"Trillium_Parts_Org_W (9 more) ...","Value__c":"trilliumparts@trilli (9 more) ...","Active__c":true}|0x459b48f8
+00:40:59.31 (47721711)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47722464)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47729206)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47731839)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47735539)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47737933)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47747046)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47750123)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47809774)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47812494)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47841824)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5zEQAS","Name":"TrilliumInventory_Da (10 more) ...","Value__c":"TrilliumParts@trilli (9 more) ...","Active__c":true}|0xe1d147d
+00:40:59.31 (47847316)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47848093)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47855739)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47858257)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47862274)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47864828)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47873714)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47875736)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47898475)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47900556)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47920381)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5zJQAS","Name":"TrilliumInventory_De (9 more) ...","Value__c":"2649","Active__c":true}|0x2debaf16
+00:40:59.31 (47923316)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47924091)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (47929465)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47931633)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (47935224)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (47942195)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47950348)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (47952379)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47973508)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (47975620)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (47994639)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5zOQAS","Name":"TrilliumInventory_De (9 more) ...","Value__c":"1000","Active__c":true}|0x4664e261
+00:40:59.31 (47997564)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (47998338)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48004485)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48007614)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48011262)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48013738)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48021538)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48023688)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48044513)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48046563)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48065538)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5zTQAS","Name":"TrilliumInventory_De (9 more) ...","Value__c":"Trillium Warehouse","Active__c":true}|0x59a7bedd
+00:40:59.31 (48068543)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48069285)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48074658)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48076755)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48080321)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48082595)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48090392)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48092368)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48112718)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48114607)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48132231)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F5zdQAC","Name":"TrilliumUnlistedPart (16 more) ...","Value__c":"TrilliumParts@Trilli (9 more) ...","Active__c":true}|0x3f7ff768
+00:40:59.31 (48135233)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48135974)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48141258)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48143393)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48147027)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48149500)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48156938)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48158905)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48179416)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48181436)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48199153)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F60WQAS","Name":"ShopConnect Core Act (3 more) ...","Value__c":"TRUE","Active__c":true}|0x4f9c7c8e
+00:40:59.31 (48202118)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48202854)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48208009)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48210689)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48214379)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48216608)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48224301)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48226372)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48246525)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48248416)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48265397)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F61KQAS","Name":"Trillium_SemiAnnualL (4 more) ...","Value__c":"50","Active__c":true}|0x2e8ae8f6
+00:40:59.31 (48268232)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48268962)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48274229)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48276339)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48280002)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48282407)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48290014)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48291956)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48311927)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48313804)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48331492)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000F6jqQAC","Name":"Max Records For Tran (4 more) ...","Value__c":"10","Active__c":true}|0x4abfeaac
+00:40:59.31 (48334228)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48335290)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48340530)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48342498)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48372271)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48376761)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48386769)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48388721)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48421765)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48424699)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48448401)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000FBE4QAO","Name":"SendNotificationAtta (10 more) ...","Value__c":"10","Active__c":true}|0xabb9024
+00:40:59.31 (48451643)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48452523)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48460369)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48462916)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48466648)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48469080)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48477196)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48479181)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48500202)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48502121)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48521253)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000FEtFQAW","Name":"managementGatewaySet (8 more) ...","Value__c":"management_gateway","Active__c":true}|0x266ff5f1
+00:40:59.31 (48524246)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48525144)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48530959)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48533062)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48536902)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48539301)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48546866)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48548781)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48569726)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48571593)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48589596)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000FEtKQAW","Name":"managementGatewayUrl","Value__c":"https://management-g (34 more) ...","Active__c":true}|0x5fdb6492
+00:40:59.31 (48592490)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48593253)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48598723)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48601811)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48608103)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48611930)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48623446)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48626833)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48661574)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48664193)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48685501)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000FLfPQAW","Name":"ContentVersionSizeLi (3 more) ...","Value__c":"9000000","Active__c":true}|0x6a840f4f
+00:40:59.31 (48688473)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48689231)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48695306)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48697702)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48701255)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48703557)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48711389)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48713342)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48734409)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48736355)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48754468)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGOsQAO","Name":"HighRadiusEmailRecip (5 more) ...","Value__c":"Natalia.Hartshorn@lo (80 more) ...","Active__c":true}|0x3ce8988b
+00:40:59.31 (48757422)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48758157)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48763421)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48765707)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48769263)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48771642)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48779355)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48782215)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48813208)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48816596)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48852225)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGPHQA4","Name":"HighRadiusEmailIgnor (1 more) ...","Value__c":"RETAILCREDIT@LOVES.C (19 more) ...","Active__c":true}|0x6571329a
+00:40:59.31 (48857422)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48858569)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48868008)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48871423)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48877625)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48881555)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48895406)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (48898787)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48933519)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (48936633)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (48966960)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGPgQAO","Name":"MulesoftEnvironment","Value__c":"-prod","Active__c":true}|0x610a2552
+00:40:59.31 (48971477)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (48972592)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (48981016)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48984608)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (48990782)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (48994790)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49007762)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49012460)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49054160)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49058039)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49088219)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGQ5QAO","Name":"CommunityPurgeJobCod (2 more) ...","Value__c":"District,Division","Active__c":true}|0x2b3ea04b
+00:40:59.31 (49092871)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49094047)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49102869)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49106548)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49112677)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49116970)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49131077)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49134327)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49170062)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49173076)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49201958)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGQAQA4","Name":"CommunityPurgeDays","Value__c":"15","Active__c":true}|0x53ea5967
+00:40:59.31 (49206601)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49207709)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49216587)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49220051)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49226170)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49230215)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49243000)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49246255)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49281887)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49285173)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49314224)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGQyQAO","Name":"MulesoftAudience","Value__c":"https://mulesoft.lov (6 more) ...","Active__c":true}|0x3f635462
+00:40:59.31 (49318493)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49319590)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49327755)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49332695)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49338707)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49342560)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49355487)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49358912)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49391181)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49394150)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49423028)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGT9QAO","Name":"SAPSnapshotPDFAPIKey","Value__c":"sfv1:uZLpwecEmskrfLV (108 more) ...","Active__c":true}|0xf73c669
+00:40:59.31 (49427818)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49429063)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49437611)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49440905)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49447140)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49450813)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49462757)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49465992)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49496639)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49499944)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49534883)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGuKQAW","Name":"Desktop Support Mana (4 more) ...","Value__c":"George Wiggins, Darr (52 more) ...","Active__c":true}|0x51110334
+00:40:59.31 (49539447)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49540526)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49549327)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49552536)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49558587)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49562055)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49573475)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49576695)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49608258)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49611294)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49639324)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGxYQAW","Name":"CustomerProfile_Appr (18 more) ...","Value__c":"false","Active__c":true}|0x50314910
+00:40:59.31 (49643667)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49644772)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49652621)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49655856)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49662005)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49665542)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49677432)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49680521)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49711218)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49714195)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49742301)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HGyCQAW","Name":"Glade Gardner User I (1 more) ...","Value__c":"005360000037j5iAAA","Active__c":true}|0x75d4c730
+00:40:59.31 (49746906)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49748489)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49756961)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49760108)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49766350)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49770011)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49781514)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49784792)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49816773)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49820016)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49848162)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HH1uQAG","Name":"Trillium PR Integrat (8 more) ...","Value__c":"0051R00000IftifQAB","Active__c":true}|0x6405076d
+00:40:59.31 (49852571)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49853726)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49861517)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49864588)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49870365)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49873949)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49884822)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49887858)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49918327)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (49921345)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (49949483)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HH32QAG","Name":"TruckCareIntegration (6 more) ...","Value__c":"0051R00000JeE4nQAF","Active__c":true}|0x3dd4b07a
+00:40:59.31 (49954109)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (49955191)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (49963707)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49966723)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (49972702)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (49976270)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49987712)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (49991027)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50022210)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50026182)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50053767)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000HH40QAG","Name":"com_AccountContact_S (11 more) ...","Value__c":"true","Active__c":false}|0x67770719
+00:40:59.31 (50058240)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50059361)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50067745)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50071048)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50076937)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50080879)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50092977)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50096224)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50126600)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50129654)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50156801)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000LQUsQAO","Name":"Store999_SMAId","Value__c":"FC999","Active__c":true}|0x3449b180
+00:40:59.31 (50161060)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50162112)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50169868)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50173107)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50178825)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50182545)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50194282)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50197412)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50233546)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50236712)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50264891)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bmrvQAA","Name":"LoggingEnabled","Value__c":"true","Active__c":true}|0x78bbe60b
+00:40:59.31 (50269629)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50270734)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50281708)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50284630)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50290370)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50294100)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50305814)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50308923)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50339301)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50342284)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50370030)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bms0QAA","Name":"LoggingFutureEnabled","Value__c":"true","Active__c":true}|0x6074ce06
+00:40:59.31 (50374309)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50375406)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50383668)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50386704)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50392728)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50396299)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50407971)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50411124)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50441653)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50444650)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50472443)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bmsyQAA","Name":"ShopConnectId","Value__c":"0013600001lG7PLAA0","Active__c":true}|0x3f6442de
+00:40:59.31 (50476939)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50478058)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50486301)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50489885)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50496135)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50500105)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50513720)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50516903)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50550745)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50554003)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50583127)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bnarQAA","Name":"Case Notification Id","Value__c":"0ML1R000000GmfsWAC","Active__c":true}|0x46d83103
+00:40:59.31 (50588056)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50589400)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50598062)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50601408)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50607720)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50611374)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50623362)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50626533)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50656836)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50659817)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50688215)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bnawQAA","Name":"TrilliumInventory_In (14 more) ...","Value__c":"2","Active__c":true}|0x61740c6d
+00:40:59.31 (50692546)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50693680)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50701897)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50704820)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50710743)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50714356)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50725723)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50729019)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50759432)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50762537)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50792357)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bnbuQAA","Name":"SalesforceBaseURL","Value__c":"https://loves.lightn (14 more) ...","Active__c":true}|0x27b6fabb
+00:40:59.31 (50796919)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50798048)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50806122)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50809265)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50815277)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50818919)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50831136)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50834292)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50864792)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50867635)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50894898)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l1R000000bng1QAA","Name":"Customer Profile Pre (18 more) ...","Value__c":"true","Active__c":true}|0x3ad92e21
+00:40:59.31 (50899219)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (50900312)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (50908322)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50911172)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (50917329)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (50920897)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50932634)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (50935709)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50966528)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (50969487)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (50997362)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000RZuAAM","Name":"RabbitMQ_Username","Value__c":"zoubhwjp","Active__c":true}|0x3d0e4050
+00:40:59.31 (51001571)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51003582)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51011541)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51014461)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51020477)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51024083)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51035946)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51039201)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51069921)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51072913)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51099906)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000RaTAAU","Name":"InboundMLA_Wait","Value__c":"0","Active__c":true}|0x7cd834f8
+00:40:59.31 (51104048)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51105189)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51113350)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51116346)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51122223)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51125891)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51137770)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51140948)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51171350)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51174248)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51203218)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000Rb2AAE","Name":"ContactTriggerDontRu (10 more) ...","Value__c":"0053600000D52rBAAR","Active__c":true}|0x6cab6afa
+00:40:59.31 (51207911)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51209112)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51217553)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51220590)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51226456)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51230046)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51241758)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51244910)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51275735)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51278619)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51305735)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000Rb7AAE","Name":"AccountTriggerDontRu (10 more) ...","Value__c":"00536000004ABAgAAO","Active__c":true}|0x1f70f968
+00:40:59.31 (51310275)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51311495)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51319775)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51322657)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51328586)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51332339)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51344007)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51347077)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51377590)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51384547)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51424522)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":true,"User_Specific_Value__c":"false","Id":"a4l360000000RbRAAU","Users__c":"005360000036OeQAAU","Name":"TCI_SendOutboundMess (4 more) ...","Value__c":"true","Active__c":true}|0x50332616
+00:40:59.31 (51429586)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51430629)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51439245)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51442392)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51448471)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51452107)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51464080)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51467292)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51498628)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51501783)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51531584)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000RjQAAU","Name":"WorkOrderTriggerDont (12 more) ...","Value__c":"00536000004ABAgAAO","Active__c":true}|0x6d71b71c
+00:40:59.31 (51536096)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51537405)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51545752)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51548912)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51555074)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51558942)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51571964)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51574974)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51609202)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51612209)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51641289)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000RjVAAU","Name":"CaseTriggerDontRunFo (7 more) ...","Value__c":"00536000004ABAgAAO","Active__c":true}|0x5a3aecf2
+00:40:59.31 (51645487)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51646686)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51655486)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51658821)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51664686)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51668399)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51681425)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51684539)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51718247)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51721231)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51749251)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000RkiAAE","Name":"DeleteServiceLogs","Value__c":"14","Active__c":true}|0x4299e564
+00:40:59.31 (51753352)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51754427)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51763188)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51766645)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51772531)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51776165)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51788687)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51792009)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51825338)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51828518)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51857250)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l360000000S1FAAU","Name":"Auth0Audience","Value__c":"https://app70261335. (17 more) ...","Active__c":true}|0xbd378b7
+00:40:59.31 (51861264)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51862208)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51870483)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51877758)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51883821)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51887756)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51899690)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51902753)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51934039)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (51937250)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (51965625)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd2yAAC","Name":"MLA_OptInPreferenceS (5 more) ...","Value__c":"local","Active__c":true}|0x6b7ae786
+00:40:59.31 (51969926)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (51971944)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (51978485)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51980801)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (51984424)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (51986998)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51995062)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (51997025)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52017820)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52020237)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52038383)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd33AAC","Name":"SaveDemographics","Value__c":"Retalix","Active__c":true}|0x66aacb67
+00:40:59.31 (52041113)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52041878)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52047162)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52049096)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52052714)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52055059)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52062702)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52064752)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52085292)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52087423)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52105230)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd4wAAC","Name":"SAPGatewayAPIKey","Value__c":"2v4FRGTMtTNGZCnoaboW (12 more) ...","Active__c":true}|0x6b95a013
+00:40:59.31 (52108127)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52108969)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52114348)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52116212)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52119867)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52122239)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52129767)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52131693)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52151802)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52153692)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52170181)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd5aAAC","Name":"Mktg_SmsSubOverride","Value__c":"TRUE","Active__c":true}|0x7b137b16
+00:40:59.31 (52172792)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52173554)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52178909)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52180777)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52184308)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52186752)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52194261)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52196294)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52216592)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52218446)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52235523)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd5fAAC","Name":"Mktg_EmailSubOverrid (1 more) ...","Value__c":"TRUE","Active__c":true}|0x47e9f525
+00:40:59.31 (52238483)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52239234)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52244281)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52246379)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52249972)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52252398)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52260186)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52262119)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52282688)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52284761)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52301696)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd5kAAC","Name":"MktgCloudSmsTestKeyw (3 more) ...","Value__c":"JOIN","Active__c":true}|0x77a8ff4c
+00:40:59.31 (52304461)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52305235)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52310216)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52312136)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52315779)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52318091)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52325820)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52327731)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52372126)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52376108)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52399641)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lHq00000062fCIAQ","Name":"FMCSA_Web_Key","Value__c":"98d92f5d4979271f22d3 (20 more) ...","Active__c":true}|0x31fb4c92
+00:40:59.31 (52409626)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52411740)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52419890)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52422601)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52426493)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52429335)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52439020)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52441240)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52465220)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52467256)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52487896)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lHq00000062fWIAQ","Name":"FuelManagementPriceP (13 more) ...","Value__c":"15","Active__c":true}|0x51504a70
+00:40:59.31 (52490940)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52491770)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52497301)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52499423)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52503169)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52505596)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52513430)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52515614)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52536222)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52538164)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52555747)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lHq00000064uOIAQ","Name":"MulesoftControl","Value__c":"https://lovescloudse (31 more) ...","Active__c":true}|0x5918dda2
+00:40:59.31 (52558636)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52559385)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52564453)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52566472)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52570146)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52572420)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52580007)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52581924)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52602710)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52604739)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52623020)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lHq000000W2TUIA0","Name":"Risk Escalation","Value__c":"/loves-risk-sys-api/ (13 more) ...","Active__c":true}|0x69fa1b52
+00:40:59.31 (52625943)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52626688)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52631853)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52633807)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52637332)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52639551)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52647086)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52649195)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52669365)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52671345)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52687735)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lHq000000W7WJIA0","Name":"StoreReconDaysBack","Value__c":"7","Active__c":true}|0x28e4523
+00:40:59.31 (52690521)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52691269)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52696445)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52698396)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52702035)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52704330)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52711908)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52713885)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52733955)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.next()
+00:40:59.31 (52735777)|VARIABLE_SCOPE_BEGIN|[50]|env|Env_Variable__c|true|false
+00:40:59.31 (52753480)|VARIABLE_ASSIGNMENT|[50]|env|{"User_Switch_Active__c":false,"Id":"a4lbV000000vdRFQAY","Name":"custProfileSerchFilt (2 more) ...","Value__c":"Name,BillingCity,Bil (26 more) ...","Active__c":true}|0x515e8cc8
+00:40:59.31 (52756550)|STATEMENT_EXECUTE|[51]
+00:40:59.31 (52757291)|STATEMENT_EXECUTE|[52]
+00:40:59.31 (52762727)|SYSTEM_METHOD_ENTRY|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52764652)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:40:59.31 (52768225)|SYSTEM_METHOD_EXIT|[52]|Map<String,Env_Variable__c>.put(Object, Object)
+00:40:59.31 (52770679)|METHOD_ENTRY|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52777344)|METHOD_EXIT|[50]||Database.QueryLocatorIterator.hasNext()
+00:40:59.31 (52781680)|VARIABLE_ASSIGNMENT|[50]|env|null|
+00:40:59.31 (52804976)|METHOD_EXIT|[28]|01p3600000JZYJv|EnvVariable.buildMap()
+00:40:59.31 (52808146)|STATEMENT_EXECUTE|[29]
+00:40:59.31 (52816479)|SYSTEM_METHOD_ENTRY|[29]|Map<String,Env_Variable__c>.get(Object)
+00:40:59.31 (52838649)|SYSTEM_METHOD_EXIT|[29]|Map<String,Env_Variable__c>.get(Object)
+00:40:59.31 (52841101)|VARIABLE_SCOPE_BEGIN|[29]|envVar|Env_Variable__c|true|false
+00:40:59.31 (52865076)|VARIABLE_ASSIGNMENT|[29]|envVar|{"User_Switch_Active__c":false,"Id":"a4l36000000Pd5aAAC","Name":"Mktg_SmsSubOverride","Value__c":"TRUE","Active__c":true}|0x7b137b16
+00:40:59.31 (52868739)|STATEMENT_EXECUTE|[30]
+00:40:59.31 (52869486)|STATEMENT_EXECUTE|[33]
+00:40:59.31 (52870239)|STATEMENT_EXECUTE|[33]
+00:40:59.31 (52892144)|STATEMENT_EXECUTE|[34]
+00:40:59.31 (52897390)|STATEMENT_EXECUTE|[41]
+00:40:59.31 (52898185)|STATEMENT_EXECUTE|[42]
+00:40:59.31 (52905898)|METHOD_EXIT|[22]|01p3600000JZYJv|EnvVariable.getValue(String)
+00:40:59.31 (52910543)|HEAP_ALLOCATE|[22]|Bytes:4
+00:40:59.31 (52928354)|HEAP_ALLOCATE|[22]|Bytes:5
+00:40:59.31 (52969965)|VARIABLE_ASSIGNMENT|[22]|MarketingCloudREST.isSmsOverrideActive|true
+00:40:59.31 (52972636)|STATEMENT_EXECUTE|[117]
+00:40:59.31 (52973589)|STATEMENT_EXECUTE|[136]
+00:40:59.31 (52985001)|METHOD_EXIT|[16]|MarketingCloudREST
+00:40:59.31 (53010807)|METHOD_ENTRY|[91]|01p3600000JXGPQ|MarketingCloudREST.getSmsResponse(MktgCloud_Updater.SmsRequest, System.HttpCalloutMock)
+00:40:59.31 (53029455)|VARIABLE_SCOPE_BEGIN|[64]|smsRequest|MktgCloud_Updater.SmsRequest|true|false
+00:40:59.31 (53080058)|VARIABLE_ASSIGNMENT|[64]|smsRequest|{"messageText":"STOP","shortCode":"56837","subscribers":"0x70d4e8b8"}|0x466a9b15
+00:40:59.31 (53083888)|VARIABLE_SCOPE_BEGIN|[64]|mock|System.HttpCalloutMock|true|false
+00:40:59.31 (53087989)|VARIABLE_ASSIGNMENT|[64]|mock|null|
+00:40:59.31 (53091533)|STATEMENT_EXECUTE|[64]
+00:40:59.31 (53145833)|SYSTEM_METHOD_ENTRY|[65]|List<MktgCloud_Updater.Subscriber>.isEmpty()
+00:40:59.31 (53162188)|SYSTEM_METHOD_EXIT|[65]|List<MktgCloud_Updater.Subscriber>.isEmpty()
+00:40:59.31 (53167035)|STATEMENT_EXECUTE|[65]
+00:40:59.31 (53171568)|METHOD_EXIT|[91]|01p3600000JXGPQ|MarketingCloudREST.getSmsResponse(MktgCloud_Updater.SmsRequest, System.HttpCalloutMock)
+00:40:59.53 (53208526)|CUMULATIVE_LIMIT_USAGE
+00:40:59.53 (53208526)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 1 out of 200
+  Number of query rows: 61 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+00:40:59.53 (53208526)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+00:40:59.53 (53208526)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcInnerTypes:0
+  String:__sfdcInnerTypes:0
+  String:__sfdcParameterizedTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_sfdcSuppressedCodeLocations:0
+  String:_static_EMAIL:0
+  String:_static_SMS:0
+  String:_static_apiEndpoint:0
+  String:_static_authCreds:0
+  MarketingCloudREST.AuthResponse:_static_authResponse:0
+  MktgCloud_Updater.EmailRequest:_static_emailOpts:0
+  Map<String,Env_Variable__c>:_static_envMap:0
+  Boolean:_static_isSmsOverrideActive:0
+  List<String>:_static_optTypes:0
+  String:_static_requestBody:0
+  String:_static_requestUrl:0
+  MktgCloud_Updater.SmsRequest:_static_smsOptIns:0
+  MktgCloud_Updater.SmsRequest:_static_smsOptOuts:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+00:40:59.53 (53208526)|CUMULATIVE_LIMIT_USAGE_END
+
+00:40:59.31 (53484305)|CODE_UNIT_FINISHED|MktgCloud_Updater.sendSmsOptsRequests(String)
+00:40:59.31 (53498332)|EXECUTION_FINISHED
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING_BEGIN
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING|SOQL operations|
+Class.EnvVariable.buildMap: line 50, column 1: [SELECT Name, Value__c, Active__c, User_Specific_Value__c, User_Switch_Active__c, Users__c 
+                                     FROM Env_Variable__c]: executed 125 times in 8 ms
+
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING|No profiling information for DML operations
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static void sendSmsOptsRequests(String): executed 1 time in 22 ms
+Class.MarketingCloudREST: line 22, column 1: public static String getValue(String): executed 1 time in 11 ms
+Class.EnvVariable.getValue: line 28, column 1: global public Integer size(): executed 2 times in 11 ms
+Class.MktgCloud_Updater: line 18, column 1: global MktgCloud_Updater.EmailRequest(): executed 1 time in 3 ms
+Class.MktgCloud_Updater.sendSmsOptsRequests: line 88, column 1: global static Boolean isRunningTest(): executed 1 time in 1 ms
+Class.MktgCloud_Updater.sendSmsOptsRequests: line 89, column 1: global static Object deserialize(String, System.Type): executed 1 time in 1 ms
+Class.MktgCloud_Updater.sendSmsOptsRequests: line 91, column 1: public static System.HttpResponse getSmsResponse(MktgCloud_Updater.SmsRequest, System.HttpCalloutMock): executed 1 time in 1 ms
+Class.MktgCloud_Updater: line 19, column 1: global MktgCloud_Updater.SmsRequest(): executed 1 time in 0 ms
+Class.MktgCloud_Updater: line 20, column 1: global MktgCloud_Updater.SmsRequest(): executed 1 time in 0 ms
+Class.MktgCloud_Updater: line 21, column 1: global public List<String>(): executed 1 time in 0 ms
+Class.MarketingCloudREST: line 17, column 1: global MarketingCloudREST.AuthResponse(): executed 1 time in 0 ms
+
+00:40:59.126 (126848875)|CUMULATIVE_PROFILING_END

@@ -33,7 +33,7 @@ public partial class DebugLevelDialog : Window
         {
             var debugLevel = new DebugLevel
             {
-                DeveloperName = name.Replace(" ", "_"),
+                DeveloperName = SanitizeDeveloperName(name),
                 MasterLabel = name,
                 ApexCode = GetComboBoxValue(ApexCodeComboBox),
                 Database = GetComboBoxValue(DatabaseComboBox),
@@ -69,6 +69,18 @@ public partial class DebugLevelDialog : Window
     {
         DialogResult = false;
         Close();
+    }
+
+    private static string SanitizeDeveloperName(string name)
+    {
+        // Salesforce DeveloperName: alphanumeric + underscore, must start with a letter
+        var sanitized = System.Text.RegularExpressions.Regex.Replace(name, @"[^a-zA-Z0-9_]", "_");
+        // Collapse consecutive underscores and trim trailing ones
+        sanitized = System.Text.RegularExpressions.Regex.Replace(sanitized, @"_+", "_").Trim('_');
+        // Must start with a letter
+        if (sanitized.Length == 0 || !char.IsLetter(sanitized[0]))
+            sanitized = "BW_" + sanitized;
+        return sanitized;
     }
 
     private string GetComboBoxValue(ComboBox comboBox)

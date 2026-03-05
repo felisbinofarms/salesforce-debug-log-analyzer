@@ -25,7 +25,7 @@ public class CacheService
         if (!forceRefresh &&
             _cachedDebugLevels != null &&
             _debugLevelsCacheTime.HasValue &&
-            DateTime.Now - _debugLevelsCacheTime.Value < _cacheExpiration)
+            DateTime.UtcNow - _debugLevelsCacheTime.Value < _cacheExpiration)
         {
             return _cachedDebugLevels;
         }
@@ -35,7 +35,7 @@ public class CacheService
 
         // Update cache
         _cachedDebugLevels = debugLevels;
-        _debugLevelsCacheTime = DateTime.Now;
+        _debugLevelsCacheTime = DateTime.UtcNow;
 
         return debugLevels;
     }
@@ -50,11 +50,7 @@ public class CacheService
     }
 
     /// <summary>
-    /// Clears only debug levels cache
+    /// Clears only debug levels cache (alias for ClearCache for backwards compat)
     /// </summary>
-    public void ClearDebugLevelsCache()
-    {
-        _cachedDebugLevels = null;
-        _debugLevelsCacheTime = null;
-    }
+    public void ClearDebugLevelsCache() => ClearCache();
 }

@@ -106,8 +106,9 @@ public class LicenseService
     {
         var license = GetCachedLicense() ?? new LicenseInfo();
 
-        // Don't restart a trial that already ran
-        if (license.Tier == LicenseTier.Trial && license.TrialStartedAt.HasValue)
+        // Don't restart a trial that already ran (check TrialStartedAt regardless of current tier,
+        // since expired trials are downgraded to Free but shouldn't be retriggerable)
+        if (license.TrialStartedAt.HasValue)
             return;
 
         license.Tier             = LicenseTier.Trial;

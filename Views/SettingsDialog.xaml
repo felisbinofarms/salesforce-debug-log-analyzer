@@ -107,8 +107,8 @@
                             Padding="15,10"
                             Margin="0,5"/>
 
-                    <Button x:Name="AdvancedTabButton" 
-                            Content="Advanced" 
+                    <Button x:Name="AdvancedTabButton"
+                            Content="Advanced"
                             Click="AdvancedTabButton_Click"
                             Style="{StaticResource MaterialDesignFlatButton}"
                             Foreground="{StaticResource TextPrimary}"
@@ -118,7 +118,18 @@
                             Padding="15,10"
                             Margin="0,5"/>
 
-                    <Button x:Name="AboutTabButton" 
+                    <Button x:Name="MonitoringTabButton"
+                            Content="Monitoring"
+                            Click="MonitoringTabButton_Click"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="{StaticResource TextPrimary}"
+                            FontSize="14"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="15,10"
+                            Margin="0,5"/>
+
+                    <Button x:Name="AboutTabButton"
                             Content="About" 
                             Click="AboutTabButton_Click"
                             Style="{StaticResource MaterialDesignFlatButton}"

@@ -315,7 +315,7 @@ public partial class DebugSetupWizard : UserControl
         Step4Border.Background = System.Windows.Media.Brushes.Transparent;
 
         // Show current step
-        var activeColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0x65, 0xF2));
+        var activeColor = (System.Windows.Media.Brush)FindResource("AccentPrimary");
         switch (step)
         {
             case 1:

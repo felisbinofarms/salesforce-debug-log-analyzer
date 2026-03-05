@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Serilog;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services
@@ -99,7 +100,7 @@ namespace SalesforceDebugAnalyzer.Services
             catch (Exception ex)
             {
                 // Log error but return partial metadata
-                Console.WriteLine($"Error fetching metadata: {ex.Message}");
+                Log.Warning(ex, "Error fetching org metadata");
             }
 
             return metadata;
@@ -115,7 +116,7 @@ namespace SalesforceDebugAnalyzer.Services
                 // Use Salesforce Describe API to get all objects
                 var response = await _apiService.ExecuteRequestAsync<DescribeGlobalResponse>(
                     "GET", 
-                    "/services/data/v59.0/sobjects"
+                    "/services/data/v60.0/sobjects"
                 );
 
                 foreach (var sobject in response.SObjects)
@@ -138,7 +139,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching objects: {ex.Message}");
+                Log.Warning(ex, "Error fetching objects");
             }
         }
 
@@ -151,7 +152,7 @@ namespace SalesforceDebugAnalyzer.Services
             {
                 var response = await _apiService.ExecuteRequestAsync<DescribeSObjectResponse>(
                     "GET",
-                    $"/services/data/v59.0/sobjects/{objectName}/describe"
+                    $"/services/data/v60.0/sobjects/{objectName}/describe"
                 );
 
                 if (!metadata.Objects.ContainsKey(objectName))
@@ -173,7 +174,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching fields for {objectName}: {ex.Message}");
+                Log.Warning(ex, "Error fetching fields for {ObjectName}", objectName);
             }
         }
 
@@ -200,7 +201,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching users: {ex.Message}");
+                Log.Warning(ex, "Error fetching users");
             }
         }
 
@@ -231,7 +232,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching Apex classes: {ex.Message}");
+                Log.Warning(ex, "Error fetching Apex classes");
             }
         }
 
@@ -258,7 +259,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching triggers: {ex.Message}");
+                Log.Warning(ex, "Error fetching triggers");
             }
         }
 
@@ -285,7 +286,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching flows: {ex.Message}");
+                Log.Warning(ex, "Error fetching flows");
             }
         }
 
@@ -313,7 +314,7 @@ namespace SalesforceDebugAnalyzer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching record types: {ex.Message}");
+                Log.Warning(ex, "Error fetching record types");
             }
         }
 
@@ -410,9 +411,11 @@ namespace SalesforceDebugAnalyzer.Services
 
             try
             {
+                // Sanitize recordId to prevent SOQL injection (Salesforce IDs are alphanumeric)
+                var safeId = new string(recordId.Where(c => char.IsLetterOrDigit(c)).ToArray());
                 // Query for record name/title
                 var nameField = objectMeta.ApiName == "Case" ? "CaseNumber" : "Name";
-                var query = $"SELECT {nameField} FROM {objectMeta.ApiName} WHERE Id = '{recordId}' LIMIT 1";
+                var query = $"SELECT {nameField} FROM {objectMeta.ApiName} WHERE Id = '{safeId}' LIMIT 1";
                 var response = await _apiService.QueryAsync<Dictionary<string, object>>(query);
                 
                 if (response.Records.Count > 0 && response.Records[0].TryGetValue(nameField, out var name))

@@ -1,7 +1,8 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
+using Serilog;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -11,8 +12,10 @@ namespace SalesforceDebugAnalyzer.Services;
 /// </summary>
 public class SalesforceApiService : IDisposable
 {
+    private const string ApiVersion = "v60.0";
     private readonly HttpClient _httpClient;
     private SalesforceConnection? _connection;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private bool _disposed;
 
     public SalesforceApiService()
@@ -60,6 +63,7 @@ public class SalesforceApiService : IDisposable
                     _connection.UserId = userInfo.ContainsKey("user_id") ? userInfo["user_id"].ToString() ?? "" : "";
                     _connection.OrgId = userInfo.ContainsKey("organization_id") ? userInfo["organization_id"].ToString() ?? "" : "";
                     _connection.Username = userInfo.ContainsKey("preferred_username") ? userInfo["preferred_username"].ToString() ?? "" : "";
+                    // Use display name if available, fall back to org id
                     _connection.OrgName = userInfo.ContainsKey("organization_id") ? userInfo["organization_id"].ToString() ?? "" : "";
                     
                     // Also try to get email if username not available
@@ -70,9 +74,10 @@ public class SalesforceApiService : IDisposable
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Continue even if user info fails
+            // Log but continue â€” connection may still work for API calls even if userinfo fetch fails
+            Log.Warning(ex, "Failed to fetch user info during authentication");
         }
 
         return _connection;
@@ -90,7 +95,7 @@ public class SalesforceApiService : IDisposable
                     $"FROM ApexLog ORDER BY StartTime DESC LIMIT {limit}";
 
         var encodedQuery = Uri.EscapeDataString(query);
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -109,7 +114,7 @@ public class SalesforceApiService : IDisposable
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/ApexLog/{logId}/Body";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{logId}/Body";
 
         try
         {
@@ -132,6 +137,26 @@ public class SalesforceApiService : IDisposable
     }
 
     /// <summary>
+    /// Makes an authenticated GET request to the given relative endpoint and returns the raw string response.
+    /// Useful for downloading non-JSON resources (e.g., CSV from EventLogFile).
+    /// </summary>
+    public async Task<string?> GetAuthenticatedStringAsync(string relativeEndpoint)
+    {
+        if (_connection == null || !_connection.IsConnected)
+            return null;
+
+        var url = $"{_connection.InstanceUrl}{relativeEndpoint}";
+        var response = await _httpClient.GetAsync(url);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
+    /// The API version constant. Exposed so other services can build endpoints.
+    /// </summary>
+    public static string ApiVersionString => ApiVersion;
+
+    /// <summary>
     /// Delete old debug logs (Salesforce keeps logs for 24 hours)
     /// </summary>
     public async Task<int> DeleteOldLogsAsync(int hoursOld = 1)
@@ -145,7 +170,7 @@ public class SalesforceApiService : IDisposable
             var cutoffTime = DateTime.UtcNow.AddHours(-hoursOld);
             var query = $"SELECT Id FROM ApexLog WHERE StartTime < {cutoffTime:yyyy-MM-ddTHH:mm:ss.fffZ}";
             var encodedQuery = Uri.EscapeDataString(query);
-            var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+            var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
@@ -160,7 +185,7 @@ public class SalesforceApiService : IDisposable
             int deleted = 0;
             foreach (var log in result.Records)
             {
-                var deleteUrl = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/ApexLog/{log.Id}";
+                var deleteUrl = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{log.Id}";
                 var deleteResponse = await _httpClient.DeleteAsync(deleteUrl);
                 if (deleteResponse.IsSuccessStatusCode)
                     deleted++;
@@ -184,7 +209,7 @@ public class SalesforceApiService : IDisposable
 
         var query = "SELECT Id,DeveloperName,MasterLabel,ApexCode,ApexProfiling,Database,System,Validation,Visualforce,Workflow,Callout FROM DebugLevel";
         var encodedQuery = Uri.EscapeDataString(query);
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -221,7 +246,7 @@ public class SalesforceApiService : IDisposable
             ExpirationDate = expirationDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         };
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/TraceFlag";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/TraceFlag";
         var json = JsonConvert.SerializeObject(traceFlag);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -252,7 +277,7 @@ public class SalesforceApiService : IDisposable
             var safeUserId = new string(userId.Where(c => char.IsLetterOrDigit(c)).ToArray());
             var query = $"SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag WHERE TracedEntityId = '{safeUserId}' AND LogType = 'USER_DEBUG'";
             var encodedQuery = Uri.EscapeDataString(query);
-            var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+            var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
             var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode) return null;
@@ -283,7 +308,7 @@ public class SalesforceApiService : IDisposable
             ExpirationDate = expirationDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         };
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/TraceFlag/{traceFlagId}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/TraceFlag/{traceFlagId}";
         var json = JsonConvert.SerializeObject(updateData);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -312,7 +337,7 @@ public class SalesforceApiService : IDisposable
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/DebugLevel";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/DebugLevel";
         var json = JsonConvert.SerializeObject(debugLevel);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -335,7 +360,7 @@ public class SalesforceApiService : IDisposable
 
         var query = "SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag";
         var encodedQuery = Uri.EscapeDataString(query);
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/query/?q={encodedQuery}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -354,7 +379,7 @@ public class SalesforceApiService : IDisposable
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/ApexLog/{logId}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{logId}";
         var response = await _httpClient.DeleteAsync(url);
         response.EnsureSuccessStatusCode();
     }
@@ -367,7 +392,7 @@ public class SalesforceApiService : IDisposable
         if (_connection == null || !_connection.IsConnected)
             throw new InvalidOperationException("Not connected to Salesforce");
 
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/tooling/sobjects/TraceFlag/{traceFlagId}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/TraceFlag/{traceFlagId}";
         var response = await _httpClient.DeleteAsync(url);
         response.EnsureSuccessStatusCode();
     }
@@ -381,7 +406,7 @@ public class SalesforceApiService : IDisposable
             throw new InvalidOperationException("Not connected to Salesforce");
 
         var encodedQuery = Uri.EscapeDataString(soql);
-        var url = $"{_connection.InstanceUrl}/services/data/v60.0/query/?q={encodedQuery}";
+        var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/query/?q={encodedQuery}";
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -410,6 +435,97 @@ public class SalesforceApiService : IDisposable
         var result = JsonConvert.DeserializeObject<T>(content);
 
         return result ?? throw new InvalidOperationException("Failed to deserialize response");
+    }
+
+    /// <summary>
+    /// Ensures the access token is valid, refreshing it if within 15 minutes of expiry.
+    /// Safe to call concurrently â€” only one refresh executes at a time.
+    /// </summary>
+    public async Task<bool> EnsureAuthenticatedAsync()
+    {
+        if (_connection == null) return false;
+
+        // Still valid with comfortable margin? No refresh needed.
+        if (DateTime.UtcNow < _connection.TokenExpiresAt.AddMinutes(-15))
+            return true;
+
+        // No refresh token? Can't auto-refresh.
+        if (string.IsNullOrEmpty(_connection.RefreshToken))
+        {
+            Log.Warning("Token expiring soon but no refresh token available");
+            return _connection.IsConnected;
+        }
+
+        await _refreshLock.WaitAsync();
+        try
+        {
+            // Double-check after acquiring lock (another thread may have refreshed)
+            if (DateTime.UtcNow < _connection.TokenExpiresAt.AddMinutes(-15))
+                return true;
+
+            return await RefreshTokenAsync();
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the OAuth access token using the stored refresh token.
+    /// </summary>
+    private async Task<bool> RefreshTokenAsync()
+    {
+        if (_connection == null || string.IsNullOrEmpty(_connection.RefreshToken))
+            return false;
+
+        try
+        {
+            // Determine token endpoint based on instance URL
+            var tokenEndpoint = _connection.InstanceUrl.Contains("sandbox", StringComparison.OrdinalIgnoreCase)
+                || _connection.InstanceUrl.Contains("test.salesforce.com", StringComparison.OrdinalIgnoreCase)
+                ? "https://test.salesforce.com/services/oauth2/token"
+                : "https://login.salesforce.com/services/oauth2/token";
+
+            var requestBody = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "grant_type", "refresh_token" },
+                { "client_id", "PlatformCLI" },
+                { "refresh_token", _connection.RefreshToken }
+            });
+
+            var response = await _httpClient.PostAsync(tokenEndpoint, requestBody);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Error("Token refresh failed: {StatusCode} {Body}", response.StatusCode, content);
+                return false;
+            }
+
+            var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
+            if (tokenResponse == null || !tokenResponse.ContainsKey("access_token"))
+            {
+                Log.Error("Token refresh response missing access_token");
+                return false;
+            }
+
+            var newAccessToken = tokenResponse["access_token"].ToString()!;
+            _connection.AccessToken = newAccessToken;
+            _connection.TokenIssuedAt = DateTime.UtcNow;
+            _connection.TokenExpiresAt = DateTime.UtcNow.AddHours(2);
+
+            // Update the HTTP client bearer token
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", newAccessToken);
+
+            Log.Information("OAuth token refreshed successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Token refresh failed with exception");
+            return false;
+        }
     }
 
     /// <summary>

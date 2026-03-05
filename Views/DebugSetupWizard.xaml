@@ -141,8 +141,8 @@
                                                Text="Loading..." 
                                                Foreground="{StaticResource TextSecondary}"
                                                Margin="0,4,0,0"/>
-                                    <TextBlock Text="✓ Best for troubleshooting your own actions" 
-                                               Foreground="Green" 
+                                    <TextBlock Text="✓ Best for troubleshooting your own actions"
+                                               Foreground="{StaticResource Success}"
                                                FontSize="12"
                                                Margin="0,4,0,0"/>
                                 </StackPanel>
@@ -166,7 +166,7 @@
                                          Background="{StaticResource BgSecondary}"
                                          Foreground="{StaticResource TextPrimary}"
                                          BorderBrush="{StaticResource BorderDefault}"/>
-                                <TextBlock Text="💡 Tip: Find this in Setup > Users > Click on user > View their User ID" 
+                                <TextBlock Text="Tip: Find this in Setup &gt; Users &gt; Click on user &gt; View their User ID"
                                            FontSize="12"
                                            Foreground="{StaticResource TextSecondary}"
                                            TextWrapping="Wrap"/>
@@ -242,7 +242,7 @@
                                                    FontSize="12" FontStyle="Italic"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    Margin="0,4,0,0"/>
-                                        <TextBlock Text="⚠️ Log files will be 10–50x larger. Only use when debugging a specific problem."
+                                        <TextBlock Text="Note: Log files will be 10–50x larger. Only use when debugging a specific problem."
                                                    TextWrapping="Wrap"
                                                    FontSize="12"
                                                    Foreground="{StaticResource Warning}"
@@ -356,7 +356,7 @@
                             <TextBlock x:Name="DurationRecommendation" 
                                        Text="✓ Good for quick testing (2-4 hours recommended)" 
                                        FontSize="13"
-                                       Foreground="Green"
+                                       Foreground="{StaticResource Success}"
                                        HorizontalAlignment="Center"
                                        Margin="0,0,0,24"/>
 
@@ -451,7 +451,7 @@
                         </Border.BorderBrush>
                         <StackPanel>
                             <Button x:Name="EnableButton" 
-                                    Content="🚀 Enable Debug Logging" 
+                                    Content="Enable Debug Logging" 
                                     FontSize="16"
                                     Height="48"
                                     Click="EnableLogging_Click"

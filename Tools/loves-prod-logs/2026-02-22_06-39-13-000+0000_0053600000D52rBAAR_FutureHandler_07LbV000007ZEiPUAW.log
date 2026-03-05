@@ -1,0 +1,387 @@
+﻿64.0 APEX_CODE,FINEST;APEX_PROFILING,FINEST;CALLOUT,FINEST;DATA_ACCESS,INFO;DB,FINEST;NBA,FINEST;SYSTEM,FINE;VALIDATION,INFO;VISUALFORCE,FINER;WAVE,FINEST;WORKFLOW,FINER
+00:39:13.6 (6145758)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:39:13.6 (6672136)|EXECUTION_STARTED
+00:39:13.6 (6716226)|CODE_UNIT_STARTED|[EXTERNAL]|FutureHandler - state load
+00:39:13.6 (8871215)|CODE_UNIT_FINISHED|FutureHandler - state load
+00:39:13.6 (8963686)|EXECUTION_FINISHED
+00:39:13.41 (41065566)|USER_INFO|[EXTERNAL]|0053600000D52rB|heroku.connected@loves.com|(GMT-06:00) Central Standard Time (America/Chicago)|GMT-06:00
+00:39:13.41 (41115467)|EXECUTION_STARTED
+00:39:13.41 (41145124)|CODE_UNIT_STARTED|[EXTERNAL]|01p1R00000JmIn3|Contact_AccountSync.handleAtFuture(String, String)
+00:39:13.41 (41445489)|VARIABLE_SCOPE_BEGIN|[20]|Contact_AccountSync.RECTYPE_INDIV|String|false|true
+00:39:13.41 (41891693)|HEAP_ALLOCATE|[95]|Bytes:3
+00:39:13.41 (41995853)|HEAP_ALLOCATE|[100]|Bytes:152
+00:39:13.41 (42026553)|HEAP_ALLOCATE|[417]|Bytes:408
+00:39:13.41 (42045122)|HEAP_ALLOCATE|[430]|Bytes:408
+00:39:13.41 (42081338)|HEAP_ALLOCATE|[317]|Bytes:6
+00:39:13.41 (42102108)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:24
+00:39:13.41 (42110087)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:10
+00:39:13.41 (42209993)|VARIABLE_ASSIGNMENT|[EXTERNAL]|Contact_AccountSync.RECTYPE_INDIV|"Individual"
+00:39:13.41 (42248995)|METHOD_ENTRY|[19]|01p1R00000JmIn3|Contact_AccountSync.Contact_AccountSync()
+00:39:13.41 (42269748)|STATEMENT_EXECUTE|[19]
+00:39:13.41 (42289370)|STATEMENT_EXECUTE|[19]
+00:39:13.41 (42300498)|METHOD_EXIT|[19]|Contact_AccountSync
+00:39:13.41 (42307912)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3265
+00:39:13.41 (42313353)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:3286
+00:39:13.41 (42350815)|VARIABLE_SCOPE_BEGIN|[43]|contactListJson|String|false|false
+00:39:13.41 (42386404)|VARIABLE_ASSIGNMENT|[43]|contactListJson|"[{\"attributes\":{\"typ (3245 more) ..."
+00:39:13.41 (42397118)|VARIABLE_SCOPE_BEGIN|[43]|oldMapJson|String|false|false
+00:39:13.41 (42413074)|VARIABLE_ASSIGNMENT|[43]|oldMapJson|"{\"003bV000008ptlsQAA (3266 more) ..."
+00:39:13.41 (42929604)|STATEMENT_EXECUTE|[43]
+00:39:13.41 (42933583)|STATEMENT_EXECUTE|[44]
+00:39:13.41 (42946993)|HEAP_ALLOCATE|[44]|Bytes:67
+00:39:13.41 (42996942)|HEAP_ALLOCATE|[68]|Bytes:5
+00:39:13.41 (43042764)|HEAP_ALLOCATE|[74]|Bytes:5
+00:39:13.41 (43059344)|HEAP_ALLOCATE|[82]|Bytes:7
+00:39:13.41 (43427196)|HEAP_ALLOCATE|[44]|Bytes:33
+00:39:13.41 (43467871)|SYSTEM_METHOD_ENTRY|[1]|Type.Type()
+00:39:13.41 (43475476)|STATEMENT_EXECUTE|[1]
+00:39:13.41 (43487500)|SYSTEM_METHOD_EXIT|[1]|Type
+00:39:13.41 (43495680)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:13.41 (43666276)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:13.41 (43682352)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:39:13.41 (43777313)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x506b4232
+00:39:13.41 (43788716)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:39:13.41 (43911706)|VARIABLE_ASSIGNMENT|[4]|apextype|"List<Contact>"|0xffcef75
+00:39:13.41 (46960180)|HEAP_ALLOCATE|[44]|Bytes:8
+00:39:13.41 (47042667)|HEAP_ALLOCATE|[44]|Bytes:24
+00:39:13.41 (47060968)|SYSTEM_METHOD_ENTRY|[1]|JSON.JSON()
+00:39:13.41 (47069465)|STATEMENT_EXECUTE|[1]
+00:39:13.41 (47078653)|SYSTEM_METHOD_EXIT|[1]|JSON
+00:39:13.41 (47125070)|METHOD_ENTRY|[44]||System.JSON.deserialize(String, System.Type)
+00:39:13.41 (50285984)|METHOD_EXIT|[44]||System.JSON.deserialize(String, System.Type)
+00:39:13.41 (50385489)|VARIABLE_SCOPE_BEGIN|[44]|contactList|List<Contact>|true|false
+00:39:13.41 (50428864)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+00:39:13.41 (51386118)|VARIABLE_ASSIGNMENT|[44]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:12.000Z","AccountId":"001bV000009uA63QAE","Email":"javidelarosa166@gmai (5 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2025-01-13T05:24:31.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"7bbf0d2e-aac1-4651-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Email_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","MailingLatitude":36.1738,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Driver_Type__c":"Commercial","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[]","IndividualId":"0PKbV000000bhdvWAA","Phone_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"RegistrationSource__c":"Love's App","OtherCountryCode":"US","Receipt_Unsubscribed_Time__c":"2025-01-13T05:24:40.000Z","Loyalty_Terms_Accepted__c":"2025-01-13T05:24:32.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"003bV000008ptlsQAA","Contractor_Review_Date__c":"2025-07-12T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","CreatedDate":"2025-01-13T05:24:40.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"De La Rosa","Id":"003bV000008ptlsQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0053600000D52rBAAR","MailingLongitude":-115.0622,"AgeRestrictedContentPreference__c":false,"Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17205770596","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2025-01-13T05:24:30.000Z","Guarantor__c":false,"FirstName":"Javier","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:12.000Z","NASCAR__c":false,"Text_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x4e72a35
+00:39:13.41 (51455767)|STATEMENT_EXECUTE|[45]
+00:39:13.41 (51493258)|METHOD_ENTRY|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:39:13.41 (51549536)|VARIABLE_SCOPE_BEGIN|[48]|contactList|List<Contact>|true|false
+00:39:13.41 (51977824)|VARIABLE_ASSIGNMENT|[48]|contactList|[{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:12.000Z","AccountId":"001bV000009uA63QAE","Email":"javidelarosa166@gmai (5 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2025-01-13T05:24:31.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"7bbf0d2e-aac1-4651-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Email_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","MailingLatitude":36.1738,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Driver_Type__c":"Commercial","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[]","IndividualId":"0PKbV000000bhdvWAA","Phone_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"RegistrationSource__c":"Love's App","OtherCountryCode":"US","Receipt_Unsubscribed_Time__c":"2025-01-13T05:24:40.000Z","Loyalty_Terms_Accepted__c":"2025-01-13T05:24:32.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"003bV000008ptlsQAA","Contractor_Review_Date__c":"2025-07-12T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","CreatedDate":"2025-01-13T05:24:40.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"De La Rosa","Id":"003bV000008ptlsQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0053600000D52rBAAR","MailingLongitude":-115.0622,"AgeRestrictedContentPreference__c":false,"Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17205770596","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2025-01-13T05:24:30.000Z","Guarantor__c":false,"FirstName":"Javier","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:12.000Z","NASCAR__c":false,"Text_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}]|0x4e72a35
+00:39:13.41 (52011590)|VARIABLE_SCOPE_BEGIN|[48]|oldMapJson|String|false|false
+00:39:13.41 (52034042)|VARIABLE_ASSIGNMENT|[48]|oldMapJson|"{\"003bV000008ptlsQAA (3266 more) ..."
+00:39:13.41 (52045049)|STATEMENT_EXECUTE|[48]
+00:39:13.41 (52048674)|STATEMENT_EXECUTE|[49]
+00:39:13.41 (52082008)|HEAP_ALLOCATE|[49]|Bytes:4
+00:39:13.41 (52128055)|SYSTEM_CONSTRUCTOR_ENTRY|[49]|<init>()
+00:39:13.41 (52185346)|SYSTEM_CONSTRUCTOR_EXIT|[49]|<init>()
+00:39:13.41 (52195597)|VARIABLE_SCOPE_BEGIN|[49]|conIdList|List<String>|true|false
+00:39:13.41 (52236987)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (52254352)|VARIABLE_ASSIGNMENT|[49]|conIdList|[]|0x7dc95ef2
+00:39:13.41 (52261474)|STATEMENT_EXECUTE|[50]
+00:39:13.41 (52269269)|HEAP_ALLOCATE|[50]|Bytes:4
+00:39:13.41 (52282477)|SYSTEM_CONSTRUCTOR_ENTRY|[50]|<init>()
+00:39:13.41 (52295512)|SYSTEM_CONSTRUCTOR_EXIT|[50]|<init>()
+00:39:13.41 (52303899)|VARIABLE_SCOPE_BEGIN|[50]|accIdList|List<String>|true|false
+00:39:13.41 (52320318)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (52331957)|VARIABLE_ASSIGNMENT|[50]|accIdList|[]|0xed5ada6
+00:39:13.41 (52338049)|STATEMENT_EXECUTE|[51]
+00:39:13.41 (52381539)|HEAP_ALLOCATE|[51]|Bytes:4
+00:39:13.41 (52430689)|SYSTEM_CONSTRUCTOR_ENTRY|[51]|<init>()
+00:39:13.41 (52446002)|SYSTEM_CONSTRUCTOR_EXIT|[51]|<init>()
+00:39:13.41 (52454835)|VARIABLE_SCOPE_BEGIN|[51]|upsAcctList|List<Account>|true|false
+00:39:13.41 (52465426)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (52496018)|VARIABLE_ASSIGNMENT|[51]|upsAcctList|[]|0x14b3c10e
+00:39:13.41 (52997156)|SYSTEM_METHOD_ENTRY|[54]|List<Contact>.iterator()
+00:39:13.41 (53120898)|SYSTEM_METHOD_EXIT|[54]|List<Contact>.iterator()
+00:39:13.41 (53241431)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:39:13.41 (53266906)|HEAP_ALLOCATE|[54]|Bytes:5
+00:39:13.41 (53285140)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:39:13.41 (53306678)|HEAP_ALLOCATE|[54]|Bytes:364
+00:39:13.41 (53332513)|VARIABLE_SCOPE_BEGIN|[54]|con|Contact|true|false
+00:39:13.41 (53768738)|VARIABLE_ASSIGNMENT|[54]|con|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-22T06:39:12.000Z","AccountId":"001bV000009uA63QAE","Email":"javidelarosa166@gmai (5 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2025-01-13T05:24:31.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"7bbf0d2e-aac1-4651-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Email_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","MailingLatitude":36.1738,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Driver_Type__c":"Commercial","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[]","IndividualId":"0PKbV000000bhdvWAA","Phone_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"RegistrationSource__c":"Love's App","OtherCountryCode":"US","Receipt_Unsubscribed_Time__c":"2025-01-13T05:24:40.000Z","Loyalty_Terms_Accepted__c":"2025-01-13T05:24:32.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"003bV000008ptlsQAA","Contractor_Review_Date__c":"2025-07-12T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","CreatedDate":"2025-01-13T05:24:40.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"De La Rosa","Id":"003bV000008ptlsQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0053600000D52rBAAR","MailingLongitude":-115.0622,"AgeRestrictedContentPreference__c":false,"Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17205770596","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2025-01-13T05:24:30.000Z","Guarantor__c":false,"FirstName":"Javier","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-22T06:39:12.000Z","NASCAR__c":false,"Text_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x3daa34c9
+00:39:13.41 (53820895)|STATEMENT_EXECUTE|[54]
+00:39:13.41 (53825760)|STATEMENT_EXECUTE|[55]
+00:39:13.41 (53882270)|SYSTEM_METHOD_ENTRY|[55]|List<String>.add(Object)
+00:39:13.41 (53941431)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (54029885)|SYSTEM_METHOD_EXIT|[55]|List<String>.add(Object)
+00:39:13.41 (54052756)|STATEMENT_EXECUTE|[56]
+00:39:13.41 (54064072)|SYSTEM_METHOD_ENTRY|[56]|List<String>.add(Object)
+00:39:13.41 (54083698)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (54098539)|SYSTEM_METHOD_EXIT|[56]|List<String>.add(Object)
+00:39:13.41 (54111432)|SYSTEM_METHOD_ENTRY|[54]|system.ListIterator.hasNext()
+00:39:13.41 (54338519)|HEAP_ALLOCATE|[54]|Bytes:5
+00:39:13.41 (54358392)|SYSTEM_METHOD_EXIT|[54]|system.ListIterator.hasNext()
+00:39:13.41 (54381984)|VARIABLE_ASSIGNMENT|[54]|con|null|
+00:39:13.41 (54389399)|STATEMENT_EXECUTE|[60]
+00:39:13.41 (54405809)|METHOD_ENTRY|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:39:13.41 (54461616)|VARIABLE_SCOPE_BEGIN|[105]|accIdList|List<String>|true|false
+00:39:13.41 (54484076)|VARIABLE_ASSIGNMENT|[105]|accIdList|["001bV000009uA63QAE"]|0xed5ada6
+00:39:13.41 (54495190)|VARIABLE_SCOPE_BEGIN|[105]|conIdList|List<String>|true|false
+00:39:13.41 (54563441)|VARIABLE_ASSIGNMENT|[105]|conIdList|["003bV000008ptlsQAA"]|0x7dc95ef2
+00:39:13.41 (54572086)|STATEMENT_EXECUTE|[105]
+00:39:13.41 (54574825)|STATEMENT_EXECUTE|[106]
+00:39:13.41 (54589016)|HEAP_ALLOCATE|[106]|Bytes:4
+00:39:13.41 (54633219)|VARIABLE_SCOPE_BEGIN|[106]|acctMap|Map<String,Account>|true|false
+00:39:13.41 (54699357)|VARIABLE_ASSIGNMENT|[106]|acctMap|{}|0x59742190
+00:39:13.41 (54709599)|HEAP_ALLOCATE|[107]|Bytes:237
+00:39:13.41 (54724790)|HEAP_ALLOCATE|[107]|Bytes:4
+00:39:13.41 (54739364)|HEAP_ALLOCATE|[107]|Bytes:7
+00:39:13.41 (54756565)|HEAP_ALLOCATE|[107]|Bytes:7
+00:39:13.41 (56784779)|SOQL_EXECUTE_BEGIN|[107]|Aggregations:0|SELECT Id, Name, BillingCity, BillingCountry, BillingPostalCode, BillingState, BillingStreet, Phone, Person_Email__c, Auth0Id__c, SMA_SMAId__c, RecordTypeId, RecordType.Name FROM Account WHERE (Id IN :tmpVar1 OR SMA_SMAId__c IN :tmpVar2)
+00:39:13.41 (56885587)|LIMIT_USAGE|[107]|SOQL|1|200
+00:39:13.41 (56898200)|LIMIT_USAGE|[107]|AGGS|0|600
+00:39:13.41 (84541496)|SOQL_EXECUTE_EXPLAIN|[107]|Index on ApexExecutionOverlayAction : [ScopeId], cardinality: 0, sobjectCardinality: 1, relativeCost 0
+00:39:13.41 (84608738)|SOQL_EXECUTE_END|[107]|Rows:1
+00:39:13.41 (84656038)|LIMIT_USAGE|[107]|SOQL_ROWS|1|50000
+00:39:13.41 (84679696)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:8
+00:39:13.41 (84800631)|SYSTEM_METHOD_ENTRY|[107]|Database.QueryLocator.iterator()
+00:39:13.41 (84999280)|HEAP_ALLOCATE|[107]|Bytes:54
+00:39:13.41 (85028967)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:13.41 (85085351)|SYSTEM_METHOD_ENTRY|[7]|QueryLocatorIterator.QueryLocatorIterator()
+00:39:13.41 (85094012)|STATEMENT_EXECUTE|[7]
+00:39:13.41 (85108324)|SYSTEM_METHOD_EXIT|[7]|QueryLocatorIterator
+00:39:13.41 (85118535)|HEAP_ALLOCATE|[107]|Bytes:28
+00:39:13.41 (85155290)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:13.41 (85168767)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:13.41 (85206244)|HEAP_ALLOCATE|[107]|Bytes:8
+00:39:13.41 (85234876)|VARIABLE_SCOPE_BEGIN|[15]|this|Database.QueryLocatorIterator|true|false
+00:39:13.41 (85360619)|VARIABLE_ASSIGNMENT|[15]|this|{}|0x6fe32e72
+00:39:13.41 (85369965)|VARIABLE_SCOPE_BEGIN|[15]|values|List<SObject>|true|false
+00:39:13.41 (87508534)|VARIABLE_ASSIGNMENT|[15]|values|[{"BillingCountry":"United States","SMA_SMAId__c":"003bV000008ptlsQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7205770596","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","BillingPostalCode":"89110","Id":"001bV000009uA63QAE","Person_Email__c":"javidelarosa166@gmai (5 more) ...","Name":"Javier De La Rosa"}]|0x4e734cf0
+00:39:13.41 (87555862)|VARIABLE_SCOPE_BEGIN|[15]|ql|Database.QueryLocator|true|false
+00:39:13.41 (87714458)|VARIABLE_ASSIGNMENT|[15]|ql|{"query":"SELECT Id, Name, Bil (217 more) ..."}|0x219b8e33
+00:39:13.41 (87724033)|VARIABLE_SCOPE_BEGIN|[15]|totalNumRecords|Integer|false|false
+00:39:13.41 (87738518)|VARIABLE_ASSIGNMENT|[15]|totalNumRecords|1
+00:39:13.41 (87744295)|VARIABLE_SCOPE_BEGIN|[15]|queryMoreSize|Integer|false|false
+00:39:13.41 (87753348)|VARIABLE_ASSIGNMENT|[15]|queryMoreSize|49999
+00:39:13.41 (87957626)|HEAP_ALLOCATE|[107]|Bytes:28
+00:39:13.41 (88004254)|SYSTEM_METHOD_EXIT|[107]|Database.QueryLocator.iterator()
+00:39:13.41 (88117454)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:13.41 (88246314)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:13.41 (88256597)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.next()
+00:39:13.41 (88360481)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.next()
+00:39:13.41 (88375903)|VARIABLE_SCOPE_BEGIN|[107]|acc|Account|true|false
+00:39:13.41 (88505803)|VARIABLE_ASSIGNMENT|[107]|acc|{"BillingCountry":"United States","SMA_SMAId__c":"003bV000008ptlsQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7205770596","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","BillingPostalCode":"89110","Id":"001bV000009uA63QAE","Person_Email__c":"javidelarosa166@gmai (5 more) ...","Name":"Javier De La Rosa"}|0x3127c4c
+00:39:13.41 (88518387)|STATEMENT_EXECUTE|[110]
+00:39:13.41 (88594375)|SYSTEM_METHOD_ENTRY|[111]|String.isBlank(String)
+00:39:13.41 (88651564)|SYSTEM_METHOD_EXIT|[111]|String.isBlank(String)
+00:39:13.41 (88659437)|STATEMENT_EXECUTE|[111]
+00:39:13.41 (88661988)|STATEMENT_EXECUTE|[112]
+00:39:13.41 (88686562)|SYSTEM_METHOD_ENTRY|[112]|Map<String,Account>.put(Object, Object)
+00:39:13.41 (88753797)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:39:13.41 (88773411)|SYSTEM_METHOD_EXIT|[112]|Map<String,Account>.put(Object, Object)
+00:39:13.41 (88778833)|STATEMENT_EXECUTE|[114]
+00:39:13.41 (88802991)|SYSTEM_METHOD_ENTRY|[114]|Map<String,Account>.put(Object, Object)
+00:39:13.41 (88833231)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:-4
+00:39:13.41 (88840156)|SYSTEM_METHOD_EXIT|[114]|Map<String,Account>.put(Object, Object)
+00:39:13.41 (88847292)|METHOD_ENTRY|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:13.41 (88868741)|METHOD_EXIT|[107]||Database.QueryLocatorIterator.hasNext()
+00:39:13.41 (88902068)|VARIABLE_ASSIGNMENT|[107]|acc|null|
+00:39:13.41 (88923533)|STATEMENT_EXECUTE|[116]
+00:39:13.41 (88928156)|METHOD_EXIT|[60]|01p1R00000JmIn3|Contact_AccountSync.getAccountData(List<String>, List<String>)
+00:39:13.41 (88939098)|VARIABLE_SCOPE_BEGIN|[60]|accountMap|Map<String,Account>|true|false
+00:39:13.41 (89127372)|VARIABLE_ASSIGNMENT|[60]|accountMap|{"003bV000008ptlsQAA":{"BillingCountry":"United States","SMA_SMAId__c":"003bV000008ptlsQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7205770596","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","BillingPostalCode":"89110","Id":"001bV000009uA63QAE","Person_Email__c":"javidelarosa166@gmai (5 more) ...","Name":"Javier De La Rosa"},"001bV000009uA63QAE":{"BillingCountry":"United States","SMA_SMAId__c":"003bV000008ptlsQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7205770596","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","BillingPostalCode":"89110","Id":"001bV000009uA63QAE","Person_Email__c":"javidelarosa166@gmai (5 more) ...","Name":"Javier De La Rosa"}}|0x59742190
+00:39:13.41 (89141401)|STATEMENT_EXECUTE|[61]
+00:39:13.41 (89156451)|METHOD_ENTRY|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:39:13.41 (89289153)|VARIABLE_SCOPE_BEGIN|[119]|conIdList|List<String>|true|false
+00:39:13.41 (89324600)|VARIABLE_ASSIGNMENT|[119]|conIdList|["003bV000008ptlsQAA"]|0x7dc95ef2
+00:39:13.41 (89337936)|STATEMENT_EXECUTE|[119]
+00:39:13.41 (89340479)|STATEMENT_EXECUTE|[120]
+00:39:13.41 (89347361)|HEAP_ALLOCATE|[120]|Bytes:264
+00:39:13.41 (89373020)|HEAP_ALLOCATE|[120]|Bytes:4
+00:39:13.41 (89974277)|SOQL_EXECUTE_BEGIN|[120]|Aggregations:0|SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, RecordTypeId, AccountId, CS_Birth_Date__c, MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c FROM Contact WHERE Id IN :tmpVar1
+00:39:13.41 (90012280)|LIMIT_USAGE|[120]|SOQL|2|200
+00:39:13.41 (90028290)|LIMIT_USAGE|[120]|AGGS|0|600
+00:39:13.41 (103687705)|SOQL_EXECUTE_EXPLAIN|[120]|Index on Contact : [Id], cardinality: 1, sobjectCardinality: 10303891, relativeCost 0
+00:39:13.41 (103730045)|SOQL_EXECUTE_END|[120]|Rows:1
+00:39:13.41 (103748792)|LIMIT_USAGE|[120]|SOQL_ROWS|2|50000
+00:39:13.41 (103792940)|HEAP_ALLOCATE|[120]|Bytes:8
+00:39:13.41 (103817886)|HEAP_ALLOCATE|[120]|Bytes:444
+00:39:13.41 (103864634)|HEAP_ALLOCATE|[120]|Bytes:8
+00:39:13.41 (103909398)|METHOD_EXIT|[61]|01p1R00000JmIn3|Contact_AccountSync.getContactData(List<String>)
+00:39:13.41 (103947920)|VARIABLE_SCOPE_BEGIN|[61]|conList|List<Contact>|true|false
+00:39:13.41 (104166506)|VARIABLE_ASSIGNMENT|[61]|conList|[{"Email":"javidelarosa166@gmai (5 more) ...","AccountId":"001bV000009uA63QAE","FirstName":"Javier","MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Name":"Javier De La Rosa","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Id":"003bV000008ptlsQAA","LastName":"De La Rosa"}]|0x30f76e34
+00:39:13.41 (104200911)|SYSTEM_METHOD_ENTRY|[64]|List<Contact>.iterator()
+00:39:13.41 (104238999)|SYSTEM_METHOD_EXIT|[64]|List<Contact>.iterator()
+00:39:13.41 (104250977)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:39:13.41 (104266769)|HEAP_ALLOCATE|[64]|Bytes:5
+00:39:13.41 (104279533)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:39:13.41 (104295339)|HEAP_ALLOCATE|[64]|Bytes:64
+00:39:13.41 (104736606)|VARIABLE_SCOPE_BEGIN|[64]|con|Contact|true|false
+00:39:13.41 (104831619)|VARIABLE_ASSIGNMENT|[64]|con|{"Email":"javidelarosa166@gmai (5 more) ...","AccountId":"001bV000009uA63QAE","FirstName":"Javier","MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Name":"Javier De La Rosa","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Id":"003bV000008ptlsQAA","LastName":"De La Rosa"}|0x6f2dcf43
+00:39:13.41 (104844566)|STATEMENT_EXECUTE|[64]
+00:39:13.41 (104847075)|STATEMENT_EXECUTE|[65]
+00:39:13.41 (104855397)|VARIABLE_SCOPE_BEGIN|[65]|acct|Account|true|false
+00:39:13.41 (104868959)|VARIABLE_ASSIGNMENT|[65]|acct|null|
+00:39:13.41 (104886570)|STATEMENT_EXECUTE|[66]
+00:39:13.41 (104917300)|SYSTEM_METHOD_ENTRY|[66]|Map<String,Account>.get(Object)
+00:39:13.41 (104955114)|SYSTEM_METHOD_EXIT|[66]|Map<String,Account>.get(Object)
+00:39:13.41 (105065868)|VARIABLE_ASSIGNMENT|[66]|acct|{"BillingCountry":"United States","SMA_SMAId__c":"003bV000008ptlsQAA","RecordType":{"Id":"01236000000o9uVAAQ","Name":"Individual"},"Phone":"7205770596","RecordTypeId":"01236000000o9uVAAQ","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","BillingPostalCode":"89110","Id":"001bV000009uA63QAE","Person_Email__c":"javidelarosa166@gmai (5 more) ...","Name":"Javier De La Rosa"}|0x3127c4c
+00:39:13.41 (105079345)|STATEMENT_EXECUTE|[67]
+00:39:13.41 (105103858)|METHOD_ENTRY|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:39:13.41 (105164893)|VARIABLE_SCOPE_BEGIN|[142]|con|Contact|true|false
+00:39:13.41 (105259104)|VARIABLE_ASSIGNMENT|[142]|con|{"Email":"javidelarosa166@gmai (5 more) ...","AccountId":"001bV000009uA63QAE","FirstName":"Javier","MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Name":"Javier De La Rosa","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Id":"003bV000008ptlsQAA","LastName":"De La Rosa"}|0x6f2dcf43
+00:39:13.41 (105274988)|VARIABLE_SCOPE_BEGIN|[142]|oldMapJson|String|false|false
+00:39:13.41 (105288178)|VARIABLE_ASSIGNMENT|[142]|oldMapJson|"{\"003bV000008ptlsQAA (3266 more) ..."
+00:39:13.41 (105295773)|STATEMENT_EXECUTE|[142]
+00:39:13.41 (105297968)|STATEMENT_EXECUTE|[143]
+00:39:13.41 (105304965)|VARIABLE_SCOPE_BEGIN|[143]|changed|Boolean|false|false
+00:39:13.41 (105322316)|HEAP_ALLOCATE|[143]|Bytes:5
+00:39:13.41 (105339288)|VARIABLE_ASSIGNMENT|[143]|changed|false
+00:39:13.41 (105363519)|SYSTEM_METHOD_ENTRY|[145]|String.isBlank(String)
+00:39:13.41 (105383282)|SYSTEM_METHOD_EXIT|[145]|String.isBlank(String)
+00:39:13.41 (105391764)|HEAP_ALLOCATE|[145]|Bytes:4
+00:39:13.41 (105440334)|STATEMENT_EXECUTE|[145]
+00:39:13.41 (105442686)|STATEMENT_EXECUTE|[146]
+00:39:13.41 (105445680)|HEAP_ALLOCATE|[146]|Bytes:89
+00:39:13.41 (105526164)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:13.41 (105536628)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:13.41 (105548553)|VARIABLE_SCOPE_BEGIN|[4]|this|System.Type|true|false
+00:39:13.41 (105634660)|VARIABLE_ASSIGNMENT|[4]|this|{}|0x61b533b9
+00:39:13.41 (105643796)|VARIABLE_SCOPE_BEGIN|[4]|apextype|java:common.apex.runtime.ApexObjectType|true|false
+00:39:13.41 (105695750)|VARIABLE_ASSIGNMENT|[4]|apextype|"Map<Id,SObject>"|0x53a548f5
+00:39:13.41 (105771228)|HEAP_ALLOCATE|[146]|Bytes:8
+00:39:13.41 (105790798)|METHOD_ENTRY|[146]||System.JSON.deserialize(String, System.Type)
+00:39:13.41 (106756613)|METHOD_EXIT|[146]||System.JSON.deserialize(String, System.Type)
+00:39:13.41 (106799400)|VARIABLE_SCOPE_BEGIN|[146]|oldMap|Map<Id,SObject>|true|false
+00:39:13.41 (107175911)|VARIABLE_ASSIGNMENT|[146]|oldMap|{"003bV000008ptlsQAA":{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-20T17:26:24.000Z","AccountId":"001bV000009uA63QAE","Email":"javidelarosa166@gmai (5 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2025-01-13T05:24:31.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"7bbf0d2e-aac1-4651-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Email_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","MailingLatitude":36.1738,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Driver_Type__c":"Commercial","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[]","IndividualId":"0PKbV000000bhdvWAA","Phone_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"RegistrationSource__c":"Love's App","OtherCountryCode":"US","Receipt_Unsubscribed_Time__c":"2025-01-13T05:24:40.000Z","Loyalty_Terms_Accepted__c":"2025-01-13T05:24:32.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"003bV000008ptlsQAA","Contractor_Review_Date__c":"2025-07-12T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","CreatedDate":"2025-01-13T05:24:40.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"De La Rosa","Id":"003bV000008ptlsQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0053600000D52rBAAR","MailingLongitude":-115.0622,"AgeRestrictedContentPreference__c":false,"Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17205770596","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2025-01-13T05:24:30.000Z","Guarantor__c":false,"FirstName":"Javier","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-20T17:26:24.000Z","NASCAR__c":false,"Text_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}}|0x58281a7b
+00:39:13.41 (107206516)|STATEMENT_EXECUTE|[147]
+00:39:13.41 (107210416)|STATEMENT_EXECUTE|[148]
+00:39:13.41 (107238763)|SYSTEM_METHOD_ENTRY|[148]|Map<Id,SObject>.get(Object)
+00:39:13.41 (107278954)|SYSTEM_METHOD_EXIT|[148]|Map<Id,SObject>.get(Object)
+00:39:13.41 (107302737)|VARIABLE_SCOPE_BEGIN|[148]|oldCon|Contact|true|false
+00:39:13.41 (107589892)|VARIABLE_ASSIGNMENT|[148]|oldCon|{"Auto_Email_Receipts__c":false,"LastModifiedDate":"2026-02-20T17:26:24.000Z","AccountId":"001bV000009uA63QAE","Email":"javidelarosa166@gmai (5 more) ...","CloudingoAgent__MAS__c":0.0,"Phone_Verified__c":false,"DSAR__c":false,"RegistrationDate__c":"2025-01-13T05:24:31.000Z","HasOptedOutOfFax":false,"Is_Owner_Active__c":true,"Text_Opt_in__c":false,"Employee_HasSubordinates__c":false,"Factoring_Authorized_Signor__c":false,"HC_ID__c":"7bbf0d2e-aac1-4651-b (16 more) ...","CreatedById":"0053600000D52rBAAR","Email_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","MailingLatitude":36.1738,"Customer_Type__c":"Commercial","Count__c":1.0,"Fishing__c":false,"Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Driver_Type__c":"Commercial","Incomplete_Contact__c":false,"Special__c":" ","LA_LastPaymentMethod_Fuel__c":"[]","IndividualId":"0PKbV000000bhdvWAA","Phone_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","IsDeleted":false,"AgeVerificationStatus__c":"NONE","Email_Verified__c":true,"IsEmailBounced":false,"RegistrationSource__c":"Love's App","OtherCountryCode":"US","Receipt_Unsubscribed_Time__c":"2025-01-13T05:24:40.000Z","Loyalty_Terms_Accepted__c":"2025-01-13T05:24:32.000Z","Golf__c":false,"CloudingoAgent__OAS__c":0.0,"HasOptedOutOfEmail":false,"SF_ID__c":"003bV000008ptlsQAA","Contractor_Review_Date__c":"2025-07-12T00:00:00.000Z","Authorized_Signor__c":false,"Email_Preference__c":false,"Phone_Opt_in__c":false,"CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","CreatedDate":"2025-01-13T05:24:40.000Z","MailingCountryCode":"US","Hunting__c":false,"LastName":"De La Rosa","Id":"003bV000008ptlsQAA","Data_Quality_Score__c":50.0,"TEMPTextPrefETL__c":1.0,"DNC_Indicator__c":"_IM1_/sfc/servlet.sh (168 more) ...","Active__c":true,"Admin_Lock__c":false,"DoNotCall":false,"Phone_Preference__c":false,"MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Text_Preference__c":false,"Push_Preference__c":false,"ManagerName__c":" ","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","MobilePlus1__c":"N/A","Data_Quality_Description__c":"Missing: Complete Ad (19 more) ...","et4ae5__HasOptedOutOfMobile__c":false,"Email_Opt_in__c":false,"OwnerId":"0053600000D52rBAAR","MailingLongitude":-115.0622,"AgeRestrictedContentPreference__c":false,"Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","OtherCountry":"United States","MailingGeocodeAccuracy":"Zip","Primary_Contact__c":false,"IsPriorityRecord":false,"PhonePlus1__c":"+17205770596","SFMC_Test_Record__c":false,"Terms_Accepted__c":"2025-01-13T05:24:30.000Z","Guarantor__c":false,"FirstName":"Javier","SFMC_No_Sync__c":false,"LA_LastPaymentMethod_Shower__c":"[{\"context\":\"shower\" (85 more) ...","Factoring_Guarantor__c":false,"SystemModstamp":"2026-02-20T17:26:24.000Z","NASCAR__c":false,"Text_Unsubscribed_Time__c":"2025-07-01T03:04:21.000Z","attributes":{"type":"Contact","url":"/services/data/v66.0 (36 more) ..."},"LastModifiedById":"0053600000D52rBAAR","CloudingoAgent__CES__c":0.0}|0x111e5997
+00:39:13.41 (107613461)|STATEMENT_EXECUTE|[149]
+00:39:13.41 (107644900)|STATEMENT_EXECUTE|[151]
+00:39:13.41 (107654570)|STATEMENT_EXECUTE|[152]
+00:39:13.41 (107666296)|STATEMENT_EXECUTE|[153]
+00:39:13.41 (107676023)|STATEMENT_EXECUTE|[154]
+00:39:13.41 (107719768)|SYSTEM_METHOD_ENTRY|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:39:13.41 (107752578)|SYSTEM_METHOD_EXIT|[155]|com.salesforce.api.interop.apex.bcl.DateMethods.compareTo(Date)
+00:39:13.41 (107758785)|STATEMENT_EXECUTE|[155]
+00:39:13.41 (107764363)|STATEMENT_EXECUTE|[156]
+00:39:13.41 (107768173)|STATEMENT_EXECUTE|[157]
+00:39:13.41 (107772631)|STATEMENT_EXECUTE|[158]
+00:39:13.41 (107789085)|STATEMENT_EXECUTE|[159]
+00:39:13.41 (107799656)|STATEMENT_EXECUTE|[160]
+00:39:13.41 (107809690)|STATEMENT_EXECUTE|[161]
+00:39:13.41 (107818300)|STATEMENT_EXECUTE|[162]
+00:39:13.41 (107820381)|STATEMENT_EXECUTE|[163]
+00:39:13.41 (107826110)|METHOD_EXIT|[72]|01p1R00000JmIn3|Contact_AccountSync.wasContactDataChanged(Contact, String)
+00:39:13.41 (107833800)|STATEMENT_EXECUTE|[69]
+00:39:13.41 (107841367)|SYSTEM_METHOD_ENTRY|[64]|system.ListIterator.hasNext()
+00:39:13.41 (107854272)|HEAP_ALLOCATE|[64]|Bytes:5
+00:39:13.41 (107870835)|SYSTEM_METHOD_EXIT|[64]|system.ListIterator.hasNext()
+00:39:13.41 (107888881)|VARIABLE_ASSIGNMENT|[64]|con|null|
+00:39:13.41 (107895057)|STATEMENT_EXECUTE|[78]
+00:39:13.41 (107897035)|STATEMENT_EXECUTE|[78]
+00:39:13.41 (107899026)|STATEMENT_EXECUTE|[79]
+00:39:13.41 (107981927)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (107990143)|STATEMENT_EXECUTE|[83]
+00:39:13.41 (108007338)|HEAP_ALLOCATE|[83]|Bytes:4
+00:39:13.41 (108063321)|VARIABLE_SCOPE_BEGIN|[83]|conIdAccIdMap|Map<String,String>|true|false
+00:39:13.41 (108111180)|VARIABLE_ASSIGNMENT|[83]|conIdAccIdMap|{}|0x7c8175cf
+00:39:13.41 (108202927)|SYSTEM_METHOD_ENTRY|[84]|List<Account>.iterator()
+00:39:13.41 (108318590)|SYSTEM_METHOD_EXIT|[84]|List<Account>.iterator()
+00:39:13.41 (108342675)|SYSTEM_METHOD_ENTRY|[84]|system.ListIterator.hasNext()
+00:39:13.41 (108355850)|HEAP_ALLOCATE|[84]|Bytes:5
+00:39:13.41 (108369655)|SYSTEM_METHOD_EXIT|[84]|system.ListIterator.hasNext()
+00:39:13.41 (108390400)|VARIABLE_ASSIGNMENT|[84]|updAcct|null|
+00:39:13.41 (108398275)|STATEMENT_EXECUTE|[84]
+00:39:13.41 (108401077)|STATEMENT_EXECUTE|[87]
+00:39:13.41 (108414255)|HEAP_ALLOCATE|[87]|Bytes:4
+00:39:13.41 (108436136)|SYSTEM_CONSTRUCTOR_ENTRY|[87]|<init>()
+00:39:13.41 (108456907)|SYSTEM_CONSTRUCTOR_EXIT|[87]|<init>()
+00:39:13.41 (108466854)|VARIABLE_SCOPE_BEGIN|[87]|updateList|List<Contact>|true|false
+00:39:13.41 (108478205)|HEAP_ALLOCATE|[EXTERNAL]|Bytes:4
+00:39:13.41 (108499564)|VARIABLE_ASSIGNMENT|[87]|updateList|[]|0x30604617
+00:39:13.41 (108511986)|SYSTEM_METHOD_ENTRY|[88]|List<Contact>.iterator()
+00:39:13.41 (108526559)|SYSTEM_METHOD_EXIT|[88]|List<Contact>.iterator()
+00:39:13.41 (108535126)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:39:13.41 (108542641)|HEAP_ALLOCATE|[88]|Bytes:5
+00:39:13.41 (108553612)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:39:13.41 (108565649)|HEAP_ALLOCATE|[88]|Bytes:64
+00:39:13.41 (108601584)|VARIABLE_SCOPE_BEGIN|[88]|con|Contact|true|false
+00:39:13.41 (108771539)|VARIABLE_ASSIGNMENT|[88]|con|{"Email":"javidelarosa166@gmai (5 more) ...","AccountId":"001bV000009uA63QAE","FirstName":"Javier","MailingCountry":"United States","Loyalty_Card__c":"77785092953540","Name":"Javier De La Rosa","IDM_ID__c":"aba96b57-c290-4683-b (16 more) ...","Phone":"7205770596","MailingPostalCode":"89110","RecordTypeId":"01236000001HthEAAS","CS_Birth_Date__c":"1983-02-19T00:00:00.000Z","MailingCountryCode":"US","Auth0Id__c":"auth0&#124;6784a390190ede (10 more) ...","Id":"003bV000008ptlsQAA","LastName":"De La Rosa"}|0x6f2dcf43
+00:39:13.41 (108782416)|STATEMENT_EXECUTE|[88]
+00:39:13.41 (108791095)|STATEMENT_EXECUTE|[89]
+00:39:13.41 (108798209)|SYSTEM_METHOD_ENTRY|[88]|system.ListIterator.hasNext()
+00:39:13.41 (108805519)|HEAP_ALLOCATE|[88]|Bytes:5
+00:39:13.41 (108815829)|SYSTEM_METHOD_EXIT|[88]|system.ListIterator.hasNext()
+00:39:13.41 (108828774)|VARIABLE_ASSIGNMENT|[88]|con|null|
+00:39:13.41 (108836771)|SYSTEM_METHOD_ENTRY|[96]|List<Contact>.size()
+00:39:13.41 (108850084)|SYSTEM_METHOD_EXIT|[96]|List<Contact>.size()
+00:39:13.41 (108856776)|STATEMENT_EXECUTE|[96]
+00:39:13.41 (108862111)|METHOD_EXIT|[45]|01p1R00000JmIn3|Contact_AccountSync.handle(List<Contact>, String)
+00:39:13.108 (108921306)|CUMULATIVE_LIMIT_USAGE
+00:39:13.108 (108921306)|LIMIT_USAGE_FOR_NS|(default)|
+  Number of SOQL queries: 2 out of 200
+  Number of query rows: 2 out of 50000
+  Number of SOSL queries: 0 out of 20
+  Number of DML statements: 0 out of 150
+  Number of Publish Immediate DML: 0 out of 150
+  Number of DML rows: 0 out of 10000
+  Maximum CPU time: 0 out of 60000
+  Maximum heap size: 0 out of 12000000
+  Number of callouts: 0 out of 100
+  Number of Email Invocations: 0 out of 10
+  Number of future calls: 0 out of 50
+  Number of queueable jobs added to the queue: 0 out of 1
+  Number of Mobile Apex push calls: 0 out of 10
+
+00:39:13.108 (108921306)|TOTAL_EMAIL_RECIPIENTS_QUEUED|0
+00:39:13.108 (108921306)|STATIC_VARIABLE_LIST|
+  int:BYTES:0
+  int:BYTES:0
+  byte[]:DigitOnes:0
+  byte[]:DigitTens:0
+  Boolean:FALSE:0
+  int:MAX_EXPONENT:0
+  double:MAX_VALUE:0
+  int:MAX_VALUE:0
+  int:MIN_EXPONENT:0
+  double:MIN_NORMAL:0
+  double:MIN_VALUE:0
+  int:MIN_VALUE:0
+  double:NEGATIVE_INFINITY:0
+  double:NaN:0
+  double:POSITIVE_INFINITY:0
+  int:PRECISION:0
+  int:SIZE:0
+  int:SIZE:0
+  Boolean:TRUE:0
+  String:__sfdcParameterizedTypes:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_sfdcAdditionalCodeLocations:0
+  String:_static_RECTYPE_INDIV:0
+  char[]:digits:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+  long:serialVersionUID:0
+
+00:39:13.108 (108921306)|CUMULATIVE_LIMIT_USAGE_END
+
+00:39:13.41 (111351278)|CODE_UNIT_FINISHED|Contact_AccountSync.handleAtFuture(String, String)
+00:39:13.41 (111380175)|EXECUTION_FINISHED
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING_BEGIN
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING|SOQL operations|
+Class.Contact_AccountSync.getAccountData: line 107, column 1: [SELECT Id, Name,BillingCity,BillingCountry,BillingPostalCode,BillingState,BillingStreet,Phone,
+                                  Person_Email__c,Auth0Id__c,SMA_SMAId__c,RecordTypeId,RecordType.Name
+                             FROM Account 
+                            WHERE Id IN :accIdList or SMA_SMAId__c in :conIdList]: executed 5 times in 33 ms
+Class.Contact_AccountSync.getContactData: line 120, column 1: [SELECT Id, FirstName, LastName, Name, MailingCity, MailingCountry, MailingPostalCode, MailingState, MailingStreet, Phone, Email, 
+                       RecordTypeId, AccountId, CS_Birth_Date__c, 
+                       MailingCountryCode, Auth0Id__c, IDM_ID__c, Loyalty_Card__c
+                  FROM Contact 
+                 WHERE Id IN: conIdList]: executed 1 time in 15 ms
+
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING|No profiling information for SOSL operations
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING|DML operations|
+Class.Contact_AccountSync.handle: line 79, column 1: Upsert: List<Account>: executed 1 time in 0 ms
+
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING|method invocations|
+External entry point: public static void handleAtFuture(String, String): executed 1 time in 68 ms
+Class.Contact_AccountSync.handleAtFuture: line 45, column 1: public static void handle(List<Contact>, String): executed 1 time in 58 ms
+Class.Contact_AccountSync.handle: line 60, column 1: private static Map<String,Account> getAccountData(List<String>, List<String>): executed 1 time in 35 ms
+Class.Contact_AccountSync.handle: line 61, column 1: private static List<Contact> getContactData(List<String>): executed 1 time in 15 ms
+Class.Contact_AccountSync.handle: line 72, column 1: private static Boolean wasContactDataChanged(Contact, String): executed 1 time in 3 ms
+Class.Contact_AccountSync.handleAtFuture: line 44, column 1: global static Object deserialize(String, System.Type): executed 1 time in 3 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 146, column 1: global static Object deserialize(String, System.Type): executed 1 time in 1 ms
+Class.Contact_AccountSync.getAccountData: line 112, column 1: global public Object put(Object, Object): executed 1 time in 1 ms
+Class.Contact_AccountSync.handle: line 64, column 1: global public System.Iterator iterator(): executed 3 times in 0 ms
+Class.Contact_AccountSync.handle: line 66, column 1: global public Object get(Object): executed 1 time in 0 ms
+Class.Contact_AccountSync.wasContactDataChanged: line 145, column 1: public static Boolean isBlank(String): executed 1 time in 0 ms
+
+00:39:13.199 (199043481)|CUMULATIVE_PROFILING_END
