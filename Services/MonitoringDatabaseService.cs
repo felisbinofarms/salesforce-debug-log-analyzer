@@ -11,7 +11,7 @@ namespace SalesforceDebugAnalyzer.Services;
 /// </summary>
 public class MonitoringDatabaseService : IDisposable
 {
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
 
     private readonly string _dbPath;
     private readonly string _orgId;
@@ -220,6 +220,22 @@ public class MonitoringDatabaseService : IDisposable
                     ON shield_events(org_id, event_type, event_date);
             ";
             cmd.ExecuteNonQuery();
+        }
+
+        if (fromVersion < 2)
+        {
+            // Add user feedback columns to alerts table (added in schema v2)
+            using var cmd2 = connection.CreateCommand();
+            cmd2.Transaction = transaction;
+            cmd2.CommandText = @"
+                ALTER TABLE alerts ADD COLUMN user_feedback TEXT;
+                ALTER TABLE alerts ADD COLUMN feedback_at   TEXT;
+            ";
+            try { cmd2.ExecuteNonQuery(); }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column"))
+            {
+                // Columns already exist — safe to ignore
+            }
         }
 
         // Update schema version
