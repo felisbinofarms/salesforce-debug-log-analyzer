@@ -70,7 +70,7 @@ public partial class App : Application
 
     private void OnShowWindowRequested(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(() =>
         {
             if (MainWindow == null)
             {
@@ -87,7 +87,7 @@ public partial class App : Application
 
     private void OnExitRequested(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(() =>
         {
             // Disable tray-minimize so Close() actually closes
             if (MainWindow is MainWindow mw)
@@ -102,7 +102,7 @@ public partial class App : Application
 
     private void OnMonitoringToggled(object? sender, bool active)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(() =>
         {
             if (MainWindow?.DataContext is ViewModels.MainViewModel vm)
             {
