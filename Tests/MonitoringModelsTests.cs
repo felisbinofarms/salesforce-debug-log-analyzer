@@ -226,4 +226,135 @@ public class MonitoringModelsTests
         var baseline = new Baseline();
         baseline.WindowDays.Should().Be(14);
     }
+
+    // ================================================================
+    //  MonitoringAlert — AffectedUserCount display properties
+    // ================================================================
+
+    [Fact]
+    public void MonitoringAlert_AffectedUsersDisplay_SingleUser()
+    {
+        var alert = new MonitoringAlert { AffectedUserCount = 1 };
+        alert.AffectedUsersDisplay.Should().Be("1 user");
+        alert.HasAffectedUsers.Should().BeTrue();
+    }
+
+    [Fact]
+    public void MonitoringAlert_AffectedUsersDisplay_PluralUsers()
+    {
+        var alert = new MonitoringAlert { AffectedUserCount = 5 };
+        alert.AffectedUsersDisplay.Should().Be("5 users");
+    }
+
+    [Fact]
+    public void MonitoringAlert_AffectedUsersDisplay_NullCount_ReturnsEmpty()
+    {
+        var alert = new MonitoringAlert { AffectedUserCount = null };
+        alert.AffectedUsersDisplay.Should().BeEmpty();
+        alert.HasAffectedUsers.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MonitoringAlert_AffectedUsersDisplay_ZeroCount_ReturnsEmpty()
+    {
+        var alert = new MonitoringAlert { AffectedUserCount = 0 };
+        alert.AffectedUsersDisplay.Should().BeEmpty();
+        alert.HasAffectedUsers.Should().BeFalse();
+    }
+
+    // ================================================================
+    //  ShieldDashboardData — AnomalyAffectedUsers display properties
+    // ================================================================
+
+    [Fact]
+    public void ShieldDashboardData_AnomalyAffectedUsersDisplay_ZeroUsers()
+    {
+        var data = new ShieldDashboardData { AnomalyAffectedUsers = 0 };
+        data.AnomalyAffectedUsersDisplay.Should().Be("No users affected");
+        data.HasAnomalyAffectedUsers.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShieldDashboardData_AnomalyAffectedUsersDisplay_MultipleUsers()
+    {
+        var data = new ShieldDashboardData { AnomalyAffectedUsers = 3 };
+        data.AnomalyAffectedUsersDisplay.Should().Be("3 users affected");
+        data.HasAnomalyAffectedUsers.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShieldDashboardData_AnomalyAffectedUsersDisplay_OneUser()
+    {
+        var data = new ShieldDashboardData { AnomalyAffectedUsers = 1 };
+        data.AnomalyAffectedUsersDisplay.Should().Be("1 user affected");
+        data.HasAnomalyAffectedUsers.Should().BeTrue();
+    }
+
+    // ================================================================
+    //  ShieldDashboardData — Sparkline
+    // ================================================================
+
+    [Fact]
+    public void SparklineData_HasActivityTrend_FalseWhenLessThanThreePoints()
+    {
+        var data = new ShieldDashboardData();
+        data.HasActivityTrend.Should().BeFalse();
+        data.ActivitySparkline.Add(new SparklinePoint(DateTime.UtcNow.AddHours(-1), 10));
+        data.ActivitySparkline.Add(new SparklinePoint(DateTime.UtcNow, 20));
+        data.HasActivityTrend.Should().BeFalse(); // 2 points is not enough
+    }
+
+    [Fact]
+    public void SparklineData_HasActivityTrend_TrueWithThreeOrMorePoints()
+    {
+        var data = new ShieldDashboardData
+        {
+            ActivitySparkline = new List<SparklinePoint>
+            {
+                new(DateTime.UtcNow.AddHours(-2), 5),
+                new(DateTime.UtcNow.AddHours(-1), 10),
+                new(DateTime.UtcNow, 15)
+            }
+        };
+        data.HasActivityTrend.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SparklineData_ActivitySparklinePoints_NormalizesToCanvasCoordinates()
+    {
+        var data = new ShieldDashboardData
+        {
+            ActivitySparkline = new List<SparklinePoint>
+            {
+                new(DateTime.UtcNow.AddHours(-2), 0),
+                new(DateTime.UtcNow.AddHours(-1), 50),
+                new(DateTime.UtcNow, 100)
+            }
+        };
+
+        var points = data.ActivitySparklinePoints;
+        points.Should().HaveCount(3);
+
+        // First point at x=0, last at x=240
+        points[0].X.Should().BeApproximately(0, 0.001);
+        points[2].X.Should().BeApproximately(240, 0.001);
+
+        // Max value (100) should yield lowest Y (near 0, top of canvas)
+        points[2].Y.Should().BeLessThan(points[0].Y);
+
+        // Y is bounded within [0, 40]
+        foreach (var pt in points)
+        {
+            pt.X.Should().BeGreaterThanOrEqualTo(0);
+            pt.Y.Should().BeGreaterThanOrEqualTo(0);
+            pt.Y.Should().BeLessThanOrEqualTo(40);
+        }
+    }
+
+    [Fact]
+    public void SparklineData_ActivitySparklinePoints_EmptyWhenFewerThanTwoPoints()
+    {
+        var data = new ShieldDashboardData();
+        data.ActivitySparklinePoints.Should().BeEmpty();
+    }
 }

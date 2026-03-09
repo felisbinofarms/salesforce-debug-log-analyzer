@@ -178,13 +178,30 @@ public partial class AlertDetailDialog : Window
         }
     }
 
-    private void ViewLog_Click(object sender, RoutedEventArgs e)
+    private async void ViewLog_Click(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(_alert.RelatedLogId))
+        if (string.IsNullOrEmpty(_alert.RelatedLogId)) return;
+
+        ViewLogButton.IsEnabled = false;
+        ViewLogButton.Content = "Loading...";
+        try
         {
-            // TODO: Navigate to log or download it
-            MessageBox.Show($"Log ID: {_alert.RelatedLogId}\n\nLog viewing coming soon!", 
-                "Related Log", MessageBoxButton.OK, MessageBoxImage.Information);
+            var success = await _viewModel.NavigateToLogByIdAsync(_alert.RelatedLogId);
+            if (success)
+            {
+                DialogResult = true;
+                Close();
+            }
+            else
+            {
+                ViewLogButton.IsEnabled = true;
+                ViewLogButton.Content = "View Log";
+            }
+        }
+        catch
+        {
+            ViewLogButton.IsEnabled = true;
+            ViewLogButton.Content = "View Log";
         }
     }
 

@@ -11,7 +11,7 @@ namespace SalesforceDebugAnalyzer.Services;
 /// </summary>
 public class MonitoringDatabaseService : IDisposable
 {
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 3;
 
     private readonly string _dbPath;
     private readonly string _orgId;
@@ -236,6 +236,16 @@ public class MonitoringDatabaseService : IDisposable
             {
                 // Columns already exist — safe to ignore
             }
+        }
+
+        if (fromVersion < 3)
+        {
+            // Add affected_user_count to alerts table (schema v3)
+            using var cmd3 = connection.CreateCommand();
+            cmd3.Transaction = transaction;
+            cmd3.CommandText = "ALTER TABLE alerts ADD COLUMN affected_user_count INTEGER;";
+            try { cmd3.ExecuteNonQuery(); }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column")) { }
         }
 
         // Update schema version
@@ -644,10 +654,10 @@ public class MonitoringDatabaseService : IDisposable
             cmd.CommandText = @"
                 INSERT INTO alerts (org_id, created_at, alert_type, severity, title, description,
                     entry_point, metric_name, current_value, baseline_value, threshold_value,
-                    related_log_id, notified_via)
+                    related_log_id, notified_via, affected_user_count)
                 VALUES (@orgId, @createdAt, @alertType, @severity, @title, @description,
                     @entryPoint, @metricName, @currentValue, @baselineValue, @thresholdValue,
-                    @relatedLogId, @notifiedVia);
+                    @relatedLogId, @notifiedVia, @affectedUserCount);
                 SELECT last_insert_rowid();";
 
             cmd.Parameters.AddWithValue("@orgId", alert.OrgId);
@@ -663,6 +673,7 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@thresholdValue", (object?)alert.ThresholdValue ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@relatedLogId", (object?)alert.RelatedLogId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@notifiedVia", (object?)alert.NotifiedVia ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@affectedUserCount", (object?)alert.AffectedUserCount ?? DBNull.Value);
 
             var id = Convert.ToInt64(await cmd.ExecuteScalarAsync());
             alert.Id = id;
@@ -1053,6 +1064,660 @@ public class MonitoringDatabaseService : IDisposable
     }
 
     /// <summary>
+    /// Get the latest event_date across all Shield events for this org.
+    /// Returns null if no events exist.
+    /// </summary>
+    public async Task<DateTime?> GetLatestShieldEventDateAsync()
+    {
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT MAX(event_date) FROM shield_events WHERE org_id = @orgId";
+        cmd.Parameters.AddWithValue("@orgId", _orgId);
+
+        var result = await cmd.ExecuteScalarAsync();
+        if (result is string dateStr && DateTime.TryParse(dateStr, null,
+                System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+            return dt;
+        return null;
+    }
+
+    // ================================================================
+    //  SHIELD DASHBOARD AGGREGATION
+    // ================================================================
+
+    /// <summary>
+    /// Build the full Shield dashboard with actionable insights.
+    /// Compares current 24h vs previous 24h for trend analysis.
+    /// All heavy work is done in SQL to handle millions of events efficiently.
+    /// </summary>
+    public async Task<ShieldDashboardData> GetShieldDashboardDataAsync(int hours = 24)
+    {
+        var data = new ShieldDashboardData();
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var anchor = await GetLatestShieldEventDateAsync() ?? DateTime.UtcNow;
+        var since = anchor.AddHours(-hours).ToString("O");
+        var sincePrev = anchor.AddHours(-hours * 2).ToString("O"); // previous period for trend comparison
+
+        // 1. Date range + summary
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT MIN(event_date), MAX(event_date), COUNT(*), COUNT(DISTINCT user_id)
+                                FROM shield_events WHERE org_id = @orgId AND event_date >= @since";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            if (await r.ReadAsync() && !r.IsDBNull(0))
+            {
+                DateTime.TryParse(r.GetString(0), null, System.Globalization.DateTimeStyles.RoundtripKind, out var from);
+                DateTime.TryParse(r.GetString(1), null, System.Globalization.DateTimeStyles.RoundtripKind, out var to);
+                data.DataFrom = from;
+                data.DataTo = to;
+                data.TotalEvents = r.GetInt64(2);
+                data.UniqueUsers = r.GetInt32(3);
+            }
+        }
+
+        // 2. Apex exceptions — the most actionable: what code is breaking?
+        await BuildExceptionInsights(connection, data, since, sincePrev);
+
+        // 3. Failed logins — brute force detection + reason breakdown
+        await BuildLoginInsights(connection, data, since, sincePrev);
+
+        // 4. Page performance degradation — what got slower vs 7-day baseline?
+        await BuildPageInsights(connection, data, since, anchor);
+
+        // 5. API performance — what's slow and getting worse?
+        await BuildApiInsights(connection, data, since, anchor);
+
+        // 6. Top API endpoints (reference table, kept for detail)
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT uri, COUNT(*) as cnt, AVG(duration_ms), MAX(duration_ms), COUNT(DISTINCT user_id)
+                                FROM shield_events
+                                WHERE org_id = @orgId AND event_type = 'API' AND event_date >= @since AND uri IS NOT NULL
+                                GROUP BY uri ORDER BY cnt DESC LIMIT 10";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+                data.TopApiEndpoints.Add(new ShieldDashboardRow
+                {
+                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
+                    MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
+                    UniqueUsers = r.GetInt32(4)
+                });
+        }
+
+        // Sort insights by impact score (highest first)
+        data.Insights.Sort((a, b) => b.ImpactScore.CompareTo(a.ImpactScore));
+
+        // Populate anomaly-affected user count (deduplicated across all anomaly types)
+        data.AnomalyAffectedUsers = await GetAffectedUsersCountAsync(hours);
+
+        // Build 24h hourly sparkline (total events per hour bucket)
+        await BuildActivitySparklineAsync(connection, data, since);
+
+        return data;
+    }
+
+    private async Task BuildActivitySparklineAsync(
+        SqliteConnection connection, ShieldDashboardData data, string since)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT substr(event_date, 1, 13) AS hour_bucket, COUNT(*) AS cnt
+            FROM shield_events
+            WHERE org_id = @orgId AND event_date >= @since
+            GROUP BY hour_bucket
+            ORDER BY hour_bucket ASC
+            LIMIT 48";
+        cmd.Parameters.AddWithValue("@orgId", _orgId);
+        cmd.Parameters.AddWithValue("@since", since);
+
+        using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+        {
+            var bucket = r.GetString(0); // e.g. "2026-03-15T14"
+            if (DateTime.TryParse(bucket + ":00:00Z", null,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+            {
+                data.ActivitySparkline.Add(new SparklinePoint(dt, r.GetDouble(1)));
+            }
+        }
+    }
+
+    private async Task BuildExceptionInsights(SqliteConnection connection, ShieldDashboardData data, string since, string sincePrev)
+    {
+        // Current period: exceptions grouped by type with messages + stack traces
+        var exceptions = new List<(string type, long count, int users, string? message, string? stackTrace)>();
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"
+                SELECT COALESCE(NULLIF(uri, ''), 'Unknown') as ex_type,
+                       COUNT(*) as cnt, COUNT(DISTINCT user_id) as users
+                FROM shield_events
+                WHERE org_id = @orgId AND event_type = 'ApexUnexpectedException' AND event_date >= @since
+                GROUP BY ex_type ORDER BY cnt DESC LIMIT 15";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+                exceptions.Add((r.GetString(0), r.GetInt64(1), r.GetInt32(2), null, null));
+        }
+
+        data.ExceptionTotal = (int)exceptions.Sum(e => e.count);
+
+        // Enrich each exception type with message + stack trace from extra_json
+        for (int i = 0; i < exceptions.Count; i++)
+        {
+            var ex = exceptions[i];
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"SELECT extra_json FROM shield_events
+                                WHERE org_id = @orgId AND event_type = 'ApexUnexpectedException'
+                                      AND event_date >= @since AND COALESCE(NULLIF(uri, ''), 'Unknown') = @uri
+                                      AND extra_json IS NOT NULL LIMIT 1";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            cmd.Parameters.AddWithValue("@uri", ex.type);
+            var jsonStr = await cmd.ExecuteScalarAsync() as string;
+            if (jsonStr != null)
+            {
+                try
+                {
+                    var json = Newtonsoft.Json.Linq.JObject.Parse(jsonStr);
+                    var msg = json["exceptionMessage"]?.ToString();
+                    var stack = json["stackTrace"]?.ToString();
+                    exceptions[i] = (ex.type, ex.count, ex.users, msg, stack);
+                }
+                catch { }
+            }
+        }
+
+        // Previous period: count for trend comparison
+        var prevCounts = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"
+                SELECT COALESCE(NULLIF(uri, ''), 'Unknown'), COUNT(*)
+                FROM shield_events
+                WHERE org_id = @orgId AND event_type = 'ApexUnexpectedException'
+                      AND event_date >= @sincePrev AND event_date < @since
+                GROUP BY 1";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@sincePrev", sincePrev);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+                prevCounts[r.GetString(0)] = r.GetInt64(1);
+        }
+
+        // Generate insights
+        foreach (var (type, count, users, message, stackTrace) in exceptions)
+        {
+            prevCounts.TryGetValue(type, out var prevCount);
+            var trend = prevCount > 0
+                ? $"↑ {(count - prevCount) * 100 / prevCount}% vs previous {(since.Contains("24") ? "24h" : "period")}"
+                : prevCount == 0 && count > 0 ? "🆕 New — not seen in previous period" : null;
+            if (prevCount > 0 && count <= prevCount)
+                trend = count == prevCount ? "→ Same as previous period" : $"↓ {(prevCount - count) * 100 / prevCount}% vs previous period";
+
+            var severity = count >= 50 || users >= 5 ? "critical" : count >= 5 ? "warning" : "info";
+            var title = type.Length > 80 ? type[..80] + "…" : type;
+
+            var detail = "";
+            if (!string.IsNullOrEmpty(message))
+                detail += message + "\n";
+            if (!string.IsNullOrEmpty(stackTrace))
+                detail += "\n" + stackTrace;
+
+            var recommendation = InferExceptionRecommendation(type, message, stackTrace);
+
+            data.Insights.Add(new ShieldInsight
+            {
+                Severity = severity,
+                Category = "exception",
+                Title = title,
+                Description = $"{count:N0} occurrences | {users} user{(users == 1 ? "" : "s")} affected",
+                Detail = string.IsNullOrWhiteSpace(detail) ? null : detail.Trim(),
+                Recommendation = recommendation,
+                Count = count,
+                AffectedUsers = users,
+                TrendText = trend,
+                ImpactScore = count * (severity == "critical" ? 3.0 : severity == "warning" ? 2.0 : 1.0) + users * 10
+            });
+
+            data.ApexExceptions.Add(new ShieldDashboardRow
+            {
+                Label = type, Count = count, UniqueUsers = users,
+                SubLabel = message, SeverityColor = "#F85149"
+            });
+        }
+    }
+
+    private static readonly Dictionary<string, string> LoginTypeMap = new()
+    {
+        ["3"] = "Partner Portal", ["4"] = "SSO SAML", ["5"] = "Customer Portal",
+        ["6"] = "OAuth Refresh Token", ["7"] = "AppExchange", ["8"] = "SAML SSO",
+        ["9"] = "SAML SSO Internal", ["A"] = "Application Login",
+        ["I"] = "OAuth API", ["i"] = "OAuth JS-API", ["r"] = "Remote Access 2.0"
+    };
+
+    private static readonly Dictionary<string, string> LoginStatusMap = new()
+    {
+        ["LOGIN_SAML_INVALID_IN_RES_TO"] = "SSO/IdP misconfiguration (stale SAML assertion)",
+        ["LOGIN_TWOFACTOR_REQ"] = "MFA challenge required",
+        ["LOGIN_ERROR_INVALID_PASSWORD"] = "Invalid password",
+        ["LOGIN_OAUTH_NO_CONSUMER"] = "Deleted/disabled Connected App",
+        ["OAUTH_TOKEN_IN_PROCESS"] = "Token refresh race condition",
+        ["OAUTH_APP_ACCESS_DENIED"] = "OAuth app access denied",
+        ["LOGIN_ERROR_USER_INACTIVE"] = "Inactive user account",
+        ["LOGIN_ERROR_ORG_LOCKOUT"] = "Org locked out",
+        ["LOGIN_ERROR_SECURITY_TOKEN_REQUIRED"] = "Security token required",
+        ["LOGIN_CHALLENGE_SENT"] = "Verification code sent",
+        ["LOGIN_ERROR_OAUTH_INVALID_GRANT"] = "Invalid OAuth grant",
+    };
+
+    private static string DecodeLoginType(string? code) =>
+        code != null && LoginTypeMap.TryGetValue(code, out var name) ? name : code ?? "Unknown";
+
+    private static string DecodeBrowser(string? browser)
+    {
+        if (string.IsNullOrEmpty(browser)) return "Unknown";
+        if (browser.Contains("Web Service Connector", StringComparison.OrdinalIgnoreCase))
+            return "Salesforce WSC (Java Integration)";
+        if (browser.Contains("Edg/", StringComparison.OrdinalIgnoreCase)) return "Edge";
+        if (browser.Contains("CriOS", StringComparison.OrdinalIgnoreCase)) return "Chrome (iOS)";
+        if (browser.Contains("Safari", StringComparison.OrdinalIgnoreCase) &&
+            browser.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) return "Chrome";
+        if (browser.Contains("Safari", StringComparison.OrdinalIgnoreCase)) return "Safari";
+        if (browser.Contains("Firefox", StringComparison.OrdinalIgnoreCase)) return "Firefox";
+        if (browser.Contains("iPhone", StringComparison.OrdinalIgnoreCase) ||
+            browser.Contains("Mobile", StringComparison.OrdinalIgnoreCase)) return "Mobile Browser";
+        return browser.Length > 40 ? browser[..40] + "…" : browser;
+    }
+
+    private static string FriendlyReason(string? status) =>
+        status != null && LoginStatusMap.TryGetValue(status, out var friendly) ? friendly : status ?? "Unknown";
+
+    private async Task BuildLoginInsights(SqliteConnection connection, ShieldDashboardData data, string since, string sincePrev)
+    {
+        // Rich per-IP analysis with reason, browser, login type breakdown
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"
+                SELECT client_ip, COUNT(*) as attempts, COUNT(DISTINCT user_id) as targets,
+                       GROUP_CONCAT(DISTINCT user_id) as user_list
+                FROM shield_events
+                WHERE org_id = @orgId AND event_type = 'Login' AND is_success = 0
+                      AND event_date >= @since AND client_ip IS NOT NULL
+                GROUP BY client_ip HAVING attempts >= 3
+                ORDER BY attempts DESC LIMIT 15";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var ip = r.GetString(0);
+                var detail = new LoginFailureDetail
+                {
+                    IpAddress = ip,
+                    Attempts = r.GetInt64(1),
+                    UniqueTargets = r.GetInt32(2),
+                    UserIds = (r.IsDBNull(3) ? "" : r.GetString(3)).Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                    Severity = r.GetInt64(1) >= 20 || r.GetInt32(2) >= 5 ? "critical"
+                             : r.GetInt64(1) >= 5 ? "warning" : "info"
+                };
+                data.LoginDetails.Add(detail);
+            }
+        }
+
+        // For each IP, get the reason/browser/loginType breakdown
+        foreach (var detail in data.LoginDetails)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT json_extract(extra_json, '$.loginStatus') as reason,
+                       json_extract(extra_json, '$.loginType') as lt,
+                       json_extract(extra_json, '$.browser') as browser,
+                       COUNT(*) as cnt
+                FROM shield_events
+                WHERE org_id = @orgId AND event_type = 'Login' AND is_success = 0
+                      AND event_date >= @since AND client_ip = @ip
+                GROUP BY reason, lt, browser ORDER BY cnt DESC";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            cmd.Parameters.AddWithValue("@ip", detail.IpAddress);
+            using var r = await cmd.ExecuteReaderAsync();
+            string? topReason = null, topLoginType = null, topBrowser = null;
+            while (await r.ReadAsync())
+            {
+                var reason = r.IsDBNull(0) ? "Unknown" : r.GetString(0);
+                var lt = r.IsDBNull(1) ? null : r.GetString(1);
+                var browser = r.IsDBNull(2) ? null : r.GetString(2);
+                var cnt = r.GetInt64(3);
+
+                if (topReason == null) { topReason = reason; topLoginType = lt; topBrowser = browser; }
+
+                if (!detail.ReasonBreakdown.ContainsKey(FriendlyReason(reason)))
+                    detail.ReasonBreakdown[FriendlyReason(reason)] = cnt;
+                else
+                    detail.ReasonBreakdown[FriendlyReason(reason)] += cnt;
+            }
+            detail.PrimaryReason = topReason ?? "Unknown";
+            detail.PrimaryReasonFriendly = FriendlyReason(topReason);
+            detail.LoginTypeDecoded = DecodeLoginType(topLoginType);
+            detail.BrowserOrApp = DecodeBrowser(topBrowser);
+        }
+
+        // Also keep the simple FailedLogins reference table (by reason)
+        using (var cmd2 = connection.CreateCommand())
+        {
+            cmd2.CommandText = @"
+                SELECT json_extract(extra_json, '$.loginStatus') as reason,
+                       COUNT(*) as cnt, COUNT(DISTINCT user_id) as users, COUNT(DISTINCT client_ip) as ips
+                FROM shield_events
+                WHERE org_id = @orgId AND event_type = 'Login' AND event_date >= @since AND is_success = 0
+                GROUP BY reason ORDER BY cnt DESC LIMIT 15";
+            cmd2.Parameters.AddWithValue("@orgId", _orgId);
+            cmd2.Parameters.AddWithValue("@since", since);
+            using var r = await cmd2.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var reason = r.IsDBNull(0) ? "Unknown" : r.GetString(0);
+                var cnt = r.GetInt64(1);
+                data.FailedLogins.Add(new ShieldDashboardRow
+                {
+                    Label = FriendlyReason(reason), Count = cnt, UniqueUsers = r.GetInt32(2),
+                    SubLabel = $"{r.GetInt32(3)} IPs",
+                    SeverityColor = cnt > 20 ? "#F85149" : "#D29922"
+                });
+            }
+        }
+
+        data.FailedLoginTotal = (int)data.FailedLogins.Sum(f => f.Count);
+
+        // Insights: suspicious IPs get insight cards
+        foreach (var detail in data.LoginDetails.Where(d => d.Attempts >= 5))
+        {
+            var severity = detail.Severity;
+            var targetDesc = detail.UniqueTargets == 1 ? "1 account" : $"{detail.UniqueTargets} accounts";
+
+            // Determine what this IP is doing
+            string recommendation;
+            if (detail.BrowserOrApp.Contains("WSC", StringComparison.OrdinalIgnoreCase) ||
+                detail.BrowserOrApp.Contains("Integration", StringComparison.OrdinalIgnoreCase))
+            {
+                recommendation = $"A Java integration ({detail.BrowserOrApp}) is failing with {detail.PrimaryReasonFriendly}. " +
+                    "Check and update the service account credentials used by this integration.";
+            }
+            else if (detail.PrimaryReason == "LOGIN_SAML_INVALID_IN_RES_TO")
+            {
+                recommendation = "Your SSO Identity Provider (Okta/Azure AD) is sending stale SAML assertions. " +
+                    "Check the IdP configuration — this affects multiple users and is a systemic SSO issue.";
+            }
+            else if (detail.PrimaryReason == "LOGIN_TWOFACTOR_REQ")
+            {
+                recommendation = "These are MFA challenges, not true failures. Salesforce logs them as 'failed' during the verification step. " +
+                    "This is normal unless the count is unusually high.";
+            }
+            else
+            {
+                recommendation = detail.UniqueTargets >= 3
+                    ? "Multiple accounts targeted from one IP. Possible brute force attack — consider blocking this IP."
+                    : "Monitor this IP. Reset the user's password if they don't recognize this activity.";
+            }
+
+            data.Insights.Add(new ShieldInsight
+            {
+                Severity = severity,
+                Category = "security",
+                Title = $"Failed logins from {detail.IpAddress}",
+                Description = $"{detail.Attempts} attempts → {targetDesc} | {detail.LoginTypeDecoded} via {detail.BrowserOrApp}",
+                Detail = $"Top reason: {detail.PrimaryReasonFriendly}" +
+                    (detail.HasMultipleReasons ? $"\nAll reasons: {detail.ReasonsDisplay}" : ""),
+                Recommendation = recommendation,
+                Count = detail.Attempts,
+                AffectedUsers = detail.UniqueTargets,
+                ImpactScore = detail.Attempts * (severity == "critical" ? 3.0 : 2.0) + detail.UniqueTargets * 20
+            });
+        }
+
+        // Overall trend insight (only if no suspicious IPs already created insights)
+        long prevFailures = 0;
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT COUNT(*) FROM shield_events
+                                WHERE org_id = @orgId AND event_type = 'Login' AND is_success = 0
+                                      AND event_date >= @sincePrev AND event_date < @since";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@sincePrev", sincePrev);
+            cmd.Parameters.AddWithValue("@since", since);
+            prevFailures = (long)(await cmd.ExecuteScalarAsync() ?? 0L);
+        }
+
+        if (data.FailedLoginTotal > 0 && !data.LoginDetails.Any(d => d.Attempts >= 5))
+        {
+            var trend = prevFailures > 0
+                ? (data.FailedLoginTotal > prevFailures
+                    ? $"↑ {(data.FailedLoginTotal - prevFailures) * 100 / prevFailures}% vs previous period"
+                    : $"↓ {(prevFailures - data.FailedLoginTotal) * 100 / prevFailures}% vs previous period")
+                : null;
+            data.Insights.Add(new ShieldInsight
+            {
+                Severity = data.FailedLoginTotal >= 50 ? "warning" : "info",
+                Category = "security",
+                Title = $"{data.FailedLoginTotal} failed login attempts",
+                Description = $"Top reason: {data.FailedLogins.FirstOrDefault()?.Label ?? "Unknown"} | {data.FailedLogins.Sum(f => f.UniqueUsers)} users",
+                TrendText = trend,
+                Count = data.FailedLoginTotal,
+                AffectedUsers = data.FailedLogins.Sum(f => f.UniqueUsers),
+                ImpactScore = data.FailedLoginTotal * 0.5
+            });
+        }
+    }
+
+    private async Task BuildPageInsights(SqliteConnection connection, ShieldDashboardData data, string since, DateTime anchor)
+    {
+        // Compare current 24h EPT vs 7-day baseline (excluding current period)
+        var since7d = anchor.AddDays(-7).ToString("O");
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"
+                WITH current_ept AS (
+                    SELECT COALESCE(uri, 'Unknown') as page, AVG(duration_ms) as avg_now,
+                           MAX(duration_ms) as max_now, COUNT(*) as views_now, COUNT(DISTINCT user_id) as users_now
+                    FROM shield_events
+                    WHERE org_id = @orgId AND event_type = 'LightningPageView' AND event_date >= @since
+                          AND duration_ms IS NOT NULL
+                    GROUP BY page HAVING views_now >= 3
+                ),
+                baseline_ept AS (
+                    SELECT COALESCE(uri, 'Unknown') as page, AVG(duration_ms) as avg_baseline, COUNT(*) as views_base
+                    FROM shield_events
+                    WHERE org_id = @orgId AND event_type = 'LightningPageView'
+                          AND event_date >= @since7d AND event_date < @since
+                          AND duration_ms IS NOT NULL
+                    GROUP BY page HAVING views_base >= 10
+                )
+                SELECT c.page, c.avg_now, b.avg_baseline, c.max_now, c.views_now, c.users_now,
+                       ROUND((c.avg_now - b.avg_baseline) * 100.0 / b.avg_baseline, 0) as pct_change
+                FROM current_ept c
+                JOIN baseline_ept b ON c.page = b.page
+                WHERE c.avg_now > b.avg_baseline * 1.3
+                ORDER BY (c.avg_now - b.avg_baseline) DESC
+                LIMIT 10";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            cmd.Parameters.AddWithValue("@since7d", since7d);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var page = r.GetString(0);
+                var avgNow = r.GetDouble(1);
+                var avgBaseline = r.GetDouble(2);
+                var maxNow = r.GetDouble(3);
+                var views = r.GetInt64(4);
+                var users = r.GetInt32(5);
+                var pctChange = r.GetDouble(6);
+                var severity = avgNow > 5000 ? "critical" : avgNow > 3000 || pctChange > 100 ? "warning" : "info";
+
+                data.Insights.Add(new ShieldInsight
+                {
+                    Severity = severity,
+                    Category = "performance",
+                    Title = $"{page} got {pctChange:F0}% slower",
+                    Description = $"EPT: {avgBaseline:F0}ms → {avgNow:F0}ms (max {maxNow:F0}ms) | {views} views, {users} users",
+                    Recommendation = avgNow > 3000
+                        ? $"Page load exceeds 3s. Check recently deployed components on this layout. Review Aura/LWC component load times."
+                        : $"Performance degraded but still acceptable. Monitor for further regression.",
+                    TrendText = $"↑ {pctChange:F0}% vs 7-day average",
+                    Count = views,
+                    AffectedUsers = users,
+                    ImpactScore = pctChange * users * 0.1 + (avgNow > 3000 ? 100 : 0)
+                });
+                data.SlowPageCount++;
+            }
+        }
+
+        // Top pages (reference table)
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT COALESCE(uri, 'Unknown'), COUNT(*), AVG(duration_ms), MAX(duration_ms), COUNT(DISTINCT user_id)
+                                FROM shield_events
+                                WHERE org_id = @orgId AND event_type = 'LightningPageView' AND event_date >= @since
+                                GROUP BY 1 ORDER BY 2 DESC LIMIT 10";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+                data.TopPages.Add(new ShieldDashboardRow
+                {
+                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
+                    MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
+                    UniqueUsers = r.GetInt32(4),
+                    SeverityColor = (r.IsDBNull(2) ? 0 : r.GetDouble(2)) > 3000 ? "#F85149"
+                                  : (r.IsDBNull(2) ? 0 : r.GetDouble(2)) > 1000 ? "#D29922" : null
+                });
+        }
+    }
+
+    private async Task BuildApiInsights(SqliteConnection connection, ShieldDashboardData data, string since, DateTime anchor)
+    {
+        // Slowest APIs vs 7-day baseline
+        var since7d = anchor.AddDays(-7).ToString("O");
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"
+                WITH current_api AS (
+                    SELECT uri, AVG(duration_ms) as avg_now, MAX(duration_ms) as max_now,
+                           COUNT(*) as calls_now, COUNT(DISTINCT user_id) as users_now
+                    FROM shield_events
+                    WHERE org_id = @orgId AND event_type = 'API' AND event_date >= @since
+                          AND uri IS NOT NULL AND duration_ms IS NOT NULL
+                    GROUP BY uri HAVING calls_now >= 10
+                ),
+                baseline_api AS (
+                    SELECT uri, AVG(duration_ms) as avg_baseline, COUNT(*) as calls_base
+                    FROM shield_events
+                    WHERE org_id = @orgId AND event_type = 'API' AND event_date >= @since7d AND event_date < @since
+                          AND uri IS NOT NULL AND duration_ms IS NOT NULL
+                    GROUP BY uri HAVING calls_base >= 20
+                )
+                SELECT c.uri, c.avg_now, b.avg_baseline, c.max_now, c.calls_now, c.users_now,
+                       ROUND((c.avg_now - b.avg_baseline) * 100.0 / b.avg_baseline, 0) as pct_change
+                FROM current_api c
+                JOIN baseline_api b ON c.uri = b.uri
+                WHERE c.avg_now > b.avg_baseline * 1.5 AND c.avg_now > 500
+                ORDER BY (c.avg_now - b.avg_baseline) * c.calls_now DESC
+                LIMIT 10";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            cmd.Parameters.AddWithValue("@since7d", since7d);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var uri = r.GetString(0);
+                var avgNow = r.GetDouble(1);
+                var avgBaseline = r.GetDouble(2);
+                var maxNow = r.GetDouble(3);
+                var calls = r.GetInt64(4);
+                var users = r.GetInt32(5);
+                var pctChange = r.GetDouble(6);
+                var severity = avgNow > 5000 ? "critical" : avgNow > 2000 || pctChange > 200 ? "warning" : "info";
+
+                data.Insights.Add(new ShieldInsight
+                {
+                    Severity = severity,
+                    Category = "performance",
+                    Title = $"API degradation: {(uri.Length > 60 ? uri[..60] + "…" : uri)}",
+                    Description = $"Avg: {avgBaseline:F0}ms → {avgNow:F0}ms (max {maxNow:F0}ms) | {calls:N0} calls, {users} users",
+                    Recommendation = $"This API slowed {pctChange:F0}%. Check for new triggers/flows on the affected object, N+1 queries, or increased data volume.",
+                    TrendText = $"↑ {pctChange:F0}% vs 7-day average",
+                    Count = calls,
+                    AffectedUsers = users,
+                    ImpactScore = pctChange * calls * 0.001 + (avgNow > 3000 ? 100 : 0)
+                });
+            }
+        }
+
+        // Slowest APIs reference table (absolute, not relative)
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT uri, COUNT(*), AVG(duration_ms), MAX(duration_ms), COUNT(DISTINCT user_id)
+                                FROM shield_events
+                                WHERE org_id = @orgId AND event_type = 'API' AND event_date >= @since
+                                      AND uri IS NOT NULL AND duration_ms IS NOT NULL
+                                GROUP BY uri HAVING COUNT(*) >= 10 ORDER BY 3 DESC LIMIT 10";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@since", since);
+            using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+                data.SlowestApiEndpoints.Add(new ShieldDashboardRow
+                {
+                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
+                    MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
+                    UniqueUsers = r.GetInt32(4)
+                });
+        }
+    }
+
+    private static string? InferExceptionRecommendation(string exceptionType, string? message, string? stackTrace)
+    {
+        if (string.IsNullOrEmpty(exceptionType) && string.IsNullOrEmpty(message))
+            return "Review the exception details in Salesforce Setup → Debug Logs or Apex Exception Email notifications.";
+
+        var combined = $"{exceptionType} {message} {stackTrace}".ToLowerInvariant();
+
+        if (combined.Contains("null") || combined.Contains("de-reference"))
+            return "NullPointerException: Add null checks before accessing object properties. Check if SOQL queries return results before using them.";
+        if (combined.Contains("soql") || combined.Contains("101") || combined.Contains("too many"))
+            return "Governor limit hit: Move queries outside of loops. Use collections and maps for bulk processing. Consider @future or Queueable for heavy operations.";
+        if (combined.Contains("dml") || combined.Contains("150"))
+            return "DML limit hit: Collect records into lists and perform single DML operations. Use Database.insert with allOrNone=false for partial success.";
+        if (combined.Contains("cpu") || combined.Contains("timeout"))
+            return "CPU/timeout: Optimize loops and nested iterations. Move heavy processing to async (@future/Queueable). Check for recursive triggers.";
+        if (combined.Contains("callout"))
+            return "Callout exception: Check external service availability. Add retry logic with exponential backoff. Verify endpoint URL and authentication.";
+        if (combined.Contains("visualforce") || combined.Contains("viewstate"))
+            return "Visualforce issue: Reduce view state size by using transient variables. Consider migrating to Lightning Web Components.";
+        if (combined.Contains("flow") || combined.Contains("process"))
+            return "Flow/Process Builder error: Review the flow for missing null checks on record variables. Test with different record types and field values.";
+        if (combined.Contains("trigger"))
+            return "Trigger exception: Add recursion control (static boolean flag). Ensure trigger handles bulk operations (200+ records).";
+        if (combined.Contains("mixed_dml"))
+            return "Mixed DML: Separate setup object DML from non-setup object DML. Use @future method for the setup object operation.";
+
+        return "Review the stack trace to identify the root cause. Check recent deployments that may have introduced this error.";
+    }
+
+    /// <summary>
     /// Get Shield events of a specific type from a recent time window.
     /// </summary>
     public async Task<List<ShieldEvent>> GetRecentShieldEventsAsync(string eventType, DateTime since)
@@ -1161,8 +1826,94 @@ public class MonitoringDatabaseService : IDisposable
             RelatedLogId = reader.IsDBNull(reader.GetOrdinal("related_log_id")) ? null : reader.GetString(reader.GetOrdinal("related_log_id")),
             NotifiedVia = reader.IsDBNull(reader.GetOrdinal("notified_via")) ? null : reader.GetString(reader.GetOrdinal("notified_via")),
             UserFeedback = reader.IsDBNull(reader.GetOrdinal("user_feedback")) ? null : reader.GetString(reader.GetOrdinal("user_feedback")),
-            FeedbackAt = reader.IsDBNull(reader.GetOrdinal("feedback_at")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("feedback_at")), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind)
+            FeedbackAt = reader.IsDBNull(reader.GetOrdinal("feedback_at")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("feedback_at")), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind),
+            AffectedUserCount = reader.IsDBNull(reader.GetOrdinal("affected_user_count")) ? null : reader.GetInt32(reader.GetOrdinal("affected_user_count"))
         };
+    }
+
+    /// <summary>
+    /// Updates is_success=0 for Login events that had failed login statuses.
+    /// </summary>
+    public async Task RepairLoginSuccessAsync(List<ShieldEvent> failedLogins)
+    {
+        if (failedLogins.Count == 0) return;
+        await _writeLock.WaitAsync();
+        try
+        {
+            using var connection = new SqliteConnection(ConnectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            foreach (var evt in failedLogins)
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.CommandText = "UPDATE shield_events SET is_success = 0 WHERE id = @id";
+                cmd.Parameters.AddWithValue("@id", evt.Id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            transaction.Commit();
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Deletes shield events with corrupted event_date values (from broken CSV parsing).
+    /// </summary>
+    public async Task<int> DeleteCorruptedEventsAsync()
+    {
+        await _writeLock.WaitAsync();
+        try
+        {
+            using var connection = new SqliteConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            // Delete events where event_date contains 'column' (garbled CSV) or doesn't start with a digit
+            cmd.CommandText = @"
+                DELETE FROM shield_events 
+                WHERE event_date LIKE '%column%' 
+                   OR (event_date NOT LIKE '2%' AND event_date NOT GLOB '[0-9]*')";
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Clears processed log file records for a given event type so they'll be re-downloaded.
+    /// </summary>
+    public async Task<int> ClearProcessedLogFilesAsync(string eventType)
+    {
+        await _writeLock.WaitAsync();
+        try
+        {
+            using var connection = new SqliteConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            // Also delete the events for this type so they can be re-parsed
+            using var delCmd = connection.CreateCommand();
+            delCmd.CommandText = "DELETE FROM shield_events WHERE org_id = @orgId AND event_type = @eventType";
+            delCmd.Parameters.AddWithValue("@orgId", _orgId);
+            delCmd.Parameters.AddWithValue("@eventType", eventType);
+            await delCmd.ExecuteNonQueryAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM shield_log_files WHERE org_id = @orgId AND event_type = @eventType";
+            cmd.Parameters.AddWithValue("@orgId", _orgId);
+            cmd.Parameters.AddWithValue("@eventType", eventType);
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
     }
 
     public void Dispose()
@@ -1172,5 +1923,125 @@ public class MonitoringDatabaseService : IDisposable
             _writeLock.Dispose();
             _disposed = true;
         }
+    }
+
+    // ================================================================
+    //  GOVERNOR ARCHAEOLOGY
+    // ================================================================
+
+    /// <summary>
+    /// Aggregates governor limit statistics across all analysed debug logs for this org
+    /// over the past <paramref name="days"/> days.
+    /// Returns entry points ranked by average SOQL count, CPU time, and N+1 query patterns.
+    /// </summary>
+    public async Task<GovernorArchaeologyData> GetGovernorArchaeologyAsync(int days = 7)
+    {
+        var since = DateTime.UtcNow.AddDays(-days);
+        var data = new GovernorArchaeologyData { DaysAnalyzed = days, Since = since };
+
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT entry_point,
+                   operation_type,
+                   COUNT(*) as exec_count,
+                   AVG(soql_count)            as avg_soql,
+                   MAX(soql_count)            as max_soql,
+                   MAX(soql_limit)            as soql_limit,
+                   AVG(query_rows)            as avg_rows,
+                   MAX(query_rows)            as max_rows,
+                   AVG(cpu_time_ms)           as avg_cpu,
+                   MAX(cpu_time_ms)           as max_cpu,
+                   AVG(duration_ms)           as avg_duration,
+                   AVG(duplicate_query_count) as avg_dup,
+                   SUM(CASE WHEN has_errors = 1 THEN 1 ELSE 0 END) as error_count
+            FROM log_snapshots
+            WHERE org_id = @orgId
+              AND captured_at >= @since
+              AND entry_point IS NOT NULL
+              AND entry_point != ''
+            GROUP BY entry_point, operation_type
+            HAVING COUNT(*) >= 1
+            ORDER BY avg_soql DESC
+            LIMIT 100";
+        cmd.Parameters.AddWithValue("@orgId", _orgId);
+        cmd.Parameters.AddWithValue("@since", since.ToString("O"));
+
+        var allRows = new List<GovernorArchaeologyRow>();
+        using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                allRows.Add(new GovernorArchaeologyRow
+                {
+                    EntryPoint = reader.GetString(0),
+                    OperationType = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    ExecutionCount = reader.GetInt32(2),
+                    AvgSoqlCount = reader.IsDBNull(3) ? 0 : reader.GetDouble(3),
+                    MaxSoqlCount = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                    SoqlLimit = reader.IsDBNull(5) ? 100 : reader.GetInt32(5),
+                    AvgQueryRows = reader.IsDBNull(6) ? 0 : reader.GetDouble(6),
+                    MaxQueryRows = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                    AvgCpuMs = reader.IsDBNull(8) ? 0 : reader.GetDouble(8),
+                    MaxCpuMs = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                    AvgDurationMs = reader.IsDBNull(10) ? 0 : reader.GetDouble(10),
+                    AvgDuplicateQueryCount = reader.IsDBNull(11) ? 0 : reader.GetDouble(11),
+                    ErrorCount = reader.IsDBNull(12) ? 0 : reader.GetInt32(12)
+                });
+            }
+        }
+
+        // Count total executions in window
+        using (var cntCmd = connection.CreateCommand())
+        {
+            cntCmd.CommandText = "SELECT COUNT(*) FROM log_snapshots WHERE org_id = @orgId AND captured_at >= @since";
+            cntCmd.Parameters.AddWithValue("@orgId", _orgId);
+            cntCmd.Parameters.AddWithValue("@since", since.ToString("O"));
+            var cnt = await cntCmd.ExecuteScalarAsync();
+            data.TotalExecutions = cnt is long l ? (int)l : 0;
+        }
+
+        // Top 10 by average SOQL (already sorted)
+        data.TopBySoql = allRows.Take(10).ToList();
+
+        // Top 10 by average CPU time
+        data.TopByCpu = allRows.OrderByDescending(r => r.AvgCpuMs).Take(10).ToList();
+
+        // Top 10 by N+1 / duplicate query patterns
+        data.TopByNPlusOne = allRows
+            .Where(r => r.AvgDuplicateQueryCount >= 1)
+            .OrderByDescending(r => r.AvgDuplicateQueryCount)
+            .Take(10)
+            .ToList();
+
+        return data;
+    }
+
+    /// <summary>
+    /// Returns the count of unique Salesforce users affected by anomaly alerts in the last 24 hours.
+    /// Counts distinct user_id values in shield_events where is_anomaly = 1.
+    /// </summary>
+    public async Task<int> GetAffectedUsersCountAsync(int hours = 24)
+    {
+        var since = DateTime.UtcNow.AddHours(-hours);
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT COUNT(DISTINCT user_id)
+            FROM shield_events
+            WHERE org_id = @orgId
+              AND is_anomaly = 1
+              AND event_date >= @since
+              AND user_id IS NOT NULL
+              AND user_id != ''";
+        cmd.Parameters.AddWithValue("@orgId", _orgId);
+        cmd.Parameters.AddWithValue("@since", since.ToString("O"));
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result is long l ? (int)l : 0;
     }
 }

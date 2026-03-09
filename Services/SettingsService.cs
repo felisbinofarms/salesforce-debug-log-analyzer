@@ -155,6 +155,29 @@ public class AppSettings
     // Shield
     public bool ShieldMonitoringEnabled { get; set; } = true;
 
+    // Shield detection thresholds
+    public int ShieldFailedLoginThreshold { get; set; } = 5;
+    public double ShieldApiSpikeZScore { get; set; } = 2.5;
+    public int ShieldEptDegradationMs { get; set; } = 3000;
+    public int ShieldApiFailureThreshold { get; set; } = 3;
+    public double ShieldApiFailureRate { get; set; } = 0.20;
+    public int ShieldReportExportRowThreshold { get; set; } = 5000;
+
+    // Alert routing — Email (SMTP)
+    public bool EmailAlertsEnabled { get; set; } = false;
+    public string AlertEmailTo { get; set; } = "";
+    public string SmtpHost { get; set; } = "smtp.gmail.com";
+    public int SmtpPort { get; set; } = 587;
+    public string SmtpUsername { get; set; } = "";
+    public string SmtpPassword { get; set; } = "";
+
+    // Alert routing — Slack
+    public bool SlackAlertsEnabled { get; set; } = false;
+    public string SlackWebhookUrl { get; set; } = "";
+
+    // Alert routing shared
+    public bool AlertRoutingCriticalOnly { get; set; } = true;
+
     // Threshold overrides (percentages 0-100)
     public int GovernorWarningPct { get; set; } = 80;
     public int GovernorCriticalPct { get; set; } = 90;

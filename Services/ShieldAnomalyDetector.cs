@@ -13,23 +13,47 @@ namespace SalesforceDebugAnalyzer.Services;
 public class ShieldAnomalyDetector
 {
     private readonly MonitoringDatabaseService _db;
+    private readonly SettingsService? _settingsService;
 
     // Known IPs per user (built from recent login history)
     private readonly Dictionary<string, HashSet<string>> _knownUserIps = new();
 
-    // Thresholds
-    private const int FailedLoginSpikeThreshold = 5;     // 5+ failed logins in 1 hour
-    private const double ApiSpikeZScore = 2.5;            // API calls z-score threshold
-    private const double EptDegradationMs = 3000;         // EPT > 3s = degraded
-    private const int QuietHourStart = 0;                 // Midnight
-    private const int QuietHourEnd = 5;                   // 5 AM (unusual login hours)
+    // Detection anchor — the latest event timestamp, used instead of DateTime.UtcNow
+    // because Shield event log files have a 1-3 hour lag from Salesforce
+    private DateTime _anchor = DateTime.UtcNow;
+
+    // Threshold defaults (used when settings are not available)
+    private const int DefaultFailedLoginThreshold = 5;
+    private const double DefaultApiSpikeZScore = 2.5;
+    private const double DefaultEptDegradationMs = 3000;
+    private const int QuietHourStart = 0;
+    private const int QuietHourEnd = 5;
+    private const int DefaultApiFailureSpikeThreshold = 3;
+    private const double DefaultApiFailureRateThreshold = 0.20;
+    private const int DefaultReportExportRowThreshold = 5000;
+
+    // Configurable threshold accessors
+    private int FailedLoginSpikeThreshold => _settingsService?.Load().ShieldFailedLoginThreshold ?? DefaultFailedLoginThreshold;
+    private double ApiSpikeZScore => _settingsService?.Load().ShieldApiSpikeZScore ?? DefaultApiSpikeZScore;
+    private double EptDegradationMs => _settingsService?.Load().ShieldEptDegradationMs ?? DefaultEptDegradationMs;
+    private int ApiFailureSpikeThreshold => _settingsService?.Load().ShieldApiFailureThreshold ?? DefaultApiFailureSpikeThreshold;
+    private double ApiFailureRateThreshold => _settingsService?.Load().ShieldApiFailureRate ?? DefaultApiFailureRateThreshold;
+    private int ReportExportRowThreshold => _settingsService?.Load().ShieldReportExportRowThreshold ?? DefaultReportExportRowThreshold;
 
     /// <summary>Fired when a new anomaly-based alert should be created.</summary>
     public event EventHandler<MonitoringAlert>? AlertGenerated;
 
-    public ShieldAnomalyDetector(MonitoringDatabaseService db)
+    /// <summary>
+    /// Fired when an Apex exception spike is detected and an automatic Trace Flag
+    /// should be set on the affected user so the next occurrence is captured in a debug log.
+    /// Carries the Salesforce User ID of the affected user.
+    /// </summary>
+    public event EventHandler<string>? AutoTraceFlagRequested;
+
+    public ShieldAnomalyDetector(MonitoringDatabaseService db, SettingsService? settingsService = null)
     {
         _db = db;
+        _settingsService = settingsService;
     }
 
     /// <summary>
@@ -40,10 +64,19 @@ public class ShieldAnomalyDetector
     {
         try
         {
+            // Use latest event timestamp as anchor — Shield data lags 1-3 hours behind real-time
+            _anchor = await _db.GetLatestShieldEventDateAsync() ?? DateTime.UtcNow;
+            Log.Information("Shield detection running (anchor: {Anchor:u}, lag: {Lag:F1}h)",
+                _anchor, (DateTime.UtcNow - _anchor).TotalHours);
+
             await DetectLoginAnomalies();
             await DetectApiSpikes();
+            await DetectApiFailures();
             await DetectPagePerformanceDegradation();
             await DetectApexExceptions();
+            await DetectDataExfiltration();
+            await DetectPermissionChanges();
+            await GenerateActivitySummary();
         }
         catch (Exception ex)
         {
@@ -80,7 +113,7 @@ public class ShieldAnomalyDetector
     /// </summary>
     private async Task DetectLoginAnomalies()
     {
-        var recentLogins = await _db.GetRecentShieldEventsAsync("Login", DateTime.UtcNow.AddHours(-1));
+        var recentLogins = await _db.GetRecentShieldEventsAsync("Login", _anchor.AddHours(-1));
         if (recentLogins.Count == 0) return;
 
         // 1. Failed login spike
@@ -137,10 +170,12 @@ public class ShieldAnomalyDetector
             }
         }
 
-        // 3. Unusual hour logins
+        // 3. Unusual hour logins (check UTC hour to avoid timezone confusion)
         foreach (var login in recentLogins.Where(l => l.IsSuccess))
         {
-            if (DateTime.TryParse(login.EventDate, out var loginTime))
+            if (DateTime.TryParse(login.EventDate, null,
+                    System.Globalization.DateTimeStyles.RoundtripKind | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                    out var loginTime))
             {
                 var hour = loginTime.Hour;
                 if (hour >= QuietHourStart && hour < QuietHourEnd)
@@ -166,13 +201,13 @@ public class ShieldAnomalyDetector
     /// </summary>
     private async Task DetectApiSpikes()
     {
-        var recentApi = await _db.GetRecentShieldEventsAsync("API", DateTime.UtcNow.AddHours(-1));
-        var historicalApi = await _db.GetRecentShieldEventsAsync("API", DateTime.UtcNow.AddDays(-7));
+        var recentApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddHours(-1));
+        var historicalApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddDays(-7));
 
         if (recentApi.Count == 0 || historicalApi.Count < 24) return; // Not enough data
 
         // Calculate hourly average from last 7 days
-        var totalHours = (DateTime.UtcNow - DateTime.UtcNow.AddDays(-7)).TotalHours;
+        var totalHours = 7 * 24.0; // 168 hours in 7 days
         var avgPerHour = historicalApi.Count / totalHours;
 
         if (avgPerHour < 1) return; // Too few API calls to be meaningful
@@ -217,11 +252,102 @@ public class ShieldAnomalyDetector
     }
 
     /// <summary>
+    /// Detects API failure spikes: endpoints returning 4xx/5xx or marked !IsSuccess.
+    /// Also flags when the overall API failure rate exceeds the threshold.
+    /// Correlates with debug log callout failures in the same time window.
+    /// </summary>
+    private async Task DetectApiFailures()
+    {
+        var recentApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddHours(-1));
+        if (recentApi.Count == 0) return;
+
+        var failedApi = recentApi
+            .Where(e => !e.IsSuccess || (e.StatusCode.HasValue && e.StatusCode.Value >= 400))
+            .ToList();
+
+        if (failedApi.Count == 0) return;
+
+        // --- Per-endpoint failure spikes ---
+        var endpointGroups = failedApi
+            .GroupBy(e => e.Uri ?? "unknown")
+            .Where(g => g.Count() >= ApiFailureSpikeThreshold);
+
+        // Fetch callout-related snapshots once (for correlation note)
+        var calloutFailureSnapshots = await _db.GetSnapshotsSinceAsync(_anchor.AddHours(-2), null);
+        var calloutFailures = calloutFailureSnapshots
+            .Where(s => s.CalloutCount > 0 && s.TransactionFailed)
+            .ToList();
+        var correlationNote = calloutFailures.Count > 0
+            ? $" ⚠️ {calloutFailures.Count} debug log(s) with callout failures may be related."
+            : string.Empty;
+
+        foreach (var group in endpointGroups)
+        {
+            var affectedUsers = group
+                .Select(e => e.UserId)
+                .Where(u => !string.IsNullOrEmpty(u))
+                .Distinct()
+                .Count();
+
+            var statusCodes = group
+                .Where(e => e.StatusCode.HasValue)
+                .Select(e => e.StatusCode!.Value)
+                .Distinct()
+                .OrderBy(c => c)
+                .Take(3)
+                .ToList();
+
+            var statusText = statusCodes.Count > 0
+                ? $" (HTTP {string.Join(", ", statusCodes)})"
+                : string.Empty;
+
+            var userNote = affectedUsers > 0 ? $" Affected users: {affectedUsers}." : string.Empty;
+
+            await TryCreateAlert(new MonitoringAlert
+            {
+                OrgId = _db.OrgId,
+                AlertType = "api_failure_spike",
+                Severity = group.Count() >= 10 ? "critical" : "warning",
+                Title = $"{group.Key}: {group.Count()} API failures",
+                Description = $"{group.Count()} failed API calls to '{group.Key}'{statusText} in the last hour.{userNote}{correlationNote}",
+                EntryPoint = group.Key,
+                MetricName = "api_failure_count",
+                CurrentValue = group.Count(),
+                ThresholdValue = ApiFailureSpikeThreshold,
+                AffectedUserCount = affectedUsers > 0 ? affectedUsers : null
+            });
+        }
+
+        // --- Overall failure rate alert ---
+        if (recentApi.Count >= 10)
+        {
+            var failureRate = (double)failedApi.Count / recentApi.Count;
+            if (failureRate >= ApiFailureRateThreshold)
+            {
+                var uniqueEndpoints = failedApi.Select(e => e.Uri).Distinct().Count();
+                await TryCreateAlert(new MonitoringAlert
+                {
+                    OrgId = _db.OrgId,
+                    AlertType = "api_failure_rate",
+                    Severity = failureRate >= 0.5 ? "critical" : "warning",
+                    Title = $"API failure rate: {failureRate:P0} ({failedApi.Count}/{recentApi.Count} calls)",
+                    Description = $"{failedApi.Count} of {recentApi.Count} API calls failed this hour " +
+                                  $"({failureRate:P0} failure rate) across {uniqueEndpoints} endpoint(s). " +
+                                  "This may indicate a broken integration or authentication issue.",
+                    MetricName = "api_failure_rate",
+                    CurrentValue = Math.Round(failureRate * 100, 1),
+                    ThresholdValue = ApiFailureRateThreshold * 100
+                });
+            }
+        }
+    }
+
+    /// <summary>
     /// Detects Lightning page performance degradation using EPT (Effective Page Time).
     /// </summary>
     private async Task DetectPagePerformanceDegradation()
     {
-        var recentPages = await _db.GetRecentShieldEventsAsync("LightningPageView", DateTime.UtcNow.AddHours(-1));
+        var recentPages = await _db.GetRecentShieldEventsAsync("LightningPageView", _anchor.AddHours(-1));
         if (recentPages.Count < 5) return; // Need meaningful sample
 
         // Group by page/URI and check EPT
@@ -260,30 +386,296 @@ public class ShieldAnomalyDetector
     private async Task DetectApexExceptions()
     {
         var recentExceptions = await _db.GetRecentShieldEventsAsync(
-            "ApexUnexpectedException", DateTime.UtcNow.AddHours(-1));
+            "ApexUnexpectedException", _anchor.AddHours(-1));
 
         if (recentExceptions.Count == 0) return;
 
-        // Group by URI (class/method)
+        // Group by URI/exception type
         var exceptionGroups = recentExceptions
             .GroupBy(e => e.Uri ?? "Unknown")
             .Where(g => g.Count() >= 2); // At least 2 exceptions from same source
 
         foreach (var group in exceptionGroups)
         {
+            // Build a richer description from ExtraJson if available
+            var descParts = new List<string>();
+            descParts.Add($"{group.Count()} unhandled exceptions in the last hour.");
+
+            // Extract unique exception messages from the group
+            var messages = group
+                .Where(e => e.ExtraJson != null)
+                .Select(e => {
+                    try { return Newtonsoft.Json.Linq.JObject.Parse(e.ExtraJson!)["exceptionMessage"]?.ToString(); }
+                    catch { return null; }
+                })
+                .Where(m => !string.IsNullOrEmpty(m))
+                .Distinct()
+                .Take(3)
+                .ToList();
+
+            if (messages.Count > 0)
+                descParts.Add("Messages: " + string.Join(" | ", messages));
+
+            // Collect affected user IDs for auto trace flag
+            var affectedUserIds = group
+                .Select(e => e.UserId)
+                .Where(u => !string.IsNullOrEmpty(u))
+                .Distinct()
+                .ToList();
+
+            if (affectedUserIds.Count > 0)
+            {
+                descParts.Add($"Affected users: {affectedUserIds.Count}.");
+                descParts.Add("⚡ Auto trace flag set — next occurrence will be captured in a debug log.");
+            }
+            else
+            {
+                descParts.Add("These errors are captured by Shield and may not appear in debug logs.");
+            }
+
             await TryCreateAlert(new MonitoringAlert
             {
                 OrgId = _db.OrgId,
                 AlertType = "error_spike",
                 Severity = group.Count() >= 5 ? "critical" : "warning",
                 Title = $"{group.Key}: {group.Count()} unhandled exceptions",
-                Description = $"Apex class/method '{group.Key}' threw {group.Count()} unhandled exceptions " +
-                              $"in the last hour. These errors are captured by Shield and may not appear in debug logs.",
+                Description = string.Join(" ", descParts),
                 EntryPoint = group.Key,
                 MetricName = "apex_exceptions",
-                CurrentValue = group.Count()
+                CurrentValue = group.Count(),
+                AffectedUserCount = affectedUserIds.Count > 0 ? affectedUserIds.Count : null
+            });
+
+            // Request automatic trace flag creation for each affected user
+            foreach (var userId in affectedUserIds)
+                AutoTraceFlagRequested?.Invoke(this, userId!);
+        }
+    }
+
+    /// <summary>
+    /// Detects potential data exfiltration via large report exports or off-hours bulk operations.
+    /// Monitors ReportExport and BulkApi event types.
+    /// </summary>
+    private async Task DetectDataExfiltration()
+    {
+        var since = _anchor.AddHours(-24);
+
+        // Check report exports
+        var reportExports = await _db.GetRecentShieldEventsAsync("ReportExport", since);
+        if (reportExports.Count > 0)
+        {
+            // Large single export
+            var largeExport = reportExports
+                .Where(e => e.RowCount.HasValue && e.RowCount >= ReportExportRowThreshold)
+                .ToList();
+
+            foreach (var export in largeExport.GroupBy(e => e.UserId))
+            {
+                var maxRows = export.Max(e => e.RowCount ?? 0);
+                var userId = export.Key ?? "unknown";
+
+                await TryCreateAlert(new MonitoringAlert
+                {
+                    OrgId = _db.OrgId,
+                    AlertType = "shield_data_exfiltration",
+                    Severity = maxRows >= ReportExportRowThreshold * 4 ? "critical" : "warning",
+                    Title = $"Large report export by user {userId}",
+                    Description = $"User {userId} exported {maxRows:N0} rows from a report. " +
+                                  $"This exceeds the {ReportExportRowThreshold:N0}-row threshold. " +
+                                  $"Review if this is an expected business operation.",
+                    EntryPoint = userId,
+                    MetricName = "report_export_rows",
+                    CurrentValue = maxRows,
+                    ThresholdValue = ReportExportRowThreshold
+                });
+            }
+
+            // Off-hours export (during quiet hours)
+            var offHoursExports = reportExports
+                .Where(e =>
+                {
+                    if (!DateTime.TryParse(e.EventDate, out var dt)) return false;
+                    var hour = dt.Hour;
+                    return hour >= QuietHourStart && hour < QuietHourEnd;
+                })
+                .GroupBy(e => e.UserId)
+                .ToList();
+
+            foreach (var group in offHoursExports)
+            {
+                var userId = group.Key ?? "unknown";
+                await TryCreateAlert(new MonitoringAlert
+                {
+                    OrgId = _db.OrgId,
+                    AlertType = "shield_data_exfiltration",
+                    Severity = "warning",
+                    Title = $"Off-hours report export by {userId}",
+                    Description = $"User {userId} ran {group.Count()} report export(s) between " +
+                                  $"{QuietHourStart}:00–{QuietHourEnd}:00 UTC. " +
+                                  $"Exports during off-hours may warrant review.",
+                    EntryPoint = userId,
+                    MetricName = "off_hours_export"
+                });
+            }
+        }
+
+        // Check BulkApi operations (large-volume data movement)
+        var bulkOps = await _db.GetRecentShieldEventsAsync("BulkApi", since);
+        if (bulkOps.Count > 0)
+        {
+            var highVolumeBulk = bulkOps
+                .Where(e => e.RowCount.HasValue && e.RowCount >= ReportExportRowThreshold * 2)
+                .GroupBy(e => e.UserId)
+                .ToList();
+
+            foreach (var group in highVolumeBulk)
+            {
+                var userId = group.Key ?? "unknown";
+                var totalRows = group.Sum(e => e.RowCount ?? 0);
+                await TryCreateAlert(new MonitoringAlert
+                {
+                    OrgId = _db.OrgId,
+                    AlertType = "shield_data_exfiltration",
+                    Severity = "warning",
+                    Title = $"High-volume Bulk API operation by {userId}",
+                    Description = $"User {userId} processed {totalRows:N0} rows via Bulk API " +
+                                  $"in the last 24 hours. Verify this is an expected data migration or ETL job.",
+                    EntryPoint = userId,
+                    MetricName = "bulk_api_rows",
+                    CurrentValue = totalRows
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detects Salesforce setup and permission changes via SetupAuditTrail events.
+    /// Flags profile changes, permission set modifications, field-level security changes, and IP restrictions.
+    /// </summary>
+    private async Task DetectPermissionChanges()
+    {
+        var since = _anchor.AddHours(-24);
+        var setupEvents = await _db.GetRecentShieldEventsAsync("SetupAuditTrail", since);
+        if (setupEvents.Count == 0) return;
+
+        // High-risk sections that warrant immediate alerting
+        var criticalSections = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "PermissionSets", "PermissionSetGroups", "Profiles",
+            "IpWhitelisting", "NetworkAccess", "SessionManagement",
+            "FieldPermissions", "ObjectPermissions", "SystemPermissions"
+        };
+
+        var highRiskEvents = setupEvents
+            .Where(e =>
+            {
+                if (e.ExtraJson == null) return false;
+                try
+                {
+                    var j = Newtonsoft.Json.Linq.JObject.Parse(e.ExtraJson);
+                    var section = j["section"]?.ToString();
+                    return section != null && criticalSections.Contains(section);
+                }
+                catch { return false; }
+            })
+            .ToList();
+
+        if (highRiskEvents.Count > 0)
+        {
+            var sections = highRiskEvents
+                .Select(e =>
+                {
+                    try { return Newtonsoft.Json.Linq.JObject.Parse(e.ExtraJson!)["section"]?.ToString(); }
+                    catch { return null; }
+                })
+                .Where(s => s != null)
+                .GroupBy(s => s)
+                .OrderByDescending(g => g.Count())
+                .Take(3)
+                .Select(g => $"{g.Key} ({g.Count()})")
+                .ToList();
+
+            var uniqueUsers = highRiskEvents.Select(e => e.UserId).Distinct().Count();
+
+            await TryCreateAlert(new MonitoringAlert
+            {
+                OrgId = _db.OrgId,
+                AlertType = "shield_permission_change",
+                Severity = highRiskEvents.Count >= 5 ? "critical" : "warning",
+                Title = $"{highRiskEvents.Count} permission/profile change(s) detected",
+                Description = $"{highRiskEvents.Count} high-risk setup change(s) by {uniqueUsers} admin(s) " +
+                              $"in the last 24 hours. Sections modified: {string.Join(", ", sections)}. " +
+                              $"Review the Setup Audit Trail to verify these changes were authorized.",
+                MetricName = "permission_changes",
+                CurrentValue = highRiskEvents.Count,
+                AffectedUserCount = uniqueUsers
             });
         }
+
+        // Flag any off-hours setup changes
+        var offHoursSetup = setupEvents
+            .Where(e =>
+            {
+                if (!DateTime.TryParse(e.EventDate, out var dt)) return false;
+                var hour = dt.Hour;
+                return hour >= QuietHourStart && hour < QuietHourEnd;
+            })
+            .ToList();
+
+        if (offHoursSetup.Count >= 3)
+        {
+            var uniqueAdmins = offHoursSetup.Select(e => e.UserId).Distinct().Count();
+            await TryCreateAlert(new MonitoringAlert
+            {
+                OrgId = _db.OrgId,
+                AlertType = "shield_permission_change",
+                Severity = "warning",
+                Title = $"Off-hours setup changes ({offHoursSetup.Count})",
+                Description = $"{offHoursSetup.Count} Salesforce setup changes were made between " +
+                              $"{QuietHourStart}:00–{QuietHourEnd}:00 UTC by {uniqueAdmins} admin(s). " +
+                              $"Verify these changes were authorized.",
+                MetricName = "off_hours_setup_changes",
+                CurrentValue = offHoursSetup.Count,
+                AffectedUserCount = uniqueAdmins
+            });
+        }
+    }
+
+    /// <summary>
+    /// Generates a periodic activity summary so users know Shield is working even without anomalies.
+    /// Fires once per day as an info-level alert.
+    /// </summary>
+    private async Task GenerateActivitySummary()
+    {
+        var recentLogins = await _db.GetRecentShieldEventsAsync("Login", _anchor.AddHours(-24));
+        var recentApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddHours(-24));
+        var recentExceptions = await _db.GetRecentShieldEventsAsync("ApexUnexpectedException", _anchor.AddHours(-24));
+        var recentPages = await _db.GetRecentShieldEventsAsync("LightningPageView", _anchor.AddHours(-24));
+
+        var totalEvents = recentLogins.Count + recentApi.Count + recentExceptions.Count + recentPages.Count;
+        if (totalEvents == 0) return;
+
+        var uniqueUsers = recentLogins.Select(l => l.UserId).Where(u => u != null).Distinct().Count();
+        var failedLogins = recentLogins.Count(l => !l.IsSuccess);
+        var exceptionCount = recentExceptions.Count;
+
+        var parts = new List<string>();
+        parts.Add($"{uniqueUsers} users logged in");
+        parts.Add($"{recentApi.Count:N0} API calls");
+        if (recentPages.Count > 0) parts.Add($"{recentPages.Count:N0} page views");
+        if (failedLogins > 0) parts.Add($"{failedLogins} failed logins");
+        if (exceptionCount > 0) parts.Add($"{exceptionCount} Apex exceptions");
+
+        await TryCreateAlert(new MonitoringAlert
+        {
+            OrgId = _db.OrgId,
+            AlertType = "shield_activity_summary",
+            Severity = exceptionCount > 0 || failedLogins > 0 ? "info" : "info",
+            Title = $"Shield 24h: {totalEvents:N0} events from {uniqueUsers} users",
+            Description = string.Join(" · ", parts),
+            MetricName = "activity_summary",
+            CurrentValue = totalEvents
+        });
     }
 
     /// <summary>

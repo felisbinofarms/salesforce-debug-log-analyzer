@@ -614,6 +614,185 @@ public partial class SettingsDialog : Window
                 _currentSettings.HealthScoreCritical = Math.Max(10, Math.Min(80, value));
         };
         ContentPanel.Children.Add(healthCritText);
+
+        // --- Shield Thresholds Section ---
+        AddSectionSeparator();
+        AddHeader("Shield Detection Thresholds");
+        AddHelperText("Tune when Shield flags login, API, and performance anomalies.");
+
+        AddLabel("Failed logins per hour (spike threshold)");
+        var failedLoginText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.ShieldFailedLoginThreshold.ToString()
+        };
+        failedLoginText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(failedLoginText.Text, out int value))
+                _currentSettings.ShieldFailedLoginThreshold = Math.Max(2, Math.Min(100, value));
+        };
+        ContentPanel.Children.Add(failedLoginText);
+
+        AddLabel("API spike detection (Z-score, default 2.5)");
+        var apiZScoreText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.ShieldApiSpikeZScore.ToString("F1")
+        };
+        apiZScoreText.TextChanged += (s, e) =>
+        {
+            if (double.TryParse(apiZScoreText.Text, out double value))
+                _currentSettings.ShieldApiSpikeZScore = Math.Max(1.0, Math.Min(5.0, value));
+        };
+        ContentPanel.Children.Add(apiZScoreText);
+        AddHelperText("Higher = less sensitive. 2.5 catches ~5% of hourly spikes.");
+
+        AddLabel("Page performance degradation (ms, default 3000)");
+        var eptText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.ShieldEptDegradationMs.ToString()
+        };
+        eptText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(eptText.Text, out int value))
+                _currentSettings.ShieldEptDegradationMs = Math.Max(500, Math.Min(30000, value));
+        };
+        ContentPanel.Children.Add(eptText);
+
+        AddLabel("API endpoint failure threshold (per endpoint, default 3)");
+        var apiFailText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.ShieldApiFailureThreshold.ToString()
+        };
+        apiFailText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(apiFailText.Text, out int value))
+                _currentSettings.ShieldApiFailureThreshold = Math.Max(1, Math.Min(50, value));
+        };
+        ContentPanel.Children.Add(apiFailText);
+
+        AddLabel("Report export row threshold (data exfiltration, default 5000)");
+        var exportRowsText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.ShieldReportExportRowThreshold.ToString()
+        };
+        exportRowsText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(exportRowsText.Text, out int value))
+                _currentSettings.ShieldReportExportRowThreshold = Math.Max(100, Math.Min(1000000, value));
+        };
+        ContentPanel.Children.Add(exportRowsText);
+
+        // --- Alert Routing — Email Section ---
+        AddSectionSeparator();
+        AddHeader("Alert Routing — Email");
+        AddHelperText("Send Shield alerts by email. Requires SMTP credentials.");
+
+        var emailEnabledCheck = new CheckBox
+        {
+            Content = "Enable email alerts",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.EmailAlertsEnabled
+        };
+        emailEnabledCheck.Checked += (s, e) => _currentSettings.EmailAlertsEnabled = true;
+        emailEnabledCheck.Unchecked += (s, e) => _currentSettings.EmailAlertsEnabled = false;
+        ContentPanel.Children.Add(emailEnabledCheck);
+
+        AddLabel("Alert recipient(s) — comma separated");
+        var emailToText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.AlertEmailTo,
+            ToolTip = "e.g. admin@company.com, security@company.com"
+        };
+        emailToText.TextChanged += (s, e) => _currentSettings.AlertEmailTo = emailToText.Text.Trim();
+        ContentPanel.Children.Add(emailToText);
+
+        AddLabel("SMTP host (e.g. smtp.gmail.com)");
+        var smtpHostText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.SmtpHost
+        };
+        smtpHostText.TextChanged += (s, e) => _currentSettings.SmtpHost = smtpHostText.Text.Trim();
+        ContentPanel.Children.Add(smtpHostText);
+
+        AddLabel("SMTP port (587 for TLS, 465 for SSL)");
+        var smtpPortText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.SmtpPort.ToString()
+        };
+        smtpPortText.TextChanged += (s, e) =>
+        {
+            if (int.TryParse(smtpPortText.Text, out int value))
+                _currentSettings.SmtpPort = Math.Max(1, Math.Min(65535, value));
+        };
+        ContentPanel.Children.Add(smtpPortText);
+
+        AddLabel("SMTP username (often your email address)");
+        var smtpUserText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.SmtpUsername
+        };
+        smtpUserText.TextChanged += (s, e) => _currentSettings.SmtpUsername = smtpUserText.Text.Trim();
+        ContentPanel.Children.Add(smtpUserText);
+
+        AddLabel("SMTP password / app password");
+        var smtpPassBox = new System.Windows.Controls.PasswordBox
+        {
+            Background = (Brush)FindResource("BgInput"),
+            Foreground = (Brush)FindResource("TextPrimary"),
+            BorderBrush = (Brush)FindResource("BorderSubtle"),
+            FontSize = 13,
+            Padding = new Thickness(8),
+            Height = 32,
+            Password = _currentSettings.SmtpPassword
+        };
+        smtpPassBox.PasswordChanged += (s, e) => _currentSettings.SmtpPassword = smtpPassBox.Password;
+        ContentPanel.Children.Add(smtpPassBox);
+        AddHelperText("For Gmail use an App Password (not your account password).");
+
+        // --- Alert Routing — Slack Section ---
+        AddSectionSeparator();
+        AddHeader("Alert Routing — Slack");
+        AddHelperText("Post Shield alerts to a Slack channel via an Incoming Webhook URL.");
+
+        var slackEnabledCheck = new CheckBox
+        {
+            Content = "Enable Slack alerts",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.SlackAlertsEnabled
+        };
+        slackEnabledCheck.Checked += (s, e) => _currentSettings.SlackAlertsEnabled = true;
+        slackEnabledCheck.Unchecked += (s, e) => _currentSettings.SlackAlertsEnabled = false;
+        ContentPanel.Children.Add(slackEnabledCheck);
+
+        AddLabel("Slack Incoming Webhook URL");
+        var slackUrlText = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            Text = _currentSettings.SlackWebhookUrl,
+            ToolTip = "https://hooks.slack.com/services/T.../B.../..."
+        };
+        slackUrlText.TextChanged += (s, e) => _currentSettings.SlackWebhookUrl = slackUrlText.Text.Trim();
+        ContentPanel.Children.Add(slackUrlText);
+        AddHelperText("Create a webhook at api.slack.com → Your Apps → Incoming Webhooks.");
+
+        var criticalOnlyRoutingCheck = new CheckBox
+        {
+            Content = "Only route critical alerts (skip warnings and info)",
+            Style = (Style)FindResource("SettingCheckBox"),
+            IsChecked = _currentSettings.AlertRoutingCriticalOnly,
+            Margin = new Thickness(0, 10, 0, 5)
+        };
+        criticalOnlyRoutingCheck.Checked += (s, e) => _currentSettings.AlertRoutingCriticalOnly = true;
+        criticalOnlyRoutingCheck.Unchecked += (s, e) => _currentSettings.AlertRoutingCriticalOnly = false;
+        ContentPanel.Children.Add(criticalOnlyRoutingCheck);
     }
 
     private void AddSectionSeparator()

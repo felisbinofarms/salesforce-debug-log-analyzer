@@ -363,4 +363,85 @@ public class ShieldEventLogServiceCsvTests : IDisposable
     {
         _service.IsShieldAvailable.Should().BeFalse();
     }
+
+    // ================================================================
+    //  ReportExport CSV Parsing
+    // ================================================================
+
+    [Fact]
+    public void ParseCsv_ReportExport_ParsesRowsExportedAndReportId()
+    {
+        var csv = "TIMESTAMP_DERIVED,USER_ID,REPORT_ID,ROWS_EXPORTED,OPERATION,SOBJECT_TYPE\n" +
+                  "2026-03-15T10:00:00Z,user001,00O1234567890,12500,ReportExport,Account\n";
+
+        var events = _service.ParseCsv(csv, "ReportExport");
+
+        events.Should().HaveCount(1);
+        var ev = events[0];
+        ev.EventType.Should().Be("ReportExport");
+        ev.UserId.Should().Be("user001");
+        ev.RowCount.Should().Be(12500);
+        ev.Uri.Should().Be("00O1234567890"); // reportId used as URI
+        ev.ExtraJson.Should().Contain("reportId");
+        ev.ExtraJson.Should().Contain("00O1234567890");
+    }
+
+    [Fact]
+    public void ParseCsv_ReportExport_FallsBackToSobjectTypeWhenNoReportId()
+    {
+        var csv = "TIMESTAMP_DERIVED,USER_ID,SOBJECT_TYPE,ROWS_EXPORTED\n" +
+                  "2026-03-15T11:00:00Z,user002,,8000\n";
+
+        var events = _service.ParseCsv(csv, "ReportExport");
+
+        events.Should().HaveCount(1);
+        // SOBJECT_TYPE is empty — Uri should fall back to "report"
+        events[0].Uri.Should().Be("report");
+    }
+
+    // ================================================================
+    //  SetupAuditTrail CSV Parsing
+    // ================================================================
+
+    [Fact]
+    public void ParseCsv_SetupAuditTrail_ParsesSectionActionDisplay()
+    {
+        var csv = "TIMESTAMP_DERIVED,USER_ID,ACTION,SECTION,DISPLAY,DELEGATED_USER_NAME\n" +
+                  "2026-03-15T02:30:00Z,admin001,PermissionSetAssigned,PermissionSets,\"Assigned Admin perm set\",\n";
+
+        var events = _service.ParseCsv(csv, "SetupAuditTrail");
+
+        events.Should().HaveCount(1);
+        var ev = events[0];
+        ev.EventType.Should().Be("SetupAuditTrail");
+        ev.UserId.Should().Be("admin001");
+        ev.Uri.Should().Be("PermissionSets"); // section used as URI
+        ev.ExtraJson.Should().Contain("section");
+        ev.ExtraJson.Should().Contain("PermissionSets");
+        ev.ExtraJson.Should().Contain("action");
+        ev.ExtraJson.Should().Contain("PermissionSetAssigned");
+    }
+
+    // ================================================================
+    //  BulkApi CSV Parsing
+    // ================================================================
+
+    [Fact]
+    public void ParseCsv_BulkApi_ParsesOperationAndRowCount()
+    {
+        var csv = "TIMESTAMP_DERIVED,USER_ID,OPERATION,SOBJECT_TYPE,ROWS_PROCESSED,JOB_ID\n" +
+                  "2026-03-15T08:00:00Z,etluser,query,Contact,50000,7501234567890\n";
+
+        var events = _service.ParseCsv(csv, "BulkApi");
+
+        events.Should().HaveCount(1);
+        var ev = events[0];
+        ev.EventType.Should().Be("BulkApi");
+        ev.UserId.Should().Be("etluser");
+        ev.RowCount.Should().Be(50000);
+        ev.Uri.Should().Be("Contact"); // sobjectType used as URI
+        ev.ExtraJson.Should().Contain("operation");
+        ev.ExtraJson.Should().Contain("query");
+        ev.ExtraJson.Should().Contain("jobId");
+    }
 }

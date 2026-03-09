@@ -421,6 +421,12 @@ public class LogAnalysis
 
     /// <summary>Detailed explained issues from LogExplainerService</summary>
     public List<DetailedIssue> DetailedIssues { get; set; } = new();
+
+    /// <summary>
+    /// PII compliance scan result. Null until the user explicitly runs the PII scanner
+    /// or auto-scan is enabled in settings. Not populated by LogParserService.
+    /// </summary>
+    public PiiScanResult? PiiScan { get; set; }
 }
 
 /// <summary>
@@ -1193,4 +1199,102 @@ public class LearningItem
     public string Explanation { get; set; } = "";
     public string ResourceUrl { get; set; } = "";
     public string ResourceLabel { get; set; } = "";
+}
+
+// ================================================================
+//  PII COMPLIANCE SCANNER MODELS
+// ================================================================
+
+/// <summary>
+/// A single PII match found in a debug log line.
+/// Contains enough detail for a developer to investigate without exposing the raw value.
+/// </summary>
+public class PiiMatch
+{
+    /// <summary>1-based line number in the raw log file where the match was found.</summary>
+    public int LineNumber { get; set; }
+
+    /// <summary>Category of PII detected: "Email", "Phone", "SSN", "CreditCard", "IP Address".</summary>
+    public string PiiType { get; set; } = string.Empty;
+
+    /// <summary>Risk level: "High" (SSN, credit card), "Medium" (email, phone), "Low" (IP address).</summary>
+    public string Severity { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Masked version of the matched value (e.g., "joh***@example.com", "***-**-6789").
+    /// Never stores the actual PII value — only the masked form.
+    /// </summary>
+    public string MaskedValue { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Up to 60 chars of surrounding log text (PII replaced with [REDACTED]) for context.
+    /// </summary>
+    public string Context { get; set; } = string.Empty;
+
+    public string SeverityColor => Severity switch
+    {
+        "High"   => "#F85149",
+        "Medium" => "#D29922",
+        "Low"    => "#57F287",
+        _        => "#80848E"
+    };
+
+    public string PiiTypeIcon => PiiType switch
+    {
+        "Email"       => "📧",
+        "Phone"       => "📞",
+        "SSN"         => "🔒",
+        "Credit Card" => "💳",
+        "IP Address"  => "🌐",
+        _             => "⚠️"
+    };
+}
+
+/// <summary>
+/// Aggregated result of a PII compliance scan over a single debug log.
+/// </summary>
+public class PiiScanResult
+{
+    public List<PiiMatch> Matches { get; set; } = new();
+    public DateTime ScannedAt { get; set; } = DateTime.UtcNow;
+
+    public int TotalMatches => Matches.Count;
+    public bool HasPii => Matches.Count > 0;
+
+    /// <summary>"Clean", "Low", "Medium", or "High" — based on worst-severity finding.</summary>
+    public string RiskLevel
+    {
+        get
+        {
+            if (Matches.Any(m => m.Severity == "High"))   return "High";
+            if (Matches.Any(m => m.Severity == "Medium")) return "Medium";
+            if (Matches.Any(m => m.Severity == "Low"))    return "Low";
+            return "Clean";
+        }
+    }
+
+    public string RiskColor => RiskLevel switch
+    {
+        "High"   => "#F85149",
+        "Medium" => "#D29922",
+        "Low"    => "#57F287",
+        "Clean"  => "#57F287",
+        _        => "#80848E"
+    };
+
+    public string RiskIcon => RiskLevel switch
+    {
+        "High"   => "🔴",
+        "Medium" => "🟡",
+        "Low"    => "🟢",
+        "Clean"  => "✅",
+        _        => "⚪"
+    };
+
+    public string SummaryText => RiskLevel == "Clean"
+        ? "No PII detected — this log is safe to share."
+        : $"{TotalMatches} potential PII match{(TotalMatches == 1 ? "" : "es")} found. Review before sharing.";
+
+    /// <summary>Group matches by PiiType for display in the UI.</summary>
+    public IEnumerable<IGrouping<string, PiiMatch>> ByType => Matches.GroupBy(m => m.PiiType);
 }

@@ -198,4 +198,47 @@ public class SettingsServiceTests
         settings.DurationWarningMs.Should().BeLessThan(settings.DurationCriticalMs);
         settings.HealthScoreWarning.Should().BeGreaterThan(settings.HealthScoreCritical);
     }
+
+    // ================================================================
+    //  New Shield + Alert Routing Defaults
+    // ================================================================
+
+    [Fact]
+    public void AppSettings_Defaults_ShieldDetectionThresholds()
+    {
+        var settings = new AppSettings();
+        settings.ShieldFailedLoginThreshold.Should().Be(5);
+        settings.ShieldApiSpikeZScore.Should().BeApproximately(2.5, 0.001);
+        settings.ShieldEptDegradationMs.Should().Be(3000);
+        settings.ShieldApiFailureThreshold.Should().Be(3);
+        settings.ShieldApiFailureRate.Should().BeApproximately(0.20, 0.001);
+        settings.ShieldReportExportRowThreshold.Should().Be(5000);
+    }
+
+    [Fact]
+    public void AppSettings_Defaults_EmailAlerts_Disabled()
+    {
+        var settings = new AppSettings();
+        settings.EmailAlertsEnabled.Should().BeFalse();
+        settings.AlertEmailTo.Should().BeEmpty();
+        settings.SmtpHost.Should().Be("smtp.gmail.com");
+        settings.SmtpPort.Should().Be(587);
+        settings.SmtpUsername.Should().BeEmpty();
+        settings.SmtpPassword.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AppSettings_Defaults_SlackAlerts_Disabled()
+    {
+        var settings = new AppSettings();
+        settings.SlackAlertsEnabled.Should().BeFalse();
+        settings.SlackWebhookUrl.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AppSettings_Defaults_AlertRoutingCriticalOnly()
+    {
+        var settings = new AppSettings();
+        settings.AlertRoutingCriticalOnly.Should().BeTrue();
+    }
 }

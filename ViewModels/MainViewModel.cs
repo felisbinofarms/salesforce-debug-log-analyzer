@@ -29,6 +29,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly OrgMetadataService _metadataService;
     private readonly LogExplainerService _explainerService;
     private readonly LicenseService _licenseService;
+    private readonly PiiScannerService _piiScanner;
     private MonitoringDatabaseService? _monitoringDb;
     private BackgroundMonitoringService? _monitoringService;
     private bool _disposed;
@@ -93,6 +94,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private ObservableCollection<MonitoringAlert> _monitoringAlerts = new();
+
+    // Shield dashboard
+    [ObservableProperty]
+    private ShieldDashboardData? _shieldDashboard;
+
+    [ObservableProperty]
+    private bool _isShieldDashboardLoading = false;
+
+    [ObservableProperty]
+    private string _shieldDashboardStatus = "";
+
+    // Governor Archaeology
+    [ObservableProperty]
+    private GovernorArchaeologyData? _governorArchaeology;
+
+    [ObservableProperty]
+    private bool _isGovernorArchaeologyLoading = false;
+
+    [ObservableProperty]
+    private bool _hasGovernorArchaeology = false;
+
+    [ObservableProperty]
+    private string _governorArchaeologySubtitle = "";
 
     partial void OnSelectedLogGroupChanged(LogGroup? value)
     {
@@ -489,6 +513,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private ObservableCollection<string> _whatYourCodeDid = new();
     
+    // ===== PII COMPLIANCE SCANNER =====
+
+    [ObservableProperty]
+    private PiiScanResult? _currentPiiScan;
+
+    [ObservableProperty]
+    private bool _isPiiScanning = false;
+
+    [ObservableProperty]
+    private bool _hasPiiScan = false;
+
+    [ObservableProperty]
+    private string _piiScanStatus = "Run a scan to check this log for personal data.";
+
     // ===== ALWAYS-USEFUL: TOP METHODS & QUERIES =====
     
     [ObservableProperty]
@@ -722,6 +760,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _metadataService = new OrgMetadataService(_apiService);
         _explainerService = new LogExplainerService();
         _licenseService   = new LicenseService();
+        _piiScanner       = new PiiScannerService();
 
         // Apply initial license state immediately (from local cache, no network)
         RefreshLicenseDisplay();
@@ -824,6 +863,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return true;
     }
 
+    [RelayCommand]
+    private void Upgrade() => ShowUpgradeDialog();
+
     private void ShowUpgradeDialog()
     {
         var dialog = new Views.UpgradeDialog(_licenseService) { Owner = App.Current.MainWindow };
@@ -860,8 +902,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ConnectionDisplayName = orgName;
         StatusMessage = $"✓ Connected to {orgName}";
 
-        // Initialize monitoring database for the connected org
-        InitializeMonitoringDb(orgName);
+        // Initialize monitoring database for the connected org (use real org ID for consistency with BackgroundMonitoringService)
+        var orgId = _apiService.Connection?.OrgId;
+        InitializeMonitoringDb(!string.IsNullOrEmpty(orgId) ? orgId : orgName);
+
+        // Load existing alerts from database so the bell badge shows history
+        _ = LoadAlertsFromDatabaseAsync();
 
         // Auto-start background monitoring if enabled
         var settings = _settingsService.Load();
@@ -955,9 +1001,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ToggleMonitoring()
     {
         if (IsMonitoringActive)
+        {
             StopMonitoring();
-        else
-            await StartMonitoringAsync();
+            return;
+        }
+
+        // Require Salesforce connection before starting monitoring
+        if (!_apiService.IsConnected)
+        {
+            StatusMessage = "⚠️ Connect to Salesforce first to enable monitoring";
+            ConnectToSalesforce();
+
+            // If they still didn't connect, bail out
+            if (!_apiService.IsConnected)
+                return;
+        }
+
+        await StartMonitoringAsync();
     }
 
     private void OnMonitoringStatusChanged(object? sender, string status)
@@ -979,6 +1039,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ToggleAlertCenter()
     {
         ShowAlertCenter = !ShowAlertCenter;
+    }
+
+    private async Task LoadAlertsFromDatabaseAsync()
+    {
+        if (_monitoringDb == null) return;
+        try
+        {
+            var alerts = await _monitoringDb.GetAlertsAsync(limit: 50);
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                MonitoringAlerts.Clear();
+                foreach (var alert in alerts)
+                    MonitoringAlerts.Add(alert);
+                UnreadAlertCount = MonitoringAlerts.Count(a => !a.IsRead);
+                Log.Information("Loaded {Count} alerts from database ({Unread} unread)", alerts.Count, UnreadAlertCount);
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load alerts from database");
+        }
     }
 
     [RelayCommand]
@@ -1013,6 +1094,76 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             Log.Warning(ex, "Failed to dismiss alert {AlertId}", alertId);
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a log by its Salesforce ApexLog ID.
+    /// If the log is already loaded, selects it immediately.
+    /// If connected to Salesforce, downloads and parses it on demand.
+    /// Returns true if navigation succeeded.
+    /// </summary>
+    public async Task<bool> NavigateToLogByIdAsync(string logId)
+    {
+        if (string.IsNullOrWhiteSpace(logId)) return false;
+
+        // 1. Already loaded? Just select it.
+        var existing = Logs.FirstOrDefault(l =>
+            l.LogId == logId ||
+            l.LogId.Contains(logId) ||
+            logId.Contains(l.LogId));
+
+        if (existing != null)
+        {
+            SelectedLog = existing;
+            ShowAlertCenter = false;
+            SelectedTabIndex = 0;
+            StatusMessage = $"✓ Navigated to log: {existing.LogName}";
+            return true;
+        }
+
+        // 2. Not loaded — download from Salesforce if connected.
+        if (!_apiService.IsConnected)
+        {
+            StatusMessage = "⚠️ Connect to Salesforce to download this log";
+            return false;
+        }
+
+        StatusMessage = $"Downloading log {logId}...";
+        IsLoading = true;
+        try
+        {
+            var body = await _apiService.GetLogBodyAsync(logId);
+            if (string.IsNullOrEmpty(body))
+            {
+                StatusMessage = "⚠️ Log body is empty or no longer available in Salesforce";
+                return false;
+            }
+
+            var analysis = await Task.Run(() => _parserService.ParseLog(body, logId));
+            await EnrichLogWithMetadataAsync(analysis);
+            _ = PersistLogSnapshotAsync(analysis);
+
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                Logs.Insert(0, analysis);
+                SelectedLog = analysis;
+                ShowAlertCenter = false;
+                SelectedTabIndex = 0;
+            });
+
+            StatusMessage = $"✓ Downloaded and parsed log: {analysis.EntryPoint}";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Failed to download log: {ex.Message}";
+            Log.Warning(ex, "Failed to download log {LogId} from alert navigation", logId);
+            return false;
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -2025,6 +2176,198 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void SelectTab(int tabIndex)
     {
         SelectedTabIndex = tabIndex;
+        if (tabIndex == 6)
+        {
+            _ = LoadShieldDashboardAsync();
+            _ = LoadGovernorArchaeologyAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadShieldDashboard()
+    {
+        await LoadShieldDashboardAsync();
+        await LoadGovernorArchaeologyAsync();
+    }
+
+    private async Task LoadShieldDashboardAsync()
+    {
+        if (_monitoringDb == null)
+        {
+            ShieldDashboardStatus = "Connect to an org to see Shield data.";
+            return;
+        }
+
+        IsShieldDashboardLoading = true;
+        ShieldDashboardStatus = "Loading Shield data...";
+        try
+        {
+            var data = await _monitoringDb.GetShieldDashboardDataAsync();
+
+            // Resolve user IDs to names for login details
+            if (data.LoginDetails.Count > 0 && _apiService.IsConnected)
+            {
+                try
+                {
+                    await ResolveLoginUserNamesAsync(data);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Could not resolve user names for login details");
+                }
+            }
+
+            ShieldDashboard = data;
+            ShieldDashboardStatus = data.TotalEvents == 0
+                ? "No Shield events found. Monitoring will collect data over time."
+                : $"Showing {data.TotalEvents:N0} events from last 24h ({data.UniqueUsers} users)";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load Shield dashboard");
+            ShieldDashboardStatus = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsShieldDashboardLoading = false;
+        }
+    }
+
+    private async Task LoadGovernorArchaeologyAsync()
+    {
+        if (_monitoringDb == null) return;
+
+        IsGovernorArchaeologyLoading = true;
+        try
+        {
+            var data = await _monitoringDb.GetGovernorArchaeologyAsync(days: 7);
+            GovernorArchaeology = data;
+            HasGovernorArchaeology = data.HasAnyData;
+            GovernorArchaeologySubtitle = data.TotalExecutions == 0
+                ? "No debug logs analysed yet — open some logs to build your archaeology."
+                : $"{data.TotalExecutions:N0} executions analysed across the last {data.DaysAnalyzed} days";
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to load governor archaeology");
+            HasGovernorArchaeology = false;
+        }
+        finally
+        {
+            IsGovernorArchaeologyLoading = false;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  PII COMPLIANCE SCANNER
+    // ─────────────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanScanForPii))]
+    private async Task ScanForPii()
+    {
+        if (SelectedLog == null) return;
+
+        IsPiiScanning = true;
+        PiiScanStatus = "Scanning for personal data…";
+        CurrentPiiScan = null;
+        HasPiiScan = false;
+
+        try
+        {
+            PiiScanResult result;
+
+            if (!string.IsNullOrEmpty(SelectedLog.SourcePath) && File.Exists(SelectedLog.SourcePath))
+            {
+                // Re-read the raw file so every line (including headers) is scanned
+                var rawContent = await Task.Run(() => File.ReadAllText(SelectedLog.SourcePath));
+                result = await Task.Run(() => _piiScanner.Scan(rawContent));
+            }
+            else
+            {
+                // Log was downloaded from API — raw content not stored
+                IsPiiScanning = false;
+                PiiScanStatus = "PII scan requires a local file. Save the log to disk before scanning.";
+                return;
+            }
+
+            SelectedLog.PiiScan = result;
+            CurrentPiiScan = result;
+            HasPiiScan = true;
+            PiiScanStatus = result.HasPii
+                ? $"⚠️ {result.TotalMatches} potential PII match{(result.TotalMatches == 1 ? "" : "es")} — {result.RiskLevel} risk"
+                : "✅ No PII detected — log is safe to share";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "PII scan failed");
+            PiiScanStatus = $"Scan failed: {ex.Message}";
+        }
+        finally
+        {
+            IsPiiScanning = false;
+        }
+    }
+
+    private bool CanScanForPii() => SelectedLog != null && !IsPiiScanning;
+
+    private async Task ResolveLoginUserNamesAsync(ShieldDashboardData data)
+    {
+        // Collect all distinct user IDs across all login details
+        var allUserIds = data.LoginDetails
+            .SelectMany(d => d.UserIds)
+            .Distinct()
+            .ToList();
+
+        if (allUserIds.Count == 0) return;
+
+        // SOQL query to resolve user IDs to names (batch in groups of 100 for SOQL IN limit)
+        var userMap = new Dictionary<string, string>();
+        foreach (var batch in allUserIds.Chunk(100))
+        {
+            var idList = string.Join("','", batch.Select(id =>
+                id.Replace("'", "").Replace("\\", "")));
+            var soql = $"SELECT Id, Name, Username, IsActive FROM User WHERE Id IN ('{idList}')";
+            try
+            {
+                var result = await _apiService.QueryAsync<dynamic>(soql);
+                if (result.Records != null)
+                {
+                    foreach (var record in result.Records)
+                    {
+                        string id = record.Id?.ToString() ?? "";
+                        string name = record.Name?.ToString() ?? "";
+                        string username = record.Username?.ToString() ?? "";
+                        bool isActive = record.IsActive ?? true;
+                        var display = !string.IsNullOrEmpty(name) ? name : username;
+                        if (!isActive) display += " (inactive)";
+                        if (!string.IsNullOrEmpty(id)) userMap[id] = display;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to resolve user batch");
+            }
+        }
+
+        // Apply resolved names to each LoginFailureDetail
+        foreach (var detail in data.LoginDetails)
+        {
+            detail.UserNames = detail.UserIds
+                .Select(id => userMap.TryGetValue(id, out var name) ? name : id)
+                .ToList();
+        }
+
+        // Also update insight card details with resolved names
+        foreach (var insight in data.Insights.Where(i => i.Category == "security"))
+        {
+            if (insight.Detail?.Contains("user IDs", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                // Replace user IDs with names in the detail text
+                foreach (var (id, name) in userMap)
+                    insight.Detail = insight.Detail.Replace(id, name);
+            }
+        }
     }
 
     [RelayCommand]
@@ -2506,16 +2849,61 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        StatusMessage = "Loading logs from Salesforce...";
+        StatusMessage = "Fetching logs from Salesforce...";
         IsLoading = true;
 
         try
         {
             var apexLogs = await _apiService.QueryLogsAsync(20);
-            StatusMessage = $"Found {apexLogs.Count} logs";
+            if (apexLogs.Count == 0)
+            {
+                StatusMessage = "No debug logs found in org";
+                return;
+            }
 
-            // You could auto-load and parse these, but for now just notify
-            StatusMessage = $"✓ Found {apexLogs.Count} logs (click to download and analyze)";
+            StatusMessage = $"Downloading {apexLogs.Count} logs...";
+            int downloaded = 0;
+            int failed = 0;
+
+            foreach (var apexLog in apexLogs)
+            {
+                // Skip if already loaded
+                if (Logs.Any(l => l.LogId == apexLog.Id))
+                {
+                    downloaded++;
+                    continue;
+                }
+
+                try
+                {
+                    var body = await _apiService.GetLogBodyAsync(apexLog.Id);
+                    if (string.IsNullOrWhiteSpace(body)) continue;
+
+                    var logName = $"{apexLog.Operation ?? "Apex"} ({apexLog.StartTime:HH:mm:ss})";
+                    var analysis = await Task.Run(() => _parserService.ParseLog(body, logName));
+                    analysis.LogId = apexLog.Id;
+                    analysis.LogName = logName;
+
+                    await EnrichLogWithMetadataAsync(analysis);
+                    _ = PersistLogSnapshotAsync(analysis);
+
+                    Application.Current?.Dispatcher?.Invoke(() => Logs.Insert(0, analysis));
+                    downloaded++;
+                    StatusMessage = $"Downloaded {downloaded}/{apexLogs.Count} logs...";
+                }
+                catch
+                {
+                    failed++;
+                }
+            }
+
+            var msg = $"✓ Loaded {downloaded} log{(downloaded != 1 ? "s" : "")} from org";
+            if (failed > 0) msg += $" ({failed} failed)";
+            StatusMessage = msg;
+
+            // Select the most recent if nothing is selected
+            if (SelectedLog == null && Logs.Count > 0)
+                SelectedLog = Logs[0];
         }
         catch (Exception ex)
         {

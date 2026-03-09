@@ -198,6 +198,12 @@ public partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
+    private void MonitoringBadge_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_viewModel.ToggleMonitoringCommand.CanExecute(null))
+            _viewModel.ToggleMonitoringCommand.Execute(null);
+    }
+
     private void MaximizeButton_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;

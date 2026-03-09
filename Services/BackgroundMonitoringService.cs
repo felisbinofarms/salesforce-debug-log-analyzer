@@ -19,6 +19,8 @@ public class BackgroundMonitoringService : IDisposable
     private ToastNotificationService? _toastService;
     private ShieldEventLogService? _shieldService;
     private ShieldAnomalyDetector? _shieldDetector;
+    private AlertRoutingService? _alertRouter;
+    private string? _cachedDebugLevelId;
 
     private System.Threading.Timer? _pollTimer;
     private System.Threading.Timer? _analysisTimer;
@@ -56,12 +58,14 @@ public class BackgroundMonitoringService : IDisposable
     /// </summary>
     public async Task StartAsync()
     {
-        if (_isRunning) return;
         if (!_apiService.IsConnected || _apiService.Connection == null)
         {
             StatusChanged?.Invoke(this, "Cannot start monitoring — not connected to Salesforce");
             return;
         }
+
+        // Stop any existing monitoring first (cleans up Shield references before DB disposal)
+        if (_isRunning) Stop();
 
         // Initialize database for the connected org
         var orgId = ExtractOrgIdentifier();
@@ -129,8 +133,18 @@ public class BackgroundMonitoringService : IDisposable
 
             if (shieldAvailable)
             {
-                _shieldDetector = new ShieldAnomalyDetector(_dbService);
+                // One-time data repair for events parsed before CSV bugfixes
+                var repairDone = await _dbService.GetConfigAsync("csv_repair_v1");
+                if (repairDone == null)
+                {
+                    await _shieldService.RepairExistingDataAsync();
+                    await _dbService.SetConfigAsync("csv_repair_v1", DateTime.UtcNow.ToString("O"));
+                }
+
+                _alertRouter = new AlertRoutingService(_settingsService);
+                _shieldDetector = new ShieldAnomalyDetector(_dbService, _settingsService);
                 _shieldDetector.AlertGenerated += OnAlertGenerated;
+                _shieldDetector.AutoTraceFlagRequested += OnAutoTraceFlagRequested;
                 await _shieldDetector.SeedKnownIpsAsync();
 
                 _shieldTimer = new System.Threading.Timer(
@@ -169,6 +183,16 @@ public class BackgroundMonitoringService : IDisposable
         _shieldTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         _shieldTimer?.Dispose();
         _shieldTimer = null;
+
+        // Clean up Shield references so they don't use the old DB service
+        if (_shieldDetector != null)
+        {
+            _shieldDetector.AlertGenerated -= OnAlertGenerated;
+            _shieldDetector.AutoTraceFlagRequested -= OnAutoTraceFlagRequested;
+            _shieldDetector = null;
+        }
+        _shieldService = null;
+
         _isRunning = false;
 
         Log.Information("Background monitoring stopped");
@@ -223,6 +247,7 @@ public class BackgroundMonitoringService : IDisposable
             var eventsProcessed = await _shieldService.PollAndProcessAsync();
             if (eventsProcessed > 0)
             {
+                StatusChanged?.Invoke(this, $"Shield: {eventsProcessed:N0} events processed");
                 // Run anomaly detection after processing new Shield events
                 await _shieldDetector.RunDetectionAsync();
             }
@@ -237,8 +262,73 @@ public class BackgroundMonitoringService : IDisposable
     {
         // Fire toast notification
         _toastService?.ShowAlert(alert);
+        // Route to email / Slack (fire-and-forget; errors are logged inside the service)
+        if (_alertRouter != null)
+            _ = _alertRouter.RouteAlertAsync(alert);
         // Relay to subscribers (e.g., MainViewModel for in-app alert center)
         AlertGenerated?.Invoke(this, alert);
+    }
+
+    /// <summary>
+    /// Handles automatic Trace Flag creation when Shield detects a repeating Apex exception.
+    /// Silently sets a 1-hour trace flag on the affected user so the next occurrence
+    /// is captured in a full debug log — without any developer intervention.
+    /// </summary>
+    private async void OnAutoTraceFlagRequested(object? sender, string userId)
+    {
+        if (!_apiService.IsConnected || _dbService == null) return;
+        try
+        {
+            // Resolve and cache a suitable DebugLevel ID (query once per monitoring session)
+            if (_cachedDebugLevelId == null)
+            {
+                var levels = await _apiService.QueryDebugLevelsAsync();
+                // Prefer SFDC_DevConsole (always present in every org), then any available level
+                var preferred = levels.FirstOrDefault(l =>
+                    l.DeveloperName?.Equals("SFDC_DevConsole", StringComparison.OrdinalIgnoreCase) == true)
+                    ?? levels.FirstOrDefault();
+
+                if (preferred == null)
+                {
+                    Log.Warning("Cannot auto-create trace flag: no DebugLevel records found in org");
+                    return;
+                }
+                _cachedDebugLevelId = preferred.Id;
+                Log.Information("Auto trace flag will use DebugLevel: {Name} ({Id})",
+                    preferred.DeveloperName, _cachedDebugLevelId);
+            }
+
+            // Set trace flag to expire in 1 hour — just long enough to capture the next occurrence
+            var expiry = DateTime.UtcNow.AddHours(1);
+            var traceFlagId = await _apiService.CreateTraceFlagAsync(userId, _cachedDebugLevelId, expiry);
+
+            Log.Information(
+                "Auto trace flag created for user {UserId} (expires {Expiry:u}, flag: {FlagId})",
+                userId, expiry, traceFlagId);
+
+            // Fire an info alert so the developer knows a trace flag was set
+            var infoAlert = new MonitoringAlert
+            {
+                OrgId = _dbService.OrgId,
+                AlertType = "auto_trace_flag",
+                Severity = "info",
+                Title = $"Auto trace flag set for user {userId}",
+                Description = $"Black Widow detected a repeating Apex exception from user {userId} "
+                            + $"and automatically set a 1-hour debug trace flag. "
+                            + $"The next occurrence will be captured in a full debug log. "
+                            + $"Trace flag expires at {expiry.ToLocalTime():h:mm tt}.",
+                EntryPoint = userId,
+                MetricName = "auto_trace_flag",
+                CreatedAt = DateTime.UtcNow
+            };
+            if (_dbService != null)
+                await _dbService.InsertAlertAsync(infoAlert);
+            AlertGenerated?.Invoke(this, infoAlert);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to auto-create trace flag for user {UserId}", userId);
+        }
     }
 
     private async Task PollAndProcessLogsAsync()
@@ -314,7 +404,13 @@ public class BackgroundMonitoringService : IDisposable
         {
             Log.Information("Monitoring poll: processed {NewLogs} new logs ({Total} total)",
                 newLogsCount, _logsProcessedTotal);
-            StatusChanged?.Invoke(this, $"Processed {newLogsCount} new logs");
+            StatusChanged?.Invoke(this, $"Processed {newLogsCount} new logs ({_logsProcessedTotal} total)");
+        }
+        else
+        {
+            var queried = recentLogs.Count;
+            var timeStr = _lastPollTime.ToLocalTime().ToString("h:mm:ss tt");
+            StatusChanged?.Invoke(this, $"Monitoring active · Last poll {timeStr} · {queried} logs checked · {_logsProcessedTotal} processed");
         }
     }
 

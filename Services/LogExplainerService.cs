@@ -132,21 +132,17 @@ public class LogExplainerService
             issues.Add(GenerateCriticalLimitIssue(analysis, lastLimitSnapshot, soqlPercent, cpuPercent, dmlPercent));
         }
         
-        // Issue 2: N+1 query pattern
-        var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
-        if (soqlCount > 10)
+        // Issue 2: N+1 query pattern (threshold: ≥3 repetitions of the same query)
+        var repeatedQueryGroup = analysis.DatabaseOperations
+            .Where(d => d.OperationType == "SOQL")
+            .GroupBy(d => SimplifyQuery(d.Query))
+            .Where(g => g.Count() >= 3)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+
+        if (repeatedQueryGroup != null)
         {
-            var repeatedQueries = analysis.DatabaseOperations
-                .Where(d => d.OperationType == "SOQL")
-                .GroupBy(d => SimplifyQuery(d.Query))
-                .Where(g => g.Count() >= 3)
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault();
-            
-            if (repeatedQueries != null && repeatedQueries.Count() >= 5)
-            {
-                issues.Add(GenerateNPlusOneIssue(repeatedQueries, analysis));
-            }
+            issues.Add(GenerateNPlusOneIssue(repeatedQueryGroup, analysis));
         }
         
         // Issue 3: Stack overflow risk
@@ -174,7 +170,38 @@ public class LogExplainerService
         {
             issues.Add(GenerateTriggerReEntryIssue(reEntries.First(), analysis));
         }
-        
+
+        // Issue 6: Faulted flows
+        var faultedFlows = analysis.Flows.Where(f => f.HasFault).ToList();
+        if (faultedFlows.Any())
+        {
+            issues.Add(GenerateFaultedFlowIssue(faultedFlows));
+        }
+
+        // Issue 7: Heap explosion (> 6 MB used = > 60% of 10 MB limit)
+        if (analysis.TotalHeapAllocated > 6 * 1024 * 1024)
+        {
+            issues.Add(GenerateHeapExplosionIssue(analysis.TotalHeapAllocated));
+        }
+
+        // Issue 8: Duplicate SOQL (from DuplicateQueries — parser-detected)
+        var topDuplicate = analysis.DuplicateQueries
+            .OrderByDescending(q => q.ExecutionCount)
+            .FirstOrDefault();
+        if (topDuplicate != null && topDuplicate.ExecutionCount >= 3)
+        {
+            // Only add if we didn't already flag it via the N+1 path
+            if (repeatedQueryGroup == null)
+                issues.Add(GenerateDuplicateSoqlIssue(topDuplicate));
+        }
+
+        // Issue 9: Callout errors
+        var failedCallouts = analysis.Callouts.Where(c => c.IsError).ToList();
+        if (failedCallouts.Any())
+        {
+            issues.Add(GenerateCalloutErrorIssue(failedCallouts));
+        }
+
         return issues;
     }
     
@@ -462,6 +489,177 @@ public class LogExplainerService
         };
     }
     
+    private DetailedIssue GenerateFaultedFlowIssue(List<FlowExecution> faultedFlows)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("### ⚡ Flow Fault Path Triggered\n");
+
+        sb.AppendLine("**What's happening:**");
+        if (faultedFlows.Count == 1)
+        {
+            sb.AppendLine($"Your Flow `{faultedFlows[0].FlowName}` hit an unhandled error and followed its **Fault path**.");
+            if (!string.IsNullOrEmpty(faultedFlows[0].FaultMessage))
+                sb.AppendLine($"\nFault message: `{faultedFlows[0].FaultMessage}`");
+        }
+        else
+        {
+            sb.AppendLine($"{faultedFlows.Count} Flows faulted in this transaction:");
+            foreach (var f in faultedFlows)
+                sb.AppendLine($"• `{f.FlowName}`{(f.FaultMessage != null ? $" — {f.FaultMessage}" : "")}");
+        }
+        sb.AppendLine();
+
+        sb.AppendLine("**What this means:**");
+        sb.AppendLine("A Flow fault path is like a triage nurse saying \"something went wrong, activating the backup plan.\"");
+        sb.AppendLine("The flow didn't crash the user's action, but it also didn't finish normally — the fault connector ran instead.\n");
+
+        sb.AppendLine("**Why it matters:**");
+        sb.AppendLine("• Fault paths often send error emails or log records, so users may get confusing notifications");
+        sb.AppendLine("• The intended automation (create/update records, send emails) was SKIPPED");
+        sb.AppendLine("• Fault paths are often a temporary fix hiding a real bug\n");
+
+        sb.AppendLine("**How to investigate:**");
+        sb.AppendLine("1. Open the Flow in Flow Builder");
+        sb.AppendLine("2. Look for elements with a red fault connector");
+        sb.AppendLine("3. Add a Debug log or `{!$Flow.FaultMessage}` text to see the real error");
+        sb.AppendLine("4. Fix the root cause rather than relying on fault path\n");
+
+        return new DetailedIssue
+        {
+            Severity = IssueSeverity.High.ToString(),
+            Title = faultedFlows.Count == 1
+                ? $"⚡ Flow Fault: {faultedFlows[0].FlowName}"
+                : $"⚡ {faultedFlows.Count} Flows Hit Fault Paths",
+            Description = sb.ToString(),
+            Impact = "Intended automation was skipped; users may see error notifications",
+            Effort = "Medium (investigate fault message and fix root cause)",
+            Priority = 2
+        };
+    }
+
+    private DetailedIssue GenerateHeapExplosionIssue(long heapBytes)
+    {
+        var heapMb = heapBytes / (1024.0 * 1024.0);
+        var percent = heapBytes * 100.0 / (10 * 1024 * 1024);
+        var sb = new StringBuilder();
+        sb.AppendLine("### 🧠 Heap Memory Near Limit\n");
+
+        sb.AppendLine("**What's happening:**");
+        sb.AppendLine($"Your code allocated **{heapMb:F1} MB** of memory ({percent:F0}% of the 10 MB limit).\n");
+
+        sb.AppendLine("**The Analogy:**");
+        sb.AppendLine("Think of the heap as your desk. Salesforce gives you a 10 MB desk.");
+        sb.AppendLine("If you pile up too many papers (objects in memory), you run out of room and Salesforce throws `System.LimitException: Heap size too large`.\n");
+
+        sb.AppendLine("**Common causes:**");
+        sb.AppendLine("• Querying too many rows with too many fields: `SELECT * FROM Object__c LIMIT 10000`");
+        sb.AppendLine("• Storing entire JSON payloads in Strings");
+        sb.AppendLine("• Building huge lists or Maps in memory before processing\n");
+
+        sb.AppendLine("**How to fix it:**");
+        sb.AppendLine("```apex");
+        sb.AppendLine("// ❌ BAD: Selecting all fields on every record");
+        sb.AppendLine("List<Account> accs = [SELECT Id, Name, ... 40 fields ... FROM Account LIMIT 5000];");
+        sb.AppendLine();
+        sb.AppendLine("// ✅ GOOD: Select only what you need");
+        sb.AppendLine("List<Account> accs = [SELECT Id, Name FROM Account WHERE ... LIMIT 200];");
+        sb.AppendLine("```\n");
+
+        return new DetailedIssue
+        {
+            Severity = percent >= 90 ? IssueSeverity.Critical.ToString() : IssueSeverity.High.ToString(),
+            Title = $"🧠 High Heap Usage ({heapMb:F1} MB / 10 MB)",
+            Description = sb.ToString(),
+            Impact = $"Code may throw LimitException if heap usage grows — currently at {percent:F0}%",
+            Effort = "Medium (select fewer fields, process in smaller chunks)",
+            Priority = percent >= 90 ? 1 : 2
+        };
+    }
+
+    private DetailedIssue GenerateDuplicateSoqlIssue(DuplicateQueryInfo duplicate)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("### 🔂 Identical SOQL Query Repeated\n");
+
+        sb.AppendLine("**What's happening:**");
+        sb.AppendLine($"This query ran **{duplicate.ExecutionCount} times** and returned {duplicate.TotalRows:N0} rows total:");
+        sb.AppendLine($"```sql\n{TruncateQuery(duplicate.ExampleQuery)}\n```\n");
+
+        sb.AppendLine("**Why it's wasteful:**");
+        sb.AppendLine($"Each execution hits the database and counts against your 100-query limit.");
+        sb.AppendLine($"Running the same query {duplicate.ExecutionCount}x returns the SAME data every time — identical wasted effort.\n");
+
+        sb.AppendLine("**How to fix it:**");
+        sb.AppendLine("Cache the result the first time and reuse it:");
+        sb.AppendLine("```apex");
+        sb.AppendLine("// ❌ BAD: Same query called from multiple methods");
+        sb.AppendLine("public void methodA() { List<X> r = [SELECT...]; }");
+        sb.AppendLine("public void methodB() { List<X> r = [SELECT...]; } // Same query again!");
+        sb.AppendLine();
+        sb.AppendLine("// ✅ GOOD: Query once, store result");
+        sb.AppendLine("private List<X> _cache;");
+        sb.AppendLine("private List<X> getResult() {");
+        sb.AppendLine("    if (_cache == null) _cache = [SELECT...];");
+        sb.AppendLine("    return _cache;");
+        sb.AppendLine("}");
+        sb.AppendLine("```\n");
+
+        return new DetailedIssue
+        {
+            Severity = IssueSeverity.Medium.ToString(),
+            Title = $"🔂 Duplicate SOQL Query ({duplicate.ExecutionCount}x)",
+            Description = sb.ToString(),
+            Impact = $"Wastes {duplicate.ExecutionCount - 1} of your 100 SOQL query limit",
+            Effort = "Low (cache result in a private field or static variable)",
+            Priority = 3
+        };
+    }
+
+    private DetailedIssue GenerateCalloutErrorIssue(List<CalloutOperation> failedCallouts)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("### 🌐 External HTTP Callout Failed\n");
+
+        sb.AppendLine("**What's happening:**");
+        sb.AppendLine($"Your code made {failedCallouts.Count} callout{(failedCallouts.Count > 1 ? "s" : "")} to external services that returned errors:\n");
+
+        foreach (var c in failedCallouts.Take(3))
+        {
+            var endpoint = c.Endpoint.Length > 60 ? c.Endpoint.Substring(0, 57) + "..." : c.Endpoint;
+            sb.AppendLine($"• **HTTP {c.StatusCode}** — `{c.HttpMethod} {endpoint}`");
+        }
+        if (failedCallouts.Count > 3)
+            sb.AppendLine($"• ...and {failedCallouts.Count - 3} more");
+        sb.AppendLine();
+
+        sb.AppendLine("**What HTTP error codes mean:**");
+        sb.AppendLine("• **400** — Bad request (your code sent bad data to the external service)");
+        sb.AppendLine("• **401 / 403** — Authentication failed (wrong credentials or expired token)");
+        sb.AppendLine("• **404** — Endpoint not found (URL is wrong or resource was deleted)");
+        sb.AppendLine("• **429** — Rate limited (you sent too many requests, slow down)");
+        sb.AppendLine("• **500 / 503** — External service crashed (their problem, not yours)\n");
+
+        sb.AppendLine("**How to handle callout errors properly:**");
+        sb.AppendLine("```apex");
+        sb.AppendLine("HttpResponse res = http.send(req);");
+        sb.AppendLine("if (res.getStatusCode() != 200) {");
+        sb.AppendLine("    // Log the error with full details for debugging");
+        sb.AppendLine("    System.debug('Callout failed: ' + res.getStatusCode() + ' ' + res.getBody());");
+        sb.AppendLine("    throw new CalloutException('Integration failed: ' + res.getStatusCode());");
+        sb.AppendLine("}");
+        sb.AppendLine("```\n");
+
+        return new DetailedIssue
+        {
+            Severity = IssueSeverity.High.ToString(),
+            Title = $"🌐 {failedCallouts.Count} Failed HTTP Callout{(failedCallouts.Count > 1 ? "s" : "")}",
+            Description = sb.ToString(),
+            Impact = "External integration failed — data may not have been sent or received correctly",
+            Effort = "Low to Medium (add error handling, verify credentials and endpoint URLs)",
+            Priority = 2
+        };
+    }
+
     private string ExplainEntryPoint(string entryPoint, string operationType)
     {
         return operationType.ToLower() switch

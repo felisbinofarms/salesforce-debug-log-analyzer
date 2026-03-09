@@ -607,6 +607,164 @@ public class ShieldAnomalyDetectorTests : IDisposable
     }
 
     // ================================================================
+    //  AutoTraceFlagRequested event (new — Gap 5)
+    // ================================================================
+
+    [Fact]
+    public async Task DetectApexExceptions_FiresAutoTraceFlagEvent_WhenExceptionsHaveUserId()
+    {
+        var autoTraceUserIds = new List<string>();
+        _detector.AutoTraceFlagRequested += (_, userId) => autoTraceUserIds.Add(userId);
+
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 3; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "ApexUnexpectedException",
+                EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"),
+                Uri = "AutoFlagClass.method",
+                UserId = "user-abc",
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        autoTraceUserIds.Should().Contain("user-abc");
+    }
+
+    [Fact]
+    public async Task DetectApexExceptions_DoesNotFireEvent_WhenExceptionsHaveNoUserId()
+    {
+        var autoTraceUserIds = new List<string>();
+        _detector.AutoTraceFlagRequested += (_, userId) => autoTraceUserIds.Add(userId);
+
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 3; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "ApexUnexpectedException",
+                EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"),
+                Uri = "AnonymousClass.method",
+                UserId = null, // No user ID
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        autoTraceUserIds.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DetectApexExceptions_FiresOneEvent_PerUniqueUser()
+    {
+        var autoTraceUserIds = new List<string>();
+        _detector.AutoTraceFlagRequested += (_, userId) => autoTraceUserIds.Add(userId);
+
+        // 4 exceptions from 2 distinct users
+        var events = new List<ShieldEvent>
+        {
+            new() { OrgId = _testOrgId, EventType = "ApexUnexpectedException", EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"), Uri = "MultiUserClass.method", UserId = "user-001", IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "ApexUnexpectedException", EventDate = DateTime.UtcNow.AddMinutes(-4).ToString("O"), Uri = "MultiUserClass.method", UserId = "user-001", IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "ApexUnexpectedException", EventDate = DateTime.UtcNow.AddMinutes(-3).ToString("O"), Uri = "MultiUserClass.method", UserId = "user-002", IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "ApexUnexpectedException", EventDate = DateTime.UtcNow.AddMinutes(-2).ToString("O"), Uri = "MultiUserClass.method", UserId = "user-002", IsSuccess = false },
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        // One event per unique user — not per exception
+        autoTraceUserIds.Should().HaveCount(2);
+        autoTraceUserIds.Should().Contain("user-001");
+        autoTraceUserIds.Should().Contain("user-002");
+    }
+
+    [Fact]
+    public async Task DetectApexExceptions_NoEvent_WhenBelowExceptionThreshold()
+    {
+        var autoTraceUserIds = new List<string>();
+        _detector.AutoTraceFlagRequested += (_, userId) => autoTraceUserIds.Add(userId);
+
+        // Only 1 exception — below threshold of 2
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId,
+                EventType = "ApexUnexpectedException",
+                EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"),
+                Uri = "RareClass.method",
+                UserId = "user-xyz",
+                IsSuccess = false
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        autoTraceUserIds.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DetectApexExceptions_AlertDescription_ContainsAutoTraceFlagText_WhenUsersPresent()
+    {
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 3; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "ApexUnexpectedException",
+                EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"),
+                Uri = "UserDescClass.method",
+                UserId = "user-desc",
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.EntryPoint == "UserDescClass.method" &&
+            a.Description != null &&
+            a.Description.Contains("Auto trace flag set"));
+    }
+
+    [Fact]
+    public async Task DetectApexExceptions_AlertDescription_DoesNotContainAutoTraceFlagText_WhenNoUsers()
+    {
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 3; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "ApexUnexpectedException",
+                EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"),
+                Uri = "NoUserClass.method",
+                UserId = null,
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.EntryPoint == "NoUserClass.method" &&
+            a.Description != null &&
+            !a.Description.Contains("Auto trace flag set"));
+    }
+
+    // ================================================================
     //  Empty DB
     // ================================================================
 
@@ -622,5 +780,403 @@ public class ShieldAnomalyDetectorTests : IDisposable
     {
         await _detector.RunDetectionAsync();
         _generatedAlerts.Should().BeEmpty();
+    }
+
+    // ================================================================
+    //  API Failure Correlation — DetectApiFailures
+    // ================================================================
+
+    [Fact]
+    public async Task ApiFailureSpike_FiresAlert_WhenThreePlusFailuresSameEndpoint()
+    {
+        // Insert 4 failures on the same endpoint in the last hour
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 4; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "API",
+                EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"),
+                UserId = $"user-{i}",
+                Uri = "/services/data/v59.0/query",
+                StatusCode = 500,
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a => a.AlertType == "api_failure_spike");
+    }
+
+    [Fact]
+    public async Task ApiFailureSpike_NoAlert_WhenBelowThreshold()
+    {
+        // Insert only 2 failures (below threshold of 3)
+        var events = new List<ShieldEvent>
+        {
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"), UserId = "user-1", Uri = "/services/data/v59.0/query", StatusCode = 500, IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-4).ToString("O"), UserId = "user-2", Uri = "/services/data/v59.0/query", StatusCode = 404, IsSuccess = false },
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Where(a => a.AlertType == "api_failure_spike").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ApiFailureSpike_SetsAffectedUserCount_Correctly()
+    {
+        var events = new List<ShieldEvent>
+        {
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-10).ToString("O"), UserId = "user-A", Uri = "/services/custom", StatusCode = 400, IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-9).ToString("O"),  UserId = "user-B", Uri = "/services/custom", StatusCode = 503, IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-8).ToString("O"),  UserId = "user-A", Uri = "/services/custom", StatusCode = 500, IsSuccess = false },  // duplicate user
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        var alert = _generatedAlerts.FirstOrDefault(a => a.AlertType == "api_failure_spike");
+        alert.Should().NotBeNull();
+        // 2 distinct users (user-A appears twice, but only counted once)
+        alert!.AffectedUserCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ApiFailureSpike_IsCritical_WhenTenOrMoreFailures()
+    {
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 12; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "API",
+                EventDate = DateTime.UtcNow.AddMinutes(-3).ToString("O"),
+                UserId = $"user-{i}",
+                Uri = "/services/data/v59.0/sobjects/Account",
+                StatusCode = 500,
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.AlertType == "api_failure_spike" && a.Severity == "critical");
+    }
+
+    [Fact]
+    public async Task ApiFailureRate_FiresAlert_WhenHighFailureRateWithEnoughCalls()
+    {
+        // 10 calls, 4 failures = 40% > 20% threshold
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 10; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "API",
+                EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"),
+                UserId = $"user-{i}",
+                Uri = $"/services/data/v59.0/endpoint-{i}",  // different endpoints to avoid spike alert
+                StatusCode = i < 4 ? 500 : 200,
+                IsSuccess = i >= 4
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a => a.AlertType == "api_failure_rate");
+    }
+
+    [Fact]
+    public async Task ApiFailureRate_NoAlert_WhenBelowThreshold()
+    {
+        // 10 calls, only 1 failure = 10% < 20% threshold
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 10; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "API",
+                EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"),
+                UserId = $"user-{i}",
+                Uri = $"/services/data/v59.0/endpoint-{i}",
+                StatusCode = i == 0 ? 500 : 200,
+                IsSuccess = i > 0
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Where(a => a.AlertType == "api_failure_rate").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ApiFailureRate_NoAlert_WhenLessThanTenCalls()
+    {
+        // 5 calls all failing = 100% but not enough data volume (< 10 calls)
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 5; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId,
+                EventType = "API",
+                EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"),
+                UserId = $"user-{i}",
+                Uri = $"/services/data/v59.0/endpoint-{i}",
+                StatusCode = 500,
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Where(a => a.AlertType == "api_failure_rate").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ApiFailureSpike_AffectedUserCount_IsNull_WhenNoUserIds()
+    {
+        // Failures with no user IDs
+        var events = new List<ShieldEvent>
+        {
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"), UserId = null, Uri = "/anonymous", StatusCode = 500, IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-4).ToString("O"), UserId = null, Uri = "/anonymous", StatusCode = 500, IsSuccess = false },
+            new() { OrgId = _testOrgId, EventType = "API", EventDate = DateTime.UtcNow.AddMinutes(-3).ToString("O"), UserId = null, Uri = "/anonymous", StatusCode = 500, IsSuccess = false },
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        var alert = _generatedAlerts.FirstOrDefault(a => a.AlertType == "api_failure_spike");
+        alert.Should().NotBeNull();
+        alert!.AffectedUserCount.Should().BeNull();
+    }
+
+    // ================================================================
+    //  Data Exfiltration — ReportExport
+    // ================================================================
+
+    [Fact]
+    public async Task DetectsLargeReportExport_WhenRowsExceedThreshold()
+    {
+        // 8000 rows exported — above default threshold of 5000
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId, EventType = "ReportExport",
+                EventDate = DateTime.UtcNow.AddMinutes(-30).ToString("O"),
+                UserId = "user-exporter", Uri = "00O123",
+                RowCount = 8000, IsSuccess = true
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.AlertType == "shield_data_exfiltration" &&
+            a.MetricName == "report_export_rows" &&
+            a.EntryPoint == "user-exporter");
+    }
+
+    [Fact]
+    public async Task NoAlertForSmallReportExport_WhenBelowThreshold()
+    {
+        // Only 1000 rows — well below default threshold of 5000
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId, EventType = "ReportExport",
+                EventDate = DateTime.UtcNow.AddMinutes(-30).ToString("O"),
+                UserId = "normal-user", Uri = "00O456",
+                RowCount = 1000, IsSuccess = true
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().NotContain(a =>
+            a.AlertType == "shield_data_exfiltration" &&
+            a.MetricName == "report_export_rows");
+    }
+
+    [Fact]
+    public async Task LargeReportExport_Critical_WhenRowsExceedFourTimesThreshold()
+    {
+        // 25000 rows = 5× default threshold → critical
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId, EventType = "ReportExport",
+                EventDate = DateTime.UtcNow.AddMinutes(-15).ToString("O"),
+                UserId = "bulk-exporter", Uri = "00O789",
+                RowCount = 25000, IsSuccess = true
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        var alert = _generatedAlerts.FirstOrDefault(a =>
+            a.AlertType == "shield_data_exfiltration" && a.MetricName == "report_export_rows");
+        alert.Should().NotBeNull();
+        alert!.Severity.Should().Be("critical");
+    }
+
+    // ================================================================
+    //  Data Exfiltration — BulkApi
+    // ================================================================
+
+    [Fact]
+    public async Task DetectsHighVolumeBulkApiOperation()
+    {
+        // 12000 rows via Bulk API — above 2× threshold (2 × 5000 = 10000)
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId, EventType = "BulkApi",
+                EventDate = DateTime.UtcNow.AddMinutes(-20).ToString("O"),
+                UserId = "etl-user", Uri = "Contact",
+                RowCount = 12000, IsSuccess = true
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.AlertType == "shield_data_exfiltration" &&
+            a.MetricName == "bulk_api_rows" &&
+            a.EntryPoint == "etl-user");
+    }
+
+    // ================================================================
+    //  Permission Changes — SetupAuditTrail
+    // ================================================================
+
+    [Fact]
+    public async Task DetectsPermissionSetChange_InHighRiskSection()
+    {
+        // Insert 2 PermissionSets changes + 1 Profiles change (3 total — triggers warning threshold)
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 2; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId, EventType = "SetupAuditTrail",
+                EventDate = DateTime.UtcNow.AddHours(-2).ToString("O"),
+                UserId = "admin-001", Uri = "PermissionSets",
+                ExtraJson = Newtonsoft.Json.JsonConvert.SerializeObject(new
+                {
+                    action = "PermissionSetAssigned",
+                    section = "PermissionSets",
+                    display = $"Assigned perm set {i}"
+                })
+            });
+        }
+        events.Add(new ShieldEvent
+        {
+            OrgId = _testOrgId, EventType = "SetupAuditTrail",
+            EventDate = DateTime.UtcNow.AddHours(-1).ToString("O"),
+            UserId = "admin-002", Uri = "Profiles",
+            ExtraJson = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                action = "ProfileUpdated",
+                section = "Profiles",
+                display = "Modified Admin profile"
+            })
+        });
+
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().Contain(a =>
+            a.AlertType == "shield_permission_change" &&
+            a.MetricName == "permission_changes");
+    }
+
+    [Fact]
+    public async Task NoPermissionChangeAlert_ForNonSensitiveSection()
+    {
+        // A setup change in a non-sensitive section (e.g., "Dashboards")
+        var events = new List<ShieldEvent>
+        {
+            new()
+            {
+                OrgId = _testOrgId, EventType = "SetupAuditTrail",
+                EventDate = DateTime.UtcNow.AddHours(-1).ToString("O"),
+                UserId = "admin-003", Uri = "Dashboards",
+                ExtraJson = Newtonsoft.Json.JsonConvert.SerializeObject(new
+                {
+                    action = "DashboardCreated",
+                    section = "Dashboards",
+                    display = "New sales dashboard"
+                })
+            }
+        };
+        await _db.InsertShieldEventsAsync(events);
+
+        await _detector.RunDetectionAsync();
+
+        _generatedAlerts.Should().NotContain(a =>
+            a.AlertType == "shield_permission_change" &&
+            a.MetricName == "permission_changes");
+    }
+
+    // ================================================================
+    //  Configurable Thresholds
+    // ================================================================
+
+    [Fact]
+    public async Task ConfigurableThreshold_LowerFailedLoginThreshold_TriggersEarlier()
+    {
+        // Default threshold = 5 — but override to 2 via settings
+        var settingsService = new SettingsService();
+        var settings = settingsService.Load();
+        settings.ShieldFailedLoginThreshold = 2;
+        settingsService.Save(settings);
+
+        var detector = new ShieldAnomalyDetector(_db, settingsService);
+        var alerts = new List<MonitoringAlert>();
+        detector.AlertGenerated += (_, a) => alerts.Add(a);
+
+        // Insert only 3 failed logins (between 2 and 5)
+        var events = new List<ShieldEvent>();
+        for (int i = 0; i < 3; i++)
+        {
+            events.Add(new ShieldEvent
+            {
+                OrgId = _testOrgId, EventType = "Login",
+                EventDate = DateTime.UtcNow.AddMinutes(-5).ToString("O"),
+                UserId = $"victim-{i}", ClientIp = $"192.168.1.{i}",
+                IsSuccess = false
+            });
+        }
+        await _db.InsertShieldEventsAsync(events);
+
+        await detector.RunDetectionAsync();
+
+        alerts.Should().Contain(a =>
+            a.AlertType == "shield_login_anomaly" &&
+            a.MetricName == "failed_logins");
     }
 }

@@ -105,7 +105,7 @@ public class LogParserService
         
         if (lastNs > firstNs && firstNs >= 0)
         {
-            analysis.DurationMs = (lastNs - firstNs) / 1_000_000;
+            analysis.DurationMs = (lastNs - firstNs) / 1_000_000.0;
             analysis.WallClockMs = analysis.DurationMs;
             analysis.DurationSource = DurationSource.NanosecondPrecise;
         }
@@ -2624,16 +2624,14 @@ public class LogParserService
     private (CumulativeProfiling? profiling, bool found) ParseCumulativeProfiling(string[] lines)
     {
         var profiling = new CumulativeProfiling();
-        bool inProfilingSection = false;
-        bool inSoqlSection = false;
-        bool inDmlSection = false;
-        bool inMethodSection = false;
         
-        var soqlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
+        var soqlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
         // System/package code format: (System Code): [SELECT ...]: executed N time(s) in M ms
-        var soqlSystemPattern = new Regex(@"^\((.+?)\):\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
-        var dmlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(\w+):\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
-        var methodPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
+        var soqlSystemPattern = new Regex(@"^\((.+?)\):\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
+        var dmlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(\w+):\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
+        var methodPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
+        // External entry point format (no line number): External entry point: <signature>: executed N time(s) in M ms
+        var externalPattern = new Regex(@"^External entry point:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
         
         // Find the CUMULATIVE_PROFILING_BEGIN line first (search backwards for speed)
         int startIndex = -1;
@@ -2648,49 +2646,71 @@ public class LogParserService
         
         if (startIndex < 0) return (null, false);
         
-        // Now iterate FORWARD from BEGIN to END
-        for (int i = startIndex; i < lines.Length; i++)
+        // Pre-process: SOQL queries can span multiple physical lines (Salesforce formats
+        // multi-line queries with newlines). Join continuation lines into logical entries
+        // before regex matching.
+        var logicalLines = new List<(string line, string section)>();
+        string currentSection = "";
+        string accumulated = "";
+        
+        for (int i = startIndex + 1; i < lines.Length; i++)
         {
-            var line = lines[i].Trim();
+            var rawLine = lines[i];
             
-            if (line.Contains("CUMULATIVE_PROFILING_BEGIN"))
+            if (rawLine.Contains("CUMULATIVE_PROFILING_END"))
             {
-                inProfilingSection = true;
+                // Flush any accumulated entry
+                if (!string.IsNullOrWhiteSpace(accumulated))
+                    logicalLines.Add((accumulated.Trim(), currentSection));
+                break;
+            }
+            
+            // Section header lines contain timestamps and CUMULATIVE_PROFILING|
+            if (rawLine.Contains("CUMULATIVE_PROFILING|"))
+            {
+                // Flush previous accumulated entry
+                if (!string.IsNullOrWhiteSpace(accumulated))
+                    logicalLines.Add((accumulated.Trim(), currentSection));
+                accumulated = "";
+                
+                if (rawLine.Contains("SOQL operations|"))
+                    currentSection = "SOQL";
+                else if (rawLine.Contains("DML operations|"))
+                    currentSection = "DML";
+                else if (rawLine.Contains("method invocations|"))
+                    currentSection = "METHOD";
+                else
+                    currentSection = ""; // "No profiling information" lines
                 continue;
             }
             
-            if (line.Contains("CUMULATIVE_PROFILING_END"))
-            {
-                break; // Done parsing, exit loop
-            }
+            var trimmed = rawLine.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
             
-            if (!inProfilingSection) continue;
+            // A new entry starts with Class., Trigger., External, or ( — otherwise it's a continuation
+            bool isNewEntry = trimmed.StartsWith("Class.", StringComparison.Ordinal)
+                           || trimmed.StartsWith("Trigger.", StringComparison.Ordinal)
+                           || trimmed.StartsWith("External ", StringComparison.Ordinal)
+                           || trimmed.StartsWith("(", StringComparison.Ordinal);
             
-            // Section headers
-            if (line.Contains("CUMULATIVE_PROFILING|SOQL operations|"))
+            if (isNewEntry)
             {
-                inSoqlSection = true;
-                inDmlSection = false;
-                inMethodSection = false;
-                continue;
+                // Flush previous
+                if (!string.IsNullOrWhiteSpace(accumulated))
+                    logicalLines.Add((accumulated.Trim(), currentSection));
+                accumulated = trimmed;
             }
-            else if (line.Contains("CUMULATIVE_PROFILING|DML operations|"))
+            else
             {
-                inSoqlSection = false;
-                inDmlSection = true;
-                inMethodSection = false;
-                continue;
+                // Continuation line — join with a space (collapse multi-line SOQL)
+                accumulated += " " + trimmed;
             }
-            else if (line.Contains("CUMULATIVE_PROFILING|method invocations|"))
-            {
-                inSoqlSection = false;
-                inDmlSection = false;
-                inMethodSection = true;
-                continue;
-            }
-            
-            // Parse SOQL operations
-            if (inSoqlSection)
+        }
+        
+        // Now parse each logical line against its section
+        foreach (var (line, section) in logicalLines)
+        {
+            if (section == "SOQL")
             {
                 var match = soqlPattern.Match(line);
                 if (match.Success)
@@ -2710,7 +2730,6 @@ public class LogParserService
                 }
                 else
                 {
-                    // Try system/package code format: (System Code): [query]: executed N times in M ms
                     var sysMatch = soqlSystemPattern.Match(line);
                     if (sysMatch.Success)
                     {
@@ -2726,9 +2745,7 @@ public class LogParserService
                     }
                 }
             }
-            
-            // Parse DML operations
-            if (inDmlSection)
+            else if (section == "DML")
             {
                 var match = dmlPattern.Match(line);
                 if (match.Success)
@@ -2748,9 +2765,7 @@ public class LogParserService
                     });
                 }
             }
-            
-            // Parse method invocations
-            if (inMethodSection)
+            else if (section == "METHOD")
             {
                 var match = methodPattern.Match(line);
                 if (match.Success)
@@ -2767,6 +2782,23 @@ public class LogParserService
                         ExecutionCount = int.Parse(match.Groups[4].Value),
                         TotalDurationMs = int.Parse(match.Groups[5].Value)
                     });
+                }
+                else
+                {
+                    // Try external entry point format (no line/column)
+                    var extMatch = externalPattern.Match(line);
+                    if (extMatch.Success)
+                    {
+                        profiling.TopMethods.Add(new CumulativeMethod
+                        {
+                            ClassName = "(Entry Point)",
+                            MethodName = "",
+                            LineNumber = 0,
+                            Signature = extMatch.Groups[1].Value,
+                            ExecutionCount = int.Parse(extMatch.Groups[2].Value),
+                            TotalDurationMs = int.Parse(extMatch.Groups[3].Value)
+                        });
+                    }
                 }
             }
         }
@@ -3458,6 +3490,32 @@ public class LogParserService
         }
 
         health.Score = Math.Max(0, (int)score);
+        
+        // Generate actionable issues BEFORE finalizing grade — issues may reveal
+        // problems not caught by the score factors above (e.g., N+1 from CumulativeProfiling
+        // when individual SOQL events were truncated from the log)
+        GenerateActionableIssues(analysis, health, lastSnapshot);
+        
+        // Reconcile: if GenerateActionableIssues found critical/warning issues that
+        // the score factors above missed, apply additional deductions
+        var criticalCount = health.CriticalIssues.Count(i => i.Severity == IssueSeverity.Critical);
+        var warningCount = health.CriticalIssues.Count(i => i.Severity == IssueSeverity.High);
+        if (criticalCount > 0 || warningCount > 0)
+        {
+            var issueDeduction = criticalCount * 15 + warningCount * 5;
+            // Only deduct the portion not already captured by the score factors
+            var currentDeduction = 100 - health.Score;
+            var additionalDeduction = Math.Max(0, issueDeduction - currentDeduction);
+            if (additionalDeduction > 0)
+            {
+                health.Score = Math.Max(0, health.Score - additionalDeduction);
+                if (criticalCount > 0)
+                    reasons.Add($"{criticalCount} critical issue{(criticalCount > 1 ? "s" : "")} detected (-{additionalDeduction} pts)");
+                else
+                    reasons.Add($"{warningCount} warning{(warningCount > 1 ? "s" : "")} detected (-{additionalDeduction} pts)");
+            }
+        }
+        
         health.Reasoning = reasons.Any() ? string.Join(", ", reasons) : "No major issues detected";
         
         // Assign grade and status
@@ -3486,9 +3544,6 @@ public class LogParserService
             >= 40 => "⚠️",
             _ => "🔥"
         };
-        
-        // Generate actionable issues
-        GenerateActionableIssues(analysis, health, lastSnapshot);
         
         return health;
     }
