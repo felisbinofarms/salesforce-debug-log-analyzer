@@ -160,6 +160,93 @@
 
 ---
 
+## 🎨 Phase 7: Complete UI Redesign (HIGH PRIORITY)
+
+**Problem:** The current Discord-themed dark UI does not feel modern, intuitive, or professional enough to represent a paid product. Users who already understand Salesforce logs find the layout does not match how they think about debugging. The output structure does not match the mental model of experienced developers and architects.
+
+**Goal:** Rebuild the UI from scratch with a clean, modern design that works for both beginners and senior architects — without feeling like a gaming app.
+
+### Design Principles
+- Clean minimal aesthetic — think Linear, Vercel, or Apple design language
+- Dense information for power users, progressive disclosure for beginners
+- No Discord theme — neutral professional palette (dark mode optional)
+- Every pixel earns its place — remove anything decorative that does not aid comprehension
+
+### New Layout Structure
+- [ ] Full UI redesign — replace Discord theme with modern neutral design system
+- [ ] Responsive layout — panels resize gracefully, no fixed-width columns
+- [ ] Consistent typography hierarchy — clear distinction between labels, values, and actions
+- [ ] Color used only for signal (red = error, amber = warning, green = healthy) — not decoration
+- [ ] Subtle micro-animations on load (150ms) — not distracting
+- [ ] Keyboard-first navigation — power users should never need the mouse
+
+### Navigation Overhaul
+- [ ] Replace tab bar with a left sidebar navigation (icon + label, collapsible)
+- [ ] Breadcrumb trail showing current log → current view
+- [ ] Recent logs quick-access panel (last 10 analyzed)
+- [ ] Global search across all open logs (Ctrl+K command palette)
+
+### Component Library
+- [ ] Define a reusable WPF component set (cards, badges, stat tiles, progress bars)
+- [ ] Consistent spacing tokens (4px grid system)
+- [ ] Accessible contrast ratios — WCAG AA minimum
+- [ ] Icon set refresh — replace emoji with a consistent vector icon library
+
+---
+
+## 🏗️ Phase 8: Architect View (HIGH PRIORITY)
+
+**Problem:** Black Widow was designed to explain logs to beginners. Senior developers and architects — the people most likely to pay — open it, find the output does not match how they think, and go back to the Developer Console. The Summary and Explain tabs are too verbose for someone who already knows what a SOQL query is.
+
+**Goal:** Add a dedicated Architect View that is the default tab for power users — dense, no analogies, all critical signals visible in under 3 seconds without scrolling.
+
+### Data Model Changes
+- [ ] Add `List<DebugStatement>` to `LogAnalysis` — extracted from `USER_DEBUG` nodes already in the execution tree (data is already parsed, just not surfaced as a dedicated collection)
+- [ ] `DebugStatement` model: `{ LineNumber, ApexLine, LogLevel, Message, Timestamp, NanosecondCounter }`
+- [ ] Populate during `BuildExecutionTree()` walk — no re-parsing needed
+
+### Architect View Layout
+Single screen, four quadrants, no scrolling required on load:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  [Entry Point] · [Context] · [Duration]          [Score]    │
+├─────────────────┬──────────────┬────────────┬───────────────┤
+│  EXCEPTIONS     │  LIMITS      │  TIMING    │  DEBUG LINES  │
+│  ─────────────  │  ──────────  │  ────────  │  ───────────  │
+│  Unhandled (N)  │  SOQL  87/100│  Total Xms │  [L.23] msg   │
+│  Handled  (N)   │  CPU  4200ms │  Top 3     │  [L.67] msg   │
+│  Fatal    (N)   │  DML   12/150│  methods   │  [L.89] msg   │
+│  ─────────────  │  Rows  4800  │  with ms   │  [L.142] msg  │
+│  Click to drill │  ──────────  │  each      │  ───────────  │
+└─────────────────┴──────────────┴────────────┴───────────────┘
+│  EXCEPTION DETAIL (expands inline on click)                  │
+│  NullPointerException at CaseTrigger.cls:142 — UNHANDLED    │
+│  → CaseTrigger.execute() → CaseHandler.process() → ...      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- [ ] Exceptions panel — unhandled first, then handled, then fatal; click to expand full stack trace inline
+- [ ] Limits panel — all governor limits as compact progress bars (% used / limit); color coded by severity
+- [ ] Timing panel — total execution time + top 5 slowest methods with individual durations
+- [ ] Debug Lines panel — chronological list of all `USER_DEBUG` statements with line number, log level, and message; filterable by level (DEBUG, INFO, WARN, ERROR)
+- [ ] All four panels update instantly when a different log is selected
+- [ ] Copy to clipboard on any panel for quick sharing
+
+### Architect View Behavior
+- [ ] Make Architect View the default first tab (configurable in settings)
+- [ ] Existing Summary / Explain / Tree / Timeline / Queries tabs remain — nothing removed
+- [ ] User preference persisted — if they switch to Summary as default, remember it
+- [ ] Architect View respects transaction chain mode — aggregates across all logs in the group
+
+### Shield Log Integration (Planned Add-on)
+- [ ] When Salesforce Shield is present, add a fifth panel: **Shield Events**
+- [ ] Shows field-level encryption reads, platform events, event monitoring entries alongside debug log signals
+- [ ] Correlates Shield timestamps to debug log execution timeline
+- [ ] Flags PII exposure in debug output (already has `PiiScanResult` model in `LogModels.cs`)
+
+---
+
 ## Release History & Plan
 
 | Version | Status | Highlights |
@@ -168,7 +255,8 @@
 | v0.5-beta | ✅ Released | Transaction grouping, phase detection, 5 tabs |
 | **v0.9-beta** | **🟢 Current** | Governance insights, CLI streaming, all features stable |
 | v1.0 | 📋 Planned | Windows installer, Stripe payments, Pro tier |
-| v1.1 | 📋 Planned | PDF export, side-by-side comparison, bulk analysis |
+| v1.1 | 📋 Planned | **UI redesign (Phase 7) + Architect View (Phase 8)** |
+| v1.2 | 📋 Planned | PDF export, side-by-side comparison, bulk analysis |
 | v2.0 | 🔮 Future | AI explanations, learning mode, translation levels |
 
 ---
@@ -182,11 +270,14 @@
 | Transaction chain grouping | ✅ Automatic | ❌ One log at a time |
 | Governance context detection | ✅ Built-in | ❌ Not available |
 | Before/after code examples | ✅ Per issue | ⚠️ Generic suggestions |
+| Architect View (power user) | ✅ Planned v1.1 | ❌ Not available |
+| Shield log correlation | ✅ Planned v1.1 | ❌ Not available |
 | Target audience | Everyone | Developers only |
 | Setup complexity | ✅ Zero (Platform CLI) | ⚠️ Connected App required |
 
 ---
 
-**Last Updated:** February 20, 2026
+**Last Updated:** March 11, 2026
 **Current Version:** v0.9-beta
 **Next Milestone:** v1.0 — Windows installer + Pro tier payments (Phase 5)
+**Known Gap:** UI does not match mental model of Sr. Architects — Phases 7 & 8 address this directly
