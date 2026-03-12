@@ -1,13 +1,942 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="clr-namespace:SalesforceDebugAnalyzer.ViewModels"
+        xmlns:h="clr-namespace:SalesforceDebugAnalyzer.Helpers"
         x:Class="SalesforceDebugAnalyzer.Views.MainWindow"
         Title="Black Widow — Salesforce Debug Log Analyzer"
-        Width="1280" Height="800"
+        Width="1600" Height="900"
+        MinWidth="1200" MinHeight="700"
         WindowStartupLocation="CenterScreen"
-        Background="#0B0E13">
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="48"
+        Background="{StaticResource BgPrimary}"
+        DragDrop.AllowDrop="True">
 
-    <TextBlock Text="Black Widow — Migration in progress"
-               Foreground="#9198A1" FontSize="20"
-               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Resources>
+        <h:EqualsIntConverter x:Key="EqualsInt"/>
+        <h:PositiveIntToBoolConverter x:Key="PositiveInt"/>
+    </Window.Resources>
 
+    <Grid Background="{StaticResource BgPrimary}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="56"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="26"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TITLE BAR (Row 0, 48px)                 -->
+        <!-- ═══════════════════════════════════════ -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="{StaticResource SidebarBg}"
+                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,0,1"
+                IsHitTestVisible="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="56"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- App Icon -->
+                <Border Grid.Column="0" Background="{StaticResource SidebarBg}">
+                    <mi:MaterialIcon Kind="Spider" Width="22" Height="22"
+                                     VerticalAlignment="Center" HorizontalAlignment="Center"
+                                     Foreground="{StaticResource AccentPrimary}"/>
+                </Border>
+
+                <!-- App Title + Breadcrumb -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock Text="Black Widow" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock Text=" › " FontSize="13" Foreground="{StaticResource TextMuted}"
+                               IsVisible="{Binding SelectedLog, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    <TextBlock Text="{Binding SelectedLog.OperationType}" FontSize="13"
+                               Foreground="{StaticResource TextSecondary}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="300"
+                               IsVisible="{Binding SelectedLog, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+
+                <!-- Streaming Status Badge (center) -->
+                <Border Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="{StaticResource Danger}" CornerRadius="10" Padding="10,4"
+                        IsVisible="{Binding IsStreaming}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="6" Height="6" Fill="White" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding StreamingStatus}"
+                                   Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Window Controls (Right) -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <!-- Alert Bell -->
+                    <Button Classes="windowControl" Command="{Binding ToggleAlertCenterCommand}"
+                            ToolTip.Tip="Alerts">
+                        <Grid>
+                            <mi:MaterialIcon Kind="BellOutline"
+                                             Foreground="{StaticResource TextSecondary}" Width="18" Height="18"/>
+                            <Border Background="{StaticResource Danger}" CornerRadius="7"
+                                    MinWidth="14" Height="14" Padding="3,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,-4,-4,0"
+                                    IsVisible="{Binding UnreadAlertCount, Converter={x:Static ObjectConverters.IsNotNull},
+                                               FallbackValue=False}">
+                                <TextBlock Text="{Binding UnreadAlertCount}" FontSize="9" FontWeight="Bold"
+                                           Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                    </Button>
+                    <Button Classes="windowControl" Click="MinimizeButton_Click" ToolTip.Tip="Minimize">
+                        <mi:MaterialIcon Kind="WindowMinimize" Foreground="{StaticResource TextSecondary}" Width="16" Height="16"/>
+                    </Button>
+                    <Button Classes="windowControl" Click="MaximizeButton_Click" ToolTip.Tip="Maximize">
+                        <mi:MaterialIcon Kind="WindowMaximize" Foreground="{StaticResource TextSecondary}" Width="16" Height="16"/>
+                    </Button>
+                    <Button Classes="windowControl closeButton" Click="CloseButton_Click" ToolTip.Tip="Close">
+                        <mi:MaterialIcon Kind="Close" Foreground="{StaticResource TextSecondary}" Width="16" Height="16"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- LEFT SIDEBAR (56px icon rail)           -->
+        <!-- ═══════════════════════════════════════ -->
+        <Border Grid.Row="1" Grid.Column="0"
+                Background="{StaticResource SidebarBg}"
+                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Nav Icons (Top) -->
+                <StackPanel Grid.Row="0" Margin="0,12,0,0" HorizontalAlignment="Center" Spacing="6">
+                    <!-- Home -->
+                    <Button Classes="sidebar-active" ToolTip.Tip="Home">
+                        <mi:MaterialIcon Kind="Home" Foreground="White" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Upload File -->
+                    <Button Classes="sidebar" Command="{Binding UploadLogCommand}" ToolTip.Tip="Upload log file (Ctrl+O)">
+                        <mi:MaterialIcon Kind="Upload" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Load Folder -->
+                    <Button Classes="sidebar" Command="{Binding LoadLogFolderCommand}" ToolTip.Tip="Load log folder (Ctrl+Shift+O)">
+                        <mi:MaterialIcon Kind="FolderOpen" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Go Live -->
+                    <Button Classes="sidebar" Command="{Binding ToggleStreamingCommand}" ToolTip.Tip="Go Live — Stream logs">
+                        <Grid>
+                            <mi:MaterialIcon Kind="AccessPoint" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                            <Ellipse Width="8" Height="8" Fill="{StaticResource Success}"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top"
+                                     IsVisible="{Binding IsStreaming}"/>
+                        </Grid>
+                    </Button>
+
+                    <!-- Separator -->
+                    <Border Height="1" Width="32" Background="{StaticResource BorderDefault}" Margin="0,6"/>
+
+                    <!-- Manage Debug Logs -->
+                    <Button Classes="sidebar" Command="{Binding ManageDebugLogsCommand}" ToolTip.Tip="Manage Debug Logs">
+                        <mi:MaterialIcon Kind="TextBoxSearch" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Export -->
+                    <Button Classes="sidebar" Command="{Binding ExportReportCommand}" ToolTip.Tip="Export Report (Ctrl+E)">
+                        <mi:MaterialIcon Kind="Download" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- Nav Icons (Bottom) -->
+                <StackPanel Grid.Row="1" Margin="0,0,0,12" HorizontalAlignment="Center" Spacing="6">
+                    <!-- Settings -->
+                    <Button Classes="sidebar" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="Settings (Ctrl+,)">
+                        <mi:MaterialIcon Kind="Cog" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Disconnect -->
+                    <Button Classes="sidebar" Command="{Binding DisconnectCommand}" ToolTip.Tip="Disconnect">
+                        <mi:MaterialIcon Kind="Power" Foreground="{StaticResource Danger}" Width="24" Height="24"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- MAIN CONTENT (Row 1, Column 1)          -->
+        <!-- ═══════════════════════════════════════ -->
+        <Grid Grid.Row="1" Grid.Column="1">
+
+            <!-- ConnectionsView (shown when not connected) -->
+            <Border x:Name="ConnectionsViewContainer"
+                    IsVisible="{Binding !IsConnected}"
+                    Background="{StaticResource BgPrimary}">
+                <!-- ConnectionsView will be inserted here programmatically -->
+            </Border>
+
+            <!-- Main Dashboard (shown when connected OR has logs) -->
+            <Grid x:Name="MainContentGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Trial Banner -->
+                <Border Grid.Row="0" Background="#F0B232" Padding="8,4"
+                        IsVisible="{Binding ShowTrialBanner}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding TrialBannerText}" Foreground="#1C2128"
+                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Classes="ghost" Command="{Binding UpgradeCommand}"
+                                Margin="8,0,0,0">
+                            <TextBlock Text="Upgrade Now →" Foreground="#1C2128" FontWeight="Bold" FontSize="12"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Two-column layout: Log List + Analysis -->
+                <Grid Grid.Row="1" Margin="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360" MinWidth="300" MaxWidth="450"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ═══════════════════════════════ -->
+                    <!-- LEFT: LOG LIST PANEL             -->
+                    <!-- ═══════════════════════════════ -->
+                    <Grid Grid.Column="0" Margin="12,12,0,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header: Title + Actions -->
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Debug Logs" FontSize="18" FontWeight="Bold"/>
+                                <Border Classes="badge" Background="{StaticResource AccentSubtle}"
+                                        IsVisible="{Binding ShowGroupedView}">
+                                    <TextBlock FontSize="11" Foreground="{StaticResource AccentPrimary}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="📦 {0} groups">
+                                                <Binding Path="LogGroups.Count" FallbackValue="0"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                <Button Classes="ghost" Command="{Binding UploadLogCommand}" ToolTip.Tip="Upload log">
+                                    <mi:MaterialIcon Kind="Plus" Foreground="{StaticResource TextSecondary}" Width="18" Height="18"/>
+                                </Button>
+                                <Button Classes="ghost" Command="{Binding LoadLogFolderCommand}" ToolTip.Tip="Load folder">
+                                    <mi:MaterialIcon Kind="FolderOpen" Foreground="{StaticResource TextSecondary}" Width="18" Height="18"/>
+                                </Button>
+                                <Button Classes="ghost" Command="{Binding LoadRecentLogsCommand}" ToolTip.Tip="Download from Org">
+                                    <mi:MaterialIcon Kind="CloudDownload" Foreground="{StaticResource TextSecondary}" Width="18" Height="18"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Search Box -->
+                        <TextBox Grid.Row="1" x:Name="SearchBox" Classes="search"
+                                 Margin="0,0,0,8"/>
+
+                        <!-- Log List -->
+                        <ListBox Grid.Row="2" x:Name="LogListBox"
+                                 Classes="logList"
+                                 ItemsSource="{Binding Logs}"
+                                 SelectedItem="{Binding SelectedLog}"
+                                 IsVisible="{Binding !ShowGroupedView}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource BgSecondary}"
+                                            CornerRadius="8" Margin="0,0,0,4" Padding="0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="4"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- Accent Bar -->
+                                            <Border Grid.Column="0" CornerRadius="4,0,0,4"
+                                                    Background="{StaticResource Success}"/>
+                                            <!-- Content -->
+                                            <StackPanel Grid.Column="1" Margin="12,10">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding OperationIcon}"
+                                                               FontSize="14" Margin="0,0,6,0"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding OperationType}"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextPrimary}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <Border Grid.Column="2" Classes="badge"
+                                                            Background="{StaticResource BgTertiary}" IsVisible="{Binding HasHealthScore}">
+                                                        <TextBlock Text="{Binding HealthScore, StringFormat={}{0:N0}}"
+                                                                   FontSize="10" FontWeight="Bold"
+                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding EntryPoint}" FontSize="11"
+                                                           Foreground="{StaticResource TextMuted}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,2,0,0"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+                                                    <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0:N0}ms">
+                                                                <Binding Path="TotalDurationMs"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0:N0} lines">
+                                                                <Binding Path="TotalLines"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Log Groups List -->
+                        <ListBox Grid.Row="2"
+                                 Classes="logList"
+                                 ItemsSource="{Binding LogGroups}"
+                                 SelectedItem="{Binding SelectedLogGroup}"
+                                 IsVisible="{Binding ShowGroupedView}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource BgSecondary}"
+                                            CornerRadius="8" Margin="0,0,0,4" Padding="12,10">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="📦" FontSize="14"/>
+                                                <TextBlock Text="{Binding UserName}" FontSize="13" FontWeight="SemiBold"/>
+                                                <TextBlock Text="transaction" FontSize="11"
+                                                           Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+                                                <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0} logs">
+                                                            <Binding Path="LogCount"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0:N0}ms total">
+                                                            <Binding Path="TotalDurationMs"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Empty State -->
+                        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    IsVisible="{Binding !HasLogs}" Spacing="12">
+                            <mi:MaterialIcon Kind="FileDocumentOutline"
+                                             Width="48" Height="48"
+                                             Foreground="{StaticResource TextDisabled}"
+                                             HorizontalAlignment="Center"/>
+                            <TextBlock Text="No logs loaded" FontSize="14"
+                                       Foreground="{StaticResource TextMuted}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Upload, drag-drop, or download from org"
+                                       FontSize="12" Foreground="{StaticResource TextDisabled}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Sort/Filter Bar -->
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8"
+                                    Margin="0,8,0,0"
+                                    IsVisible="{Binding !IsStreaming}">
+                            <Button Classes="ghost" Command="{Binding SortLogsCommand}" CommandParameter="Date"
+                                    ToolTip.Tip="Sort by date">
+                                <mi:MaterialIcon Kind="CalendarClock" Foreground="{StaticResource TextMuted}" Width="16" Height="16"/>
+                            </Button>
+                            <Button Classes="ghost" Command="{Binding SortLogsCommand}" CommandParameter="Duration"
+                                    ToolTip.Tip="Sort by duration">
+                                <mi:MaterialIcon Kind="TimerOutline" Foreground="{StaticResource TextMuted}" Width="16" Height="16"/>
+                            </Button>
+                            <Button Classes="ghost" Command="{Binding SortLogsCommand}" CommandParameter="Status"
+                                    ToolTip.Tip="Sort by status">
+                                <mi:MaterialIcon Kind="AlertCircleOutline" Foreground="{StaticResource TextMuted}" Width="16" Height="16"/>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Live Stream Panel -->
+                        <Border Grid.Row="3" Background="{StaticResource BgSecondary}"
+                                CornerRadius="8" Padding="12"
+                                IsVisible="{Binding IsStreaming}"
+                                Margin="0,8,0,0">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="8" Height="8" Fill="{StaticResource Danger}"/>
+                                    <TextBlock Text="Live Stream" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimary}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Classes="primary" Command="{Binding StartRecordingCommand}"
+                                            IsVisible="{Binding !IsRecording}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <mi:MaterialIcon Kind="Record" Foreground="White" Width="14" Height="14"/>
+                                            <TextBlock Text="Record" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="primary" Background="{StaticResource Danger}"
+                                            Command="{Binding StopRecordingAsyncCommand}"
+                                            IsVisible="{Binding IsRecording}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <mi:MaterialIcon Kind="Stop" Foreground="White" Width="14" Height="14"/>
+                                            <TextBlock Text="{Binding RecordingElapsedTime}" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Splitter -->
+                    <GridSplitter Grid.Column="1" Width="1" Background="{StaticResource BorderSubtle}"
+                                  ResizeDirection="Columns"/>
+
+                    <!-- ═══════════════════════════════ -->
+                    <!-- RIGHT: ANALYSIS DASHBOARD       -->
+                    <!-- ═══════════════════════════════ -->
+                    <Border Grid.Column="2" Background="{StaticResource BgSecondary}"
+                            CornerRadius="10" Margin="12"
+                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Tab Bar -->
+                            <Border Grid.Row="0" BorderBrush="{StaticResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <Grid Margin="12,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Spacing="2">
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="0"
+                                                Tag="0">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="ChartBox" Width="16" Height="16"/>
+                                                <TextBlock Text="Overview"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="1">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="FileTree" Width="16" Height="16"/>
+                                                <TextBlock Text="Tree"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="2">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="TimelineClockOutline" Width="16" Height="16"/>
+                                                <TextBlock Text="Timeline"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="3">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="DatabaseSearch" Width="16" Height="16"/>
+                                                <TextBlock Text="Queries"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="Lightbulb" Width="16" Height="16"/>
+                                                <TextBlock Text="Explain"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="tab" Command="{Binding SelectTabCommand}" CommandParameter="6"
+                                                IsVisible="{Binding IsConnected}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <mi:MaterialIcon Kind="ShieldLock" Width="16" Height="16"/>
+                                                <TextBlock Text="Security"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="ghost"
+                                            Command="{Binding ExportReportCommand}" ToolTip.Tip="Export">
+                                        <mi:MaterialIcon Kind="Download" Foreground="{StaticResource TextMuted}"
+                                                         Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Tab Content Area -->
+                            <Grid Grid.Row="1">
+
+                                <!-- Welcome/Empty State (when no log selected) -->
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            IsVisible="{Binding SelectedLog, Converter={x:Static ObjectConverters.IsNull}}"
+                                            Spacing="16" MaxWidth="500">
+                                    <mi:MaterialIcon Kind="Spider" Width="48" Height="48"
+                                                     Foreground="{StaticResource AccentPrimary}"
+                                                     HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Black Widow" FontSize="28" FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Text="Salesforce Debug Log Analyzer" FontSize="14"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock Text="How do you want to start?" FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{StaticResource TextMuted}"
+                                               Margin="0,12,0,0"/>
+
+                                    <!-- Action Cards -->
+                                    <StackPanel Orientation="Horizontal" Spacing="12"
+                                                HorizontalAlignment="Center" Margin="0,8,0,0">
+                                        <Button Classes="secondary" Command="{Binding UploadLogCommand}">
+                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                                <mi:MaterialIcon Kind="Upload" Width="24" Height="24"
+                                                                 Foreground="{StaticResource AccentPrimary}"
+                                                                 HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Upload File" FontSize="13" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="secondary" Command="{Binding LoadLogFolderCommand}">
+                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                                <mi:MaterialIcon Kind="FolderOpen" Width="24" Height="24"
+                                                                 Foreground="{StaticResource Warning}"
+                                                                 HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Load Folder" FontSize="13" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="secondary" Command="{Binding ToggleStreamingCommand}">
+                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                                <mi:MaterialIcon Kind="AccessPoint" Width="24" Height="24"
+                                                                 Foreground="{StaticResource Success}"
+                                                                 HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Go Live" FontSize="13" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <TextBlock Text="💡 Drag and drop a .log file anywhere"
+                                               FontSize="12" Foreground="{StaticResource TextDisabled}"
+                                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                </StackPanel>
+
+                                <!-- Tab Content (when log selected) -->
+                                <Grid IsVisible="{Binding SelectedLog, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <!-- Summary Tab (Index 0) -->
+                                    <ScrollViewer x:Name="SummaryTabContent"
+                                                  IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=0}">
+                                        <StackPanel Margin="24" Spacing="20">
+                                            <!-- Hero Stats -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border Grid.Column="0" Classes="elevated-card" Margin="0,0,8,0">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="Duration" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="{Binding HeroDuration}" FontSize="24" FontWeight="Bold"
+                                                                   Foreground="{StaticResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Grid.Column="1" Classes="elevated-card" Margin="4,0,4,0">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="SOQL" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatSoqlCount}" FontSize="24" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding StatSoqlLimit, StringFormat=/ {0}}"
+                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Grid.Column="2" Classes="elevated-card" Margin="4,0,4,0">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="DML" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatDmlCount}" FontSize="24" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding DmlLimit, StringFormat=/ {0}}"
+                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Grid.Column="3" Classes="elevated-card" Margin="8,0,0,0">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="CPU Time" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatCpuTime}" FontSize="24" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding StatCpuLimit, StringFormat=/ {0}ms}"
+                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Health Score Card -->
+                                            <Border Classes="card" IsVisible="{Binding HasHealthData}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Margin="0,0,24,0"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding HealthGrade}" FontSize="48" FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentPrimary}"
+                                                                   HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding HealthScore, StringFormat={}{0:N0}/100}"
+                                                                   FontSize="12" Foreground="{StaticResource TextMuted}"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="8">
+                                                        <TextBlock Text="Health Assessment" FontSize="15" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding HealthPlainStatement}" FontSize="13"
+                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                   TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Plain English Summary -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Text="What Happened" FontSize="15" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding PlainEnglishSummary}" FontSize="13"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Issues -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="Issues" FontSize="15" FontWeight="SemiBold"/>
+                                                        <Border Classes="badge-danger"
+                                                                IsVisible="{Binding !!Issues.Count}">
+                                                            <TextBlock Text="{Binding Issues.Count}" FontSize="11"
+                                                                       Foreground="{StaticResource Danger}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Issues}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource BgTertiary}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <TextBlock Text="{Binding}" FontSize="13"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               TextWrapping="Wrap"/>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Recommendations -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Recommendations" FontSize="15" FontWeight="SemiBold"/>
+                                                        <Button Grid.Column="1" Classes="ghost"
+                                                                Command="{Binding CopyRecommendationsCommand}"
+                                                                ToolTip.Tip="Copy recommendations">
+                                                            <mi:MaterialIcon Kind="ContentCopy" Width="14" Height="14"
+                                                                             Foreground="{StaticResource TextMuted}"/>
+                                                        </Button>
+                                                    </Grid>
+                                                    <ItemsControl ItemsSource="{Binding Recommendations}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource BgTertiary}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <TextBlock Text="{Binding}" FontSize="13"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               TextWrapping="Wrap"/>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- Tree Tab (Index 1) -->
+                                    <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=1}">
+                                        <StackPanel Margin="24" Spacing="12">
+                                            <TextBlock Text="Execution Tree" FontSize="18" FontWeight="Bold"/>
+                                            <TreeView ItemsSource="{Binding ExecutionTreeNodes}"
+                                                      Background="Transparent">
+                                                <TreeView.ItemTemplate>
+                                                    <TreeDataTemplate ItemsSource="{Binding Children}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding Name}" FontSize="13"
+                                                                       Foreground="{StaticResource TextPrimary}"/>
+                                                            <TextBlock Text="{Binding Duration, StringFormat={}{0:N1}ms}"
+                                                                       FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                        </StackPanel>
+                                                    </TreeDataTemplate>
+                                                </TreeView.ItemTemplate>
+                                            </TreeView>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- Timeline Tab (Index 2) -->
+                                    <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=2}">
+                                        <StackPanel Margin="24" Spacing="12">
+                                            <TextBlock Text="Timeline" FontSize="18" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding TimelineTotalDurationMs, StringFormat=Total: {0:N0}ms}"
+                                                       FontSize="13" Foreground="{StaticResource TextMuted}"/>
+                                            <ItemsControl ItemsSource="{Binding TimelineSegments}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="120"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="80"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                                       FontSize="12" Foreground="{StaticResource TextSecondary}"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <Border Grid.Column="1" Height="8" CornerRadius="4"
+                                                                    Background="{StaticResource AccentPrimary}"
+                                                                    HorizontalAlignment="Left"
+                                                                    Margin="8,0"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
+                                                                       FontSize="11" Foreground="{StaticResource TextMuted}"
+                                                                       HorizontalAlignment="Right"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- Queries Tab (Index 3) -->
+                                    <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=3}">
+                                        <StackPanel Margin="24" Spacing="12">
+                                            <TextBlock Text="Database Operations" FontSize="18" FontWeight="Bold"/>
+                                            <ItemsControl ItemsSource="{Binding DatabaseOperations}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Classes="card" Margin="0,0,0,8">
+                                                            <StackPanel Spacing="4">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <Border Classes="badge"
+                                                                            Background="{StaticResource InfoSubtle}">
+                                                                        <TextBlock Text="{Binding OperationType}"
+                                                                                   FontSize="10" FontWeight="Bold"
+                                                                                   Foreground="{StaticResource Info}"/>
+                                                                    </Border>
+                                                                    <TextBlock Text="{Binding Duration, StringFormat={}{0:N1}ms}"
+                                                                               FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                                    <TextBlock Text="{Binding RowCount, StringFormat={}{0} rows}"
+                                                                               FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding Query}"
+                                                                           FontSize="12" FontFamily="Cascadia Code,Consolas,monospace"
+                                                                           Foreground="{StaticResource TextSecondary}"
+                                                                           TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- Explain Tab (Index 4) -->
+                                    <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=4}">
+                                        <StackPanel Margin="24" Spacing="12">
+                                            <TextBlock Text="Plain English Explanation" FontSize="18" FontWeight="Bold"/>
+                                            <Border Classes="card">
+                                                <TextBlock Text="{Binding FullSummaryText}" FontSize="13"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           TextWrapping="Wrap"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- Security Tab (Index 6) -->
+                                    <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=6}">
+                                        <StackPanel Margin="24" Spacing="12">
+                                            <TextBlock Text="Security Shield" FontSize="18" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding ShieldDashboardStatus}" FontSize="13"
+                                                       Foreground="{StaticResource TextMuted}"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- STATUS BAR (Row 2)                      -->
+        <!-- ═══════════════════════════════════════ -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="{StaticResource SidebarBg}"
+                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,1,0,0">
+            <Grid Margin="12,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Status Message -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                            VerticalAlignment="Center">
+                    <mi:MaterialIcon Kind="InformationOutline" Width="12" Height="12"
+                                     Foreground="{StaticResource TextMuted}"/>
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11"
+                               Foreground="{StaticResource TextMuted}"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <!-- Right: License + Version -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                            VerticalAlignment="Center">
+                    <Border CornerRadius="3" Padding="6,1"
+                            Background="{StaticResource BgHover}">
+                        <TextBlock Text="{Binding TierDisplayName}" FontSize="10"
+                                   FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"/>
+                    </Border>
+                    <TextBlock Text="Black Widow v1.0" FontSize="10"
+                               Foreground="{StaticResource TextDisabled}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- COMMAND PALETTE OVERLAY (Ctrl+K)        -->
+        <!-- ═══════════════════════════════════════ -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="2"
+                Background="#AA000000"
+                IsVisible="{Binding IsCommandPaletteOpen}"
+                PointerPressed="CommandPaletteBackdrop_PointerPressed"
+                ZIndex="100">
+            <Border Background="{StaticResource BgSecondary}"
+                    CornerRadius="12" Width="620" MaxHeight="520"
+                    VerticalAlignment="Top" Margin="0,80,0,0"
+                    BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                <Grid Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Search -->
+                    <Grid Grid.Row="0" Margin="16,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <mi:MaterialIcon Kind="Magnify" Width="18" Height="18"
+                                         Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="1" x:Name="CommandPaletteBox"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 Watermark="Type a command..."
+                                 FontSize="15"
+                                 TextChanged="CommandPaletteBox_TextChanged"
+                                 KeyDown="CommandPaletteBox_KeyDown"/>
+                    </Grid>
+
+                    <!-- Results -->
+                    <ListBox Grid.Row="1" x:Name="PaletteResultsList"
+                             ItemsSource="{Binding PaletteResults}"
+                             Background="Transparent" BorderThickness="0"
+                             MaxHeight="380" Margin="8,0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12,8" CornerRadius="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontSize="13"
+                                                       Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="11"
+                                                       Foreground="{StaticResource TextMuted}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Help -->
+                    <Border Grid.Row="2" BorderBrush="{StaticResource BorderSubtle}"
+                            BorderThickness="0,1,0,0" Padding="16,8">
+                        <TextBlock Text="↑↓ Navigate  ⏎ Execute  Esc Close"
+                                   FontSize="11" Foreground="{StaticResource TextDisabled}"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
 </Window>

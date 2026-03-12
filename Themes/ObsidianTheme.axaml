@@ -1,0 +1,261 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- OBSIDIAN DESIGN SYSTEM — Black Widow                   -->
+        <!-- "Calm authority — built for 2AM production incidents"  -->
+        <!-- WCAG AA compliant · Neutral dark · Professional        -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+
+        <!-- BACKGROUNDS (neutral, no color tint) -->
+        <Color x:Key="BgPrimaryColor">#0B0E13</Color>
+        <Color x:Key="BgSecondaryColor">#141820</Color>
+        <Color x:Key="BgTertiaryColor">#1C2128</Color>
+        <Color x:Key="BgInputColor">#272D36</Color>
+        <Color x:Key="BgHoverColor">#1E242C</Color>
+
+        <SolidColorBrush x:Key="BgPrimary" Color="#0B0E13"/>
+        <SolidColorBrush x:Key="BgSecondary" Color="#141820"/>
+        <SolidColorBrush x:Key="BgTertiary" Color="#1C2128"/>
+        <SolidColorBrush x:Key="BgInput" Color="#272D36"/>
+        <SolidColorBrush x:Key="BgHover" Color="#1E242C"/>
+
+        <!-- SIDEBAR -->
+        <SolidColorBrush x:Key="SidebarBg" Color="#070A0E"/>
+        <SolidColorBrush x:Key="SidebarBorder" Color="#1C2128"/>
+
+        <!-- TEXT (warm white, WCAG AA on BgPrimary) -->
+        <SolidColorBrush x:Key="TextPrimary" Color="#E6EDF3"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9BA4AE"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#7D8590"/>
+        <SolidColorBrush x:Key="TextDisabled" Color="#484F58"/>
+
+        <!-- BORDERS -->
+        <SolidColorBrush x:Key="BorderDefault" Color="#2D333B"/>
+        <SolidColorBrush x:Key="BorderSubtle" Color="#1C2128"/>
+        <SolidColorBrush x:Key="BorderFocus" Color="#4493F8"/>
+
+        <!-- ACCENT (professional blue) -->
+        <SolidColorBrush x:Key="AccentPrimary" Color="#4493F8"/>
+        <SolidColorBrush x:Key="AccentHover" Color="#1F6FEB"/>
+        <SolidColorBrush x:Key="AccentActive" Color="#1158C7"/>
+        <SolidColorBrush x:Key="AccentSubtle" Color="#164493F8"/>
+
+        <!-- SEMANTIC (clear signals, never panic-inducing) -->
+        <SolidColorBrush x:Key="Success" Color="#3FB950"/>
+        <SolidColorBrush x:Key="SuccessSubtle" Color="#183FB950"/>
+        <SolidColorBrush x:Key="Warning" Color="#D29922"/>
+        <SolidColorBrush x:Key="WarningSubtle" Color="#18D29922"/>
+        <SolidColorBrush x:Key="Danger" Color="#F85149"/>
+        <SolidColorBrush x:Key="DangerSubtle" Color="#18F85149"/>
+        <SolidColorBrush x:Key="Info" Color="#79C0FF"/>
+        <SolidColorBrush x:Key="InfoSubtle" Color="#1879C0FF"/>
+
+        <!-- LOG LEVEL COLORS -->
+        <SolidColorBrush x:Key="LogDebug" Color="#7D8590"/>
+        <SolidColorBrush x:Key="LogInfo" Color="#4493F8"/>
+        <SolidColorBrush x:Key="LogWarn" Color="#D29922"/>
+        <SolidColorBrush x:Key="LogError" Color="#F85149"/>
+        <SolidColorBrush x:Key="LogFatal" Color="#DA3633"/>
+
+        <!-- TYPOGRAPHY -->
+        <x:Double x:Key="FontXS">11</x:Double>
+        <x:Double x:Key="FontSM">12</x:Double>
+        <x:Double x:Key="FontBaseline">13</x:Double>
+        <x:Double x:Key="FontMD">14</x:Double>
+        <x:Double x:Key="FontLG">15</x:Double>
+        <x:Double x:Key="FontXL">18</x:Double>
+        <x:Double x:Key="FontXXL">24</x:Double>
+        <x:Double x:Key="FontHero">32</x:Double>
+
+        <!-- SPACING (4px base) -->
+        <Thickness x:Key="PadSM">8</Thickness>
+        <Thickness x:Key="PadMD">16</Thickness>
+        <Thickness x:Key="PadLG">24</Thickness>
+
+        <!-- CORNER RADIUS -->
+        <CornerRadius x:Key="RadiusSmall">4</CornerRadius>
+        <CornerRadius x:Key="RadiusMedium">8</CornerRadius>
+        <CornerRadius x:Key="RadiusLarge">12</CornerRadius>
+        <CornerRadius x:Key="RadiusXLarge">16</CornerRadius>
+        <CornerRadius x:Key="RadiusPill">999</CornerRadius>
+    </Styles.Resources>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- BASE CONTROL STYLES                    -->
+    <!-- ══════════════════════════════════════ -->
+
+    <!-- Default TextBlock -->
+    <Style Selector="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+    </Style>
+
+    <!-- SidebarButton: transparent 44x44 icon button for the icon rail -->
+    <Style Selector="Button.sidebar">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.sidebar:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+    </Style>
+
+    <!-- SidebarButton Active state -->
+    <Style Selector="Button.sidebar-active">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <!-- WindowControl: title bar buttons -->
+    <Style Selector="Button.windowControl">
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.windowControl:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+    </Style>
+
+    <!-- CloseButton: red hover for close button -->
+    <Style Selector="Button.closeButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource Danger}"/>
+    </Style>
+
+    <!-- Primary action button -->
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AccentHover}"/>
+    </Style>
+
+    <!-- Secondary action button -->
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+    </Style>
+
+    <!-- Ghost button (icon-only, transparent) -->
+    <Style Selector="Button.ghost">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+    </Style>
+
+    <!-- Card border base -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{StaticResource BgSecondary}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- Elevated card -->
+    <Style Selector="Border.elevated-card">
+        <Setter Property="Background" Value="{StaticResource BgTertiary}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- Tab button style -->
+    <Style Selector="Button.tab">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+    <Style Selector="Button.tab:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+    </Style>
+
+    <!-- Badge styles -->
+    <Style Selector="Border.badge">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+    <Style Selector="Border.badge-danger">
+        <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+    <Style Selector="Border.badge-success">
+        <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+    <Style Selector="Border.badge-warning">
+        <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+
+    <!-- TextBox input style -->
+    <Style Selector="TextBox.search">
+        <Setter Property="Background" Value="{StaticResource BgInput}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Watermark" Value="🔍 Search logs..."/>
+    </Style>
+    <Style Selector="TextBox.search:focus">
+        <Setter Property="BorderBrush" Value="{StaticResource BorderFocus}"/>
+    </Style>
+
+    <!-- ListBox base (transparent, no chrome) -->
+    <Style Selector="ListBox.logList">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="ListBox.logList ListBoxItem">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+    <Style Selector="ListBox.logList ListBoxItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="ListBox.logList ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+</Styles>

@@ -59,6 +59,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _showGroupedView = false;
+
+    [ObservableProperty]
+    private bool _hasLogs = false;
     
     // Aggregate metrics displayed when a LogGroup is selected
     [ObservableProperty]
@@ -795,6 +798,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _streamingThrottleTimer.Tick += OnStreamingThrottleTick;
+
+        // Track HasLogs when collection changes
+        Logs.CollectionChanged += (_, _) => HasLogs = Logs.Count > 0;
     }
 
     // ─────────────────────────────────────────────────────────────────────
