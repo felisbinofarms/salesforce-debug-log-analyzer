@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.ViewModels;
 
 namespace SalesforceDebugAnalyzer.Views;
@@ -14,6 +15,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        // Wire up ViewModel
+        var api = new SalesforceApiService();
+        var parser = new LogParserService();
+        var oauth = new OAuthService();
+        DataContext = new MainViewModel(api, parser, oauth);
 
         // Keyboard shortcuts
         KeyDown += OnWindowKeyDown;
