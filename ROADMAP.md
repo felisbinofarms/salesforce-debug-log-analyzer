@@ -98,10 +98,20 @@
 - [x] Settings persistence (JSON, encrypted sensitive fields)
 - [x] InsightsPanel — governance recommendations sidebar
 - [x] LicenseService — AES-256 encrypted local license storage, device fingerprinting
+- [x] Export analysis to PDF/JSON/TXT (QuestPDF via ReportExportService)
+- [x] PII scanner — detects sensitive data in debug logs
+- [x] Shield anomaly detection — security event monitoring
+- [x] Shield event log CSV parsing
+- [x] Trend analysis service — historical pattern detection
+- [x] Alert routing and center UI
+- [x] Background monitoring service
+- [x] System tray integration (NotifyIcon)
+- [x] Toast notification service
+- [x] Monitoring database (SQLite)
+- [x] LogCompare QA tool — scripted vs AI comparison workflow
 
 ### In Progress
-- [ ] Raw log viewer with syntax highlighting (AvalonEdit)
-- [ ] Export analysis to PDF (QuestPDF)
+- [ ] Raw log viewer with syntax highlighting (AvalonEdit package installed, not wired to UI)
 - [ ] Export to HTML with embedded charts
 
 ### Planned for This Phase
@@ -111,7 +121,7 @@
 
 ---
 
-## 📋 Phase 5: Distribution & Monetization (PLANNED)
+## ✅ Phase 5: Distribution & Monetization (MOSTLY COMPLETE)
 
 ### Distribution
 - [ ] Windows installer (WiX or NSIS)
@@ -119,16 +129,20 @@
 - [ ] Custom URL scheme registration (`blackwidow://`)
 - [ ] GitHub Releases pipeline
 
-### Monetization
-- [ ] Stripe payment integration (subscription checkout)
-- [ ] Upgrade flow UI — feature comparison modal, trial CTA
-- [ ] Backend license validation API (30-day check, device fingerprinting)
-- [ ] Trial enforcement and expiration warnings
-- [ ] Feature gating (Free vs Pro tier)
-- [ ] Stripe webhook handler (payment → license provisioning)
+### Monetization ✅
+- [x] LemonSqueezy payment integration (replaced Stripe — checkout URLs configured)
+- [x] Upgrade flow UI — feature comparison modal, trial start, license activation (UpgradeDialog.xaml)
+- [x] License validation API — LemonSqueezy activate/validate/deactivate endpoints
+- [x] Trial enforcement — 14-day local Pro trial, no credit card required
+- [x] Feature gating — Free vs Pro tier checks across all commands (LicenseFeature enum)
+- [x] Device fingerprinting — SHA256-based, 2 devices per license
+- [x] 7-day offline grace period
+- [ ] LemonSqueezy account setup + product variant creation (store-side config)
+- [ ] Webhook handler for payment → license provisioning (server-side)
 
-> **Note:** LicenseService and UpgradeDialog scaffolding already exist.
-> Next step is wiring Stripe Checkout and deploying the validation API.
+> **Note:** LicenseService (623 lines) and UpgradeDialog are fully implemented.
+> Payment provider is **LemonSqueezy** (not Stripe). Client-side integration is complete.
+> Remaining work is store-side account configuration and server-side webhook.
 
 ---
 
@@ -253,10 +267,10 @@ Single screen, four quadrants, no scrolling required on load:
 |---|---|---|
 | v0.1-alpha | ✅ Released | Core parser, plain-English summaries, OAuth |
 | v0.5-beta | ✅ Released | Transaction grouping, phase detection, 5 tabs |
-| **v0.9-beta** | **🟢 Current** | Governance insights, CLI streaming, all features stable |
-| v1.0 | 📋 Planned | Windows installer, Stripe payments, Pro tier |
+| **v0.9-beta** | **🟢 Current** | Governance insights, CLI streaming, Shield monitoring, PII scanner, licensing/trial system |
+| v1.0 | 📋 Planned | Windows installer, LemonSqueezy store setup, webhook handler |
 | v1.1 | 📋 Planned | **UI redesign (Phase 7) + Architect View (Phase 8)** |
-| v1.2 | 📋 Planned | PDF export, side-by-side comparison, bulk analysis |
+| v1.2 | 📋 Planned | Side-by-side comparison, bulk analysis, raw log viewer |
 | v2.0 | 🔮 Future | AI explanations, learning mode, translation levels |
 
 ---
@@ -271,7 +285,7 @@ Single screen, four quadrants, no scrolling required on load:
 | Governance context detection | ✅ Built-in | ❌ Not available |
 | Before/after code examples | ✅ Per issue | ⚠️ Generic suggestions |
 | Architect View (power user) | ✅ Planned v1.1 | ❌ Not available |
-| Shield log correlation | ✅ Planned v1.1 | ❌ Not available |
+| Shield log correlation | ✅ Implemented | ❌ Not available |
 | Target audience | Everyone | Developers only |
 | Setup complexity | ✅ Zero (Platform CLI) | ⚠️ Connected App required |
 
@@ -279,5 +293,5 @@ Single screen, four quadrants, no scrolling required on load:
 
 **Last Updated:** March 11, 2026
 **Current Version:** v0.9-beta
-**Next Milestone:** v1.0 — Windows installer + Pro tier payments (Phase 5)
+**Next Milestone:** v1.0 — Windows installer + LemonSqueezy store setup (Phase 5 remaining)
 **Known Gap:** UI does not match mental model of Sr. Architects — Phases 7 & 8 address this directly

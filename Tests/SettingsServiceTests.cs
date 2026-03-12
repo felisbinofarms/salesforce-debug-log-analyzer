@@ -8,8 +8,24 @@ namespace SalesforceDebugAnalyzer.Tests;
 /// Tests for SettingsService: default values, save/load roundtrip,
 /// and correct default values for all monitoring-related settings.
 /// </summary>
-public class SettingsServiceTests
+public class SettingsServiceTests : IDisposable
 {
+    private readonly string _tempDir;
+
+    public SettingsServiceTests()
+    {
+        _tempDir = Path.Combine(Path.GetTempPath(), "bw-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(_tempDir);
+    }
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_tempDir, recursive: true); } catch { }
+    }
+
+    private SettingsService CreateIsolatedService() =>
+        new(Path.Combine(_tempDir, "settings.json"));
+
     // ================================================================
     //  Default Values
     // ================================================================
@@ -123,7 +139,7 @@ public class SettingsServiceTests
     [Fact]
     public void SettingsService_Load_ReturnsDefaults()
     {
-        var service = new SettingsService();
+        var service = CreateIsolatedService();
         var settings = service.Load();
 
         settings.Should().NotBeNull();
@@ -133,7 +149,8 @@ public class SettingsServiceTests
     [Fact]
     public void SettingsService_SaveAndLoad_Roundtrip()
     {
-        var service = new SettingsService();
+        var settingsPath = Path.Combine(_tempDir, "roundtrip.json");
+        var service = new SettingsService(settingsPath);
         var settings = service.Load();
 
         // Modify monitoring settings
@@ -145,7 +162,7 @@ public class SettingsServiceTests
         service.Save(settings);
 
         // Load fresh (clear cache by creating new service)
-        var freshService = new SettingsService();
+        var freshService = new SettingsService(settingsPath);
 
         // Force re-read by creating new SettingsService instance
         // (it reads from the same file path)
@@ -162,7 +179,7 @@ public class SettingsServiceTests
     [Fact]
     public void SettingsService_Reset_RestoresDefaults()
     {
-        var service = new SettingsService();
+        var service = CreateIsolatedService();
         var settings = service.Load();
 
         // Modify some values
@@ -181,7 +198,7 @@ public class SettingsServiceTests
     [Fact]
     public void SettingsService_GetSettingsPath_NotEmpty()
     {
-        var service = new SettingsService();
+        var service = CreateIsolatedService();
         service.GetSettingsPath().Should().NotBeNullOrEmpty();
         service.GetSettingsPath().Should().EndWith("settings.json");
     }

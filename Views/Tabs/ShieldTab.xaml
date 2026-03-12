@@ -1,0 +1,682 @@
+﻿<UserControl x:Class="SalesforceDebugAnalyzer.Views.Tabs.ShieldTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="900">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">
+        <StackPanel MaxWidth="1100">
+
+            <!-- Header -->
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Shield Monitoring" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock Text="{Binding ShieldDashboardStatus}" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding LoadShieldDashboardCommand}" Content="&#x27F3; Refresh"
+                        Background="{StaticResource AccentPrimary}" Foreground="White" BorderThickness="0"
+                        Padding="16,8" FontSize="12" Cursor="Hand" VerticalAlignment="Top"/>
+            </Grid>
+
+            <!-- Loading indicator -->
+            <StackPanel Visibility="{Binding IsShieldDashboardLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        HorizontalAlignment="Center" Margin="0,40,0,40">
+                <ProgressBar IsIndeterminate="True" Width="160" HorizontalAlignment="Center"
+                             Foreground="{StaticResource AccentPrimary}"/>
+                <TextBlock Text="Analyzing Shield events..." FontSize="13" Foreground="{StaticResource TextSecondary}"
+                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
+
+            <!-- Dashboard content (visible when data loaded) -->
+            <StackPanel Visibility="{Binding ShieldDashboard, Converter={StaticResource NullToVisibilityConverter}}">
+
+                <!-- Quick Stats Bar -->
+                <Border CornerRadius="8" Padding="16,12" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <UniformGrid Columns="5">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding ShieldDashboard.TotalEvents, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Events (24h)" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding ShieldDashboard.UniqueUsers}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Active Users" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding ShieldDashboard.ExceptionTotal}" FontSize="20" FontWeight="Bold" Foreground="#F85149" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Exceptions" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding ShieldDashboard.FailedLoginTotal}" FontSize="20" FontWeight="Bold" Foreground="#D29922" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Failed Logins" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding ShieldDashboard.AnomalyAffectedUsers}" FontSize="20" FontWeight="Bold" Foreground="#E05252" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Users Impacted" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                                       ToolTip="Distinct users who triggered at least one Shield anomaly (exceptions or API failures) in the last 24h"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </Border>
+
+                <!-- 24h Activity Trend -->
+                <Border CornerRadius="8" Padding="16,12" Margin="0,0,0,16"
+                        Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                        Visibility="{Binding ShieldDashboard.HasActivityTrend, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="24H ACTIVITY TREND" FontSize="11" FontWeight="Bold"
+                                   Foreground="{StaticResource TextMuted}" Margin="0,0,0,8"/>
+                        <Viewbox Height="44" HorizontalAlignment="Stretch" Stretch="Fill">
+                            <Canvas Width="240" Height="40">
+                                <Polyline Points="{Binding ShieldDashboard.ActivitySparklinePoints}"
+                                          Stroke="{StaticResource AccentPrimary}" StrokeThickness="1.5"
+                                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Issues to Fix (Insight Cards) -->
+                <StackPanel Visibility="{Binding ShieldDashboard.HasInsights, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <materialDesign:PackIcon Kind="AlertDecagram" Width="18" Height="18" Foreground="#F85149" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Issues to Fix" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Text=" — prioritized by impact" FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding ShieldDashboard.Insights}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="8" Padding="16" Margin="0,0,0,10"
+                                        Background="{StaticResource BgSecondary}"
+                                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" CornerRadius="4" Padding="8,3" Margin="0,0,10,0"
+                                                    VerticalAlignment="Top" Background="{Binding SeverityBgBrush}">
+                                                <TextBlock Text="{Binding SeverityLabel}" FontSize="10" FontWeight="Bold"
+                                                           FontFamily="Consolas" Foreground="{Binding SeverityBrush}"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="2" CornerRadius="4" Padding="10,4" Margin="10,0,0,0"
+                                                    VerticalAlignment="Top" Background="{Binding SeverityBgBrush}">
+                                                <TextBlock Text="{Binding CountDisplay}" FontSize="16" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" Foreground="{Binding SeverityBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" TextBlock.FontSize="12">
+                                            <TextBlock Text="{Binding Description}" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Margin="12,0,0,0" Foreground="{StaticResource TextMuted}"
+                                                       Visibility="{Binding HasTrend, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Run Text="{Binding TrendText, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Border CornerRadius="6" Padding="12,8" Margin="0,8,0,0"
+                                                Background="{StaticResource BgTertiary}"
+                                                Visibility="{Binding HasDetail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Detail}" FontSize="11" FontFamily="Consolas"
+                                                       Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" MaxHeight="120"/>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                                    Visibility="{Binding HasRecommendation, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <materialDesign:PackIcon Kind="LightbulbOnOutline" Width="14" Height="14"
+                                                                     Foreground="{StaticResource AccentPrimary}"
+                                                                     VerticalAlignment="Top" Margin="0,1,6,0"/>
+                                            <TextBlock Text="{Binding Recommendation}" FontSize="12"
+                                                       Foreground="{StaticResource AccentPrimary}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- "No issues" state -->
+                <Border CornerRadius="8" Padding="24" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                        Visibility="{Binding ShieldDashboard.HasInsights, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CheckCircle" Width="36" Height="36" Foreground="{StaticResource Success}"
+                                                 HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="No issues detected" FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Success}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Black Widow analyzed your Shield events and found nothing actionable. Keep monitoring!"
+                                   FontSize="12" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Reference Tables -->
+                <TextBlock Text="Details" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,8,0,12"/>
+
+                <!-- Login Security Analysis -->
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="ShieldLock" Width="18" Height="18" Foreground="#D29922" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Login Security Analysis" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <Run Text="{Binding ShieldDashboard.FailedLoginTotal, Mode=OneWay, FallbackValue=0}"/><Run Text=" total failures"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.LoginDetails}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Padding="12,10" Margin="0,0,0,8"
+                                            Background="{StaticResource BgTertiary}"
+                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Ip" Width="14" Height="14" Foreground="{Binding SeverityBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding IpAddress}" FontSize="13" FontWeight="Bold" FontFamily="Consolas"
+                                                               Foreground="{StaticResource TextPrimary}"/>
+                                                </StackPanel>
+                                                <WrapPanel Margin="0,5,0,0">
+                                                    <Border CornerRadius="3" Padding="6,2" Margin="0,0,6,3" Background="#1A3D5C">
+                                                        <TextBlock Text="{Binding PrimaryReasonFriendly}" FontSize="10" Foreground="#58A6FF"/>
+                                                    </Border>
+                                                    <Border CornerRadius="3" Padding="6,2" Margin="0,0,6,3" Background="#2D2714">
+                                                        <TextBlock Text="{Binding LoginTypeDecoded}" FontSize="10" Foreground="#D29922"/>
+                                                    </Border>
+                                                    <Border CornerRadius="3" Padding="6,2" Margin="0,0,6,3" Background="#1A2D1A">
+                                                        <TextBlock Text="{Binding BrowserOrApp}" FontSize="10" Foreground="#3FB950"/>
+                                                    </Border>
+                                                </WrapPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <materialDesign:PackIcon Kind="AccountMultiple" Width="12" Height="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                    <TextBlock FontSize="10" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" MaxWidth="500">
+                                                        <Run Text="{Binding UniqueTargets, Mode=OneWay, StringFormat='{}{0} users: '}"/><Run Text="{Binding UserNamesDisplay, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding ReasonsDisplay}" FontSize="10" Foreground="{StaticResource TextMuted}"
+                                                           Margin="0,3,0,0" TextWrapping="Wrap"
+                                                           Visibility="{Binding HasMultipleReasons, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding AttemptsDisplay}" FontSize="20" FontWeight="Bold"
+                                                           Foreground="{Binding SeverityBrush}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="attempts" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Reason summary table -->
+                        <TextBlock Text="Failure Reasons Summary" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}" Margin="0,6,0,6">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShieldDashboard.FailedLogins.Count, FallbackValue=0}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.FailedLogins}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="8,0">
+                                            <Run Text="{Binding UniqueUsers, Mode=OneWay}"/><Run Text=" users · "/><Run Text="{Binding SubLabel, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="2" Text="{Binding CountDisplay}" FontSize="12" FontWeight="Bold"
+                                                   Foreground="#D29922" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="No failed logins" FontSize="11" Foreground="{StaticResource Success}" HorizontalAlignment="Center" Margin="0,8,0,4">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShieldDashboard.FailedLoginTotal, FallbackValue=0}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Apex Exception Types -->
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="AlertCircle" Width="16" Height="16" Foreground="#F85149" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Exception Types" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.ApexExceptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold" Foreground="#F85149" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding SubLabel}" FontSize="10" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
+                                                       Visibility="{Binding SubLabel, Converter={StaticResource NullToVisibilityConverter}}" MaxHeight="40"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding CountDisplay}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="#F85149" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="No exceptions" FontSize="11" Foreground="{StaticResource Success}" HorizontalAlignment="Center" Margin="0,8,0,4">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShieldDashboard.ApexExceptions.Count, FallbackValue=0}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Busiest API Endpoints -->
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="Api" Width="16" Height="16" Foreground="{StaticResource AccentPrimary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Busiest API Endpoints" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                        </StackPanel>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="ENDPOINT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                            <TextBlock Grid.Column="1" Text="CALLS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="AVG" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="MAX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="USERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.TopApiEndpoints}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="6,4" Margin="0,0,0,1" CornerRadius="3">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CountDisplay}" FontSize="11" Foreground="{StaticResource AccentPrimary}"
+                                                       HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding AvgDurationDisplay}" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding MaxDurationDisplay}" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="4" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right">
+                                                <Run Text="{Binding UniqueUsers, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Slowest API Endpoints -->
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="Turtle" Width="16" Height="16" Foreground="#D29922" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Slowest APIs" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="  (min 10 calls)" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom"/>
+                        </StackPanel>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="ENDPOINT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                            <TextBlock Grid.Column="1" Text="CALLS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="AVG" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="MAX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="USERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.SlowestApiEndpoints}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="6,4" Margin="0,0,0,1" CornerRadius="3">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CountDisplay}" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding AvgDurationDisplay}" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="#D29922" HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding MaxDurationDisplay}" FontSize="11" Foreground="#F85149"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="4" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right">
+                                                <Run Text="{Binding UniqueUsers, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Top Pages with EPT -->
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,16" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="Monitor" Width="16" Height="16" Foreground="{StaticResource AccentPrimary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Page Views" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="  (EPT = Experienced Page Time)" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom"/>
+                        </StackPanel>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PAGE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                            <TextBlock Grid.Column="1" Text="VIEWS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="AVG EPT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="MAX EPT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="USERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding ShieldDashboard.TopPages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="6,4" Margin="0,0,0,1" CornerRadius="3">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CountDisplay}" FontSize="11" Foreground="{StaticResource AccentPrimary}"
+                                                       HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding AvgDurationDisplay}" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding MaxDurationDisplay}" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                                                       HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="4" FontSize="11" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right">
+                                                <Run Text="{Binding UniqueUsers, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+
+            <!-- Governor Archaeology -->
+            <StackPanel Margin="0,16,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <materialDesign:PackIcon Kind="DatabaseSearch" Width="18" Height="18" Foreground="{StaticResource AccentPrimary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Governor Archaeology" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock Text=" — worst offenders across all sessions" FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                </StackPanel>
+                <TextBlock Text="{Binding GovernorArchaeologySubtitle}" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,12"/>
+
+                <ProgressBar IsIndeterminate="True" Width="120" HorizontalAlignment="Left"
+                             Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,12"
+                             Visibility="{Binding IsGovernorArchaeologyLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <!-- No data yet -->
+                <Border CornerRadius="8" Padding="20" Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                        Visibility="{Binding HasGovernorArchaeology, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="DatabaseOff" Width="32" Height="32" Foreground="{StaticResource TextMuted}"
+                                                 HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="No archaeology data yet" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Open debug log files or enable monitoring to build your archaeology."
+                                   FontSize="12" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Has data -->
+                <StackPanel Visibility="{Binding HasGovernorArchaeology, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <!-- Top SOQL Consumers -->
+                    <Border CornerRadius="8" Padding="14" Margin="0,0,0,12" Background="{StaticResource BgSecondary}"
+                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                            Visibility="{Binding GovernorArchaeology.HasSoqlData, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <materialDesign:PackIcon Kind="DatabaseArrowRight" Width="16" Height="16" Foreground="#58A6FF" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Top SOQL Consumers" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Text="  (avg queries per execution)" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ENTRY POINT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Grid.Column="1" Text="AVG / LIMIT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Text="MAX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Text="AVG CPU" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="4" Text="RUNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding GovernorArchaeology.TopBySoql}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="4,5" CornerRadius="3" Margin="0,0,0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="70"/><ColumnDefinition Width="70"/><ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding ShortEntryPoint}" FontSize="11"
+                                                           Foreground="{StaticResource TextPrimary}" FontFamily="Consolas"
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding EntryPoint}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding AvgSoqlDisplay}" FontSize="11" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Right" Foreground="{Binding SoqlRiskBrush}"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding MaxSoqlDisplay}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding AvgCpuDisplay}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding ExecutionCount}" FontSize="11"
+                                                           Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Top CPU Consumers -->
+                    <Border CornerRadius="8" Padding="14" Margin="0,0,0,12" Background="{StaticResource BgSecondary}"
+                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                            Visibility="{Binding GovernorArchaeology.HasCpuData, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <materialDesign:PackIcon Kind="Cpu64Bit" Width="16" Height="16" Foreground="#D29922" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Top CPU Consumers" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Text="  (10s limit per transaction)" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/><ColumnDefinition Width="80"/><ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ENTRY POINT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Grid.Column="1" Text="AVG CPU" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Text="MAX CPU" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Text="AVG DURATION" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="4" Text="RUNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding GovernorArchaeology.TopByCpu}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="4,5" CornerRadius="3" Margin="0,0,0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="70"/><ColumnDefinition Width="80"/><ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding ShortEntryPoint}" FontSize="11"
+                                                           Foreground="{StaticResource TextPrimary}" FontFamily="Consolas"
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding EntryPoint}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding AvgCpuDisplay}" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="#D29922" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding MaxCpuDisplay}" FontSize="11"
+                                                           Foreground="#F85149" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding AvgDurationDisplay}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding ExecutionCount}" FontSize="11"
+                                                           Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- N+1 Query Patterns -->
+                    <Border CornerRadius="8" Padding="14" Margin="0,0,0,12" Background="{StaticResource BgSecondary}"
+                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                            Visibility="{Binding GovernorArchaeology.HasNPlusOneData, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <materialDesign:PackIcon Kind="DatabaseRefresh" Width="16" Height="16" Foreground="#F85149" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="N+1 Query Patterns" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock Text="  (same SOQL in a loop — fix with bulk patterns)" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Bottom"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="80"/><ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ENTRY POINT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Grid.Column="1" Text="AVG DUPS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Text="AVG SOQL" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Text="RUNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding GovernorArchaeology.TopByNPlusOne}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="4,5" CornerRadius="3" Margin="0,0,0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgHover}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="80"/><ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding ShortEntryPoint}" FontSize="11"
+                                                           Foreground="{StaticResource TextPrimary}" FontFamily="Consolas"
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding EntryPoint}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding AvgDupDisplay}" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="#F85149" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding AvgSoqlDisplay}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding ExecutionCount}" FontSize="11"
+                                                           Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

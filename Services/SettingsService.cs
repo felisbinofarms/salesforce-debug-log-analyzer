@@ -12,15 +12,28 @@ public class SettingsService
     private readonly string _settingsPath;
     private AppSettings? _cachedSettings;
 
-    public SettingsService()
-    {
-        var appDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "BlackWidow"
-        );
+    public SettingsService() : this(null) { }
 
-        Directory.CreateDirectory(appDataPath);
-        _settingsPath = Path.Combine(appDataPath, "settings.json");
+    /// <summary>
+    /// Creates a SettingsService. Pass a custom path for testing isolation.
+    /// </summary>
+    internal SettingsService(string? settingsPath)
+    {
+        if (settingsPath != null)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+            _settingsPath = settingsPath;
+        }
+        else
+        {
+            var appDataPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "BlackWidow"
+            );
+
+            Directory.CreateDirectory(appDataPath);
+            _settingsPath = Path.Combine(appDataPath, "settings.json");
+        }
     }
 
     /// <summary>

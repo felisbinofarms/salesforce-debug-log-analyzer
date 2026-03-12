@@ -1,27 +1,29 @@
 # 🎯 PROJECT STATUS - READ THIS FIRST
-**Last Updated:** February 17, 2026  
-**Current Phase:** Monetization Sprint (7 days behind schedule)  
-**Launch Target:** March 29, 2026 (delayed from March 15)  
-**Critical Path:** 3 issues blocking revenue (0% complete)
+**Last Updated:** March 11, 2026  
+**Current Phase:** Pre-launch (Distribution & Final Polish)  
+**Launch Target:** March 29, 2026  
+**Critical Path:** Windows installer + LemonSqueezy store setup
 
 ---
 
-## ⚡ URGENT - Start Here Monday Feb 17
+## ⚡ What To Focus On Now
 
-### What To Do Right Now:
-1. **Decision needed:** Choose launch strategy (see options below)
-2. **Start Issue #1:** License validation system (4 days)
-3. **Then Issue #2:** Upgrade flow UI (3 days)
-4. **Then Issue #3:** Stripe payment (4 days)
+### Remaining v1.0 Blockers:
+1. **LemonSqueezy store setup** — Create account, product variants, checkout URLs (store-side, not code)
+2. **Webhook handler** — Server-side endpoint for payment → license provisioning
+3. **Windows installer** — WiX or NSIS packaging for distribution
+4. **Raw log viewer** — AvalonEdit is installed but not wired to UI
 
-### Critical Blockers (Must Build Before Launch):
-- ❌ **Issue #1:** License validation - NOT STARTED (0%)
-- ❌ **Issue #2:** Upgrade UI - NOT STARTED (0%)
-- ❌ **Issue #3:** Stripe payments - NOT STARTED (0%)
+### What's Already Done (Previously Thought Missing):
+- ✅ **Issue #1: License validation** — COMPLETE (LicenseService.cs, 623 lines)
+- ✅ **Issue #2: Upgrade flow UI** — COMPLETE (UpgradeDialog.xaml + code-behind)
+- ✅ **Issue #3: Payment integration** — COMPLETE (LemonSqueezy, not Stripe)
+- ✅ **Trial enforcement** — 14-day local Pro trial, no credit card
+- ✅ **Feature gating** — Free vs Pro tier checks across all commands
+- ✅ **Device fingerprinting** — SHA256-based, 2 devices per license
 
-**Days until launch:** 27 (if March 15) or 41 (if March 29)  
-**Days of work needed:** 11 minimum  
-**Current status:** BEHIND SCHEDULE - no new features until monetization done!
+**Days until launch:** 18  
+**Build status:** 0 errors, 0 warnings, 289/289 tests passing
 
 ---
 
@@ -44,135 +46,107 @@
 
 ---
 
-## 📊 What's Actually Built (As of Feb 16, 2026)
+## 📊 What's Actually Built (As of March 11, 2026)
 
-### ✅ COMPLETE (95% of technical features)
+### ✅ COMPLETE (98% of technical features)
 
 **Core Engine:**
 - ✅ LogParserService (3,522 lines) - Parses Salesforce logs
 - ✅ LogGroupService - Groups related logs into transactions
-- ✅ **LogExplainerService (524 lines)** - NEW Feb 16! Plain English with code examples
+- ✅ LogExplainerService (524 lines) - Plain English with code examples
 - ✅ LogMetadataExtractor - Fast scanning
 
-**Services (11/11):**
+**Services (24 total):**
 - ✅ SalesforceApiService - API integration
 - ✅ OAuthService - OAuth 2.0 auth
 - ✅ SalesforceCliService - Real-time streaming
 - ✅ OrgMetadataService - User/org enrichment
 - ✅ EditorBridgeService - VSCode integration
 - ✅ CacheService, SettingsService, ReportExportService
-- ✅ 3 more parsing services
+- ✅ LicenseService (623 lines) - AES-256 encryption, LemonSqueezy API, feature gating
+- ✅ PiiScannerService - Sensitive data detection
+- ✅ ShieldAnomalyDetector - Security anomaly detection
+- ✅ ShieldEventLogService - Shield CSV parsing
+- ✅ TrendAnalysisService - Historical pattern analysis
+- ✅ AlertRoutingService - Alert management
+- ✅ BackgroundMonitoringService - Continuous monitoring
+- ✅ MonitoringDatabaseService - SQLite persistence
+- ✅ SystemTrayService - System tray integration
+- ✅ ToastNotificationService - Desktop notifications
 
-**UI (10/10 views):**
-- ✅ MainWindow (2,435 lines) - Full dashboard
+**UI (13 views):**
+- ✅ MainWindow - Full dashboard
 - ✅ ConnectionDialog, TraceFlagDialog, DebugSetupWizard
 - ✅ SettingsDialog (6 tabs)
-- ✅ 5 more dialogs
+- ✅ UpgradeDialog - Feature comparison, trial start, license activation
+- ✅ InsightsPanel - Governance recommendations sidebar
+- ✅ AlertCenterPanel, AlertDetailDialog
+- ✅ ConnectionsView, OAuthBrowserDialog, DebugLevelDialog, StreamingOptionsDialog
 
 **ViewModel:**
-- ✅ MainViewModel (2,604 lines) - 19 RelayCommands
+- ✅ MainViewModel - Fully wired with RelayCommands
 
 **Models:**
-- ✅ LogAnalysis with 50+ properties
-- ✅ DetailedIssue with code examples (NEW Feb 16!)
-- ✅ LogGroup, ExecutionNode, DatabaseOperation, etc.
+- ✅ LogModels - LogAnalysis with 50+ properties, DetailedIssue with code examples
+- ✅ LicenseModels - License/LicenseTier/LicenseFeature enums, feature flags
+- ✅ MonitoringModels - Shield/trend/alert models
+- ✅ SalesforceModels
 
 **Tests:**
-- ✅ 2 test files (7/7 passing)
+- ✅ 12 test files (289/289 tests passing)
 - ✅ 231 sample logs
 
 **Build Status:**
-- ✅ 0 errors
+- ✅ 0 errors, 0 warnings
 - ✅ Compiles successfully
 
-### ❌ MISSING (0% of monetization)
+### ✅ MONETIZATION (Client-side Complete)
 
-**Critical for revenue:**
-- ❌ LicenseService.cs - NOT CREATED
-- ❌ UpgradeDialog.xaml - NOT CREATED
-- ❌ StripeService.cs - NOT CREATED
-- ❌ No trial enforcement
-- ❌ No feature gating (Free vs Pro)
-- ❌ No payment processing
-- ❌ No license validation API
+- ✅ LicenseService.cs - Full AES-256 encryption, device fingerprinting, LemonSqueezy API
+- ✅ UpgradeDialog.xaml - Feature comparison, trial CTA, license key activation
+- ✅ LicenseModels.cs - Free/Trial/Pro/Team/Enterprise tiers
+- ✅ Feature gating enforcement across all Pro features
+- ✅ 14-day trial system (no server required)
+- ✅ 7-day offline grace period
 
-**Impact:** Cannot charge users or enforce limits
+### ❌ REMAINING FOR v1.0
 
----
+**Store/Server-side (not code):**
+- ❌ LemonSqueezy account + product variants configured
+- ❌ Server-side webhook handler for payment events
 
-## 🚀 Launch Strategy Options (CHOOSE ONE)
+**Distribution:**
+- ❌ Windows installer (WiX or NSIS)
+- ❌ Auto-update mechanism
 
-### Option 1: Professional Launch (RECOMMENDED)
-**Date:** March 29, 2026 (+14 days delay)
-
-**Timeline:**
-- Week 1 (Feb 17-23): Issues #1 + #2 (License + Upgrade UI)
-- Week 2 (Feb 24-Mar 2): Issues #3 + #6 (Stripe + Installer)
-- Week 3 (Mar 3-9): Beta testing with 10 users
-- Week 4 (Mar 10-16): Bug fixes + marketing
-- Week 5 (Mar 17-23): Final polish
-- Week 6 (Mar 24-29): Launch prep
-- **March 29: LAUNCH** with full monetization
-
-**Pros:**
-- ✅ Professional launch
-- ✅ Can charge from day 1
-- ✅ No technical debt
-- ✅ Complete feature set
-
-**Cons:**
-- ⏰ 14-day delay from original plan
+**Polish:**
+- ❌ Raw log viewer UI (AvalonEdit installed, not wired)
+- ❌ HTML export with charts
 
 ---
 
-### Option 2: Hybrid Launch
-**Free Beta:** March 15, 2026 (20 invite-only users)  
-**Paid Launch:** April 1, 2026
+## 🚀 Launch Plan — March 29, 2026
 
-**Timeline:**
-- Week 1 (Feb 17-23): Recruit beta testers, prepare free version
-- **March 15:** Launch free beta (no payments)
-- Week 2-3 (Mar 16-30): Build monetization while users test
-- **April 1:** Add payments, convert beta users
+**Monetization code is DONE.** Remaining work is non-code setup + distribution.
 
-**Pros:**
-- ✅ Hit March 15 deadline (sort of)
-- ✅ Validate product-market fit first
-- ✅ Beta users = testimonials
+### Week of Mar 11-16: Store & Webhook
+- [ ] Create LemonSqueezy account and configure product variants
+- [ ] Deploy webhook handler (payment event → license key provisioning)
+- [ ] Test full purchase → activation flow end-to-end
 
-**Cons:**
-- ⚠️ Risk: Users expect free forever
-- ⚠️ 2 weeks delayed revenue
+### Week of Mar 17-23: Distribution & Beta
+- [ ] Build Windows installer (WiX or NSIS)
+- [ ] Recruit 10 beta testers (Reddit, LinkedIn)
+- [ ] Collect feedback, fix bugs
 
----
-
-### Option 3: Fire Sale ❌ NOT RECOMMENDED
-Launch March 15 as free, add payments "later"
-
-**Verdict:** DON'T DO THIS - kills business model
+### Week of Mar 24-29: Launch
+- [ ] Marketing materials (landing page, demo video)
+- [ ] Final polish + README update
+- [ ] **March 29: LAUNCH** with full monetization
 
 ---
 
-## 📋 Next Steps (What To Do Tomorrow)
-
-### Monday Feb 17, 2026 - START HERE:
-
-**Morning (2 hours):**
-1. ✅ Read this file completely
-2. ✅ Read [PROJECT_REVIEW_FEB_16_2026.md](PROJECT_REVIEW_FEB_16_2026.md)
-3. ✅ Choose launch strategy (Option 1 or 2)
-4. ✅ Open [ISSUES_BACKLOG.md](ISSUES_BACKLOG.md) and read Issue #1
-
-**Afternoon (4-6 hours):**
-5. ✅ Create `Models/LicenseModels.cs` (see NEXT_STEPS.md for code)
-6. ✅ Create `Services/LicenseService.cs` skeleton
-7. ✅ Wire into MainViewModel
-8. ✅ Add sample feature gating
-9. ✅ Commit progress to Git
-
-**End of Day:**
-10. ✅ Update this file's progress checklist (see bottom)
-11. ✅ Type `/pm standup` in Copilot Chat
+## 📋 Next Steps (Start Here)
 
 ### Tuesday Feb 18 - Continue Issue #1:
 
@@ -202,36 +176,24 @@ Launch March 15 as free, add payments "later"
 ## 🚨 Rules To Prevent Getting Off Track
 
 ### DO:
-- ✅ Focus ONLY on Issues #1, #2, #3 until complete
+- ✅ Focus on remaining launch blockers (store setup, installer, webhook)
 - ✅ Type `/pm scope-check` before starting ANY new work
 - ✅ Commit daily to Git with clear messages
-- ✅ Update this file daily with progress
-- ✅ Ask "Does this make money?" before coding
+- ✅ Ask "Does this ship v1.0?" before coding
 
 ### DON'T:
-- ❌ Add ANY features not in Issues #1-3
-- ❌ Refactor code unless blocking
-- ❌ Optimize performance unless blocking
-- ❌ Build "cool ideas" until monetization done
-- ❌ Research alternatives for >30 minutes
-
-### If You Get Tempted:
-1. Type `/pm idea` to capture it in backlog
-2. Mark it for v1.1 or v2.0
-3. Return to current issue immediately
-
-**Remember:** You already have 5 unplanned features! No more until you can charge users.
+- ❌ Add features not in the v1.0 launch checklist
+- ❌ Refactor code unless blocking launch
+- ❌ Start Phase 7/8 (UI redesign, Architect View) until after launch
 
 ---
 
-## 📚 Critical Documents (Read These)
+## 📚 Critical Documents
 
 **Must Read:**
-1. [PROJECT_PLAN.md](PROJECT_PLAN.md) - 6-week timeline
-2. [PROJECT_REVIEW_FEB_16_2026.md](PROJECT_REVIEW_FEB_16_2026.md) - Complete status (55 pages)
-3. [ISSUES_BACKLOG.md](ISSUES_BACKLOG.md) - Issue #1, #2, #3 specs
-4. [.github/copilot-instructions.md](.github/copilot-instructions.md) - Copilot PM mode
-5. [NEXT_STEPS.md](NEXT_STEPS.md) - Monday action plan with code
+1. [ROADMAP.md](ROADMAP.md) - Full feature roadmap with phase tracking
+2. [ISSUES_BACKLOG.md](ISSUES_BACKLOG.md) - Detailed issue specs
+3. [.github/copilot-instructions.md](.github/copilot-instructions.md) - Copilot PM mode
 
 **Reference:**
 - [EXAMPLE_OUTPUT.md](EXAMPLE_OUTPUT.md) - Vision for explanations
@@ -240,70 +202,42 @@ Launch March 15 as free, add payments "later"
 
 ---
 
-## 🎓 What Copilot Should Know (For New Computer)
-
-When you set up on the new computer, tell Copilot:
+## 🎓 What Copilot Should Know
 
 ```
-This is Black Widow, a Salesforce debug log analyzer. We're 27 days from launch
-but 7 days behind schedule on monetization. 
+This is Black Widow, a Salesforce debug log analyzer. We're 18 days from launch
+(March 29, 2026).
 
-CRITICAL: We MUST build Issues #1-3 (license validation, upgrade UI, Stripe 
-payments) before ANY other features. No exceptions.
+The app is feature-complete: 24 services, 13 views, 289 passing tests, 0 warnings.
+Monetization code is DONE (LicenseService + UpgradeDialog + LemonSqueezy integration).
 
-The core technical product is 95% complete. The business infrastructure is 0% 
-complete. We cannot charge users until Issues #1-3 are done.
+Remaining work: LemonSqueezy store-side setup, webhook handler, Windows installer.
 
-Read PROJECT_STATUS.md and PROJECT_REVIEW_FEB_16_2026.md for full context.
-
-Type `/pm timeline` to see progress. Type `/pm scope-check` before starting 
-any new work.
+Read PROJECT_STATUS.md and ROADMAP.md for full context.
 ```
 
 ---
 
-## 🔧 Technical Setup (New Computer)
+## 🔧 Technical Setup
 
-**Prerequisites:**
 ```powershell
 # Check .NET 8 is installed
 dotnet --version  # Should be 8.0.x
 
-# Clone repo (if not already done)
+# Clone and build
 git clone https://github.com/felisbinofarms/salesforce-debug-log-analyzer.git
-cd log_analyser
-
-# Restore packages
+cd salesforce-debug-log-analyzer
 dotnet restore
-
-# Verify build
-dotnet build  # Should succeed with 0 errors
+dotnet build    # 0 errors, 0 warnings
 
 # Run tests
 cd Tests
-dotnet test   # Should pass 7/7 tests
+dotnet test     # 289/289 passing
 
 # Run app
 cd ..
 dotnet run
 ```
-
-**VSCode Extensions:**
-- C# Dev Kit
-- GitHub Copilot
-- GitLens
-
----
-
-## 📊 Progress Tracker (Update Daily)
-
-### Week 1: Feb 17-23 (License + Upgrade UI)
-- [ ] Mon: LicenseService skeleton + storage
-- [ ] Tue: Online validation + fingerprinting
-- [ ] Wed: Feature gating + integration
-- [ ] Thu: UpgradeDialog.xaml started
-- [ ] Fri: UpgradeDialog complete
-- [ ] Sat/Sun: Buffer for unexpected issues
 
 ### Week 2: Feb 24-Mar 2 (Stripe + Installer)
 - [ ] Mon: StripeService skeleton

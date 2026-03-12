@@ -148,8 +148,8 @@ public class LogParserGoldenTests
         Assert.Equal(6, lim.QueryRows);
 
         // Parsed events: 6 SOQL, 0 DML (no discrepancy → no hidden queries)
-        Assert.Equal(6, a.DatabaseOperations.Count(d => d.OperationType == "SOQL"));
-        Assert.Equal(0, a.DatabaseOperations.Count(d => d.OperationType == "DML"));
+        Assert.Equal(6, a.DatabaseOperations!.Count(d => d.OperationType == "SOQL"));
+        Assert.Equal(0, a.DatabaseOperations!.Count(d => d.OperationType == "DML"));
 
         // N+1 detection: 6 identical queries should be grouped as duplicates
         Assert.NotNull(a.DuplicateQueries);
@@ -195,8 +195,8 @@ public class LogParserGoldenTests
 
         // Parsed events: 1 SOQL visible in log (the OpportunityTrigger query)
         // Governor (11) > parsed (1) → 10 queries hidden in managed package
-        Assert.Equal(1, a.DatabaseOperations.Count(d => d.OperationType == "SOQL"));
-        var hiddenSoql = lim.SoqlQueries - a.DatabaseOperations.Count(d => d.OperationType == "SOQL");
+        Assert.Equal(1, a.DatabaseOperations!.Count(d => d.OperationType == "SOQL"));
+        var hiddenSoql = lim.SoqlQueries - a.DatabaseOperations!.Count(d => d.OperationType == "SOQL");
         Assert.Equal(10, hiddenSoql); // 10 queries hidden (from crm package)
     }
 
@@ -305,7 +305,7 @@ public class LogParserGoldenTests
         Assert.Equal(1, lim.SoqlQueries); // Only the Account query counts against governor
 
         // Parser should identify 3 total SOQL events
-        Assert.Equal(3, a.DatabaseOperations.Count(d => d.OperationType == "SOQL"));
+        Assert.Equal(3, a.DatabaseOperations!.Count(d => d.OperationType == "SOQL"));
 
         // CMDT split: 2 __mdt queries are free, 1 regular
         Assert.Equal(1, a.RegularSoqlCount);
@@ -313,6 +313,6 @@ public class LogParserGoldenTests
 
         // Consistency check: regular + cmdt = total parsed events
         Assert.Equal(a.RegularSoqlCount + a.CustomMetadataQueryCount,
-            a.DatabaseOperations.Count(d => d.OperationType == "SOQL"));
+            a.DatabaseOperations!.Count(d => d.OperationType == "SOQL"));
     }
 }

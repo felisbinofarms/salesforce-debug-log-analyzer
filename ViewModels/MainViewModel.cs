@@ -2712,6 +2712,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task LoadLogFolder()
     {
+        if (RequiresPro(LicenseFeature.FolderImport)) return;
+
         StatusMessage = "Select folder containing debug logs...";
 
         try
@@ -2920,7 +2922,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var dialog = new SettingsDialog();
+            var dialog = new SettingsDialog(_licenseService);
             if (dialog.ShowDialog() == true)
             {
                 StatusMessage = "✓ Settings saved successfully";
@@ -2938,6 +2940,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ExportReport()
     {
+        if (RequiresPro(LicenseFeature.ExportReports)) return;
+
         if (SelectedLog == null)
         {
             StatusMessage = "⚠️ Please select a log to export";

@@ -1,3 +1,4 @@
+using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
 using Serilog;
 using System.Diagnostics;
@@ -13,13 +14,15 @@ public partial class SettingsDialog : Window
     private readonly SettingsService _settingsService;
     private AppSettings _currentSettings;
     private string _currentTab = "General";
+    private readonly LicenseService? _licenseService;
 
-    public SettingsDialog()
+    public SettingsDialog(LicenseService? licenseService = null)
     {
         InitializeComponent();
         _settingsService = new SettingsService();
         _currentSettings = _settingsService.Load();
-        
+        _licenseService = licenseService;
+
         // Load initial tab
         LoadGeneralTab();
         HighlightTab(GeneralTabButton);
@@ -65,6 +68,12 @@ public partial class SettingsDialog : Window
     {
         LoadAboutTab();
         HighlightTab(AboutTabButton);
+    }
+
+    private void LicenseTabButton_Click(object sender, RoutedEventArgs e)
+    {
+        LoadLicenseTab();
+        HighlightTab(LicenseTabButton);
     }
 
     private void HighlightTab(Button selectedButton)
@@ -805,6 +814,169 @@ public partial class SettingsDialog : Window
         });
     }
 
+    private void LoadLicenseTab()
+    {
+        _currentTab = "License";
+        ContentPanel.Children.Clear();
+
+        AddHeader("License & Subscription");
+
+        if (_licenseService == null)
+        {
+            AddHelperText("License service unavailable.");
+            return;
+        }
+
+        // Current status badge
+        var tier = _licenseService.CurrentTier;
+        var tierLabel = tier switch
+        {
+            LicenseTier.Free     => "Free",
+            LicenseTier.Trial    => $"Trial — {_licenseService.TrialDaysRemaining()} days remaining",
+            LicenseTier.Pro      => "Pro  ✓",
+            LicenseTier.Team     => "Team  ✓",
+            LicenseTier.Enterprise => "Enterprise  ✓",
+            _                    => tier.ToString()
+        };
+        var statusColor = tier is LicenseTier.Pro or LicenseTier.Team or LicenseTier.Enterprise
+            ? "#23A559"
+            : (tier == LicenseTier.Trial ? "#F0B232" : "#B5BAC1");
+
+        var statusPanel = new Border
+        {
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2B2D31")),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(16, 12, 16, 12),
+            Margin = new Thickness(0, 0, 0, 20)
+        };
+        var statusText = new TextBlock
+        {
+            Text = $"Current plan:  {tierLabel}",
+            FontSize = 16,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(statusColor))
+        };
+        statusPanel.Child = statusText;
+        ContentPanel.Children.Add(statusPanel);
+
+        // --- Activate Key Section ---
+        AddSectionSeparator();
+        AddHeader("Activate License Key");
+        AddHelperText("After purchasing, paste your license key below.");
+
+        AddLabel("License Key");
+        var keyBox = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            ToolTip = "Paste license key from your purchase email"
+        };
+        ContentPanel.Children.Add(keyBox);
+
+        AddLabel("Email address (used for purchase)");
+        var emailBox = new TextBox
+        {
+            Style = (Style)FindResource("SettingTextBox"),
+            ToolTip = "Email address used when buying Black Widow"
+        };
+        ContentPanel.Children.Add(emailBox);
+
+        var activateBtn = new Button
+        {
+            Content = "Activate Key",
+            Style = (Style)FindResource("MaterialDesignRaisedButton"),
+            Margin = new Thickness(0, 12, 0, 0),
+            Width = 160,
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        activateBtn.Click += async (s, e) =>
+        {
+            var key   = keyBox.Text.Trim();
+            var email = emailBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(email))
+            {
+                MessageBox.Show("Please enter both the license key and your email.", "Missing Fields",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            activateBtn.IsEnabled = false;
+            activateBtn.Content = "Activating...";
+            try
+            {
+                var result = await _licenseService.ApplyLicenseAsync(key, email);
+                if (result.Success)
+                {
+                    MessageBox.Show(result.Message, "Activated! 🎉", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadLicenseTab();
+                }
+                else
+                {
+                    MessageBox.Show(result.Message, "Activation Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                activateBtn.IsEnabled = true;
+                activateBtn.Content = "Activate Key";
+            }
+        };
+        ContentPanel.Children.Add(activateBtn);
+
+        // --- Deactivate Section (only if licensed) ---
+        if (tier is LicenseTier.Pro or LicenseTier.Team or LicenseTier.Enterprise)
+        {
+            AddSectionSeparator();
+            AddHeader("Device Management");
+            AddHelperText("Deactivate on this device to free up a seat (e.g. when switching computers).");
+
+            var deactivateBtn = new Button
+            {
+                Content = "Deactivate on This Device",
+                Style = (Style)FindResource("MaterialDesignFlatButton"),
+                Foreground = (Brush)FindResource("Danger"),
+                Margin = new Thickness(0, 8, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            deactivateBtn.Click += async (s, e) =>
+            {
+                var confirm = MessageBox.Show(
+                    "This will remove your Pro license from this device.\nYou can reactivate using your license key.",
+                    "Confirm Deactivate", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm != MessageBoxResult.Yes) return;
+
+                deactivateBtn.IsEnabled = false;
+                try
+                {
+                    await _licenseService.DeactivateLicenseAsync();
+                    MessageBox.Show("License deactivated. You are now on the Free plan.",
+                        "Deactivated", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadLicenseTab();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally { deactivateBtn.IsEnabled = true; }
+            };
+            ContentPanel.Children.Add(deactivateBtn);
+
+            // Manage subscription link
+            AddSectionSeparator();
+            AddLink("Manage Subscription / Billing", LicenseService.CustomerPortalUrl);
+        }
+
+        // --- Buy link for Free/Trial users ---
+        if (tier is LicenseTier.Free or LicenseTier.Trial)
+        {
+            AddSectionSeparator();
+            AddLink("Buy Black Widow Pro  ($29/mo)", LicenseService.CheckoutMonthlyUrl);
+            AddLink("Annual plan  ($249/year — save 28%)", LicenseService.CheckoutAnnualUrl);
+        }
+    }
+
     private void LoadAboutTab()
     {
         _currentTab = "About";
@@ -990,6 +1162,7 @@ public partial class SettingsDialog : Window
                 case "Advanced": LoadAdvancedTab(); break;
                 case "Monitoring": LoadMonitoringTab(); break;
                 case "About": LoadAboutTab(); break;
+                case "License": LoadLicenseTab(); break;
             }
 
             MessageBox.Show("Settings reset to defaults!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);

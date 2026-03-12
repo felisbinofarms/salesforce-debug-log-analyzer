@@ -139,6 +139,17 @@
                             HorizontalContentAlignment="Left"
                             Padding="15,10"
                             Margin="0,5"/>
+
+                    <Button x:Name="LicenseTabButton"
+                            Content="🔑 License"
+                            Click="LicenseTabButton_Click"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="{StaticResource TextPrimary}"
+                            FontSize="14"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="15,10"
+                            Margin="0,5"/>
                 </StackPanel>
             </Border>
 

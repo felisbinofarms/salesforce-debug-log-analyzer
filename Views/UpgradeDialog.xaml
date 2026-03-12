@@ -307,6 +307,12 @@
                     Width="200"
                     Click="BuyNow_Click"
                     Margin="0,0,16,0"/>
+            <Button x:Name="ActivateKeyButton"
+                    Content="I Have a Key"
+                    Style="{StaticResource SecondaryButton}"
+                    Width="160"
+                    Click="ActivateKey_Click"
+                    Margin="0,0,16,0"/>
             <Button x:Name="CancelButton" 
                     Content="Maybe Later" 
                     Style="{StaticResource LinkButton}"

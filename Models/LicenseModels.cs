@@ -66,6 +66,9 @@ public class License
     public bool IsExpired => DateTime.UtcNow > ExpiresDate;
     public bool NeedsOnlineValidation => (DateTime.UtcNow - LastValidated).Days >= 30;
     public bool InGracePeriod => Status == LicenseStatus.Offline && (DateTime.UtcNow - LastValidated).Days <= 7;
+
+    /// <summary>LemonSqueezy instance ID returned on activation — required for validation/deactivation</summary>
+    public string LemonSqueezyInstanceId { get; set; } = string.Empty;
 }
 
 /// <summary>Result returned by LicenseService.RevalidateIfNeededAsync()</summary>

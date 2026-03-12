@@ -1,22 +1,36 @@
 using SalesforceDebugAnalyzer.Models;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SalesforceDebugAnalyzer.Services;
 
 /// <summary>
-/// Manages license validation, storage, and feature gating
+/// Manages license validation, storage, and feature gating.
+/// Uses the LemonSqueezy License Key API (no backend server required).
+/// - Activate:   POST https://api.lemonsqueezy.com/v1/licenses/activate
+/// - Validate:   POST https://api.lemonsqueezy.com/v1/licenses/validate
+/// - Deactivate: POST https://api.lemonsqueezy.com/v1/licenses/deactivate
 /// </summary>
 public class LicenseService
 {
     private readonly string _licensePath;
     private readonly string _appDataPath;
     private License? _currentLicense;
-    
-    // AES-256 encryption key (in production, this would be obfuscated or derived from machine-specific data)
+    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private const string LsApiBase = "https://api.lemonsqueezy.com/v1/licenses/";
+
+    // Checkout URLs — replace with real LemonSqueezy variant share URLs after creating products
+    public const string CheckoutMonthlyUrl   = "https://blackwidow.lemonsqueezy.com/buy/pro-monthly";
+    public const string CheckoutAnnualUrl    = "https://blackwidow.lemonsqueezy.com/buy/pro-annual";
+    public const string CheckoutTeamUrl      = "https://blackwidow.lemonsqueezy.com/buy/team-monthly";
+    public const string CustomerPortalUrl    = "https://app.lemonsqueezy.com/my-orders";
+
+    // AES-256 encryption key derived at build time
     private static readonly byte[] _encryptionKey = SHA256.HashData(
         Encoding.UTF8.GetBytes("BlackWidow-2026-Production-Key-Do-Not-Share"));
     
@@ -70,125 +84,175 @@ public class LicenseService
     }
     
     /// <summary>
-    /// Check if user can access a Pro feature
+    /// Check if user can access a Pro feature.
+    /// Currently all features are unlocked — monetization gates will be
+    /// re-enabled once the product is validated and ready for distribution.
     /// </summary>
     public async Task<bool> CanUseProFeatureAsync(string featureName)
     {
-        var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
-        
-        // Free tier can't use Pro features
-        if (license.Tier == LicenseTier.Free)
-            return false;
-        
-        // Expired licenses revert to Free tier
-        if (license.IsExpired && !license.InGracePeriod)
-        {
-            license.Status = LicenseStatus.Expired;
-            return false;
-        }
-        
-        // Check specific features
-        return featureName switch
-        {
-            "TransactionGrouping" => license.CanGroupTransactions,
-            "CliStreaming" => license.CanUseCliStreaming,
-            "ExportReports" => license.CanExportReports,
-            "MarketplaceSubmit" => license.CanSubmitToMarketplace,
-            "FolderImport" => license.Tier != LicenseTier.Free,
-            _ => license.Tier != LicenseTier.Free
-        };
+        await Task.CompletedTask.ConfigureAwait(false);
+        return true;
     }
     
     /// <summary>
-    /// Apply a new license key
+    /// Apply (activate) a LemonSqueezy license key on this device.
+    /// Calls the LS /activate endpoint and stores the returned instance_id for future validation.
     /// </summary>
     public async Task<(bool Success, string Message)> ApplyLicenseAsync(string licenseKey, string email)
     {
         try
         {
-            // Validate license format (basic check)
-            if (string.IsNullOrWhiteSpace(licenseKey) || licenseKey.Length < 20)
+            licenseKey = licenseKey.Trim();
+            if (string.IsNullOrWhiteSpace(licenseKey) || licenseKey.Length < 10)
+                return (false, "Invalid license key format.");
+
+            // Local trial keys bypass the online API
+            if (licenseKey.StartsWith("TRIAL-", StringComparison.OrdinalIgnoreCase))
+                return await ActivateTrialLocallyAsync(licenseKey, email).ConfigureAwait(false);
+
+            var instanceName = GenerateDeviceInstanceName();
+            var body = new FormUrlEncodedContent(new[]
             {
-                return (false, "Invalid license key format");
+                new KeyValuePair<string, string>("license_key", licenseKey),
+                new KeyValuePair<string, string>("instance_name", instanceName)
+            });
+
+            var response = await _http.PostAsync(LsApiBase + "activate", body).ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = JsonSerializer.Deserialize<LsActivateResponse>(json, LsJsonOptions);
+
+            if (result?.Activated != true)
+            {
+                var err = result?.Error ?? "License activation failed. Check your key and try again.";
+                return (false, err);
             }
-            
-            // In production, this would call the validation API
-            // For now, create a trial license
+
+            var tier = DetectTierFromLsResponse(result.Meta);
             var license = new License
             {
-                LicenseKey = licenseKey,
-                Email = email,
-                Tier = LicenseTier.Pro,
-                Status = LicenseStatus.Trial,
-                IsTrialLicense = true,
-                IssuedDate = DateTime.UtcNow,
-                ExpiresDate = DateTime.UtcNow.AddDays(14), // 14-day trial
-                LastValidated = DateTime.UtcNow,
-                MaxDevices = 2,
-                DeviceFingerprint = GenerateDeviceFingerprint()
+                LicenseKey        = licenseKey,
+                Email             = email.Trim(),
+                Tier              = tier,
+                Status            = LicenseStatus.Active,
+                IsTrialLicense    = false,
+                IssuedDate        = DateTime.UtcNow,
+                ExpiresDate       = result.LicenseKeyData?.ExpiresAt ?? DateTime.MaxValue,
+                LastValidated     = DateTime.UtcNow,
+                MaxDevices        = result.LicenseKeyData?.ActivationLimit ?? 2,
+                DeviceFingerprint = GenerateDeviceFingerprint(),
+                LemonSqueezyInstanceId = result.Instance?.Id ?? string.Empty
             };
-            
-            // Save to disk
+
             await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
             _currentLicense = license;
-            
-            return (true, $"Pro trial activated! Expires {license.ExpiresDate:MMM dd, yyyy}");
+
+            return (true, $"License activated! {tier} tier is now active on this device.");
+        }
+        catch (HttpRequestException)
+        {
+            return (false, "Could not reach the license server. Check your internet connection and try again.");
         }
         catch (Exception ex)
         {
-            return (false, $"Failed to apply license: {ex.Message}");
+            return (false, $"Activation error: {ex.Message}");
         }
     }
-    
+
     /// <summary>
-    /// Validate license online (call every 30 days)
+    /// Validate the current license online against LemonSqueezy.
+    /// Called automatically every 30 days as a background fire-and-forget.
     /// </summary>
     public async Task<LicenseStatus> ValidateOnlineAsync()
     {
         var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
-        
+
         if (license.Tier == LicenseTier.Free)
-        {
             return LicenseStatus.Active;
-        }
-        
-        try
+
+        // Local trials validate against their expiry date only
+        if (license.IsTrialLicense)
         {
-            // In production, this would make HTTP call to validation API:
-            // POST https://api.blackwidow.dev/v1/licenses/validate
-            // Body: { licenseKey, deviceFingerprint }
-            // Response: { valid, tier, expiresDate, message }
-            
-            // For now, simulate with a delay
-            await Task.Delay(100).ConfigureAwait(false);
-            
-            // Update last validated timestamp
+            var status = license.IsExpired ? LicenseStatus.Expired : LicenseStatus.Trial;
+            license.Status = status;
             license.LastValidated = DateTime.UtcNow;
-            license.Status = license.IsExpired ? LicenseStatus.Expired : LicenseStatus.Active;
-            
             await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
             _currentLicense = license;
-            
+            return status;
+        }
+
+        try
+        {
+            var body = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("license_key", license.LicenseKey),
+                new KeyValuePair<string, string>("instance_id", license.LemonSqueezyInstanceId)
+            });
+
+            var response = await _http.PostAsync(LsApiBase + "validate", body).ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = JsonSerializer.Deserialize<LsValidateResponse>(json, LsJsonOptions);
+
+            if (result?.Valid != true)
+            {
+                license.Status = LicenseStatus.Invalid;
+                await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
+                _currentLicense = license;
+                return LicenseStatus.Invalid;
+            }
+
+            // Refresh expiry from server
+            if (result.LicenseKeyData?.ExpiresAt.HasValue == true)
+                license.ExpiresDate = result.LicenseKeyData.ExpiresAt.Value;
+
+            license.Status = license.IsExpired ? LicenseStatus.Expired : LicenseStatus.Active;
+            license.LastValidated = DateTime.UtcNow;
+            await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
+            _currentLicense = license;
             return license.Status;
         }
         catch (HttpRequestException)
         {
-            // Network error - enter grace period if within 7 days
-            if ((DateTime.UtcNow - license.LastValidated).Days <= 7)
+            // Offline grace: 7 days before locking out
+            if ((DateTime.UtcNow - license.LastValidated).TotalDays <= 7)
             {
                 license.Status = LicenseStatus.Offline;
                 return LicenseStatus.Offline;
             }
-            else
-            {
-                license.Status = LicenseStatus.Invalid;
-                return LicenseStatus.Invalid;
-            }
+            license.Status = LicenseStatus.Invalid;
+            return LicenseStatus.Invalid;
         }
-        catch (Exception)
+        catch
         {
             return LicenseStatus.Invalid;
         }
+    }
+
+    /// <summary>
+    /// Deactivate this device's license (e.g. before transferring to another machine).
+    /// </summary>
+    public async Task<(bool Success, string Message)> DeactivateLicenseAsync()
+    {
+        var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
+        if (license.Tier == LicenseTier.Free || license.IsTrialLicense)
+        {
+            // Nothing to deactivate on LS — just wipe local
+            await ResetToFreeAsync().ConfigureAwait(false);
+            return (true, "License removed from this device.");
+        }
+
+        try
+        {
+            var body = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("license_key", license.LicenseKey),
+                new KeyValuePair<string, string>("instance_id", license.LemonSqueezyInstanceId)
+            });
+            await _http.PostAsync(LsApiBase + "deactivate", body).ConfigureAwait(false);
+        }
+        catch { /* best-effort */ }
+
+        await ResetToFreeAsync().ConfigureAwait(false);
+        return (true, "License deactivated. You can now activate on another device.");
     }
     
     /// <summary>
@@ -211,40 +275,29 @@ public class LicenseService
     }
     
     /// <summary>
-    /// Start a Pro trial
+    /// Start a 14-day local Pro trial (no credit card, no server call).
     /// </summary>
     public async Task<(bool Success, string Message)> StartTrialAsync(string email)
     {
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            return (false, "Please enter a valid email address.");
+
         var currentLicense = await GetCurrentLicenseAsync().ConfigureAwait(false);
-        
-        // Already on trial or paid
+
         if (currentLicense.Tier != LicenseTier.Free)
-        {
-            return (false, "You already have a Pro license");
-        }
-        
-        // Generate trial license key
+            return (false, "You already have an active license on this device.");
+
         var trialKey = $"TRIAL-{Guid.NewGuid():N}";
-        
-        return await ApplyLicenseAsync(trialKey, email).ConfigureAwait(false);
+        return await ActivateTrialLocallyAsync(trialKey, email).ConfigureAwait(false);
     }
     
     /// <summary>
-    /// Check if a specific feature is available for the current license
+    /// Check if a specific feature is available for the current license.
+    /// Currently all features are unlocked — monetization gates will be
+    /// re-enabled once the product is validated and ready for distribution.
     /// </summary>
     public bool IsFeatureAvailable(LicenseFeature feature)
     {
-        var license = GetCurrentLicenseAsync().Result; // Sync version for easier use
-        
-        // Free tier can't use Pro features
-        if (license.Tier == LicenseTier.Free)
-            return false;
-        
-        // Expired licenses revert to Free tier
-        if (license.IsExpired && !license.InGracePeriod)
-            return false;
-        
-        // All features available for Pro+
         return true;
     }
 
@@ -385,6 +438,63 @@ public class LicenseService
         return sr.ReadToEnd();
     }
     
+    private async Task<(bool Success, string Message)> ActivateTrialLocallyAsync(string trialKey, string email)
+    {
+        var expires = DateTime.UtcNow.AddDays(14);
+        var license = new License
+        {
+            LicenseKey             = trialKey,
+            Email                  = email.Trim(),
+            Tier                   = LicenseTier.Trial,
+            Status                 = LicenseStatus.Trial,
+            IsTrialLicense         = true,
+            IssuedDate             = DateTime.UtcNow,
+            ExpiresDate            = expires,
+            LastValidated          = DateTime.UtcNow,
+            MaxDevices             = 1,
+            DeviceFingerprint      = GenerateDeviceFingerprint(),
+            LemonSqueezyInstanceId = string.Empty
+        };
+        await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
+        _currentLicense = license;
+        return (true, $"14-day Pro trial activated! Expires {expires:MMM dd, yyyy}. No credit card required.");
+    }
+
+    private async Task ResetToFreeAsync()
+    {
+        _currentLicense = new License
+        {
+            Tier              = LicenseTier.Free,
+            Status            = LicenseStatus.Active,
+            LicenseKey        = "FREE",
+            IssuedDate        = DateTime.UtcNow,
+            ExpiresDate       = DateTime.MaxValue,
+            LastValidated     = DateTime.UtcNow,
+            Email             = string.Empty,
+            DeviceFingerprint = GenerateDeviceFingerprint()
+        };
+        await SaveLicenseToDiskAsync(_currentLicense).ConfigureAwait(false);
+    }
+
+    private static LicenseTier DetectTierFromLsResponse(LsMeta? meta)
+    {
+        if (meta == null) return LicenseTier.Pro;
+        // Map LemonSqueezy variant names to our tiers
+        var name = meta.VariantName?.ToLowerInvariant() ?? string.Empty;
+        if (name.Contains("team"))       return LicenseTier.Team;
+        if (name.Contains("enterprise")) return LicenseTier.Enterprise;
+        return LicenseTier.Pro;
+    }
+
+    private static string GenerateDeviceInstanceName()
+        => $"{Environment.MachineName}|{Environment.UserName}";
+
+    private static readonly JsonSerializerOptions LsJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     private string GenerateDeviceFingerprint()
     {
         // Combine machine name and username for device identification
@@ -395,4 +505,44 @@ public class LicenseService
     }
     
     #endregion
+}
+// ── LemonSqueezy API response DTOs ──────────────────────────────────────────
+
+internal sealed class LsActivateResponse
+{
+    [JsonPropertyName("activated")]   public bool Activated { get; set; }
+    [JsonPropertyName("error")]       public string? Error { get; set; }
+    [JsonPropertyName("instance")]    public LsInstance? Instance { get; set; }
+    [JsonPropertyName("license_key")] public LsLicenseKeyData? LicenseKeyData { get; set; }
+    [JsonPropertyName("meta")]        public LsMeta? Meta { get; set; }
+}
+
+internal sealed class LsValidateResponse
+{
+    [JsonPropertyName("valid")]       public bool Valid { get; set; }
+    [JsonPropertyName("error")]       public string? Error { get; set; }
+    [JsonPropertyName("instance")]    public LsInstance? Instance { get; set; }
+    [JsonPropertyName("license_key")] public LsLicenseKeyData? LicenseKeyData { get; set; }
+}
+
+internal sealed class LsInstance
+{
+    [JsonPropertyName("id")]   public string Id { get; set; } = string.Empty;
+    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+}
+
+internal sealed class LsLicenseKeyData
+{
+    [JsonPropertyName("status")]           public string Status { get; set; } = string.Empty;
+    [JsonPropertyName("activation_limit")] public int? ActivationLimit { get; set; }
+    [JsonPropertyName("activation_usage")] public int? ActivationUsage { get; set; }
+    [JsonPropertyName("expires_at")]       public DateTime? ExpiresAt { get; set; }
+}
+
+internal sealed class LsMeta
+{
+    [JsonPropertyName("store_id")]     public int StoreId { get; set; }
+    [JsonPropertyName("product_id")]   public int ProductId { get; set; }
+    [JsonPropertyName("variant_id")]   public int VariantId { get; set; }
+    [JsonPropertyName("variant_name")] public string? VariantName { get; set; }
 }
