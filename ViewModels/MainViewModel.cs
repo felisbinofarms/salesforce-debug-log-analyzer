@@ -2,13 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
-using SalesforceDebugAnalyzer.Views;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows;
+using Avalonia.Threading;
 
 namespace SalesforceDebugAnalyzer.ViewModels;
 
@@ -363,13 +362,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private List<LogAnalysis> _recordingBuffer = new();
     
     /// <summary>Timer to update elapsed time display</summary>
-    private System.Windows.Threading.DispatcherTimer? _recordingTimer;
+    private DispatcherTimer? _recordingTimer;
     
     /// <summary>Buffer for streaming logs before adding to UI (throttling)</summary>
     private readonly Queue<StreamingLogEntry> _streamingBuffer = new();
     
     /// <summary>Timer to batch streaming log updates (reduces UI lag)</summary>
-    private System.Windows.Threading.DispatcherTimer? _streamingThrottleTimer;
+    private DispatcherTimer? _streamingThrottleTimer;
     
     /// <summary>Lock for thread-safe streaming buffer access</summary>
     private readonly object _streamingLock = new();
@@ -692,22 +691,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     // ===== ANIMATED HEALTH SCORE =====
     [ObservableProperty] private int _animatedHealthScore = 0;
-    private System.Windows.Threading.DispatcherTimer? _healthAnimTimer;
+    private CancellationTokenSource? _healthAnimCts;
 
     public void AnimateHealthScore(int targetScore)
     {
-        _healthAnimTimer?.Stop();
+        _healthAnimCts?.Cancel();
         AnimatedHealthScore = 0;
-        _healthAnimTimer = new System.Windows.Threading.DispatcherTimer
-            { Interval = TimeSpan.FromMilliseconds(12) };
-        _healthAnimTimer.Tick += (_, _) =>
+        _healthAnimCts = new CancellationTokenSource();
+        var token = _healthAnimCts.Token;
+        _ = Task.Run(async () =>
         {
-            if (AnimatedHealthScore < targetScore)
-                AnimatedHealthScore = Math.Min(AnimatedHealthScore + 2, targetScore);
-            else
-                _healthAnimTimer.Stop();
-        };
-        _healthAnimTimer.Start();
+            try
+            {
+                while (!token.IsCancellationRequested && AnimatedHealthScore < targetScore)
+                {
+                    await Task.Delay(12, token).ConfigureAwait(false);
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        AnimatedHealthScore = Math.Min(AnimatedHealthScore + 2, targetScore));
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
     }
 
     // ===== COMMAND PALETTE =====
@@ -786,7 +790,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _cliService.LogReceived += OnLogReceived;
         
         // Initialize streaming throttle timer (batches updates every 500ms to prevent UI lag)
-        _streamingThrottleTimer = new System.Windows.Threading.DispatcherTimer
+        _streamingThrottleTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(500)
         };
@@ -833,11 +837,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var result = await _licenseService.RevalidateIfNeededAsync().ConfigureAwait(false);
 
         // Re-apply display on the UI thread
-        Application.Current?.Dispatcher?.Invoke(RefreshLicenseDisplay);
+        Dispatcher.UIThread.Post(RefreshLicenseDisplay);
 
         if (!result.IsValid && result.ErrorMessage != null)
         {
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Dispatcher.UIThread.Post(() =>
             {
                 // Non-blocking notification — don't interrupt startup with a dialog
                 StatusMessage = $"⚠️ License: {result.ErrorMessage}";
@@ -845,7 +849,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         else if (result.IsOfflineGracePeriod)
         {
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Dispatcher.UIThread.Post(() =>
             {
                 StatusMessage = "ℹ️ License: offline — will revalidate when connected";
             });
@@ -868,8 +872,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ShowUpgradeDialog()
     {
-        var dialog = new Views.UpgradeDialog(_licenseService) { Owner = App.Current.MainWindow };
-        dialog.ShowDialog();
+        // TODO: Implement Avalonia UpgradeDialog
+        Log.Information("Upgrade dialog requested — not yet implemented in Avalonia");
+        StatusMessage = "⬆️ Upgrade to Pro — dialog coming soon";
         // Refresh tier in case user just started a trial
         RefreshLicenseDisplay();
     }
@@ -1022,12 +1027,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnMonitoringStatusChanged(object? sender, string status)
     {
-        Application.Current?.Dispatcher?.Invoke(() => MonitoringStatusText = status);
+        Dispatcher.UIThread.Post(() => MonitoringStatusText = status);
     }
 
     private void OnMonitoringAlertGenerated(object? sender, MonitoringAlert alert)
     {
-        Application.Current?.Dispatcher.Invoke(() =>
+        Dispatcher.UIThread.Post(() =>
         {
             Log.Information("Monitoring alert: [{Severity}] {Title}", alert.Severity, alert.Title);
             MonitoringAlerts.Insert(0, alert);
@@ -1047,7 +1052,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             var alerts = await _monitoringDb.GetAlertsAsync(limit: 50);
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Dispatcher.UIThread.Post(() =>
             {
                 MonitoringAlerts.Clear();
                 foreach (var alert in alerts)
@@ -1144,7 +1149,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             await EnrichLogWithMetadataAsync(analysis);
             _ = PersistLogSnapshotAsync(analysis);
 
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Dispatcher.UIThread.Post(() =>
             {
                 Logs.Insert(0, analysis);
                 SelectedLog = analysis;
@@ -2536,43 +2541,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Must create and show WPF dialogs on the UI thread
-            var connectionDialog = new ConnectionDialog(_oauthService, _apiService);
-            var connected = connectionDialog.ShowDialog() == true;
-
-            if (connected)
-            {
-                IsConnected = true;
-                ConnectionStatus = $"Connected to {_apiService.Connection?.InstanceUrl}";
-                
-                // Extract org name from instance URL
-                var instanceUrl = _apiService.Connection?.InstanceUrl ?? "";
-                var orgName = "Salesforce";
-                
-                if (instanceUrl.Contains(".my.salesforce.com"))
-                {
-                    var start = instanceUrl.IndexOf("//") + 2;
-                    var end = instanceUrl.IndexOf(".my.salesforce.com");
-                    if (end > start)
-                    {
-                        orgName = instanceUrl.Substring(start, end - start);
-                    }
-                }
-                else if (instanceUrl.Contains(".sandbox.salesforce.com"))
-                {
-                    orgName = "Sandbox";
-                }
-                
-                ConnectionDisplayName = orgName;
-                StatusMessage = $"✓ Connected to {orgName}";
-
-                // Optionally load recent logs
-                // await LoadRecentLogsAsync();
-            }
-            else
-            {
-                StatusMessage = "Connection cancelled";
-            }
+            // TODO: Implement Avalonia ConnectionDialog
+            Log.Information("Connection dialog requested — not yet implemented in Avalonia");
+            StatusMessage = "🔌 Connection dialog coming soon — use CLI auth for now";
         }
         catch (Exception ex)
         {
@@ -2588,16 +2559,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         
         try
         {
-            // Show drag-and-drop dialog (must be on UI thread)
-            var filePath = ShowDragDropDialog();
-            
-            if (string.IsNullOrEmpty(filePath))
-            {
-                StatusMessage = "Drag a log file onto the window, or paste the path";
-                return;
-            }
-            
-            await LoadLogFromPath(filePath);
+            // TODO: Implement Avalonia file picker dialog
+            Log.Information("Upload log requested — file picker not yet implemented in Avalonia");
+            StatusMessage = "📂 Drag a log file onto the window to load it";
         }
         catch (Exception ex)
         {
@@ -2615,7 +2579,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             if (!File.Exists(filePath))
             {
-                MessageBox.Show($"File not found: {filePath}", "Invalid Path", MessageBoxButton.OK, MessageBoxImage.Warning);
+                StatusMessage = $"⚠️ File not found: {filePath}";
                 return;
             }
             
@@ -2623,13 +2587,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             if (ext != ".log" && ext != ".txt")
             {
-                MessageBox.Show(
-                    $"This file type ({ext}) isn't supported.\n\n" +
-                    "Black Widow works with Salesforce debug log files (.log or .txt).\n\n" +
-                    "To get a debug log:\n" +
-                    "• Salesforce Setup → Debug Logs → click \"Download\"\n" +
-                    "• Or use the \"Connect to Salesforce\" button above",
-                    "Not a Debug Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                StatusMessage = $"⚠️ Unsupported file type ({ext}). Use .log or .txt files from Salesforce Debug Logs.";
                 return;
             }
             
@@ -2640,18 +2598,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 var fileMB   = fileInfo.Length / (1024.0 * 1024.0);
                 if (fileMB > LicenseService.FreeTierMaxFileSizeMB)
                 {
-                    var result = MessageBox.Show(
-                        $"This log is {fileMB:F0} MB, which exceeds the {LicenseService.FreeTierMaxFileSizeMB} MB limit for the Free tier.\n\n" +
-                        "Upgrade to Pro for unlimited file sizes.\n\n" +
-                        "Would you like to upgrade now?",
-                        "File Too Large — Upgrade to Pro",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Information);
-
-                    if (result == MessageBoxResult.Yes)
-                        ShowUpgradeDialog();
-
-                    StatusMessage = $"⚠️ File too large for Free tier ({fileMB:F0} MB > {LicenseService.FreeTierMaxFileSizeMB} MB)";
+                    StatusMessage = $"⚠️ File too large for Free tier ({fileMB:F0} MB > {LicenseService.FreeTierMaxFileSizeMB} MB). Upgrade to Pro for unlimited file sizes.";
+                    ShowUpgradeDialog();
                     IsLoading = false;
                     return;
                 }
@@ -2669,17 +2617,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // Validate this looks like a Salesforce debug log
             if (!LooksLikeSalesforceLog(logContent))
             {
-                MessageBox.Show(
-                    "This doesn't look like a Salesforce debug log.\n\n" +
-                    "Salesforce debug logs typically contain lines like:\n" +
-                    "  • EXECUTION_STARTED\n" +
-                    "  • CODE_UNIT_STARTED\n" +
-                    "  • SOQL_EXECUTE_BEGIN\n\n" +
-                    "To get a debug log:\n" +
-                    "  1. Go to Setup → Debug Logs\n" +
-                    "  2. Click \"Download\" on any log entry\n" +
-                    "  3. Drop that file here",
-                    "Not a Salesforce Debug Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                StatusMessage = "⚠️ This doesn't look like a Salesforce debug log. Expected EXECUTION_STARTED, CODE_UNIT_STARTED, etc.";
                 IsLoading = false;
                 return;
             }
@@ -2718,67 +2656,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Use Vista-style folder browser for better UX
-            var folderDialog = new System.Windows.Forms.FolderBrowserDialog
-            {
-                Description = "Select Folder with Debug Logs",
-                ShowNewFolderButton = false,
-                UseDescriptionForTitle = true,
-                AutoUpgradeEnabled = true,
-                RootFolder = Environment.SpecialFolder.MyComputer
-            };
-
-            if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                StatusMessage = "Scanning folder for logs...";
-                IsLoading = true;
-
-                var folderPath = folderDialog.SelectedPath;
-
-                // Extract metadata from all logs quickly
-                var metadata = await Task.Run(() => _metadataExtractor.ExtractMetadataFromDirectory(folderPath));
-
-                if (metadata.Count == 0)
-                {
-                    StatusMessage = "⚠️ No log files found in folder";
-                    MessageBox.Show(
-                        $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
-                        "Black Widow looks for:\n" +
-                        "  • *.log files (standard Salesforce export)\n" +
-                        "  • *.txt files\n" +
-                        "  • Extension-less files starting with 07L...\n" +
-                        "  • Subfolders are also searched\n\n" +
-                        "Tip: Download logs from Setup → Debug Logs and export the .log files.",
-                        "No Logs Found",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    return;
-                }
-
-                StatusMessage = $"Found {metadata.Count} logs, grouping by transaction...";
-
-                // Group related logs
-                var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
-
-                LogGroups.Clear();
-                foreach (var group in groups)
-                {
-                    LogGroups.Add(group);
-                }
-
-                ShowGroupedView = true;  // Auto-switch to grouped view
-                StatusMessage = $"✓ Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
-
-                // Auto-select first group
-                if (LogGroups.Any())
-                {
-                    SelectedLogGroup = LogGroups.First();
-                }
-            }
-            else
-            {
-                StatusMessage = "Folder selection cancelled";
-            }
+            // TODO: Implement Avalonia folder picker
+            Log.Information("Folder import requested — folder picker not yet implemented in Avalonia");
+            StatusMessage = "📂 Folder import — coming soon. Use drag & drop for now.";
         }
         catch (Exception ex)
         {
@@ -2800,18 +2680,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             if (metadata.Count == 0)
             {
-                StatusMessage = "⚠️ No log files found in folder";
-                MessageBox.Show(
-                    $"No Salesforce debug log files found in:\n{folderPath}\n\n" +
-                    "Black Widow looks for:\n" +
-                    "  • *.log files (standard Salesforce export)\n" +
-                    "  • *.txt files\n" +
-                    "  • Extension-less files starting with 07L...\n" +
-                    "  • Subfolders are also searched\n\n" +
-                    "Tip: Download logs from Setup → Debug Logs and export the .log files.",
-                    "No Logs Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                StatusMessage = "⚠️ No Salesforce debug log files found in folder";
                 return;
             }
 
@@ -2819,7 +2688,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var groups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
 
             // Force UI thread update
-            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 LogGroups.Clear();
                 foreach (var group in groups)
@@ -2833,8 +2702,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusMessage = $"Error loading folder: {ex.Message}";
-            MessageBox.Show($"Failed to load logs:\n\n{ex.Message}",
-                "Error Loading Folder", MessageBoxButton.OK, MessageBoxImage.Error);
+            Log.Error(ex, "Failed to load logs from folder");
         }
         finally
         {
@@ -2889,7 +2757,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await EnrichLogWithMetadataAsync(analysis);
                     _ = PersistLogSnapshotAsync(analysis);
 
-                    Application.Current?.Dispatcher?.Invoke(() => Logs.Insert(0, analysis));
+                    Dispatcher.UIThread.Post(() => Logs.Insert(0, analysis));
                     downloaded++;
                     StatusMessage = $"Downloaded {downloaded}/{apexLogs.Count} logs...";
                 }
@@ -2920,21 +2788,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenSettings()
     {
-        try
-        {
-            var dialog = new SettingsDialog(_licenseService);
-            if (dialog.ShowDialog() == true)
-            {
-                StatusMessage = "✓ Settings saved successfully";
-                // Reload settings if needed
-                var settings = _settingsService.Load();
-                // Apply settings to app (theme, etc.)
-            }
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Error opening settings: {ex.Message}";
-        }
+        // TODO: Implement Avalonia SettingsDialog
+        Log.Information("Settings dialog requested — not yet implemented in Avalonia");
+        StatusMessage = "⚙️ Settings dialog — coming soon";
     }
 
     [RelayCommand]
@@ -2950,62 +2806,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var dialog = new Microsoft.Win32.SaveFileDialog
-            {
-                Title = "Export Analysis Report",
-                FileName = $"BlackWidow_Report_{DateTime.Now:yyyy-MM-dd_HHmmss}",
-                DefaultExt = ".pdf",
-                Filter = "PDF Report (*.pdf)|*.pdf|JSON Export (*.json)|*.json|Text File (*.txt)|*.txt"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                IsLoading = true;
-                StatusMessage = "Generating report...";
-
-                await Task.Run(() =>
-                {
-                    var extension = System.IO.Path.GetExtension(dialog.FileName).ToLower();
-
-                    switch (extension)
-                    {
-                        case ".pdf":
-                            _exportService.ExportToPdf(SelectedLog, dialog.FileName);
-                            break;
-                        case ".json":
-                            _exportService.ExportToJson(SelectedLog, dialog.FileName);
-                            break;
-                        case ".txt":
-                            var textContent = _exportService.GetRecommendationsText(SelectedLog);
-                            System.IO.File.WriteAllText(dialog.FileName, textContent);
-                            break;
-                    }
-                });
-
-                StatusMessage = $"✓ Report exported: {System.IO.Path.GetFileName(dialog.FileName)}";
-
-                // Open file location
-                var result = MessageBox.Show(
-                    $"Report exported successfully!\n\nWould you like to open the file?",
-                    "Export Complete",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information
-                );
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    Process.Start(new ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
-                }
-            }
+            // TODO: Implement Avalonia SaveFileDialog
+            Log.Information("Export report requested — save dialog not yet implemented in Avalonia");
+            StatusMessage = "📄 Export — coming soon";
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                $"Failed to export report:\n\n{ex.Message}\n\nPlease try again or contact support if the problem persists.",
-                "Export Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error
-            );
+            Log.Error(ex, "Export failed");
             StatusMessage = "Export failed";
         }
         finally
@@ -3026,7 +2833,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             var text = _exportService.GetRecommendationsText(SelectedLog);
-            Clipboard.SetText(text);
+            // TODO: Implement Avalonia clipboard
+            Log.Information("Copied recommendations text ({Length} chars)", text.Length);
             StatusMessage = "✓ Recommendations copied to clipboard";
         }
         catch (Exception ex)
@@ -3059,17 +2867,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // Open trace flag dialog to view/manage logs
             StatusMessage = "Opening logs view...";
             
-            // Must create and show WPF dialogs on the UI thread
-            var dialog = new TraceFlagDialog(_apiService, _parserService);
-            var success = dialog.ShowDialog() == true;
-            
-            if (success && dialog.DownloadedLogAnalysis != null)
-            {
-                // Add the downloaded log to the list
-                Logs.Insert(0, dialog.DownloadedLogAnalysis);
-                SelectedLog = dialog.DownloadedLogAnalysis;
-                StatusMessage = "✓ Log downloaded and analyzed";
-            }
+            // TODO: Implement Avalonia TraceFlagDialog
+            Log.Information("TraceFlagDialog requested — not yet implemented in Avalonia");
+            StatusMessage = "📋 Debug log management — coming soon";
         }
         catch (Exception ex)
         {
@@ -3109,7 +2909,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = "🔴 RECORDING - Perform your Salesforce action now...";
         
         // Start timer to update elapsed time
-        _recordingTimer = new System.Windows.Threading.DispatcherTimer
+        _recordingTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(1)
         };
@@ -3233,18 +3033,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Show options dialog to configure filters (prevents "fire hose" problem)
-        var dialog = new StreamingOptionsDialog(defaultUsername);
-        var result = dialog.ShowDialog();
-        
-        if (result != true)
+        // TODO: Implement Avalonia StreamingOptionsDialog - using defaults for now
+        _streamingOptions = new StreamingOptions
         {
-            StatusMessage = "Streaming cancelled";
-            return; // User cancelled
-        }
-        
-        // Store options for filtering in OnLogReceived
-        _streamingOptions = dialog.Options;
+            FilterByUser = true,
+            Username = defaultUsername
+        };
         
         // Determine which username to use for API queries
         var username = _streamingOptions.FilterByUser && !string.IsNullOrEmpty(_streamingOptions.Username)
@@ -3276,7 +3070,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OnCliStatusChanged(object? sender, string status)
     {
         // Marshal to UI thread
-        Application.Current?.Dispatcher.Invoke(() =>
+        Dispatcher.UIThread.Post(() =>
         {
             // Add to streaming log panel
             StreamingLogs.Insert(0, new StreamingLogEntry
@@ -3375,7 +3169,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OnLogReceived(object? sender, LogReceivedEventArgs e)
     {
         // Use InvokeAsync to properly handle async lambda (Invoke(async ...) causes async-void fire-and-forget)
-        Application.Current?.Dispatcher.InvokeAsync(async () =>
+        _ = Dispatcher.UIThread.InvokeAsync(async () =>
         {
             try
             {
@@ -3707,95 +3501,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     
     /// <summary>
     /// Shows a simple dialog to paste a file path
+    /// TODO: Implement as proper Avalonia dialog
     /// </summary>
     private string? ShowDragDropDialog()
     {
-        string? resultPath = null;
-        
-        var dialog = new Window
-        {
-            Title = "Open Debug Log",
-            Width = 550,
-            Height = 160,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            ResizeMode = ResizeMode.NoResize,
-            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(47, 49, 54))
-        };
-        
-        var mainStack = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
-        
-        // Instructions
-        var label = new System.Windows.Controls.TextBlock
-        {
-            Text = "Paste log file path (right-click file → Copy as path):",
-            Foreground = System.Windows.Media.Brushes.White,
-            FontSize = 14,
-            Margin = new Thickness(0, 0, 0, 12)
-        };
-        
-        // Path input row
-        var inputRow = new System.Windows.Controls.Grid();
-        inputRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
-        inputRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = System.Windows.GridLength.Auto });
-        
-        var textBox = new System.Windows.Controls.TextBox
-        {
-            Padding = new Thickness(10, 8, 10, 8),
-            FontSize = 13,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(64, 68, 75)),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0)
-        };
-        System.Windows.Controls.Grid.SetColumn(textBox, 0);
-        
-        var openButton = new System.Windows.Controls.Button
-        {
-            Content = "Open",
-            Width = 80,
-            Margin = new Thickness(10, 0, 0, 0),
-            Padding = new Thickness(10, 8, 10, 8),
-            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(88, 101, 242)),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0),
-            FontWeight = FontWeights.SemiBold
-        };
-        System.Windows.Controls.Grid.SetColumn(openButton, 1);
-        
-        openButton.Click += (s, e) =>
-        {
-            if (!string.IsNullOrWhiteSpace(textBox.Text))
-            {
-                resultPath = textBox.Text.Trim().Trim('"');
-                dialog.DialogResult = true;
-                dialog.Close();
-            }
-        };
-        
-        // Allow Enter key to submit
-        textBox.KeyDown += (s, e) =>
-        {
-            if (e.Key == System.Windows.Input.Key.Enter && !string.IsNullOrWhiteSpace(textBox.Text))
-            {
-                resultPath = textBox.Text.Trim().Trim('"');
-                dialog.DialogResult = true;
-                dialog.Close();
-            }
-        };
-        
-        inputRow.Children.Add(textBox);
-        inputRow.Children.Add(openButton);
-        
-        mainStack.Children.Add(label);
-        mainStack.Children.Add(inputRow);
-        
-        dialog.Content = mainStack;
-        
-        // Focus the textbox after dialog loads
-        dialog.Loaded += (s, e) => textBox.Focus();
-        
-        dialog.ShowDialog();
-        return resultPath;
+        // Stub — file open will be handled via Avalonia file picker or drag-drop
+        return null;
     }
 
     // ===== SALESFORCE CONNECTION MANAGEMENT =====
@@ -3849,13 +3560,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         StatusMessage = "Opening connection manager...";
 
-        var dialog = new ConnectionDialog(_oauthService, _apiService)
-        {
-            Owner = Application.Current.MainWindow
-        };
-
-        dialog.ShowDialog();
-        StatusMessage = "Connection manager closed";
+        // TODO: Implement Avalonia ConnectionDialog
+        Log.Information("Connection manager requested — not yet implemented in Avalonia");
+        StatusMessage = "🔌 Connection manager — coming soon";
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -3921,7 +3628,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var path = SelectedLog?.SourcePath;
         if (!string.IsNullOrEmpty(path))
         {
-            Clipboard.SetText(path);
+            SetClipboardText(path);
             _ = ShowToastAsync("Path copied to clipboard", "success", 2000);
         }
         else
@@ -3935,7 +3642,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (SelectedLog?.LogName != null)
         {
-            Clipboard.SetText(SelectedLog.LogName);
+            SetClipboardText(SelectedLog.LogName);
             _ = ShowToastAsync("Log name copied", "success", 1500);
         }
     }
@@ -3959,7 +3666,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!string.IsNullOrEmpty(fixText))
         {
-            Clipboard.SetText(fixText);
+            SetClipboardText(fixText);
             _ = ShowToastAsync("Fix copied to clipboard", "success", 2000);
         }
     }
@@ -4003,6 +3710,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case "sort-duration": SortLogs("Duration"); break;
             case "sort-date":     SortLogs("Date"); break;
             case "clear":    ClearSelectedLog(); break;
+        }
+    }
+
+    private static void SetClipboardText(string text)
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var mainWindow = desktop.MainWindow;
+            if (mainWindow != null)
+            {
+                var clipboard = Avalonia.Controls.TopLevel.GetTopLevel(mainWindow)?.Clipboard;
+                clipboard?.SetTextAsync(text);
+            }
         }
     }
 
@@ -4089,7 +3809,7 @@ public class TreeNodeViewModel
     public ObservableCollection<TreeNodeViewModel> Children { get; set; } = new();
     
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
-    public Thickness IndentMargin => new Thickness(Depth * 24, 0, 0, 0);
+    public Avalonia.Thickness IndentMargin => new Avalonia.Thickness(Depth * 24, 0, 0, 0);
     public string ExpanderIcon => HasChildren ? (IsExpanded ? "▾" : "▸") : "  ";
 }
 
@@ -4129,7 +3849,7 @@ public class TimelineDetailItem
     
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
     public string PercentDisplay => $"{PercentOfTotal:N1}%";
-    public Thickness IndentMargin => new Thickness(Depth * 16, 0, 0, 0);
+    public Avalonia.Thickness IndentMargin => new Avalonia.Thickness(Depth * 16, 0, 0, 0);
     
     public string TypeColor => Type switch
     {

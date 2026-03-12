@@ -7,45 +7,49 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="900">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">
-        <StackPanel MaxWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20">
+        <StackPanel MaxWidth="800">
 
-            <!-- SECTION 1: WHAT HAPPENED -->
-            <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,3,0,0">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBlock Text="📖" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="What Happened" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <!-- Plain English Summary -->
-                    <Border Background="{StaticResource BgPrimary}" CornerRadius="8" Padding="16" Margin="0,0,0,12"
-                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
-                        <TextBlock Text="{Binding PlainEnglishSummary}" FontSize="14" Foreground="{StaticResource TextPrimary}"
-                                   TextWrapping="Wrap" LineHeight="22"/>
-                    </Border>
-
-                    <!-- What Your Code Did -->
-                    <StackPanel Visibility="{Binding HasCodeActions, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="What Your Code Did:" FontSize="14" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
-                        <ItemsControl ItemsSource="{Binding WhatYourCodeDid}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="{StaticResource BgPrimary}" CornerRadius="6" Padding="12,8" Margin="0,0,0,6"
-                                            BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
-                                        <TextBlock Text="{Binding}" FontSize="13" Foreground="{StaticResource TextSecondary}"
-                                                   TextWrapping="Wrap" LineHeight="20"/>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
+            <!-- ═══ WHAT HAPPENED ═══ -->
+            <StackPanel Margin="0,0,0,28">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <materialDesign:PackIcon Kind="BookOpenPageVariant" Width="20" Height="20"
+                                             Foreground="{StaticResource AccentPrimary}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="What Happened" FontSize="17" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
-            </Border>
 
-            <!-- PERFORMANCE VERDICT -->
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                <!-- Plain English Summary — clean prose block -->
+                <TextBlock Text="{Binding PlainEnglishSummary}" FontSize="14"
+                           Foreground="{StaticResource TextPrimary}"
+                           TextWrapping="Wrap" LineHeight="24"
+                           Margin="0,0,0,12"/>
+
+                <!-- What Your Code Did — numbered steps -->
+                <ItemsControl ItemsSource="{Binding WhatYourCodeDid}"
+                              Visibility="{Binding HasCodeActions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="4" Height="4" Fill="{StaticResource TextMuted}"
+                                         VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <TextBlock Grid.Column="2" Text="{Binding}" FontSize="13"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           TextWrapping="Wrap" LineHeight="20"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ═══ PERFORMANCE VERDICT ═══ -->
+            <Border CornerRadius="8" Padding="16,14" Margin="0,0,0,24"
                     Visibility="{Binding HasPerformanceVerdict, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Border.Style>
                     <Style TargetType="Border">
@@ -53,264 +57,272 @@
                         <Setter Property="BorderBrush" Value="{StaticResource Success}"/>
                         <Setter Property="BorderThickness" Value="1"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding VerdictIcon}" Value="🔥">
+                            <DataTrigger Binding="{Binding VerdictIcon}" Value="&#x1F525;">
                                 <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
                                 <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding VerdictIcon}" Value="⚠️">
+                            <DataTrigger Binding="{Binding VerdictIcon}" Value="&#x26A0;&#xFE0F;">
                                 <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
                                 <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBlock Text="{Binding VerdictIcon}" FontSize="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Performance Verdict" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding VerdictIcon}" FontSize="20" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Performance Verdict" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding PerformanceVerdict}" FontSize="13"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   TextWrapping="Wrap" LineHeight="20"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding PerformanceVerdict}" FontSize="14" Foreground="{StaticResource TextPrimary}"
-                               TextWrapping="Wrap" LineHeight="22"/>
                 </StackPanel>
             </Border>
 
-            <!-- ISSUES FOUND -->
-            <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
-                    Visibility="{Binding HasExplainIssues, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBlock Text="🔍" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Issues Found" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    </StackPanel>
+            <!-- ═══ ISSUES FOUND ═══ -->
+            <StackPanel Margin="0,0,0,24"
+                        Visibility="{Binding HasExplainIssues, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <materialDesign:PackIcon Kind="AlertCircleOutline" Width="20" Height="20"
+                                             Foreground="{StaticResource Warning}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Issues Found" FontSize="17" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                </StackPanel>
 
-                    <ItemsControl ItemsSource="{Binding ExplainIssues}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="8" Padding="16" Margin="0,0,0,12">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{StaticResource BgPrimary}"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
-                                            <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Severity}" Value="Critical">
-                                                    <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
-                                                    <Setter Property="Background" Value="{StaticResource DangerSubtle}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Severity}" Value="High">
-                                                    <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
-                                                    <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <StackPanel>
-                                        <!-- Issue title with severity badge -->
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Icon}" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="14" FontWeight="Bold"
-                                                       Foreground="White" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <Border Grid.Column="2" CornerRadius="4" Padding="8,3" VerticalAlignment="Center"
-                                                    Background="{Binding SeverityColor}">
-                                                <TextBlock Text="{Binding Severity}" FontSize="10" FontWeight="Bold" Foreground="White"/>
-                                            </Border>
-                                        </Grid>
-
-                                        <!-- What this means -->
-                                        <TextBlock Text="{Binding WhatThisMeans}" FontSize="13" Foreground="{StaticResource TextSecondary}"
-                                                   TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,10"/>
-
-                                        <!-- Analogy -->
-                                        <Border Background="{StaticResource BgTertiary}" CornerRadius="6" Padding="12" Margin="0,0,0,10"
-                                                BorderBrush="{StaticResource AccentSubtle}" BorderThickness="1">
-                                            <StackPanel>
-                                                <TextBlock Text="💡 Think of it this way:" FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,6"/>
-                                                <TextBlock Text="{Binding Analogy}" FontSize="13" Foreground="{StaticResource TextPrimary}"
-                                                           TextWrapping="Wrap" LineHeight="20" FontStyle="Italic"/>
-                                            </StackPanel>
+                <ItemsControl ItemsSource="{Binding ExplainIssues}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="8" Padding="16" Margin="0,0,0,10">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource BgSecondary}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Severity}" Value="Critical">
+                                                <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Severity}" Value="High">
+                                                <Setter Property="BorderBrush" Value="{StaticResource Warning}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <!-- Title + severity -->
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" CornerRadius="4" Padding="7,2" VerticalAlignment="Center"
+                                                Background="{Binding SeverityColor}">
+                                            <TextBlock Text="{Binding Severity}" FontSize="10" FontWeight="Bold" Foreground="White"/>
                                         </Border>
+                                    </Grid>
 
-                                        <!-- Why it's bad -->
-                                        <TextBlock FontSize="12" Foreground="{StaticResource Warning}" TextWrapping="Wrap" LineHeight="20">
-                                            <Run Text="⚠️ Impact: " FontWeight="SemiBold"/>
-                                            <Run Text="{Binding WhyItsBad, Mode=OneWay}"/>
+                                    <!-- Description -->
+                                    <TextBlock Text="{Binding WhatThisMeans}" FontSize="13"
+                                               Foreground="{StaticResource TextSecondary}"
+                                               TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,8"/>
+
+                                    <!-- Analogy — subtle, inline -->
+                                    <Border Background="{StaticResource BgTertiary}" CornerRadius="6" Padding="12,10" Margin="0,0,0,8"
+                                            BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                                        <TextBlock FontSize="12" Foreground="{StaticResource TextSecondary}"
+                                                   TextWrapping="Wrap" LineHeight="18" FontStyle="Italic">
+                                            <Run Text="Think of it this way: " FontWeight="Medium" FontStyle="Normal"
+                                                 Foreground="{StaticResource TextMuted}"/>
+                                            <Run Text="{Binding Analogy, Mode=OneWay}"/>
                                         </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
+                                    </Border>
 
-            <!-- ALL CLEAR -->
-            <Border Background="{StaticResource SuccessSubtle}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                                    <!-- Impact -->
+                                    <TextBlock FontSize="12" Foreground="{StaticResource Warning}" TextWrapping="Wrap">
+                                        <Run Text="Impact: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding WhyItsBad, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ═══ ALL CLEAR ═══ -->
+            <Border Background="{StaticResource SuccessSubtle}" CornerRadius="8" Padding="20" Margin="0,0,0,24"
                     BorderBrush="{StaticResource Success}" BorderThickness="1"
                     Visibility="{Binding IsAllClear, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="✅" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                    <TextBlock Text="Clean Bill of Health!" FontSize="18" FontWeight="Bold"
-                               Foreground="{StaticResource Success}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                    <TextBlock Text="No performance issues detected. Your code is efficient and well within Salesforce limits."
-                               FontSize="13" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="500"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CheckCircleOutline" Width="24" Height="24"
+                                             Foreground="{StaticResource Success}"
+                                             VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Clean Bill of Health" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Success}" Margin="0,0,0,2"/>
+                        <TextBlock Text="No performance issues detected. Code is efficient and within limits."
+                                   FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- HOW TO FIX IT -->
-            <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
-                    Visibility="{Binding HasDetailedRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBlock Text="🛠️" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="How To Fix It" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <ItemsControl ItemsSource="{Binding DetailedRecommendations}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{StaticResource BgPrimary}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
-                                        BorderBrush="{StaticResource SuccessSubtle}" BorderThickness="1">
-                                    <StackPanel>
-                                        <!-- Title and time estimate -->
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Icon}" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="14" FontWeight="Bold"
-                                                       Foreground="White" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <Border Grid.Column="2" Background="{StaticResource AccentPrimary}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
-                                                <TextBlock FontSize="10" Foreground="White" FontWeight="SemiBold">
-                                                    <Run Text="~"/>
-                                                    <Run Text="{Binding EstimatedMinutes, Mode=OneWay}"/>
-                                                    <Run Text="min"/>
-                                                </TextBlock>
-                                            </Border>
-                                        </Grid>
-
-                                        <!-- Explanation -->
-                                        <TextBlock Text="{Binding Explanation}" FontSize="13" Foreground="{StaticResource TextSecondary}"
-                                                   TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,12"/>
-
-                                        <!-- Before/After Code -->
-                                        <Grid Margin="0,0,0,12"
-                                              Visibility="{Binding HasCodeExample, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="12"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Background="{StaticResource BgPrimary}" CornerRadius="6"
-                                                    BorderBrush="{StaticResource DangerSubtle}" BorderThickness="1">
-                                                <StackPanel>
-                                                    <Border Background="{StaticResource DangerSubtle}" CornerRadius="6,6,0,0" Padding="10,6">
-                                                        <TextBlock Text="{Binding CodeBeforeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Danger}"/>
-                                                    </Border>
-                                                    <TextBlock Text="{Binding CodeBefore}" FontSize="11" Foreground="{StaticResource TextSecondary}"
-                                                               FontFamily="Cascadia Code, Consolas, Courier New"
-                                                               TextWrapping="Wrap" Padding="10,8" LineHeight="18"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Grid.Column="2" Background="{StaticResource BgPrimary}" CornerRadius="6"
-                                                    BorderBrush="{StaticResource SuccessSubtle}" BorderThickness="1">
-                                                <StackPanel>
-                                                    <Border Background="{StaticResource SuccessSubtle}" CornerRadius="6,6,0,0" Padding="10,6">
-                                                        <TextBlock Text="{Binding CodeAfterLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Success}"/>
-                                                    </Border>
-                                                    <TextBlock Text="{Binding CodeAfter}" FontSize="11" Foreground="{StaticResource TextSecondary}"
-                                                               FontFamily="Cascadia Code, Consolas, Courier New"
-                                                               TextWrapping="Wrap" Padding="10,8" LineHeight="18"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-
-                                        <!-- Impact comparison -->
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Background="{StaticResource DangerSubtle}" CornerRadius="6" Padding="10,8">
-                                                <TextBlock Text="{Binding ImpactBefore}" FontSize="11" Foreground="{StaticResource Danger}" TextWrapping="Wrap" TextAlignment="Center"/>
-                                            </Border>
-                                            <TextBlock Grid.Column="1" Text="→" FontSize="18" Foreground="{StaticResource Success}"
-                                                       VerticalAlignment="Center" Margin="8,0"/>
-                                            <Border Grid.Column="2" Background="{StaticResource SuccessSubtle}" CornerRadius="6" Padding="10,8">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding ImpactAfter}" FontSize="11" Foreground="{StaticResource Success}" TextWrapping="Wrap" TextAlignment="Center"/>
-                                                    <TextBlock Text="{Binding SpeedImprovement}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Success}"
-                                                               TextAlignment="Center" Margin="0,2,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+            <!-- ═══ HOW TO FIX IT ═══ -->
+            <StackPanel Margin="0,0,0,24"
+                        Visibility="{Binding HasDetailedRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <materialDesign:PackIcon Kind="Wrench" Width="20" Height="20"
+                                             Foreground="{StaticResource Success}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="How To Fix It" FontSize="17" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
-            </Border>
 
-            <!-- WHAT YOU LEARNED -->
-            <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
-                    Visibility="{Binding HasLearningItems, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBlock Text="🎓" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="What You Learned" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <ItemsControl ItemsSource="{Binding LearningItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{StaticResource BgPrimary}" CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                                        BorderBrush="{StaticResource AccentSubtle}" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Concept}" FontSize="14" FontWeight="Bold"
-                                                   Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,6"/>
-                                        <TextBlock Text="{Binding Explanation}" FontSize="13" Foreground="{StaticResource TextSecondary}"
-                                                   TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,8"/>
-                                        <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                HorizontalAlignment="Left" Padding="0"
-                                                Visibility="{Binding ResourceUrl, Converter={StaticResource StringToVisibilityConverter}}">
-                                            <TextBlock FontSize="12" Foreground="{StaticResource AccentPrimary}" TextDecorations="Underline">
-                                                <Run Text="📚 "/>
-                                                <Run Text="{Binding ResourceLabel, Mode=OneWay}"/>
+                <ItemsControl ItemsSource="{Binding DetailedRecommendations}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource BgSecondary}" CornerRadius="8" Padding="16" Margin="0,0,0,12"
+                                    BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                                <StackPanel>
+                                    <!-- Title + time -->
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                            <TextBlock FontSize="10" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold">
+                                                <Run Text="~"/><Run Text="{Binding EstimatedMinutes, Mode=OneWay}"/><Run Text=" min"/>
                                             </TextBlock>
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
+                                        </Border>
+                                    </Grid>
 
-            <!-- OVERALL ASSESSMENT -->
-            <Border Background="{StaticResource BgTertiary}" CornerRadius="10" Padding="16" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource BorderDefault}" BorderThickness="1"
+                                    <!-- Explanation -->
+                                    <TextBlock Text="{Binding Explanation}" FontSize="13"
+                                               Foreground="{StaticResource TextSecondary}"
+                                               TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,10"/>
+
+                                    <!-- Before/After Code -->
+                                    <Grid Margin="0,0,0,10"
+                                          Visibility="{Binding HasCodeExample, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Background="{StaticResource BgPrimary}" CornerRadius="6"
+                                                BorderBrush="{StaticResource DangerSubtle}" BorderThickness="1">
+                                            <StackPanel>
+                                                <Border Background="{StaticResource DangerSubtle}" CornerRadius="6,6,0,0" Padding="10,5">
+                                                    <TextBlock Text="{Binding CodeBeforeLabel}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource Danger}"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding CodeBefore}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           FontFamily="Cascadia Code, Consolas, Courier New"
+                                                           TextWrapping="Wrap" Padding="10,8" LineHeight="17"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="2" Background="{StaticResource BgPrimary}" CornerRadius="6"
+                                                BorderBrush="{StaticResource SuccessSubtle}" BorderThickness="1">
+                                            <StackPanel>
+                                                <Border Background="{StaticResource SuccessSubtle}" CornerRadius="6,6,0,0" Padding="10,5">
+                                                    <TextBlock Text="{Binding CodeAfterLabel}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource Success}"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding CodeAfter}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           FontFamily="Cascadia Code, Consolas, Courier New"
+                                                           TextWrapping="Wrap" Padding="10,8" LineHeight="17"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Impact comparison — compact inline -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="{StaticResource DangerSubtle}" CornerRadius="6" Padding="10,6">
+                                            <TextBlock Text="{Binding ImpactBefore}" FontSize="11"
+                                                       Foreground="{StaticResource Danger}" TextWrapping="Wrap" TextAlignment="Center"/>
+                                        </Border>
+                                        <materialDesign:PackIcon Grid.Column="1" Kind="ArrowRight" Width="16" Height="16"
+                                                                 Foreground="{StaticResource Success}"
+                                                                 VerticalAlignment="Center" Margin="6,0"/>
+                                        <Border Grid.Column="2" Background="{StaticResource SuccessSubtle}" CornerRadius="6" Padding="10,6">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding ImpactAfter}" FontSize="11"
+                                                           Foreground="{StaticResource Success}" TextWrapping="Wrap" TextAlignment="Center"/>
+                                                <TextBlock Text="{Binding SpeedImprovement}" FontSize="11" FontWeight="Bold"
+                                                           Foreground="{StaticResource Success}" TextAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ═══ WHAT YOU LEARNED ═══ -->
+            <Expander Margin="0,0,0,20"
+                      Visibility="{Binding HasLearningItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="SchoolOutline" Width="18" Height="18"
+                                                 Foreground="{StaticResource AccentPrimary}"
+                                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="What You Learned" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Expander.Header>
+                <ItemsControl ItemsSource="{Binding LearningItems}" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource BgSecondary}" CornerRadius="8" Padding="14" Margin="0,0,0,8"
+                                    BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Concept}" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,4"/>
+                                    <TextBlock Text="{Binding Explanation}" FontSize="12"
+                                               Foreground="{StaticResource TextSecondary}"
+                                               TextWrapping="Wrap" LineHeight="18"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Expander>
+
+            <!-- ═══ OVERALL ASSESSMENT ═══ -->
+            <Border Background="{StaticResource BgSecondary}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                    BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
                     Visibility="{Binding HasExplanation, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
-                    <TextBlock Text="{Binding CurrentExplanation.OverallAssessment}" FontSize="13" Foreground="{StaticResource TextPrimary}"
+                    <TextBlock Text="{Binding CurrentExplanation.OverallAssessment}" FontSize="13"
+                               Foreground="{StaticResource TextPrimary}"
                                TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,8"/>
                     <StackPanel Orientation="Horizontal">
-                        <Border Background="{StaticResource AccentSubtle}" CornerRadius="4" Padding="8,4" Margin="0,0,8,0">
-                            <TextBlock Text="{Binding CurrentExplanation.Effort}" FontSize="11" Foreground="{StaticResource AccentPrimary}"/>
+                        <Border Background="{StaticResource BgTertiary}" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding CurrentExplanation.Effort}" FontSize="11"
+                                       Foreground="{StaticResource TextMuted}"/>
                         </Border>
-                        <Border Background="{StaticResource SuccessSubtle}" CornerRadius="4" Padding="8,4">
-                            <TextBlock Text="{Binding CurrentExplanation.ImpactSummary}" FontSize="11" Foreground="{StaticResource Success}"/>
+                        <Border Background="{StaticResource SuccessSubtle}" CornerRadius="4" Padding="8,3">
+                            <TextBlock Text="{Binding CurrentExplanation.ImpactSummary}" FontSize="11"
+                                       Foreground="{StaticResource Success}"/>
                         </Border>
                     </StackPanel>
                 </StackPanel>

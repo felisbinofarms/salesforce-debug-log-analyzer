@@ -30,7 +30,7 @@
             </Border>
 
             <!-- Database Operations -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource Success}" BorderThickness="0,0,0,3" CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding DatabaseOperations.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -135,12 +135,13 @@
             </Border>
 
             <!-- Namespace Limit Usage -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasNamespaceLimits, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="📦" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="PackageVariantClosed" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                         <TextBlock Text="Namespace Limit Usage" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource BgHover}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -186,12 +187,13 @@
             </Border>
 
             <!-- Flow Fault Alert -->
-            <Border Background="{StaticResource DangerSubtle}" BorderBrush="{StaticResource Danger}" BorderThickness="0,0,0,3"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource DangerSubtle}" BorderBrush="{StaticResource Danger}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasFlowFaults, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="🔴" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="AlertCircle" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource Danger}" Margin="0,0,8,0"/>
                         <TextBlock Text="Flow Fault Detected" FontSize="15" FontWeight="Bold"
                                    Foreground="{StaticResource Danger}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource Danger}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -227,12 +229,13 @@
             </Border>
 
             <!-- Platform Events -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource Info}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasPlatformEvents, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="📡" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Broadcast" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource Info}" Margin="0,0,8,0"/>
                         <TextBlock Text="Platform Events Published" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource Info}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -275,12 +278,13 @@
             </Border>
 
             <!-- HTTP Callouts -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource AccentPrimary}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasCallouts, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Web" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource AccentPrimary}" Margin="0,0,8,0"/>
                         <TextBlock Text="HTTP Callouts" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource AccentPrimary}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -359,12 +363,13 @@
             </Border>
 
             <!-- Duplicate SOQL Queries (N+1 Patterns) -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource Warning}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource Warning}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasDuplicateQueries, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="🔁" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Repeat" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource Warning}" Margin="0,0,8,0"/>
                         <TextBlock Text="Duplicate SOQL Queries" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource Warning}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -412,12 +417,13 @@
             </Border>
 
             <!-- Workflow Rules -->
-            <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource TextMuted}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasWorkflowRules, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="📋" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="ClipboardTextOutline" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                         <TextBlock Text="Workflow Rules Evaluated" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource BgHover}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
@@ -463,12 +469,13 @@
             </Border>
 
             <!-- Flow Errors -->
-            <Border Background="{StaticResource DangerSubtle}" BorderBrush="{StaticResource Danger}" BorderThickness="0,0,0,2"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,12"
+            <Border Background="{StaticResource DangerSubtle}" BorderBrush="{StaticResource Danger}" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12"
                     Visibility="{Binding HasFlowErrors, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="💥" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="FlashAlert" Width="18" Height="18" VerticalAlignment="Center"
+                                                         Foreground="{StaticResource Danger}" Margin="0,0,8,0"/>
                         <TextBlock Text="Flow Errors" FontSize="15" FontWeight="Bold"
                                    Foreground="{StaticResource Danger}" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource Danger}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">

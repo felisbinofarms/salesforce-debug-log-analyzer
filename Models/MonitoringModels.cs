@@ -282,13 +282,11 @@ public class ShieldInsight
     public double ImpactScore { get; set; }          // for priority sorting
 
     // Display helpers
-    public System.Windows.Media.SolidColorBrush SeverityBrush => new(
-        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
-            Severity switch { "critical" => "#F85149", "warning" => "#D29922", _ => "#58A6FF" }));
+    public Avalonia.Media.ISolidColorBrush SeverityBrush => new Avalonia.Media.SolidColorBrush(
+        Avalonia.Media.Color.Parse(Severity switch { "critical" => "#F85149", "warning" => "#D29922", _ => "#58A6FF" }));
 
-    public System.Windows.Media.SolidColorBrush SeverityBgBrush => new(
-        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
-            Severity switch { "critical" => "#2D1418", "warning" => "#2D2714", _ => "#14202D" }));
+    public Avalonia.Media.ISolidColorBrush SeverityBgBrush => new Avalonia.Media.SolidColorBrush(
+        Avalonia.Media.Color.Parse(Severity switch { "critical" => "#2D1418", "warning" => "#2D2714", _ => "#14202D" }));
 
     public string SeverityLabel => Severity.ToUpperInvariant();
     public string CountDisplay => Count >= 1000 ? $"{Count / 1000.0:F1}k" : Count.ToString("N0");
@@ -314,9 +312,8 @@ public class LoginFailureDetail
     public Dictionary<string, long> ReasonBreakdown { get; set; } = new();
     public string Severity { get; set; } = "info";
 
-    public System.Windows.Media.SolidColorBrush SeverityBrush => new(
-        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
-            Severity switch { "critical" => "#F85149", "warning" => "#D29922", _ => "#58A6FF" }));
+    public Avalonia.Media.ISolidColorBrush SeverityBrush => new Avalonia.Media.SolidColorBrush(
+        Avalonia.Media.Color.Parse(Severity switch { "critical" => "#F85149", "warning" => "#D29922", _ => "#58A6FF" }));
 
     public string UserNamesDisplay => UserNames.Count > 0
         ? string.Join(", ", UserNames.Take(5)) + (UserNames.Count > 5 ? $" +{UserNames.Count - 5} more" : "")
@@ -381,13 +378,13 @@ public class ShieldDashboardData
     /// Pre-computed normalized PointCollection for WPF Polyline binding.
     /// Normalizes to a 240 × 40 coordinate space.
     /// </summary>
-    public System.Windows.Media.PointCollection ActivitySparklinePoints =>
+    public Avalonia.Collections.AvaloniaList<Avalonia.Point> ActivitySparklinePoints =>
         ComputeSparklinePoints(ActivitySparkline, 240, 40);
 
-    private static System.Windows.Media.PointCollection ComputeSparklinePoints(
+    private static Avalonia.Collections.AvaloniaList<Avalonia.Point> ComputeSparklinePoints(
         List<SparklinePoint> points, double width, double height)
     {
-        var col = new System.Windows.Media.PointCollection();
+        var col = new Avalonia.Collections.AvaloniaList<Avalonia.Point>();
         if (points.Count < 2) return col;
 
         var maxVal = points.Max(p => p.Value);
@@ -397,8 +394,8 @@ public class ShieldDashboardData
         for (int i = 0; i < points.Count; i++)
         {
             var x = (i / (double)steps) * width;
-            var y = height - (points[i].Value / maxVal) * (height - 2); // 2px top margin
-            col.Add(new System.Windows.Point(x, y));
+            var y = height - (points[i].Value / maxVal) * (height - 2);
+            col.Add(new Avalonia.Point(x, y));
         }
         return col;
     }
@@ -431,8 +428,8 @@ public class GovernorArchaeologyRow
     // Display helpers
     public double SoqlLimitPct => SoqlLimit > 0 ? (AvgSoqlCount / SoqlLimit) * 100 : 0;
     public string SoqlRiskColor => SoqlLimitPct >= 80 ? "#F85149" : SoqlLimitPct >= 50 ? "#D29922" : "#3FB950";
-    public System.Windows.Media.SolidColorBrush SoqlRiskBrush => new(
-        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(SoqlRiskColor));
+    public Avalonia.Media.ISolidColorBrush SoqlRiskBrush => new Avalonia.Media.SolidColorBrush(
+        Avalonia.Media.Color.Parse(SoqlRiskColor));
     public string AvgSoqlDisplay => $"{AvgSoqlCount:F0} / {SoqlLimit}";
     public string MaxSoqlDisplay => MaxSoqlCount.ToString();
     public string AvgCpuDisplay => AvgCpuMs >= 1000 ? $"{AvgCpuMs / 1000:F1}s" : $"{AvgCpuMs:F0}ms";

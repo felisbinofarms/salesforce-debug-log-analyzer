@@ -1,7 +1,6 @@
 using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
-using System.Windows.Media;
+using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace SalesforceDebugAnalyzer.Helpers;
 
@@ -10,122 +9,96 @@ namespace SalesforceDebugAnalyzer.Helpers;
 /// </summary>
 public class InverseBooleanConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
-        {
             return !boolValue;
-        }
         return true;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
-        {
             return !boolValue;
-        }
         return false;
     }
 }
 
 /// <summary>
-/// Converts boolean to Visibility (with optional inversion)
+/// Converts boolean to bool for IsVisible (with optional inversion via parameter "Inverse")
 /// </summary>
 public class BooleanToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
         {
-            // Check if we should invert
             bool invert = parameter is string str && str.Equals("Inverse", StringComparison.OrdinalIgnoreCase);
             if (invert) boolValue = !boolValue;
-            
-            return boolValue ? Visibility.Visible : Visibility.Collapsed;
+            return boolValue;
         }
-        return Visibility.Collapsed;
+        return false;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is Visibility visibility)
+        if (value is bool b)
         {
-            bool result = visibility == Visibility.Visible;
-            
-            // Check if we should invert
             bool invert = parameter is string str && str.Equals("Inverse", StringComparison.OrdinalIgnoreCase);
-            if (invert) result = !result;
-            
-            return result;
+            return invert ? !b : b;
         }
         return false;
     }
 }
 
 /// <summary>
-/// Converts an integer to Visibility based on whether it equals the parameter
-/// Usage: Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=0}"
+/// Converts an integer to bool based on whether it equals the parameter
 /// </summary>
 public class IntEqualsToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is int intValue && parameter != null)
         {
             if (int.TryParse(parameter.ToString(), out int targetValue))
-            {
-                return intValue == targetValue ? Visibility.Visible : Visibility.Collapsed;
-            }
+                return intValue == targetValue;
         }
-        return Visibility.Collapsed;
+        return false;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a string to Visibility (Visible if not null/empty, Collapsed otherwise)
+/// Converts a string to bool (true if not null/empty)
 /// </summary>
 public class StringToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => !string.IsNullOrEmpty(value as string);
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
 /// Converts a percentage (0-100) to a width for progress bars
-/// Assumes max width of ~300px (scales based on parent)
 /// </summary>
 public class PercentToWidthConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is double percent)
         {
-            // Clamp to 0-100 and convert to a proportion
             percent = Math.Max(0, Math.Min(100, percent));
-            // Return a GridLength or actual width - we'll use a proportion of available space
-            // For a container ~400px wide, this gives us reasonable bar widths
-            return percent * 3.0; // Max ~300px at 100%
+            return percent * 3.0;
         }
         return 0.0;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
@@ -133,7 +106,7 @@ public class PercentToWidthConverter : IValueConverter
 /// </summary>
 public class PercentToSeverityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is double percent)
         {
@@ -144,18 +117,16 @@ public class PercentToSeverityConverter : IValueConverter
         return "Normal";
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a number > 0 to True, otherwise False
+/// Converts a number > 0 to True
 /// </summary>
 public class GreaterThanZeroConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is int intValue) return intValue > 0;
         if (value is double doubleValue) return doubleValue > 0;
@@ -163,57 +134,48 @@ public class GreaterThanZeroConverter : IValueConverter
         return false;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a count > 0 to Visibility.Visible, otherwise Collapsed
+/// Converts a count > 0 to true (visible), 0 to false (hidden)
 /// </summary>
 public class GreaterThanZeroToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is int intValue) return intValue > 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (value is double doubleValue) return doubleValue > 0 ? Visibility.Visible : Visibility.Collapsed;
-        return Visibility.Collapsed;
+        if (value is int intValue) return intValue > 0;
+        if (value is double doubleValue) return doubleValue > 0;
+        return false;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts boolean to inverse visibility (True=Collapsed, False=Visible)
+/// Converts boolean to inverse visibility (True=hidden, False=visible)
 /// </summary>
 public class InverseBooleanToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
-        {
-            return boolValue ? Visibility.Collapsed : Visibility.Visible;
-        }
-        return Visibility.Visible;
+            return !boolValue;
+        return true;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a percentage (0-100) to an arc PathGeometry (centered at 60,60 radius 56)
-/// for drawing circular progress in XAML.
+/// Converts a percentage (0-100) to an arc PathGeometry for circular progress.
 /// </summary>
 public class ArcPathConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         double percent;
         if (value is double d)
@@ -221,32 +183,30 @@ public class ArcPathConverter : IValueConverter
         else if (value is int i)
             percent = i;
         else
-            return Geometry.Empty;
+            return null;
         percent = Math.Max(0, Math.Min(100, percent));
-        if (percent <= 0) return Geometry.Empty;
+        if (percent <= 0) return null;
 
         const double radius = 56;
         const double center = 60;
-        double startAngle = -90; // start at top
-        // Cap at 359.99° to prevent zero-length arc when value is exactly 100%
+        double startAngle = -90;
         double sweepAngle = Math.Min(percent / 100.0 * 360.0, 359.99);
-
-        // End point
         double endAngle = startAngle + sweepAngle;
-        Point start = PointOnCircle(center, center, radius, startAngle);
-        Point end = PointOnCircle(center, center, radius, endAngle);
 
+        var start = PointOnCircle(center, center, radius, startAngle);
+        var end = PointOnCircle(center, center, radius, endAngle);
         bool isLargeArc = sweepAngle > 180.0;
 
         var figure = new PathFigure
         {
             StartPoint = start,
-            Segments = new PathSegmentCollection
+            IsClosed = false,
+            Segments = new PathSegments
             {
                 new ArcSegment
                 {
                     Point = end,
-                    Size = new Size(radius, radius),
+                    Size = new Avalonia.Size(radius, radius),
                     IsLargeArc = isLargeArc,
                     SweepDirection = SweepDirection.Clockwise
                 }
@@ -254,96 +214,72 @@ public class ArcPathConverter : IValueConverter
         };
 
         var geometry = new PathGeometry();
+        geometry.Figures ??= new PathFigures();
         geometry.Figures.Add(figure);
         return geometry;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 
-    private static Point PointOnCircle(double cx, double cy, double radius, double angleDegrees)
+    private static Avalonia.Point PointOnCircle(double cx, double cy, double radius, double angleDegrees)
     {
         double radians = angleDegrees * Math.PI / 180.0;
-        double x = cx + radius * Math.Cos(radians);
-        double y = cy + radius * Math.Sin(radians);
-        return new Point(x, y);
+        return new Avalonia.Point(cx + radius * Math.Cos(radians), cy + radius * Math.Sin(radians));
     }
 }
 
 /// <summary>
-/// Converts null to Collapsed, non-null to Visible
+/// Converts null to false (hidden), non-null to true (visible)
 /// </summary>
 public class NullToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return value != null ? Visibility.Visible : Visibility.Collapsed;
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value != null;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts null to Visible, non-null to Collapsed (inverse of NullToVisibilityConverter)
+/// Inverse of NullToVisibilityConverter
 /// </summary>
 public class InverseNullToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return value == null ? Visibility.Visible : Visibility.Collapsed;
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value == null;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a count of 0 to Visible, non-zero to Collapsed.
-/// Useful for showing "empty state" overlays when a collection has no items.
+/// Converts 0 to true (visible), non-zero to false. For empty state overlays.
 /// </summary>
 public class ZeroToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is int intValue) return intValue == 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (value is double doubleValue) return doubleValue == 0 ? Visibility.Visible : Visibility.Collapsed;
-        return Visibility.Visible;
+        if (value is int intValue) return intValue == 0;
+        if (value is double doubleValue) return doubleValue == 0;
+        return true;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Converts a health score (0-100) to a color brush for the arc and text.
-/// Green (≥80), Yellow (≥60), Orange (≥40), Red (&lt;40)
+/// Converts a health score (0-100) to a color brush.
 /// </summary>
 public class HealthScoreToColorConverter : IValueConverter
 {
-    // Pre-cached brushes to avoid creating BrushConverter + parsing hex on every call
-    private static readonly Brush GreenBrush = CreateFrozenBrush("#76BA70");
-    private static readonly Brush AmberBrush = CreateFrozenBrush("#C09040");
-    private static readonly Brush OrangeBrush = CreateFrozenBrush("#B87040");
-    private static readonly Brush CoralBrush = CreateFrozenBrush("#CC6055");
+    private static readonly ISolidColorBrush GreenBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#76BA70"));
+    private static readonly ISolidColorBrush AmberBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#C09040"));
+    private static readonly ISolidColorBrush OrangeBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#B87040"));
+    private static readonly ISolidColorBrush CoralBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#CC6055"));
 
-    private static Brush CreateFrozenBrush(string hex)
-    {
-        var brush = new System.Windows.Media.SolidColorBrush(
-            (Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
-        brush.Freeze();
-        return brush;
-    }
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         int score = value switch
         {
@@ -351,165 +287,124 @@ public class HealthScoreToColorConverter : IValueConverter
             double d => (int)d,
             _ => 100
         };
-        
+
         return score switch
         {
-            >= 80 => GreenBrush,  // Sage green  — calm, no glare
-            >= 60 => AmberBrush,  // Warm amber  — noticeable, not screaming
-            >= 40 => OrangeBrush, // Muted orange — caution without alarm
-            _ => CoralBrush       // Muted coral  — clear problem, not panic
+            >= 80 => GreenBrush,
+            >= 60 => AmberBrush,
+            >= 40 => OrangeBrush,
+            _ => CoralBrush
         };
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Generates a consistent color for a username (for visual differentiation in log lists)
+/// Generates a consistent color for a username
 /// </summary>
 public class UserToColorConverter : IValueConverter
 {
-    private static readonly string[] UserColors = new[]
-    {
-        "#5865F2", // Discord Blurple
-        "#57F287", // Green
-        "#FEE75C", // Yellow
-        "#FAA61A", // Orange
-        "#EB459E", // Pink
-        "#22D3EE", // Cyan
-        "#8B5CF6", // Purple
-        "#F97316", // Orange-Red
-        "#10B981", // Emerald
-        "#EC4899", // Hot Pink
-        "#06B6D4", // Light Blue
-        "#8B5A2B"  // Brown
-    };
+    private static readonly string[] UserColors =
+    [
+        "#5865F2", "#57F287", "#FEE75C", "#FAA61A", "#EB459E", "#22D3EE",
+        "#8B5CF6", "#F97316", "#10B981", "#EC4899", "#06B6D4", "#8B5A2B"
+    ];
 
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is string username && !string.IsNullOrEmpty(username))
         {
-            // Generate consistent hash from username
             int hash = 0;
             foreach (char c in username)
-            {
                 hash = ((hash << 5) - hash) + c;
-            }
-            hash &= 0x7FFFFFFF; // Ensure positive 32-bit integer
-            
-            // Use absolute value and modulo to get index
+            hash &= 0x7FFFFFFF;
             int index = Math.Abs(hash) % UserColors.Length;
-            string hex = UserColors[index];
-            
-            return new BrushConverter().ConvertFromString(hex) as Brush ?? Brushes.White;
+            return new SolidColorBrush(Avalonia.Media.Color.Parse(UserColors[index]));
         }
-        
-        return new BrushConverter().ConvertFromString("#72767D") as Brush ?? Brushes.Gray;
+        return new SolidColorBrush(Avalonia.Media.Color.Parse("#72767D"));
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
 /// Returns true when a double value exceeds the threshold supplied as ConverterParameter.
-/// Usage: {Binding RelativeCost, Converter={StaticResource DoubleGreaterThanConverter}, ConverterParameter=1.0}
-/// Use in DataTrigger Value="True" to apply high-cost styling.
 /// </summary>
 public class DoubleGreaterThanConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         double threshold = 0;
         if (parameter is string paramStr)
-            double.TryParse(paramStr, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out threshold);
+            double.TryParse(paramStr, NumberStyles.Any, CultureInfo.InvariantCulture, out threshold);
 
         if (value is double d) return d > threshold;
-        if (value is float f)  return f > threshold;
-        if (value is int i)    return i > threshold;
+        if (value is float f) return f > threshold;
+        if (value is int i) return i > threshold;
         return false;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
+
 /// <summary>
-/// Converts null to false, non-null to true (for use in MultiBinding)
+/// Converts null to false, non-null to true
 /// </summary>
 public class NullToBooleanConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return value != null;
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value != null;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }
 
 /// <summary>
-/// Combines multiple boolean values with AND logic, then converts to Visibility
-/// Useful for showing elements only when multiple conditions are true
-/// Usage: <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
-///          <Binding Path="Condition1"/>
-///          <Binding Path="Condition2"/>
-///        </MultiBinding>
+/// Combines multiple boolean values with AND logic, returns bool for IsVisible
 /// </summary>
 public class MultiBooleanToVisibilityConverter : IMultiValueConverter
 {
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (values == null || values.Length == 0)
-            return Visibility.Collapsed;
+        if (values == null || values.Count == 0)
+            return false;
 
-        // All values must be boolean true
         foreach (var value in values)
         {
             if (value is bool boolValue)
             {
-                if (!boolValue) return Visibility.Collapsed;
+                if (!boolValue) return false;
             }
             else
             {
-                // Non-boolean value, treat as false
-                return Visibility.Collapsed;
+                return false;
             }
         }
-
-        return Visibility.Visible;
-    }
-
-    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
+        return true;
     }
 }
 
 /// <summary>
-/// Converts an issue severity string ("Critical", "High", "Medium", "Low") to a SolidColorBrush
+/// Converts an issue severity string to a SolidColorBrush
 /// </summary>
 public class SeverityToColorConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return (value?.ToString() ?? "") switch
         {
-            "Critical" => new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49)), // Danger red
-            "High"     => new SolidColorBrush(Color.FromRgb(0xD2, 0x99, 0x22)), // Warning yellow
-            "Medium"   => new SolidColorBrush(Color.FromRgb(0x58, 0xA6, 0xFF)), // Accent blue
-            "Low"      => new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50)), // Success green
-            _          => new SolidColorBrush(Color.FromRgb(0x30, 0x36, 0x3D))  // Border default
+            "Critical" => new SolidColorBrush(Avalonia.Media.Color.Parse("#F85149")),
+            "High" => new SolidColorBrush(Avalonia.Media.Color.Parse("#D29922")),
+            "Medium" => new SolidColorBrush(Avalonia.Media.Color.Parse("#58A6FF")),
+            "Low" => new SolidColorBrush(Avalonia.Media.Color.Parse("#3FB950")),
+            _ => new SolidColorBrush(Avalonia.Media.Color.Parse("#30363D"))
         };
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }

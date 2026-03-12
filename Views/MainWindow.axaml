@@ -1,0 +1,13 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SalesforceDebugAnalyzer.Views.MainWindow"
+        Title="Black Widow — Salesforce Debug Log Analyzer"
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#0B0E13">
+
+    <TextBlock Text="Black Widow — Migration in progress"
+               Foreground="#9198A1" FontSize="20"
+               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+</Window>

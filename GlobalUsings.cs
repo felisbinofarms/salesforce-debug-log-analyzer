@@ -1,22 +1,3 @@
-// Resolve WPF vs WinForms type ambiguities caused by UseWindowsForms=true
-// WPF types take priority since this is a WPF app; WinForms is only used for NotifyIcon (system tray).
-global using Application = System.Windows.Application;
-global using Brush = System.Windows.Media.Brush;
-global using Brushes = System.Windows.Media.Brushes;
-global using Button = System.Windows.Controls.Button;
-global using CheckBox = System.Windows.Controls.CheckBox;
-global using Clipboard = System.Windows.Clipboard;
-global using Color = System.Windows.Media.Color;
-global using ColorConverter = System.Windows.Media.ColorConverter;
-global using ComboBox = System.Windows.Controls.ComboBox;
-global using DataFormats = System.Windows.DataFormats;
-global using DragDropEffects = System.Windows.DragDropEffects;
-global using DragEventArgs = System.Windows.DragEventArgs;
-global using HorizontalAlignment = System.Windows.HorizontalAlignment;
-global using MessageBox = System.Windows.MessageBox;
-global using Orientation = System.Windows.Controls.Orientation;
-global using Point = System.Windows.Point;
-global using Size = System.Windows.Size;
-global using TextBox = System.Windows.Controls.TextBox;
+// Global type aliases for the Avalonia-based project.
+// Timer alias resolves System.Threading.Timer vs System.Timers.Timer ambiguity.
 global using Timer = System.Threading.Timer;
-global using UserControl = System.Windows.Controls.UserControl;

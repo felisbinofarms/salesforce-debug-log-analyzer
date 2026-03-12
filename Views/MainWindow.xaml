@@ -115,7 +115,7 @@
     
     <Grid Background="{StaticResource BgPrimary}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="88"/>
+            <ColumnDefinition Width="56"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -130,7 +130,7 @@
                 BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="88"/>
+                    <ColumnDefinition Width="56"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -138,57 +138,31 @@
                 
                 <!-- App Icon Area -->
                 <Border Grid.Column="0" Background="{StaticResource SidebarBg}">
-                    <materialDesign:PackIcon Kind="Spider" Width="24" Height="24"
+                    <materialDesign:PackIcon Kind="Spider" Width="22" Height="22"
                                              VerticalAlignment="Center" HorizontalAlignment="Center"
                                              Foreground="{StaticResource AccentPrimary}"/>
                 </Border>
                 
-                <!-- App Title -->
-                <TextBlock Grid.Column="1" Text="Black Widow"
-                           FontSize="14" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimary}"
-                           VerticalAlignment="Center"
-                           Margin="16,0,0,0"/>
+                <!-- App Title + Context Breadcrumb -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock Text="Black Widow" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}"/>
+                    <!-- Breadcrumb separator + context (shown when a log is selected) -->
+                    <TextBlock Text=" › " FontSize="13" Foreground="{StaticResource TextMuted}"
+                               Visibility="{Binding SelectedLog, Converter={StaticResource NullToVisibilityConverter}}"/>
+                    <TextBlock Text="{Binding SelectedLog.OperationType}" FontSize="13"
+                               Foreground="{StaticResource TextSecondary}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="300"
+                               Visibility="{Binding SelectedLog, Converter={StaticResource NullToVisibilityConverter}}"
+                               ToolTip="{Binding SelectedLog.EntryPoint}"/>
+                </StackPanel>
                 
-                <!-- VSCode Connection Status (next to title) -->
-                <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Margin="120,0,0,0"
-                        Background="{StaticResource BgHover}" CornerRadius="10" Padding="10,4"
-                        ToolTip="VSCode Bridge: Click to install extension if not connected">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="6" Height="6" Margin="0,0,6,0">
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="{StaticResource TextMuted}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsEditorConnected}" Value="True">
-                                            <Setter Property="Fill" Value="{StaticResource Success}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
-                        <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="VSCode"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsEditorConnected}" Value="True">
-                                            <Setter Property="Text" Value="VSCode ?"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-                
-                <!-- Streaming Status Badge (Center) -->
+                <!-- Streaming Status Badge (compact, shown only when streaming) -->
                 <Border Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Background="{StaticResource Danger}" CornerRadius="12" Padding="12,6"
+                        Background="{StaticResource Danger}" CornerRadius="10" Padding="10,4"
                         Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="White" Margin="0,0,8,0">
+                        <Ellipse Width="6" Height="6" Fill="White" Margin="0,0,6,0">
                             <Ellipse.Style>
                                 <Style TargetType="Ellipse">
                                     <Style.Triggers>
@@ -208,61 +182,7 @@
                             </Ellipse.Style>
                         </Ellipse>
                         <TextBlock Text="{Binding StreamingStatus}" 
-                                   Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Border>
-                
-                <!-- Monitoring Status Badge (next to streaming) -->
-                <Border Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Margin="16,0,0,0" CornerRadius="12" Padding="10,5"
-                        Cursor="Hand"
-                        MouseLeftButtonUp="MonitoringBadge_Click">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{StaticResource BgHover}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsMonitoringActive}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="7" Height="7" Margin="0,0,6,0">
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="{StaticResource TextMuted}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsMonitoringActive}" Value="True">
-                                            <Setter Property="Fill" Value="{StaticResource Success}"/>
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard RepeatBehavior="Forever">
-                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                                         From="1" To="0.4" Duration="0:0:1"
-                                                                         AutoReverse="True"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
-                        <TextBlock FontSize="11" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="Monitor: Off"/>
-                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsMonitoringActive}" Value="True">
-                                            <Setter Property="Text" Value="{Binding MonitoringStatusText}"/>
-                                            <Setter Property="Foreground" Value="{StaticResource Success}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                                   Foreground="White" FontSize="11" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
                 
@@ -318,7 +238,7 @@
             </Grid>
         </Border>
         
-        <!-- Left Sidebar (88px) -->
+        <!-- Left Sidebar (56px icon rail) -->
         <Border Grid.Row="1" Grid.Column="0" 
                 Background="{StaticResource SidebarBg}" 
                 BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,1,0">
@@ -328,295 +248,164 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <!-- Navigation Buttons (Top) -->
-                <StackPanel Grid.Row="0" Margin="0,8,0,0">
+                <!-- Navigation Icons (Top) -->
+                <StackPanel Grid.Row="0" Margin="0,12,0,0" HorizontalAlignment="Center">
                     <!-- Home -->
-                    <Button Width="84" Height="68"
+                    <Button Width="44" Height="44"
                             Background="{StaticResource AccentPrimary}"
-                            BorderThickness="0"
-                            Margin="2,6,2,0"
-                            Cursor="Hand"
+                            BorderThickness="0" Margin="0,0,0,6" Cursor="Hand"
+                            ToolTip="Home"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
+                                <Setter Property="CornerRadius" Value="10"/>
                             </Style>
                         </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Home"
-                                                     Foreground="White" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Home" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <materialDesign:PackIcon Kind="Home" Foreground="White" Width="24" Height="24"/>
                     </Button>
                     
+                    <!-- Upload File -->
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,6" Cursor="Hand"
+                            Command="{Binding UploadLogCommand}"
+                            ToolTip="Upload log file (Ctrl+O)"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="Upload" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Load Folder -->
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,6" Cursor="Hand"
+                            Command="{Binding LoadLogFolderCommand}"
+                            ToolTip="Load log folder"
+                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources>
+                        <materialDesign:PackIcon Kind="FolderOpen" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
+                    </Button>
+                    
+                    <!-- Go Live (Stream) -->
+                    <Button Width="44" Height="44" BorderThickness="0"
+                            Margin="0,4,0,6" Cursor="Hand"
+                            Command="{Binding ToggleStreamingCommand}"
+                            ToolTip="Stream live logs from org">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources>
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStreaming}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Grid>
+                            <materialDesign:PackIcon Kind="AccessPoint" Width="24" Height="24"
+                                                     Foreground="{StaticResource Success}"/>
+                            <!-- Pulsing dot when streaming -->
+                            <Ellipse Width="8" Height="8" Fill="{StaticResource Success}"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
+                                     Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStreaming}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard RepeatBehavior="Forever">
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                             From="1" To="0.2" Duration="0:0:0.6"
+                                                                             AutoReverse="True"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Grid>
+                    </Button>
+
+                    <!-- Separator -->
+                    <Border Height="1" Width="32" Background="{StaticResource BorderSubtle}" Margin="0,6,0,6"/>
+                    
                     <!-- Manage Logs -->
-                    <Button Width="84" Height="68"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Margin="2,4,2,0"
-                            Cursor="Hand"
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,6" Cursor="Hand"
                             Command="{Binding ManageDebugLogsCommand}"
                             ToolTip="Manage Trace Flags &amp; Debug Logs"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
+                                <Setter Property="CornerRadius" Value="10"/>
                             </Style>
                         </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="FileDocument"
-                                                     Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Manage" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <materialDesign:PackIcon Kind="FileDocument" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
                     </Button>
                     
-                    <!-- Upload -->
-                    <Button Width="84" Height="68"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Margin="2,4,2,0"
-                            Cursor="Hand"
-                            Command="{Binding UploadLogCommand}"
-                            ToolTip="Upload a .log file from disk"
+                    <!-- Export Report -->
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,6" Cursor="Hand"
+                            Command="{Binding ExportReportCommand}"
+                            ToolTip="Export analysis report"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
+                                <Setter Property="CornerRadius" Value="10"/>
                             </Style>
                         </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Upload"
-                                                     Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Upload" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Stream Logs (Live) — visually distinct: green accent, clearly actionable -->
-                    <Button Width="84" Height="76"
-                            BorderThickness="0"
-                            Margin="2,6,2,0"
-                            Cursor="Hand"
-                            Command="{Binding ToggleStreamingCommand}"
-                            ToolTip="Stream live logs from your Salesforce org in real-time">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
-                            </Style>
-                        </Button.Resources>
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                                <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsStreaming}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
-                                    </DataTrigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource SuccessSubtle}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <Grid>
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Grid HorizontalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="AccessPoint" Width="22" Height="22" HorizontalAlignment="Center"
-                                                             Foreground="{StaticResource Success}"/>
-                                    <!-- Pulsing dot when streaming -->
-                                    <Ellipse Width="8" Height="8" Fill="{StaticResource Success}"
-                                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
-                                             Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Ellipse.Style>
-                                            <Style TargetType="Ellipse">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsStreaming}" Value="True">
-                                                        <DataTrigger.EnterActions>
-                                                            <BeginStoryboard>
-                                                                <Storyboard RepeatBehavior="Forever">
-                                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                                                     From="1" To="0.2" Duration="0:0:0.6"
-                                                                                     AutoReverse="True"/>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </DataTrigger.EnterActions>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Ellipse.Style>
-                                    </Ellipse>
-                                </Grid>
-                                <TextBlock FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5,0,0"
-                                           Foreground="{StaticResource Success}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="Go Live"/>
-                                            <Setter Property="Foreground" Value="{StaticResource Success}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsStreaming}" Value="True">
-                                                    <Setter Property="Text" Value="● Live"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <!-- Static label underneath so user knows what it does -->
-                                <TextBlock Text="Stream" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                           Foreground="{StaticResource TextMuted}"
-                                           Visibility="{Binding IsStreaming, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                            </StackPanel>
-                        </Grid>
+                        <materialDesign:PackIcon Kind="FileExport" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
                     </Button>
                 </StackPanel>
                 
                 <!-- Bottom Actions -->
-                <StackPanel Grid.Row="1" Margin="0,0,0,8">
-
-                    <!-- ═══ LICENSE TIER BADGE ═══ -->
-                    <Border CornerRadius="8" Margin="4,4,4,6" Padding="10,8"
-                            Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDefault}" BorderThickness="1">
-                        <StackPanel>
-                            <!-- Tier Pill -->
-                            <Border CornerRadius="12" Padding="10,3" HorizontalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{StaticResource BgHover}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding LicenseStatus}" Value="Pro">
-                                                <Setter Property="Background" Value="{StaticResource AccentSubtle}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding LicenseStatus}" Value="Trial">
-                                                <Setter Property="Background" Value="{StaticResource WarningSubtle}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock FontSize="10" FontWeight="Bold" HorizontalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="FREE"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding LicenseStatus}" Value="Pro">
-                                                    <Setter Property="Text" Value="✦ PRO"/>
-                                                    <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding LicenseStatus}" Value="Trial">
-                                                    <Setter Property="Text" Value="⏱ TRIAL"/>
-                                                    <Setter Property="Foreground" Value="{StaticResource Warning}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
-                            <!-- Upgrade CTA — only for Free / Trial users -->
-                            <Button Command="{Binding UpgradeCommand}" Cursor="Hand" Margin="0,5,0,0"
-                                    Visibility="{Binding IsProUser, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="UpgradeBg" CornerRadius="6" Padding="6,5">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                    <GradientStop Color="#2D1F6E" Offset="0"/>
-                                                    <GradientStop Color="#3D2890" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Border.Background>
-                                            <TextBlock Text="⚡ Upgrade to Pro" FontSize="10" FontWeight="Bold"
-                                                       Foreground="#C4B5FD" HorizontalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="UpgradeBg" Property="Opacity" Value="0.8"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                            <!-- Trial warning text -->
-                            <TextBlock Text="{Binding TrialWarning}" FontSize="9" Foreground="{StaticResource Warning}"
-                                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0"
-                                       Visibility="{Binding TrialWarning, Converter={StaticResource StringToVisibilityConverter}}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Export Report -->
-                    <Button Width="84" Height="68"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Margin="2,4,2,0"
-                            Cursor="Hand"
-                            Command="{Binding ExportReportCommand}"
-                            ToolTip="Export analysis report (PDF or JSON)"
-                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
-                            </Style>
-                        </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="FileExport"
-                                                     Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Export" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Button>
-                    
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,12">
                     <!-- Settings -->
-                    <Button Width="84" Height="68"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Margin="2,4,2,0"
-                            Cursor="Hand"
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,6" Cursor="Hand"
                             Command="{Binding OpenSettingsCommand}"
-                            ToolTip="Settings — connections, preferences, license"
+                            ToolTip="Settings"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
+                                <Setter Property="CornerRadius" Value="10"/>
                             </Style>
                         </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Cog"
-                                                     Foreground="{StaticResource TextSecondary}" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Settings" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <materialDesign:PackIcon Kind="Cog" Foreground="{StaticResource TextSecondary}" Width="24" Height="24"/>
                     </Button>
                     
                     <!-- Disconnect -->
-                    <Button Width="84" Height="68"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Margin="2,4,2,8"
-                            Cursor="Hand"
+                    <Button Width="44" Height="44"
+                            Background="Transparent" BorderThickness="0"
+                            Margin="0,0,0,0" Cursor="Hand"
                             Command="{Binding DisconnectCommand}"
-                            ToolTip="Disconnect from Salesforce"
+                            ToolTip="Sign Out"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="12"/>
+                                <Setter Property="CornerRadius" Value="10"/>
                             </Style>
                         </Button.Resources>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Power"
-                                                     Foreground="{StaticResource Danger}" Width="20" Height="20"
-                                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="Sign Out" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Danger}" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <materialDesign:PackIcon Kind="Power" Foreground="{StaticResource Danger}" Width="24" Height="24"/>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -667,11 +456,9 @@
                     <Grid Margin="16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>  <!-- 0: Header -->
-                            <RowDefinition Height="Auto"/>  <!-- 1: Quick Actions (collapsed) -->
-                            <RowDefinition Height="Auto"/>  <!-- 2: Search -->
-                            <RowDefinition Height="Auto"/>  <!-- 3: Filters -->
-                            <RowDefinition Height="*"/>     <!-- 4: Log List -->
-                            <RowDefinition Height="Auto"/>  <!-- 5: Live Streaming -->
+                            <RowDefinition Height="Auto"/>  <!-- 1: Search -->
+                            <RowDefinition Height="*"/>     <!-- 2: Log List -->
+                            <RowDefinition Height="Auto"/>  <!-- 3: Live Streaming -->
                         </Grid.RowDefinitions>
 
                         <!-- Header with action buttons -->
@@ -747,44 +534,8 @@
                             </StackPanel>
                         </Grid>
                         
-                        <!-- Quick Actions Bar (collapsed — sidebar buttons cover these actions) -->
-                        <Border Grid.Row="1" Visibility="Collapsed" Background="{StaticResource BgInput}" CornerRadius="6" Padding="8" Margin="0,0,0,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Button Command="{Binding UploadLogCommand}"
-                                        Background="Transparent" Foreground="{StaticResource TextSecondary}" BorderThickness="0"
-                                        HorizontalAlignment="Stretch" Padding="8,6" FontSize="12">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="FileUpload" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Upload File" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button Grid.Column="1" Command="{Binding ToggleStreamingCommand}"
-                                        Background="Transparent" BorderThickness="0"
-                                        HorizontalAlignment="Stretch" Padding="8,6" FontSize="12">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="Broadcast" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Stream Live" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsStreaming}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                            </Grid>
-                        </Border>
-                        
                         <!-- Search Box -->
-                        <Border Background="{StaticResource BgInput}" CornerRadius="6" Grid.Row="2" Margin="0,0,0,12">
+                        <Border Background="{StaticResource BgInput}" CornerRadius="6" Grid.Row="1" Margin="0,0,0,12">
                             <Grid>
                                 <TextBox x:Name="SearchBox" Background="Transparent" BorderThickness="0" 
                                          Foreground="{StaticResource TextPrimary}" Padding="10,8"
@@ -808,7 +559,7 @@
                         </Border>
                         
                         <!-- Log List - Virtualized ListBox for performance -->
-                        <ListBox Grid.Row="4" ItemsSource="{Binding Logs}" 
+                        <ListBox Grid.Row="2" ItemsSource="{Binding Logs}" 
                                  SelectedItem="{Binding SelectedLog}"
                                  Background="Transparent" BorderThickness="0" Margin="0,0,0,8"
                                  VirtualizingStackPanel.IsVirtualizing="True"
@@ -1049,7 +800,7 @@
                         </ListBox>
                         
                         <!-- Grouped View info banner (shown when ShowGroupedView = true) -->
-                        <Border Grid.Row="4" VerticalAlignment="Top" Padding="10,8" Margin="0,0,0,4"
+                        <Border Grid.Row="2" VerticalAlignment="Top" Padding="10,8" Margin="0,0,0,4"
                                 Background="{StaticResource BgInput}" CornerRadius="6"
                                 Visibility="{Binding ShowGroupedView, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextSecondary}">
@@ -1059,7 +810,7 @@
                         </Border>
 
                         <!-- Transaction Group List (shown when ShowGroupedView = true) -->
-                        <ListBox Grid.Row="4" ItemsSource="{Binding LogGroups}"
+                        <ListBox Grid.Row="2" ItemsSource="{Binding LogGroups}"
                                  SelectedItem="{Binding SelectedLogGroup}"
                                  Background="Transparent" BorderThickness="0" Margin="0,44,0,8"
                                  VirtualizingStackPanel.IsVirtualizing="True"
@@ -1192,14 +943,18 @@
                             </ListBox.ItemContainerStyle>
                         </ListBox>
                         
-                        <!-- Empty state when no logs loaded — simple hint (main canvas has the full welcome screen) -->
-                        <StackPanel Grid.Row="4" Margin="12,8,12,8"
-                                    Visibility="{Binding Logs.Count, Converter={StaticResource ZeroToVisibilityConverter}}">
-                            <TextBlock Text="No logs loaded yet" FontSize="12" FontWeight="SemiBold"
+                        <!-- Empty state when no logs loaded -->
+                        <StackPanel Grid.Row="2" Margin="12,20,12,8"
+                                    Visibility="{Binding Logs.Count, Converter={StaticResource ZeroToVisibilityConverter}}"
+                                    HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="28" Height="28"
+                                                     Foreground="{StaticResource TextDisabled}"
+                                                     HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="No logs loaded" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                            <TextBlock Text="Drop a .log file here or use the options in the main panel"
+                            <TextBlock Text="Drop .log files here or&#x0a;connect to Salesforce"
                                        FontSize="11" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
-                                       TextAlignment="Center" HorizontalAlignment="Center"/>
+                                       TextAlignment="Center" HorizontalAlignment="Center" LineHeight="17"/>
                         </StackPanel>
 
                         <Border Background="{StaticResource BgInput}" CornerRadius="6" 
@@ -1315,7 +1070,7 @@
                         
                         <!-- Live Streaming Panel (shown when streaming) -->
                         <Border Background="{StaticResource BgTertiary}" CornerRadius="8" 
-                                Grid.Row="5" Padding="12" Margin="0,8,0,0"
+                                Grid.Row="3" Padding="12" Margin="0,8,0,0"
                                 Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1600,42 +1355,42 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
-                        <!-- Tab Headers — VS Code underline style — Order: Summary | Explain | Timeline | Queries | Tree -->
+                        <!-- Tab Headers — compact underline style — Order: Overview | Explain | Timeline | Queries | Tree | Security | Debug(hidden) -->
                         <Border Grid.Row="0" BorderBrush="{StaticResource BorderDefault}" BorderThickness="0,0,0,1" Padding="4,0"
                                 Background="{StaticResource BgPrimary}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <StackPanel Orientation="Horizontal">
-                                <!-- Summary Tab (index 0) — first tab, admin entry point -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                <!-- Overview Tab (index 0) — formerly Summary -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40">
                                     <Button.CommandParameter><sys:Int32>0</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="ChartBox" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Summary" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Start Here" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="ChartBox" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Overview" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1649,40 +1404,32 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Explain Tab (index 4) — plain English for admins -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                <!-- Explain Tab (index 4) -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40">
                                     <Button.CommandParameter><sys:Int32>4</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="Lightbulb" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"
-                                                                                     Foreground="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=4, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                                            <TextBlock Text="Explain" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Plain English" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Lightbulb" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Explain" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
-                                                <!-- Underline indicator -->
-                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0"
-                                                        Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1696,37 +1443,32 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Timeline Tab (index 2) — performance timeline -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                <!-- Timeline Tab (index 2) -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40">
                                     <Button.CommandParameter><sys:Int32>2</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="Timeline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Timeline" FontSize="13" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Performance" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Timeline" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Timeline" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1740,37 +1482,32 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Queries Tab (index 3) — database operations -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                <!-- Queries Tab (index 3) -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40">
                                     <Button.CommandParameter><sys:Int32>3</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="DatabaseSearch" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Queries" FontSize="13" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Reads &amp; Writes" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Queries" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1784,37 +1521,32 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Tree Tab (index 1) — deep technical dive -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52">
+                                <!-- Tree Tab (index 1) -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40">
                                     <Button.CommandParameter><sys:Int32>1</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="FileTree" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Tree" FontSize="13" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Code Trace" FontSize="11" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextSecondary}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="FileTree" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Tree" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1828,83 +1560,33 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-                                <!-- Debug Tab (index 5) — parser audit trail (hidden unless IsDebugMode=true in settings.json) -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52"
-                                        Visibility="{Binding IsParserDebugMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <Button.CommandParameter><sys:Int32>5</sys:Int32></Button.CommandParameter>
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Grid>
-                                                <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="Bug" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Debug" FontSize="13" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Parser Info" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
-                                                    </StackPanel>
-                                                </Border>
-                                                <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
-                                                </Border>
-                                            </Grid>
-                                            <ControlTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
-                                                    <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgHover}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                                <!-- Shield Tab (index 6) — live org monitoring dashboard -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52"
+                                <!-- Security Tab (index 6) — merged Shield + PII -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40"
                                         Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Button.CommandParameter><sys:Int32>6</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="ShieldSearch" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="Shield" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="6">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Monitoring" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="ShieldLock" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Security" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="6">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -1918,43 +1600,37 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-
-                                <!-- PII / Compliance Tab (index 7) — personal data scanner -->
-                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="16,0" Height="52"
-                                        Visibility="{Binding SelectedLog, Converter={StaticResource NullToVisibilityConverter}}">
-                                    <Button.CommandParameter><sys:Int32>7</sys:Int32></Button.CommandParameter>
+                                <!-- Debug Tab (index 5) — hidden unless debug mode is on -->
+                                <Button Command="{Binding SelectTabCommand}" Cursor="Hand" BorderThickness="0" Padding="14,0" Height="40"
+                                        Visibility="{Binding IsParserDebugMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Button.CommandParameter><sys:Int32>5</sys:Int32></Button.CommandParameter>
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid>
                                                 <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <materialDesign:PackIcon Kind="ShieldLockOutline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="PII" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="7">
-                                                                                <Setter Property="Foreground" Value="White"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                        <TextBlock Text="Compliance" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Bug" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                                                 Foreground="{StaticResource TextMuted}"/>
+                                                        <TextBlock Text="Debug" FontSize="13" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
+                                                                            <Setter Property="Foreground" Value="White"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="Underline" Height="2" VerticalAlignment="Bottom" CornerRadius="1,1,0,0" Visibility="Collapsed">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="#4493F8"/>
-                                                    </Border.Background>
+                                                    <Border.Background><SolidColorBrush Color="#4493F8"/></Border.Background>
                                                 </Border>
                                             </Grid>
                                             <ControlTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="7">
+                                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
                                                     <Setter TargetName="Underline" Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -1966,6 +1642,15 @@
                                 </Button>
                             </StackPanel>
                             </ScrollViewer>
+                            <!-- Right side: Search + Export in tab bar -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <Button Command="{Binding ExportReportCommand}" Cursor="Hand"
+                                        Background="Transparent" BorderThickness="0" Padding="6,4"
+                                        ToolTip="Export report">
+                                    <materialDesign:PackIcon Kind="Download" Width="15" Height="15" Foreground="{StaticResource TextMuted}"/>
+                                </Button>
+                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Tab Content -->
@@ -2229,8 +1914,7 @@
                             <tabs:QueriesTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=3}"/>
                             <tabs:ExplainTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=4}"/>
                             <tabs:DebugTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=5}"/>
-                            <tabs:ShieldTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=6}"/>
-                            <tabs:PiiTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=7}"/>
+                            <tabs:SecurityTab Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVisibilityConverter}, ConverterParameter=6}"/>
                         </Grid>
                     </Grid>
                 </Border>

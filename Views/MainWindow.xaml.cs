@@ -198,12 +198,6 @@ public partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
-    private void MonitoringBadge_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (_viewModel.ToggleMonitoringCommand.CanExecute(null))
-            _viewModel.ToggleMonitoringCommand.Execute(null);
-    }
-
     private void MaximizeButton_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
@@ -270,15 +264,46 @@ public partial class MainWindow : Window
 
     private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
+        var ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+        var shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
+
         // Ctrl+K → command palette
-        if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        if (e.Key == Key.K && ctrl)
         {
             _viewModel.ToggleCommandPaletteCommand.Execute(null);
             e.Handled = true;
             return;
         }
+        // Ctrl+Shift+O → open folder
+        if (e.Key == Key.O && ctrl && shift)
+        {
+            _viewModel.LoadLogFolderCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+O → open file
+        if (e.Key == Key.O && ctrl)
+        {
+            _viewModel.UploadLogCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+E → export
+        if (e.Key == Key.E && ctrl)
+        {
+            _viewModel.ExportReportCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+, → settings
+        if (e.Key == Key.OemComma && ctrl)
+        {
+            _viewModel.OpenSettingsCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
         // Ctrl+F → focus search box
-        if (e.Key == Key.F && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        if (e.Key == Key.F && ctrl)
         {
             if (SearchBox != null)
             {
@@ -295,6 +320,26 @@ public partial class MainWindow : Window
             if (_viewModel.IsCommandPaletteOpen)
             {
                 _viewModel.CloseCommandPaletteCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+        // Number keys 1-6 → switch tabs (only when not typing in a TextBox)
+        if (!ctrl && !shift && e.OriginalSource is not System.Windows.Controls.TextBox)
+        {
+            var tabKey = e.Key switch
+            {
+                Key.D1 => 0,
+                Key.D2 => 1,
+                Key.D3 => 2,
+                Key.D4 => 3,
+                Key.D5 => 4,
+                Key.D6 => 5,
+                _ => -1
+            };
+            if (tabKey >= 0)
+            {
+                _viewModel.SelectTabCommand.Execute(tabKey);
                 e.Handled = true;
                 return;
             }

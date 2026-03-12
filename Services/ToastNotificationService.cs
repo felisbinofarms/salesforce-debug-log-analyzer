@@ -1,6 +1,5 @@
 using Serilog;
 using SalesforceDebugAnalyzer.Models;
-using System.Windows.Forms;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -51,9 +50,9 @@ public class ToastNotificationService
         {
             var icon = alert.Severity switch
             {
-                "critical" => ToolTipIcon.Error,
-                "warning" => ToolTipIcon.Warning,
-                _ => ToolTipIcon.Info
+                "critical" => SystemTrayService.TrayIcon.Error,
+                "warning" => SystemTrayService.TrayIcon.Warning,
+                _ => SystemTrayService.TrayIcon.Info
             };
 
             var title = FormatTitle(alert);
