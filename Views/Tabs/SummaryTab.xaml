@@ -9,9 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="900">
     <UserControl.Resources>
-        <helpers:ArcPathConverter x:Key="ArcPathConverter"/>
-        <helpers:HealthScoreToColorConverter x:Key="HealthScoreToColorConverter"/>
-        <helpers:SeverityToColorConverter x:Key="SeverityToColorConverter"/>
+
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">

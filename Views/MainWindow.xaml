@@ -34,12 +34,6 @@
     </WindowChrome.WindowChrome>
     
     <Window.Resources>
-        <!-- Converters unique to MainWindow (others inherited from App.xaml) -->
-        <helpers:DoubleGreaterThanConverter x:Key="DoubleGreaterThanConverter"/>
-        <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-        <helpers:ArcPathConverter x:Key="ArcPathConverter"/>
-        <helpers:HealthScoreToColorConverter x:Key="HealthScoreToColorConverter"/>
-        <helpers:SeverityToColorConverter x:Key="SeverityToColorConverter"/>
         
         <!-- Card Style — uses theme tokens so all cards inherit the palette automatically -->
         <Style x:Key="DiscordCard" TargetType="Border">

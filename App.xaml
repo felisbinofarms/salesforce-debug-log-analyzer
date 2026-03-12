@@ -29,6 +29,11 @@
             <helpers:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
             <helpers:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
             <helpers:MultiBooleanToVisibilityConverter x:Key="MultiBooleanToVisibilityConverter"/>
+            <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+            <helpers:DoubleGreaterThanConverter x:Key="DoubleGreaterThanConverter"/>
+            <helpers:ArcPathConverter x:Key="ArcPathConverter"/>
+            <helpers:HealthScoreToColorConverter x:Key="HealthScoreToColorConverter"/>
+            <helpers:SeverityToColorConverter x:Key="SeverityToColorConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
