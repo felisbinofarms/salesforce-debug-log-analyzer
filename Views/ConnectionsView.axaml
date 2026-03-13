@@ -1,0 +1,223 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="SalesforceDebugAnalyzer.Views.ConnectionsView">
+
+    <Grid Background="{StaticResource BgPrimary}">
+        <Grid VerticalAlignment="Center" HorizontalAlignment="Center"
+              MaxWidth="520" Margin="40,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===== BRANDING ===== -->
+            <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                <Border CornerRadius="16" Width="64" Height="64"
+                        HorizontalAlignment="Center" Margin="0,0,0,20"
+                        Background="{StaticResource BgSecondary}"
+                        BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                    <mi:MaterialIcon Kind="Spider" Width="36" Height="36"
+                                     Foreground="{StaticResource AccentPrimary}"/>
+                </Border>
+                <TextBlock Text="BLACK WIDOW" FontSize="28" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimary}"
+                           HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="Debug Log Analyzer" FontSize="14"
+                           Foreground="{StaticResource TextMuted}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- ===== ACTION CARDS ===== -->
+            <StackPanel Grid.Row="2" Spacing="8">
+
+                <!-- Open Log File (click to browse) -->
+                <Button x:Name="DropZoneButton" Classes="ghost"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                        Padding="16,14" Click="DropZone_Click">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="8" Width="40" Height="40"
+                                Background="{StaticResource AccentSubtle}" Margin="0,0,14,0">
+                            <mi:MaterialIcon Kind="FileDocumentOutline" Width="22" Height="22"
+                                             Foreground="{StaticResource AccentPrimary}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Open Log File" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Drop a .log file here or click to browse"
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="Ctrl+O" FontSize="11"
+                                   Foreground="{StaticResource TextDisabled}"
+                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+                <!-- Scan Folder -->
+                <Button Classes="ghost" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch" Padding="16,14"
+                        Click="LoadFolder_Click">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="8" Width="40" Height="40"
+                                Background="{StaticResource SuccessSubtle}" Margin="0,0,14,0">
+                            <mi:MaterialIcon Kind="FolderOpenOutline" Width="22" Height="22"
+                                             Foreground="{StaticResource Success}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Scan Folder" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Load and analyze all logs in a directory"
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="Ctrl+Shift+O" FontSize="11"
+                                   Foreground="{StaticResource TextDisabled}"
+                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+                <!-- Connect to Production -->
+                <Button Classes="ghost" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch" Padding="16,14"
+                        Click="ConnectProduction_Click">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="8" Width="40" Height="40"
+                                Background="{StaticResource InfoSubtle}" Margin="0,0,14,0">
+                            <mi:MaterialIcon Kind="CloudOutline" Width="22" Height="22"
+                                             Foreground="{StaticResource Info}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Connect to Production" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="OAuth 2.0 · Stream logs live · SSO supported"
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <mi:MaterialIcon Grid.Column="2" Kind="ChevronRight" Width="18" Height="18"
+                                         Foreground="{StaticResource TextDisabled}"/>
+                    </Grid>
+                </Button>
+
+                <!-- Connect to Sandbox -->
+                <Button Classes="ghost" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch" Padding="16,14"
+                        Click="ConnectSandbox_Click">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="8" Width="40" Height="40"
+                                Background="{StaticResource WarningSubtle}" Margin="0,0,14,0">
+                            <mi:MaterialIcon Kind="TestTube" Width="22" Height="22"
+                                             Foreground="{StaticResource Warning}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Connect to Sandbox" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Sandbox or Developer org · MFA supported"
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <mi:MaterialIcon Grid.Column="2" Kind="ChevronRight" Width="18" Height="18"
+                                         Foreground="{StaticResource TextDisabled}"/>
+                    </Grid>
+                </Button>
+            </StackPanel>
+
+            <!-- ===== RECENT CONNECTIONS ===== -->
+            <Border Grid.Row="4" x:Name="RecentConnectionsPanel"
+                    IsVisible="False"
+                    Background="{StaticResource BgSecondary}"
+                    CornerRadius="10"
+                    BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock Text="RECENT" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMuted}" Margin="4,0,0,10"/>
+                    <ItemsControl x:Name="RecentConnectionsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Padding="12,8" Margin="0,0,0,2"
+                                        Click="ReconnectButton_Click" Tag="{Binding}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <mi:MaterialIcon Grid.Column="0" Kind="CloudOutline"
+                                                         Width="16" Height="16"
+                                                         Foreground="{StaticResource TextMuted}"
+                                                         Margin="0,0,10,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding OrgName}"
+                                                   FontSize="13" Foreground="{StaticResource TextPrimary}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding LastUsed}"
+                                                   FontSize="11" Foreground="{StaticResource TextDisabled}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== ADVANCED: MANUAL TOKEN ===== -->
+            <Expander Grid.Row="6" Header="Advanced: Manual Token"
+                      Foreground="{StaticResource TextMuted}" FontSize="12"
+                      IsExpanded="False" HorizontalAlignment="Stretch">
+                <Border Background="{StaticResource BgSecondary}"
+                        CornerRadius="10" Padding="20" Margin="0,8,0,0"
+                        BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Instance URL" Foreground="{StaticResource TextSecondary}"
+                                   FontSize="12" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ManualInstanceUrl"
+                                 Watermark="https://your-instance.salesforce.com"
+                                 Background="{StaticResource BgInput}"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 BorderBrush="{StaticResource BorderSubtle}"
+                                 Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Access Token" Foreground="{StaticResource TextSecondary}"
+                                   FontSize="12" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ManualAccessToken"
+                                 Watermark="00D..."
+                                 Background="{StaticResource BgInput}"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 BorderBrush="{StaticResource BorderSubtle}"
+                                 Margin="0,0,0,16"/>
+
+                        <Button Content="Connect" Classes="primary"
+                                Click="ManualConnect_Click"
+                                Height="36" Padding="20,0"/>
+                    </StackPanel>
+                </Border>
+            </Expander>
+        </Grid>
+    </Grid>
+</UserControl>

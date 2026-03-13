@@ -1,0 +1,116 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SalesforceDebugAnalyzer.Views.DebugLevelDialog"
+        Title="Create Debug Level"
+        Width="500" Height="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource BgTertiary}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Create Debug Level"
+                       FontSize="{DynamicResource FontXL}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <TextBlock Text="Configure logging verbosity for different categories"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Name" Foreground="{DynamicResource TextPrimary}"/>
+                <TextBox x:Name="NameTextBox"
+                         Watermark="My Debug Level"/>
+
+                <TextBlock Text="Log Levels: NONE → ERROR → WARN → INFO → DEBUG → FINE → FINER → FINEST"
+                           TextWrapping="Wrap"
+                           FontSize="{DynamicResource FontXS}"
+                           Foreground="{DynamicResource TextMuted}"
+                           Margin="0,8,0,8"/>
+
+                <!-- Apex Code -->
+                <TextBlock Text="Apex Code" Foreground="{DynamicResource TextPrimary}"/>
+                <ComboBox x:Name="ApexCodeComboBox" SelectedIndex="7" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- Database -->
+                <TextBlock Text="Database" Foreground="{DynamicResource TextPrimary}" Margin="0,8,0,0"/>
+                <ComboBox x:Name="DatabaseComboBox" SelectedIndex="7" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- System -->
+                <TextBlock Text="System" Foreground="{DynamicResource TextPrimary}" Margin="0,8,0,0"/>
+                <ComboBox x:Name="SystemComboBox" SelectedIndex="4" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- Workflow -->
+                <TextBlock Text="Workflow" Foreground="{DynamicResource TextPrimary}" Margin="0,8,0,0"/>
+                <ComboBox x:Name="WorkflowComboBox" SelectedIndex="3" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+
+                <!-- Validation -->
+                <TextBlock Text="Validation" Foreground="{DynamicResource TextPrimary}" Margin="0,8,0,0"/>
+                <ComboBox x:Name="ValidationComboBox" SelectedIndex="3" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="NONE"/>
+                    <ComboBoxItem Content="ERROR"/>
+                    <ComboBoxItem Content="WARN"/>
+                    <ComboBoxItem Content="INFO"/>
+                    <ComboBoxItem Content="DEBUG"/>
+                    <ComboBoxItem Content="FINE"/>
+                    <ComboBoxItem Content="FINER"/>
+                    <ComboBoxItem Content="FINEST"/>
+                </ComboBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Content="Cancel"
+                    Classes="secondary"
+                    Click="CancelButton_Click"
+                    Padding="16,10"/>
+            <Button x:Name="CreateButton"
+                    Content="Create"
+                    Classes="primary"
+                    Click="CreateButton_Click"
+                    Padding="16,10"/>
+        </StackPanel>
+    </Grid>
+</Window>

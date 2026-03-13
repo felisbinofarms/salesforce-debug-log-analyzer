@@ -1,0 +1,168 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SalesforceDebugAnalyzer.Views.AlertDetailDialog"
+        Title="Alert Detail"
+        Width="700" Height="650"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        Background="Transparent">
+
+    <Border Background="{DynamicResource BgTertiary}"
+            CornerRadius="12"
+            BorderBrush="{DynamicResource BorderDefault}"
+            BorderThickness="1"
+            BoxShadow="0 8 32 0 #40000000"
+            ClipToBounds="True">
+        <Grid RowDefinitions="Auto,*,Auto">
+
+            <!-- Header -->
+            <Border Grid.Row="0" Padding="20,16"
+                    BorderBrush="{DynamicResource BorderDefault}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border x:Name="SeverityBadge" Grid.Column="0"
+                            CornerRadius="12"
+                            Padding="10,4"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center">
+                        <TextBlock x:Name="SeverityText" FontSize="11" FontWeight="Bold"
+                                   Foreground="White"/>
+                    </Border>
+                    <TextBlock x:Name="TitleText" Grid.Column="1"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" Click="Close_Click" Classes="ghost"
+                            Padding="4" Width="28" Height="28">
+                        <mi:MaterialIcon Kind="Close" Width="16" Height="16"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1" Padding="20,12">
+                <StackPanel Spacing="16">
+
+                    <!-- Description -->
+                    <TextBlock x:Name="DescriptionText"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap"/>
+
+                    <!-- Metrics Panel -->
+                    <Border x:Name="MetricsSection" Background="{DynamicResource BgSecondary}"
+                            CornerRadius="8" Padding="16">
+                        <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Current"
+                                       FontSize="11" Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Baseline"
+                                       FontSize="11" Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Change"
+                                       FontSize="11" Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center"/>
+
+                            <TextBlock x:Name="CurrentValueText" Grid.Row="1" Grid.Column="0"
+                                       FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            <TextBlock x:Name="BaselineValueText" Grid.Row="1" Grid.Column="1"
+                                       FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            <TextBlock x:Name="ChangeValueText" Grid.Row="1" Grid.Column="2"
+                                       FontSize="24" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Details Section -->
+                    <Border Background="{DynamicResource BgSecondary}"
+                            CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Details" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+
+                            <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto,Auto" Margin="0,8,0,0">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Entry Point"
+                                           FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock x:Name="EntryPointText" Grid.Row="0" Grid.Column="1"
+                                           FontSize="12" Foreground="{DynamicResource TextPrimary}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Alert Type" Margin="0,6,0,0"
+                                           FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock x:Name="AlertTypeText" Grid.Row="1" Grid.Column="1" Margin="0,6,0,0"
+                                           FontSize="12" Foreground="{DynamicResource TextPrimary}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Related Log" Margin="0,6,0,0"
+                                           FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                <Button x:Name="ViewLogButton" Grid.Row="2" Grid.Column="1"
+                                        Click="ViewLog_Click"
+                                        Classes="ghost"
+                                        Padding="0" Margin="0,4,0,0"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="False">
+                                    <TextBlock x:Name="RelatedLogText"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource AccentPrimary}"/>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Feedback Section -->
+                    <Border Background="{DynamicResource BgSecondary}"
+                            CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Was this alert helpful?" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+
+                            <!-- Not yet submitted -->
+                            <StackPanel x:Name="FeedbackButtons" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                <Button Click="ThumbsUp_Click" Classes="secondary" Padding="12,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <mi:MaterialIcon Kind="ThumbUp" Width="14" Height="14"/>
+                                        <TextBlock Text="Accurate"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ThumbsDown_Click" Classes="secondary" Padding="12,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <mi:MaterialIcon Kind="ThumbDown" Width="14" Height="14"/>
+                                        <TextBlock Text="False Alarm"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Already submitted -->
+                            <StackPanel x:Name="FeedbackSubmitted" Orientation="Horizontal" Spacing="6" IsVisible="False">
+                                <mi:MaterialIcon Kind="CheckCircle" Width="16" Height="16"
+                                                 Foreground="{DynamicResource Success}"/>
+                                <TextBlock x:Name="FeedbackStatusText" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Padding="20,12"
+                    Background="{DynamicResource BgSecondary}"
+                    BorderBrush="{DynamicResource BorderDefault}" BorderThickness="0,1,0,0">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Button Grid.Column="1" Content="Dismiss Alert"
+                            Click="Dismiss_Click"
+                            Classes="secondary"
+                            Padding="16,10"
+                            Margin="0,0,8,0"/>
+                    <Button Grid.Column="2" Content="Close"
+                            Click="Close_Click"
+                            Classes="secondary"
+                            Padding="16,10"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

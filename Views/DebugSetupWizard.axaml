@@ -1,0 +1,408 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="SalesforceDebugAnalyzer.Views.DebugSetupWizard">
+
+    <Grid ColumnDefinitions="250,*">
+        <!-- Sidebar -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource SidebarBg}"
+                BorderBrush="{DynamicResource BorderDefault}"
+                BorderThickness="0,0,1,0"
+                Padding="20">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Setup Wizard"
+                           FontSize="{DynamicResource FontXL}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimary}"
+                           Margin="0,0,0,20"/>
+
+                <!-- Step 1 -->
+                <Border x:Name="Step1Border"
+                        Background="{DynamicResource AccentPrimary}"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="12,10"
+                        BorderBrush="{DynamicResource BorderDefault}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="Numeric1CircleOutline" Width="22" Height="22"
+                                         Foreground="{DynamicResource TextPrimary}"/>
+                        <StackPanel>
+                            <TextBlock Text="Who to Debug"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="Select target user"
+                                       FontSize="{DynamicResource FontXS}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 2 -->
+                <Border x:Name="Step2Border"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="12,10"
+                        BorderBrush="{DynamicResource BorderDefault}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="Numeric2CircleOutline" Width="22" Height="22"
+                                         Foreground="{DynamicResource TextPrimary}"/>
+                        <StackPanel>
+                            <TextBlock Text="Detail Level"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="Choose log verbosity"
+                                       FontSize="{DynamicResource FontXS}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 3 -->
+                <Border x:Name="Step3Border"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="12,10"
+                        BorderBrush="{DynamicResource BorderDefault}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="Numeric3CircleOutline" Width="22" Height="22"
+                                         Foreground="{DynamicResource TextPrimary}"/>
+                        <StackPanel>
+                            <TextBlock Text="Duration"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="Set expiration time"
+                                       FontSize="{DynamicResource FontXS}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 4 -->
+                <Border x:Name="Step4Border"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="12,10"
+                        BorderBrush="{DynamicResource BorderDefault}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="Numeric4CircleOutline" Width="22" Height="22"
+                                         Foreground="{DynamicResource TextPrimary}"/>
+                        <StackPanel>
+                            <TextBlock Text="Enable &amp; Download"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="Start logging"
+                                       FontSize="{DynamicResource FontXS}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Area -->
+        <ScrollViewer Grid.Column="1" Padding="30">
+          <Panel>
+            <!-- ==================== STEP 1: Who to Debug ==================== -->
+            <StackPanel x:Name="Step1Panel" Spacing="16" IsVisible="True">
+                <TextBlock Text="Who do you want to debug?"
+                           FontSize="{DynamicResource FontXL}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+
+                <!-- Info box -->
+                <Border Background="{DynamicResource InfoSubtle}"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="14">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="InformationOutline" Width="20" Height="20"
+                                         Foreground="{DynamicResource InfoPrimary}"/>
+                        <TextBlock Text="Debug logging captures detailed execution information for a specific user. You can debug yourself or another user in your org."
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   FontSize="{DynamicResource FontSM}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Current User -->
+                <RadioButton x:Name="CurrentUserRadio"
+                             GroupName="UserSelection"
+                             IsChecked="True"
+                             Foreground="{DynamicResource TextPrimary}"
+                             Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="AccountCircle" Width="18" Height="18"
+                                         Foreground="{DynamicResource AccentPrimary}"/>
+                        <TextBlock Text="Myself (Current User)"
+                                   FontSize="{DynamicResource FontBase}"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <TextBlock x:Name="CurrentUserInfo"
+                           Text="Loading..."
+                           Foreground="{DynamicResource TextMuted}"
+                           FontSize="{DynamicResource FontSM}"
+                           Margin="28,0,0,0"/>
+
+                <!-- Another User -->
+                <RadioButton x:Name="AnotherUserRadio"
+                             GroupName="UserSelection"
+                             Foreground="{DynamicResource TextPrimary}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="AccountSearch" Width="18" Height="18"
+                                         Foreground="{DynamicResource AccentPrimary}"/>
+                        <TextBlock Text="Another User"
+                                   FontSize="{DynamicResource FontBase}"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <StackPanel x:Name="UserIdPanel" IsVisible="False" Margin="28,0,0,0" Spacing="6">
+                    <TextBlock Text="Salesforce User ID (15 or 18 characters):"
+                               FontSize="{DynamicResource FontSM}"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                    <TextBox x:Name="UserIdTextBox"
+                             Watermark="e.g. 005xx000001Svl8"
+                             Width="300"
+                             HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Next →"
+                            Classes="primary"
+                            Click="NextToStep2_Click"
+                            Padding="20,10"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ==================== STEP 2: Detail Level ==================== -->
+            <StackPanel x:Name="Step2Panel" Spacing="16" IsVisible="False">
+                <TextBlock Text="Choose debug detail level"
+                           FontSize="{DynamicResource FontXL}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+
+                <!-- Standard -->
+                <RadioButton x:Name="StandardLevelRadio"
+                             GroupName="LevelSelection"
+                             IsChecked="True"
+                             Foreground="{DynamicResource TextPrimary}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Standard"
+                                   FontWeight="SemiBold"
+                                   FontSize="{DynamicResource FontBase}"/>
+                        <TextBlock Text="Good for most debugging — captures key Apex, SOQL, and trigger events"
+                                   FontSize="{DynamicResource FontSM}"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <!-- Detailed -->
+                <RadioButton x:Name="DetailedLevelRadio"
+                             GroupName="LevelSelection"
+                             Foreground="{DynamicResource TextPrimary}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Detailed"
+                                   FontWeight="SemiBold"
+                                   FontSize="{DynamicResource FontBase}"/>
+                        <TextBlock Text="Maximum detail — captures all Apex, profiling, database, workflow, and system events"
+                                   FontSize="{DynamicResource FontSM}"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <!-- Custom -->
+                <RadioButton x:Name="CustomLevelRadio"
+                             GroupName="LevelSelection"
+                             Foreground="{DynamicResource TextPrimary}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Custom Debug Level"
+                                   FontWeight="SemiBold"
+                                   FontSize="{DynamicResource FontBase}"/>
+                        <TextBlock Text="Use a pre-configured debug level from your org"
+                                   FontSize="{DynamicResource FontSM}"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <!-- Custom Level Panel -->
+                <StackPanel x:Name="CustomLevelPanel" IsVisible="False" Margin="28,0,0,0" Spacing="8">
+                    <ComboBox x:Name="DebugLevelComboBox"
+                              Width="300"
+                              HorizontalAlignment="Left"/>
+                    <Button Content="+ Create New Debug Level"
+                            Classes="ghost"
+                            Click="CreateDebugLevel_Click"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+                    <Button Content="← Back"
+                            Classes="secondary"
+                            Click="BackToStep1_Click"
+                            Padding="20,10"/>
+                    <Button Content="Next →"
+                            Classes="primary"
+                            Click="NextToStep3_Click"
+                            Padding="20,10"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ==================== STEP 3: Duration ==================== -->
+            <StackPanel x:Name="Step3Panel" Spacing="16" IsVisible="False">
+                <TextBlock Text="How long should logging stay active?"
+                           FontSize="{DynamicResource FontXL}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+
+                <TextBlock Text="Debug logs will be generated for this duration. After it expires, logging stops automatically."
+                           FontSize="{DynamicResource FontSM}"
+                           Foreground="{DynamicResource TextSecondary}"
+                           TextWrapping="Wrap"/>
+
+                <Slider x:Name="DurationSlider"
+                        Minimum="1"
+                        Maximum="24"
+                        Value="4"
+                        IsSnapToTickEnabled="True"
+                        TickFrequency="1"
+                        Width="400"
+                        HorizontalAlignment="Left"
+                        Margin="0,10,0,0"
+                        PropertyChanged="DurationSlider_PropertyChanged"/>
+
+                <TextBlock x:Name="DurationDisplay"
+                           Text="Expires in 4 hours"
+                           FontSize="{DynamicResource FontLG}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+
+                <TextBlock x:Name="DurationRecommendation"
+                           Text="✓ Good for quick testing (recommended)"
+                           FontSize="{DynamicResource FontSM}"
+                           Foreground="{DynamicResource SuccessPrimary}"/>
+
+                <!-- Navigation -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+                    <Button Content="← Back"
+                            Classes="secondary"
+                            Click="BackToStep2_Click"
+                            Padding="20,10"/>
+                    <Button Content="Next →"
+                            Classes="primary"
+                            Click="NextToStep4_Click"
+                            Padding="20,10"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ==================== STEP 4: Enable & Download ==================== -->
+            <StackPanel x:Name="Step4Panel" Spacing="16" IsVisible="False">
+                <TextBlock Text="Review &amp; Enable"
+                           FontSize="{DynamicResource FontXL}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+
+                <!-- Summary -->
+                <Border Background="{DynamicResource BgTertiary}"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="16">
+                    <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="User:"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock x:Name="SummaryUser" Grid.Row="0" Grid.Column="1"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Debug Level:"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Margin="0,6,0,0"/>
+                        <TextBlock x:Name="SummaryLevel" Grid.Row="1" Grid.Column="1"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   Margin="0,6,0,0"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="Duration:"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Margin="0,6,0,0"/>
+                        <TextBlock x:Name="SummaryDuration" Grid.Row="2" Grid.Column="1"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   Margin="0,6,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- What Happens Next -->
+                <Border Background="{DynamicResource InfoSubtle}"
+                        CornerRadius="{DynamicResource RadiusMedium}"
+                        Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="What Happens Next?"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="1. A TraceFlag is created in your Salesforce org"
+                                   Foreground="{DynamicResource TextSecondary}" FontSize="{DynamicResource FontSM}"/>
+                        <TextBlock Text="2. Debug logs are generated for every action the user performs"
+                                   Foreground="{DynamicResource TextSecondary}" FontSize="{DynamicResource FontSM}"/>
+                        <TextBlock Text="3. You can download and analyze logs in Black Widow"
+                                   Foreground="{DynamicResource TextSecondary}" FontSize="{DynamicResource FontSM}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Log Preview -->
+                <Border Background="{DynamicResource BgInput}"
+                        CornerRadius="{DynamicResource RadiusSmall}"
+                        Padding="14">
+                    <TextBlock FontFamily="Consolas,Courier New,monospace"
+                               FontSize="{DynamicResource FontXS}"
+                               Foreground="{DynamicResource TextMuted}"
+                               Text="48.0 APEX_CODE,FINEST&#x0a;48.0 APEX_PROFILING,FINEST&#x0a;48.0 CALLOUT,INFO&#x0a;48.0 DB,FINEST&#x0a;..."/>
+                </Border>
+
+                <!-- Enable Button + Progress -->
+                <Button x:Name="EnableButton"
+                        Content="🕷️ Enable Debug Logging"
+                        Classes="primary"
+                        Click="EnableLogging_Click"
+                        Padding="24,12"
+                        HorizontalAlignment="Left"
+                        FontWeight="Bold"/>
+
+                <ProgressBar x:Name="EnableProgressBar"
+                             IsIndeterminate="True"
+                             IsVisible="False"
+                             Height="4"
+                             Margin="0,4,0,0"/>
+
+                <TextBlock x:Name="StatusText"
+                           IsVisible="False"
+                           Foreground="{DynamicResource TextSecondary}"
+                           FontSize="{DynamicResource FontSM}"
+                           TextWrapping="Wrap"/>
+
+                <Button x:Name="ViewLogsButton"
+                        Content="View Active Logs →"
+                        Classes="primary"
+                        Click="ViewLogs_Click"
+                        IsVisible="False"
+                        Padding="20,10"
+                        HorizontalAlignment="Left"/>
+
+                <!-- Navigation -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+                    <Button Content="← Back"
+                            Classes="secondary"
+                            Click="BackToStep3_Click"
+                            Padding="20,10"/>
+                </StackPanel>
+            </StackPanel>
+          </Panel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

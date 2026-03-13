@@ -1,0 +1,144 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SalesforceDebugAnalyzer.Views.UpgradeDialog"
+        Title="Upgrade to Black Widow Pro"
+        Width="900" Height="650"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{StaticResource BgPrimary}">
+
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,24">
+            <TextBlock Text="&#x1F577; Upgrade to Black Widow Pro"
+                       FontSize="28" FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimary}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Unlock transaction grouping, real-time streaming, and unlimited exports"
+                       FontSize="14" Foreground="{StaticResource TextSecondary}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- Feature Comparison Table -->
+        <Border Grid.Row="1" Background="{StaticResource BgSecondary}"
+                CornerRadius="8" Margin="0,0,0,24" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Header Row -->
+                <Border Grid.Row="0" Grid.ColumnSpan="4" Background="{StaticResource AccentPrimary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Feature" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Grid.Column="1" Text="Free" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="Pro" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="Team" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 1 -->
+                <Border Grid.Row="1" Grid.ColumnSpan="4" Background="{StaticResource BgTertiary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Single log analysis" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 2 -->
+                <Border Grid.Row="2" Grid.ColumnSpan="4" Background="{StaticResource BgSecondary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Transaction grouping" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="❌" FontSize="16" Foreground="{StaticResource DangerPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 3 -->
+                <Border Grid.Row="3" Grid.ColumnSpan="4" Background="{StaticResource BgTertiary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="File size limit" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="30MB" FontSize="13" Foreground="{StaticResource WarningPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="Unlimited" FontSize="13" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="Unlimited" FontSize="13" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 4 -->
+                <Border Grid.Row="4" Grid.ColumnSpan="4" Background="{StaticResource BgSecondary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Real-time CLI streaming" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="❌" FontSize="16" Foreground="{StaticResource DangerPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 5 -->
+                <Border Grid.Row="5" Grid.ColumnSpan="4" Background="{StaticResource BgTertiary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Export reports (PDF, JSON)" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="❌" FontSize="16" Foreground="{StaticResource DangerPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="✅" FontSize="16" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 6 -->
+                <Border Grid.Row="6" Grid.ColumnSpan="4" Background="{StaticResource BgSecondary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Marketplace access" FontSize="13" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="View" FontSize="13" Foreground="{StaticResource WarningPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="Submit" FontSize="13" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="Submit" FontSize="13" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row 7: Price -->
+                <Border Grid.Row="7" Grid.ColumnSpan="4" Background="{StaticResource BgTertiary}" Padding="16,12">
+                    <Grid ColumnDefinitions="2*,*,*,*">
+                        <TextBlock Grid.Column="0" Text="Price" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="Free" FontSize="14" FontWeight="Bold" Foreground="{StaticResource SuccessPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="$9/mo" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="$29/mo" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentPrimary}" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,0,0,16">
+            <Button x:Name="StartTrialButton" Content="Start 14-Day Free Trial"
+                    Classes="primary" Padding="24,12" FontSize="16"
+                    Click="StartTrial_Click"/>
+            <Button Content="Buy Pro — $9/mo" Classes="secondary" Padding="24,12" FontSize="16"
+                    Click="BuyNow_Click"/>
+            <Button Content="I Have a Key" Classes="ghost" Padding="16,12"
+                    Foreground="{StaticResource AccentPrimary}"
+                    Click="ActivateKey_Click"/>
+        </StackPanel>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+            <TextBlock Text="No credit card required for trial" FontSize="12"
+                       Foreground="{StaticResource TextMuted}"/>
+            <TextBlock Text="·" Foreground="{StaticResource TextMuted}"/>
+            <Button Content="Cancel" Classes="ghost" FontSize="12" Padding="4,0"
+                    Foreground="{StaticResource TextMuted}" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

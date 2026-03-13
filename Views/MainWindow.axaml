@@ -3,6 +3,7 @@
         xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:vm="clr-namespace:SalesforceDebugAnalyzer.ViewModels"
         xmlns:h="clr-namespace:SalesforceDebugAnalyzer.Helpers"
+        xmlns:views="clr-namespace:SalesforceDebugAnalyzer.Views"
         x:Class="SalesforceDebugAnalyzer.Views.MainWindow"
         Title="Black Widow — Salesforce Debug Log Analyzer"
         Width="1600" Height="900"
@@ -184,7 +185,7 @@
             <Border x:Name="ConnectionsViewContainer"
                     IsVisible="{Binding !IsConnected}"
                     Background="{StaticResource BgPrimary}">
-                <!-- ConnectionsView will be inserted here programmatically -->
+                <views:ConnectionsView x:Name="ConnectionsViewControl"/>
             </Border>
 
             <!-- Main Dashboard (shown when connected OR has logs) -->

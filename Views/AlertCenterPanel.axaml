@@ -1,0 +1,133 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="SalesforceDebugAnalyzer.Views.AlertCenterPanel">
+
+    <Border Background="{DynamicResource BgSecondary}"
+            CornerRadius="12,0,0,12"
+            BorderBrush="{DynamicResource BorderDefault}"
+            BorderThickness="1,1,0,1"
+            Width="380">
+        <Grid RowDefinitions="Auto,Auto,*">
+
+            <!-- Header -->
+            <Border Grid.Row="0" Padding="16,12"
+                    BorderBrush="{DynamicResource BorderDefault}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Alert Center"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <Button Content="Mark All Read"
+                                Classes="ghost"
+                                Click="MarkAllRead_Click"
+                                FontSize="11"
+                                Padding="8,4"/>
+                        <Button Click="Close_Click"
+                                Classes="ghost"
+                                Width="28" Height="28"
+                                Padding="0">
+                            <mi:MaterialIcon Kind="Close" Width="14" Height="14"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Severity Filter -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,8" Spacing="4">
+                <RadioButton x:Name="FilterAllRadio"
+                             Content="All" IsChecked="True"
+                             GroupName="SeverityFilter"
+                             IsCheckedChanged="FilterRadio_CheckedChanged"/>
+                <RadioButton x:Name="FilterCriticalRadio"
+                             Content="Critical"
+                             GroupName="SeverityFilter"
+                             IsCheckedChanged="FilterRadio_CheckedChanged"/>
+                <RadioButton x:Name="FilterWarningRadio"
+                             Content="Warning"
+                             GroupName="SeverityFilter"
+                             IsCheckedChanged="FilterRadio_CheckedChanged"/>
+            </StackPanel>
+
+            <!-- Alert List -->
+            <ScrollViewer Grid.Row="2">
+                <ItemsControl x:Name="AlertList" Padding="8,4">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource BgTertiary}"
+                                    CornerRadius="8"
+                                    Margin="4,3"
+                                    Padding="12,10"
+                                    BorderBrush="{DynamicResource BorderDefault}"
+                                    BorderThickness="1"
+                                    Opacity="{Binding Opacity}"
+                                    Cursor="Hand"
+                                    PointerPressed="AlertItem_PointerPressed"
+                                    Tag="{Binding}">
+                                <Grid ColumnDefinitions="4,*,Auto">
+                                    <!-- Severity color bar -->
+                                    <Border Grid.Column="0"
+                                            CornerRadius="2"
+                                            Width="4" Margin="0,0,10,0"
+                                            VerticalAlignment="Stretch"
+                                            Background="{Binding SeverityColor}"/>
+
+                                    <!-- Alert content -->
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Title}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12" FontWeight="Medium"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding Description}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="11" Margin="0,4,0,0"
+                                                   MaxHeight="44"
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" Spacing="4">
+                                            <TextBlock Text="{Binding TimeAgo}" FontSize="10"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Text="·" FontSize="10"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Text="{Binding EntryPoint}" FontSize="10"
+                                                       Foreground="{DynamicResource AccentPrimary}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="180"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Dismiss button -->
+                                    <Button Grid.Column="2"
+                                            VerticalAlignment="Top"
+                                            Click="DismissAlert_Click"
+                                            Tag="{Binding Id}"
+                                            Classes="ghost"
+                                            Width="24" Height="24"
+                                            Padding="0"
+                                            Margin="4,0,0,0">
+                                        <mi:MaterialIcon Kind="Close" Width="12" Height="12"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Empty state -->
+            <StackPanel x:Name="EmptyState" Grid.Row="2"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        IsVisible="True">
+                <mi:MaterialIcon Kind="BellCheckOutline" Width="48" Height="48"
+                                 Foreground="{DynamicResource TextMuted}"
+                                 HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <TextBlock Text="No alerts" FontSize="14"
+                           Foreground="{DynamicResource TextMuted}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Monitoring will surface issues as they're detected"
+                           FontSize="12" Foreground="{DynamicResource TextMuted}"
+                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

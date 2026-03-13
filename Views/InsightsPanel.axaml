@@ -1,0 +1,294 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="SalesforceDebugAnalyzer.Views.InsightsPanel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="16">
+
+            <!-- ═══ CARD 1: What Happened ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="20" BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="FileDocument" Width="18" Height="18"
+                                         Foreground="{DynamicResource AccentPrimary}"/>
+                        <TextBlock Text="What Happened"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PlainEnglishSummary}"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap"
+                               LineHeight="20"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ CARD 2: How Long Did User Wait? ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="20" BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="TimerOutline" Width="18" Height="18"
+                                         Foreground="{DynamicResource AccentPrimary}"/>
+                        <TextBlock Text="How Long Did User Wait?"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding UserWaitTimeSeconds}"
+                                   FontSize="36" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="seconds"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   VerticalAlignment="Bottom" Margin="0,0,0,8"/>
+                    </StackPanel>
+
+                    <!-- Speed Rating Badge -->
+                    <Border x:Name="SpeedBadge"
+                            CornerRadius="{DynamicResource RadiusPill}"
+                            Padding="16,6"
+                            HorizontalAlignment="Center">
+                        <TextBlock x:Name="SpeedRatingText"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <TextBlock Text="{Binding UserWaitExplanation}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ CARD 3: What's Using Resources? ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="20" BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="ChartBar" Width="18" Height="18"
+                                         Foreground="{DynamicResource AccentPrimary}"/>
+                        <TextBlock Text="What's Using Resources?"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ResourceUsageExplanation}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"/>
+
+                    <!-- Database Reads (SOQL) Meter -->
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="Database Reads (SOQL)"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                <TextBlock Text="{Binding SoqlCount}" FontSize="12" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text=" / " FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock Text="{Binding SoqlLimit}" FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Height="6" ClipToBounds="True">
+                            <Border Background="{DynamicResource BgInput}"
+                                    CornerRadius="3"/>
+                            <Border x:Name="SoqlBar"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Left"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Database Writes (DML) Meter -->
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="Database Writes (DML)"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                <TextBlock Text="{Binding DmlCount}" FontSize="12" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text=" / " FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock Text="{Binding DmlLimit}" FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Height="6" ClipToBounds="True">
+                            <Border Background="{DynamicResource BgInput}"
+                                    CornerRadius="3"/>
+                            <Border x:Name="DmlBar"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Left"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- CPU Meter -->
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="CPU Time"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                <TextBlock Text="{Binding CpuPercent, StringFormat={}{0:F0}%}" 
+                                           FontSize="12" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Height="6" ClipToBounds="True">
+                            <Border Background="{DynamicResource BgInput}"
+                                    CornerRadius="3"/>
+                            <Border x:Name="CpuBar"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Left"/>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ CARD 4: Problems Found ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="20" BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1"
+                    IsVisible="{Binding HasProblems}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="AlertCircleOutline" Width="18" Height="18"
+                                         Foreground="{DynamicResource Danger}"/>
+                        <TextBlock Text="Problems Found"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding PlainEnglishProblems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource BgTertiary}"
+                                        CornerRadius="6"
+                                        Padding="12" Margin="0,4">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <!-- Icon -->
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                                   FontSize="18" VerticalAlignment="Top"
+                                                   Margin="0,0,10,0"/>
+
+                                        <!-- Problem Details -->
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="13" FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Description}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Severity Badge -->
+                                        <Border Grid.Column="2"
+                                                CornerRadius="4"
+                                                Padding="8,3"
+                                                VerticalAlignment="Top"
+                                                Margin="8,0,0,0"
+                                                Background="{DynamicResource BgInput}">
+                                            <TextBlock Text="{Binding ImpactLabel}"
+                                                       FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ CARD 5: What Should You Do? ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="20" BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1"
+                    IsVisible="{Binding HasRecommendations}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="LightbulbOnOutline" Width="18" Height="18"
+                                         Foreground="{DynamicResource Warning}"/>
+                        <TextBlock Text="What Should You Do?"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding PlainEnglishRecommendations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource BgTertiary}"
+                                        CornerRadius="6"
+                                        Padding="12" Margin="0,4">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="13" FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Description}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1"
+                                                CornerRadius="4"
+                                                Padding="8,3"
+                                                VerticalAlignment="Top"
+                                                Margin="8,0,0,0"
+                                                Background="{DynamicResource AccentSubtle}">
+                                            <TextBlock FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentPrimary}">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="~{0} min">
+                                                        <Binding Path="EstimatedMinutes"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ CARD 6: All Clear ═══ -->
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusMedium}"
+                    Padding="32"
+                    BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1"
+                    IsVisible="{Binding IsAllClear}">
+                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                    <mi:MaterialIcon Kind="CheckCircle" Width="48" Height="48"
+                                     Foreground="{DynamicResource Success}"
+                                     HorizontalAlignment="Center"/>
+                    <TextBlock Text="All Clear!" FontSize="20" FontWeight="Bold"
+                               Foreground="{DynamicResource Success}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="No problems detected in this log. Everything looks healthy."
+                               FontSize="13"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap" TextAlignment="Center"
+                               MaxWidth="300"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

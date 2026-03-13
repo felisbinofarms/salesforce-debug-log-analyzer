@@ -1,0 +1,169 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SalesforceDebugAnalyzer.Views.TraceFlagDialog"
+        Title="Manage Debug Logs"
+        Width="700" Height="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgTertiary}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Debug Log Configuration"
+                       FontSize="{DynamicResource FontHero}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <TextBlock Text="Set trace flags to enable debug logging for your user"
+                       FontSize="{DynamicResource FontBase}"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="1" Margin="0,0,0,16">
+
+            <!-- Tab: Enable Debug Log -->
+            <TabItem Header="Enable Debug Log">
+                <ScrollViewer Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Configure Debug Logging"
+                                   FontWeight="SemiBold"
+                                   FontSize="{DynamicResource FontLG}"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <!-- Current User Info -->
+                        <Border Background="{DynamicResource BgSecondary}"
+                                Padding="12"
+                                CornerRadius="{DynamicResource RadiusSmall}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Current User"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock x:Name="CurrentUserTextBlock"
+                                           Text="Loading user info..."
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Debug Level -->
+                        <TextBlock Text="Debug Level"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <ComboBox x:Name="DebugLevelComboBox" HorizontalAlignment="Stretch"/>
+
+                        <Button Content="+ Create New Debug Level"
+                                Classes="ghost"
+                                Click="CreateDebugLevelButton_Click"
+                                HorizontalAlignment="Left"/>
+
+                        <!-- Duration -->
+                        <TextBlock Text="Duration (hours)"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   Margin="0,8,0,0"/>
+                        <Slider x:Name="DurationSlider"
+                                Minimum="1" Maximum="24"
+                                Value="2"
+                                IsSnapToTickEnabled="True"
+                                TickFrequency="1"/>
+                        <TextBlock x:Name="DurationLabel"
+                                   Text="Expires in 2 hours"
+                                   Foreground="{DynamicResource TextSecondary}"/>
+
+                        <!-- Enable Button -->
+                        <Button x:Name="EnableLoggingButton"
+                                Content="Enable Debug Logging"
+                                Classes="primary"
+                                Click="EnableLoggingButton_Click"
+                                HorizontalAlignment="Left"
+                                Padding="16,10"
+                                Margin="0,8,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab: Active Trace Flags -->
+            <TabItem Header="Active Trace Flags">
+                <Grid RowDefinitions="Auto,*" Margin="16">
+                    <Button Content="Refresh"
+                            Classes="secondary"
+                            Click="RefreshTraceFlagsButton_Click"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,8"/>
+
+                    <DataGrid x:Name="TraceFlagsDataGrid"
+                              Grid.Row="1"
+                              IsReadOnly="True"
+                              CanUserResizeColumns="True"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="User/Entity" Binding="{Binding TracedEntityId}" Width="140"/>
+                            <DataGridTextColumn Header="Debug Level" Binding="{Binding DebugLevelId}" Width="140"/>
+                            <DataGridTextColumn Header="Expires" Binding="{Binding ExpirationDate, StringFormat='{}{0:MM/dd HH:mm}'}" Width="110"/>
+                            <DataGridTextColumn Header="Started" Binding="{Binding StartDate, StringFormat='{}{0:MM/dd HH:mm}'}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock x:Name="NoTraceFlagsTextBlock"
+                               Grid.Row="1"
+                               Text="No active trace flags"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsVisible="False"
+                               Foreground="{DynamicResource TextMuted}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab: Recent Logs -->
+            <TabItem Header="Recent Logs">
+                <Grid RowDefinitions="Auto,*" Margin="16">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                        <Button Content="Refresh Logs"
+                                Classes="primary"
+                                Click="RefreshLogsButton_Click"/>
+                        <Button x:Name="DownloadLogButton"
+                                Content="Download Selected"
+                                Classes="ghost"
+                                Click="DownloadLogButton_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="LogsDataGrid"
+                              Grid.Row="1"
+                              IsReadOnly="True"
+                              CanUserResizeColumns="True"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="160"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                            <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime, StringFormat='{}{0:MM/dd HH:mm:ss}'}" Width="130"/>
+                            <DataGridTextColumn Header="Duration (ms)" Binding="{Binding DurationMilliseconds}" Width="100"/>
+                            <DataGridTextColumn Header="Size (KB)" Binding="{Binding LogLength}" Width="80"/>
+                            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Status Bar -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <ProgressBar x:Name="LoadingProgressBar"
+                             IsIndeterminate="True"
+                             Width="100" Height="4"
+                             IsVisible="False"
+                             VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusTextBlock"
+                           Text="Ready"
+                           Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Classes="secondary"
+                    Click="CloseButton_Click"
+                    Padding="16,10"/>
+        </Grid>
+    </Grid>
+</Window>

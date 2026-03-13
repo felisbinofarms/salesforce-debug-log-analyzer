@@ -1,0 +1,79 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SalesforceDebugAnalyzer.Views.SettingsDialog"
+        Title="Settings"
+        Width="700" Height="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{StaticResource BgPrimary}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== SIDEBAR NAV ===== -->
+        <Border Grid.Column="0" Background="{StaticResource BgSecondary}"
+                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,1,0"
+                Padding="8,16">
+            <StackPanel Spacing="2">
+                <TextBlock Text="SETTINGS" FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TextDisabled}" Margin="12,0,0,12"/>
+
+                <Button x:Name="GeneralTabBtn" Classes="ghost" Content="General"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="0"/>
+                <Button x:Name="ConnectionsTabBtn" Classes="ghost" Content="Connections"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="1"/>
+                <Button x:Name="ParserTabBtn" Classes="ghost" Content="Parser"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="2"/>
+                <Button x:Name="AdvancedTabBtn" Classes="ghost" Content="Advanced"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="3"/>
+                <Button x:Name="PrivacyTabBtn" Classes="ghost" Content="Privacy"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="4"/>
+                <Button x:Name="AboutTabBtn" Classes="ghost" Content="About"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="12,8" Click="TabButton_Click" Tag="5"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== CONTENT AREA ===== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ScrollViewer Grid.Row="0" Padding="24,20">
+                <StackPanel x:Name="ContentPanel" Spacing="12"/>
+            </ScrollViewer>
+
+            <!-- Bottom actions -->
+            <Border Grid.Row="1" BorderBrush="{StaticResource BorderSubtle}"
+                    BorderThickness="0,1,0,0" Padding="20,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="Reset to Defaults" Classes="ghost"
+                            Padding="12,6" Click="ResetDefaults_Click"/>
+
+                    <Button Grid.Column="2" Content="Cancel" Classes="secondary"
+                            Padding="16,6" Margin="0,0,8,0" Click="Cancel_Click"/>
+                    <Button Grid.Column="3" Content="Save" Classes="primary"
+                            Padding="20,6" Click="Save_Click"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

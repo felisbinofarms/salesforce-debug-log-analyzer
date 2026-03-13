@@ -1,0 +1,86 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SalesforceDebugAnalyzer.Views.OAuthBrowserDialog"
+        Title="Login to Salesforce"
+        Width="550" Height="380"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource BgTertiary}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource AccentPrimary}" Padding="16">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <mi:MaterialIcon Kind="Key" Width="24" Height="24" Foreground="White"/>
+                <TextBlock Text="Salesforce OAuth Login"
+                           FontSize="{DynamicResource FontLG}"
+                           FontWeight="Medium"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <StackPanel Grid.Row="1" Margin="24" Spacing="16" VerticalAlignment="Center">
+            <mi:MaterialIcon Kind="WebCheck" Width="48" Height="48"
+                             Foreground="{DynamicResource AccentPrimary}"
+                             HorizontalAlignment="Center"/>
+
+            <TextBlock Text="Browser-Based Authentication"
+                       FontSize="{DynamicResource FontXL}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}"
+                       HorizontalAlignment="Center"/>
+
+            <TextBlock Text="Your default browser will open for Salesforce login. After completing login, you'll be redirected back automatically."
+                       FontSize="{DynamicResource FontBase}"
+                       Foreground="{DynamicResource TextSecondary}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       MaxWidth="400"/>
+
+            <Border Background="{DynamicResource BgSecondary}"
+                    CornerRadius="{DynamicResource RadiusSmall}"
+                    Padding="12"
+                    HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <mi:MaterialIcon Kind="InformationOutline" Width="16" Height="16"
+                                     Foreground="{DynamicResource Info}"/>
+                    <TextBlock Text="Port 1717 must be available for the OAuth callback"
+                               FontSize="{DynamicResource FontSM}"
+                               Foreground="{DynamicResource TextMuted}"/>
+                </StackPanel>
+            </Border>
+
+            <ProgressBar x:Name="LoadingProgressBar"
+                         IsIndeterminate="True"
+                         Height="4"
+                         IsVisible="False"
+                         HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="{DynamicResource BgSecondary}" Padding="16,8">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock x:Name="StatusText"
+                           Text="Ready to authenticate"
+                           Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="Open in Browser"
+                        Classes="secondary"
+                        Click="OpenInBrowser_Click"
+                        Margin="0,0,8,0"
+                        Padding="16,10"/>
+                <Button Grid.Column="2"
+                        Content="Cancel"
+                        Classes="secondary"
+                        Click="CancelButton_Click"
+                        Padding="16,10"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
