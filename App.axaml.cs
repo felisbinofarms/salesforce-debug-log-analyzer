@@ -21,7 +21,7 @@ public partial class App : Application
             "SalesforceDebugAnalyzer", "Logs", "app-.txt");
 
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+            .MinimumLevel.Debug()
             .WriteTo.File(logPath,
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
@@ -29,6 +29,19 @@ public partial class App : Application
             .CreateLogger();
 
         Log.Information("Application starting up (Avalonia)");
+
+        // Global exception handlers — log crashes before the process dies
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            Log.Fatal(e.ExceptionObject as Exception, "FATAL: AppDomain unhandled exception");
+            Log.CloseAndFlush();
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log.Error(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

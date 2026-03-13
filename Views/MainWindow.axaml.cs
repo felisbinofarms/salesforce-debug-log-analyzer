@@ -181,10 +181,10 @@ public partial class MainWindow : Window
             if (item is Avalonia.Platform.Storage.IStorageFile file)
             {
                 var path = file.Path.LocalPath;
-                if (path.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+                if (path.EndsWith(".log", StringComparison.OrdinalIgnoreCase) ||
+                    path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Use UploadLog with file path if available, or notify ViewModel
-                    vm.StatusMessage = $"Loading dropped file: {System.IO.Path.GetFileName(path)}";
+                    await vm.LoadLogFromPath(path);
                 }
             }
         }
