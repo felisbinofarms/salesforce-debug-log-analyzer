@@ -1491,10 +1491,469 @@
 
                                     <!-- Security Tab (Index 6) -->
                                     <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=6}">
-                                        <StackPanel Margin="24" Spacing="12">
-                                            <TextBlock Text="Security Shield" FontSize="18" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding ShieldDashboardStatus}" FontSize="13"
-                                                       Foreground="{StaticResource TextMuted}"/>
+                                        <StackPanel Margin="24" Spacing="16">
+
+                                            <!-- Header -->
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <mi:MaterialIcon Kind="ShieldLockOutline" Width="22" Height="22"
+                                                                 Foreground="{StaticResource AccentPrimary}"/>
+                                                <TextBlock Text="Security &amp; Compliance" FontSize="18" FontWeight="Bold"/>
+                                            </StackPanel>
+
+                                            <!-- ═══ PII COMPLIANCE SCANNER ═══ -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="10">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="ShieldAlertOutline" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Warning}"/>
+                                                        <TextBlock Text="PII Compliance Scanner" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="Scan the selected log for personal identifiable information (emails, phone numbers, SSN, credit cards, IP addresses) before sharing."
+                                                               FontSize="12" Foreground="{StaticResource TextSecondary}"
+                                                               TextWrapping="Wrap"/>
+
+                                                    <!-- Scan Button + Status -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <Button Command="{Binding ScanForPiiCommand}"
+                                                                Classes="accent" Padding="16,8" CornerRadius="6">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <mi:MaterialIcon Kind="TextSearch" Width="14" Height="14"/>
+                                                                <TextBlock Text="Scan for PII" FontSize="12" FontWeight="SemiBold"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <TextBlock Text="{Binding PiiScanStatus}" FontSize="12"
+                                                                   Foreground="{StaticResource TextMuted}"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+
+                                                    <!-- Scanning progress -->
+                                                    <StackPanel IsVisible="{Binding IsPiiScanning}" Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="Loading" Width="14" Height="14"
+                                                                         Foreground="{StaticResource AccentPrimary}"/>
+                                                        <TextBlock Text="Scanning…" FontSize="12"
+                                                                   Foreground="{StaticResource AccentPrimary}"/>
+                                                    </StackPanel>
+
+                                                    <!-- PII Results -->
+                                                    <StackPanel IsVisible="{Binding HasPiiScan}" Spacing="8">
+
+                                                        <!-- Risk Level Badge -->
+                                                        <Border CornerRadius="8" Padding="12,8"
+                                                                Background="{StaticResource BgTertiary}">
+                                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                                <TextBlock Text="{Binding CurrentPiiScan.RiskIcon}" FontSize="16"
+                                                                           VerticalAlignment="Center"/>
+                                                                <StackPanel>
+                                                                    <TextBlock FontSize="13" FontWeight="SemiBold"
+                                                                               Foreground="{StaticResource TextPrimary}">
+                                                                        <TextBlock.Text>
+                                                                            <MultiBinding StringFormat="Risk Level: {0}">
+                                                                                <Binding Path="CurrentPiiScan.RiskLevel"/>
+                                                                            </MultiBinding>
+                                                                        </TextBlock.Text>
+                                                                    </TextBlock>
+                                                                    <TextBlock Text="{Binding CurrentPiiScan.SummaryText}" FontSize="11"
+                                                                               Foreground="{StaticResource TextMuted}"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- PII Matches List -->
+                                                        <ItemsControl ItemsSource="{Binding CurrentPiiScan.Matches}"
+                                                                      IsVisible="{Binding CurrentPiiScan.HasPii}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Background="{StaticResource DangerSubtle}"
+                                                                            CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding PiiTypeIcon}" FontSize="14"
+                                                                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                            <Border Grid.Column="1" CornerRadius="4" Padding="6,2"
+                                                                                    Background="{StaticResource BgTertiary}" Margin="0,0,8,0"
+                                                                                    VerticalAlignment="Center">
+                                                                                <TextBlock Text="{Binding PiiType}" FontSize="10"
+                                                                                           FontWeight="Bold"
+                                                                                           Foreground="{StaticResource Warning}"/>
+                                                                            </Border>
+                                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                                                <TextBlock Text="{Binding MaskedValue}" FontSize="12"
+                                                                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                           Foreground="{StaticResource TextPrimary}"/>
+                                                                                <TextBlock Text="{Binding Context}" FontSize="10"
+                                                                                           Foreground="{StaticResource TextMuted}"
+                                                                                           TextTrimming="CharacterEllipsis" MaxLines="1"/>
+                                                                            </StackPanel>
+                                                                            <TextBlock Grid.Column="3" FontSize="10"
+                                                                                       VerticalAlignment="Center"
+                                                                                       Foreground="{StaticResource TextDisabled}">
+                                                                                <TextBlock.Text>
+                                                                                    <MultiBinding StringFormat="L{0}">
+                                                                                        <Binding Path="LineNumber"/>
+                                                                                    </MultiBinding>
+                                                                                </TextBlock.Text>
+                                                                            </TextBlock>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+
+                                                        <!-- Clean state -->
+                                                        <Border IsVisible="{Binding !CurrentPiiScan.HasPii}"
+                                                                Background="{StaticResource SuccessSubtle}"
+                                                                CornerRadius="8" Padding="16,12">
+                                                            <StackPanel Orientation="Horizontal" Spacing="10"
+                                                                        HorizontalAlignment="Center">
+                                                                <mi:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18"
+                                                                                 Foreground="{StaticResource Success}"/>
+                                                                <TextBlock Text="No personal data detected — safe to share"
+                                                                           FontSize="13" Foreground="{StaticResource Success}"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- ═══ SHIELD MONITORING DASHBOARD ═══ -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="10">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="ShieldStarOutline" Width="16" Height="16"
+                                                                         Foreground="{StaticResource AccentPrimary}"/>
+                                                        <TextBlock Text="Shield Event Monitoring" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="{Binding ShieldDashboardStatus}" FontSize="12"
+                                                               Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+
+                                                    <!-- Dashboard content (when data exists) -->
+                                                    <StackPanel IsVisible="{Binding ShieldDashboard, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                Spacing="12">
+
+                                                        <!-- Quick Stats Row -->
+                                                        <Grid ColumnDefinitions="*,*,*,*">
+                                                            <Border Grid.Column="0" Classes="card" Margin="0,0,6,0">
+                                                                <StackPanel HorizontalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ShieldDashboard.TotalEvents}"
+                                                                               FontSize="20" FontWeight="Bold"
+                                                                               Foreground="{StaticResource AccentPrimary}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                    <TextBlock Text="Total Events" FontSize="10"
+                                                                               Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <Border Grid.Column="1" Classes="card" Margin="3,0,3,0">
+                                                                <StackPanel HorizontalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ShieldDashboard.UniqueUsers}"
+                                                                               FontSize="20" FontWeight="Bold"
+                                                                               Foreground="{StaticResource Info}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                    <TextBlock Text="Unique Users" FontSize="10"
+                                                                               Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <Border Grid.Column="2" Classes="card" Margin="3,0,3,0">
+                                                                <StackPanel HorizontalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ShieldDashboard.ExceptionTotal}"
+                                                                               FontSize="20" FontWeight="Bold"
+                                                                               Foreground="{StaticResource Danger}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                    <TextBlock Text="Exceptions" FontSize="10"
+                                                                               Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <Border Grid.Column="3" Classes="card" Margin="6,0,0,0">
+                                                                <StackPanel HorizontalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ShieldDashboard.FailedLoginTotal}"
+                                                                               FontSize="20" FontWeight="Bold"
+                                                                               Foreground="{StaticResource Warning}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                    <TextBlock Text="Failed Logins" FontSize="10"
+                                                                               Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </Grid>
+
+                                                        <!-- Insights (actionable alerts) -->
+                                                        <StackPanel IsVisible="{Binding ShieldDashboard.HasInsights}" Spacing="6">
+                                                            <TextBlock Text="Actionable Insights" FontSize="13" FontWeight="SemiBold"
+                                                                       Margin="0,4,0,0"/>
+                                                            <ItemsControl ItemsSource="{Binding ShieldDashboard.Insights}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border CornerRadius="6" Padding="12,8" Margin="0,0,0,4"
+                                                                                Background="{StaticResource BgTertiary}"
+                                                                                BorderBrush="{StaticResource BorderSubtle}"
+                                                                                BorderThickness="1">
+                                                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                                                <!-- Severity indicator -->
+                                                                                <Border Grid.Column="0" Width="4" CornerRadius="2"
+                                                                                        Margin="0,0,10,0" VerticalAlignment="Stretch">
+                                                                                    <Border.Background>
+                                                                                        <SolidColorBrush Color="{Binding SeverityColor}"/>
+                                                                                    </Border.Background>
+                                                                                </Border>
+                                                                                <!-- Content -->
+                                                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <Border CornerRadius="3" Padding="4,1"
+                                                                                                Background="{StaticResource BgHover}">
+                                                                                            <TextBlock Text="{Binding SeverityLabel}"
+                                                                                                       FontSize="9" FontWeight="Bold"
+                                                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                                                        </Border>
+                                                                                        <TextBlock Text="{Binding Title}" FontSize="13"
+                                                                                                   FontWeight="SemiBold"
+                                                                                                   Foreground="{StaticResource TextPrimary}"/>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock Text="{Binding Description}" FontSize="11"
+                                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                                               TextWrapping="Wrap"/>
+                                                                                    <TextBlock Text="{Binding Recommendation}"
+                                                                                               IsVisible="{Binding HasRecommendation}"
+                                                                                               FontSize="11" FontStyle="Italic"
+                                                                                               Foreground="{StaticResource Success}"
+                                                                                               TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                                                </StackPanel>
+                                                                                <!-- Count badge -->
+                                                                                <Border Grid.Column="2" CornerRadius="10" Padding="8,2"
+                                                                                        Background="{StaticResource BgHover}"
+                                                                                        VerticalAlignment="Top" Margin="8,0,0,0">
+                                                                                    <TextBlock Text="{Binding CountDisplay}" FontSize="11"
+                                                                                               FontWeight="Bold"
+                                                                                               Foreground="{StaticResource TextMuted}"/>
+                                                                                </Border>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+
+                                                        <!-- Failed Logins Detail -->
+                                                        <StackPanel IsVisible="{Binding ShieldDashboard.FailedLoginTotal}" Spacing="6">
+                                                            <TextBlock Text="Failed Login Analysis" FontSize="13" FontWeight="SemiBold"
+                                                                       Margin="0,4,0,0"/>
+                                                            <ItemsControl ItemsSource="{Binding ShieldDashboard.LoginDetails}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Background="{StaticResource WarningSubtle}"
+                                                                                CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                                                <mi:MaterialIcon Grid.Column="0" Kind="AccountAlertOutline"
+                                                                                                 Width="14" Height="14"
+                                                                                                 Foreground="{StaticResource Warning}"
+                                                                                                 Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <TextBlock Text="{Binding IpAddress}" FontSize="12"
+                                                                                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                                   FontWeight="SemiBold"
+                                                                                                   Foreground="{StaticResource TextPrimary}"/>
+                                                                                        <TextBlock Text="{Binding AttemptsDisplay}" FontSize="11"
+                                                                                                   Foreground="{StaticResource Warning}"/>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock Text="{Binding PrimaryReasonFriendly}"
+                                                                                               FontSize="11"
+                                                                                               Foreground="{StaticResource TextSecondary}"/>
+                                                                                    <TextBlock Text="{Binding UserNamesDisplay}" FontSize="10"
+                                                                                               Foreground="{StaticResource TextMuted}"
+                                                                                               TextTrimming="CharacterEllipsis"
+                                                                                               IsVisible="{Binding UserNamesDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                                                </StackPanel>
+                                                                                <TextBlock Grid.Column="2" Text="{Binding BrowserOrApp}"
+                                                                                           FontSize="10"
+                                                                                           Foreground="{StaticResource TextDisabled}"
+                                                                                           VerticalAlignment="Top"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+
+                                                        <!-- Top API Endpoints -->
+                                                        <StackPanel Spacing="6">
+                                                            <TextBlock Text="Top API Endpoints" FontSize="13" FontWeight="SemiBold"
+                                                                       Margin="0,4,0,0"/>
+                                                            <ItemsControl ItemsSource="{Binding ShieldDashboard.TopApiEndpoints}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Background="{StaticResource BgTertiary}"
+                                                                                CornerRadius="4" Padding="8,4" Margin="0,0,0,3">
+                                                                            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                                                                <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                                                                           FontSize="12"
+                                                                                           Foreground="{StaticResource TextPrimary}"
+                                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                                <TextBlock Grid.Column="1"
+                                                                                           Text="{Binding CountDisplay}"
+                                                                                           FontSize="11" Margin="8,0"
+                                                                                           Foreground="{StaticResource TextMuted}"/>
+                                                                                <TextBlock Grid.Column="2"
+                                                                                           Text="{Binding AvgDurationDisplay}"
+                                                                                           FontSize="11" Margin="8,0"
+                                                                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                           Foreground="{StaticResource Info}"/>
+                                                                                <TextBlock Grid.Column="3"
+                                                                                           Text="{Binding UniqueUsers, StringFormat={}{0} users}"
+                                                                                           FontSize="10"
+                                                                                           Foreground="{StaticResource TextDisabled}"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+
+                                                        <!-- Slowest Endpoints -->
+                                                        <StackPanel Spacing="6">
+                                                            <TextBlock Text="Slowest API Endpoints" FontSize="13" FontWeight="SemiBold"
+                                                                       Margin="0,4,0,0"/>
+                                                            <ItemsControl ItemsSource="{Binding ShieldDashboard.SlowestApiEndpoints}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Background="{StaticResource DangerSubtle}"
+                                                                                CornerRadius="4" Padding="8,4" Margin="0,0,0,3">
+                                                                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                                                                <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                                                                           FontSize="12"
+                                                                                           Foreground="{StaticResource TextPrimary}"
+                                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                                <TextBlock Grid.Column="1"
+                                                                                           Text="{Binding MaxDurationDisplay}"
+                                                                                           FontSize="11" FontWeight="Bold"
+                                                                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                           Foreground="{StaticResource Danger}"
+                                                                                           Margin="8,0"/>
+                                                                                <TextBlock Grid.Column="2"
+                                                                                           Text="{Binding CountDisplay}"
+                                                                                           FontSize="10"
+                                                                                           Foreground="{StaticResource TextMuted}"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+
+                                                        <!-- Apex Exceptions -->
+                                                        <StackPanel Spacing="6">
+                                                            <TextBlock Text="Apex Exceptions" FontSize="13" FontWeight="SemiBold"
+                                                                       Margin="0,4,0,0"/>
+                                                            <ItemsControl ItemsSource="{Binding ShieldDashboard.ApexExceptions}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Background="{StaticResource DangerSubtle}"
+                                                                                CornerRadius="4" Padding="8,4" Margin="0,0,0,3">
+                                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                                <StackPanel Grid.Column="0">
+                                                                                    <TextBlock Text="{Binding Label}" FontSize="12"
+                                                                                               FontWeight="SemiBold"
+                                                                                               Foreground="{StaticResource TextPrimary}"
+                                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                                    <TextBlock Text="{Binding SubLabel}" FontSize="10"
+                                                                                               Foreground="{StaticResource TextMuted}"
+                                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                                </StackPanel>
+                                                                                <TextBlock Grid.Column="1"
+                                                                                           Text="{Binding CountDisplay}"
+                                                                                           FontSize="12" FontWeight="Bold"
+                                                                                           Foreground="{StaticResource Danger}"
+                                                                                           VerticalAlignment="Center"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- No dashboard state -->
+                                                    <Border IsVisible="{Binding !ShieldDashboard, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                            Background="{StaticResource BgTertiary}"
+                                                            CornerRadius="8" Padding="24,16">
+                                                        <StackPanel HorizontalAlignment="Center" Spacing="8">
+                                                            <mi:MaterialIcon Kind="ShieldOffOutline" Width="32" Height="32"
+                                                                             Foreground="{StaticResource TextDisabled}"
+                                                                             HorizontalAlignment="Center"/>
+                                                            <TextBlock Text="No Shield data loaded"
+                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                                       HorizontalAlignment="Center"/>
+                                                            <TextBlock Text="Connect to an org with Shield enabled to view security event monitoring"
+                                                                       FontSize="11" Foreground="{StaticResource TextDisabled}"
+                                                                       HorizontalAlignment="Center" TextWrapping="Wrap"
+                                                                       TextAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- ═══ MONITORING ALERTS ═══ -->
+                                            <Border Classes="card"
+                                                    IsVisible="{Binding MonitoringAlerts.Count}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="BellAlertOutline" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Warning}"/>
+                                                        <TextBlock Text="Recent Alerts" FontSize="14" FontWeight="SemiBold"/>
+                                                        <Border CornerRadius="10" Padding="6,1"
+                                                                Background="{StaticResource Warning}"
+                                                                IsVisible="{Binding UnreadAlertCount}">
+                                                            <TextBlock Text="{Binding UnreadAlertCount}" FontSize="10"
+                                                                       FontWeight="Bold" Foreground="#1C2128"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding MonitoringAlerts}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border CornerRadius="6" Padding="10,6" Margin="0,0,0,4"
+                                                                        Opacity="{Binding Opacity}"
+                                                                        Background="{StaticResource BgTertiary}">
+                                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                                        <Border Grid.Column="0" Width="4" CornerRadius="2"
+                                                                                Margin="0,0,10,0" VerticalAlignment="Stretch">
+                                                                            <Border.Background>
+                                                                                <SolidColorBrush Color="{Binding SeverityColor}"/>
+                                                                            </Border.Background>
+                                                                        </Border>
+                                                                        <StackPanel Grid.Column="1" Spacing="2">
+                                                                            <TextBlock Text="{Binding Title}" FontSize="12"
+                                                                                       FontWeight="SemiBold"
+                                                                                       Foreground="{StaticResource TextPrimary}"/>
+                                                                            <TextBlock Text="{Binding Description}" FontSize="11"
+                                                                                       Foreground="{StaticResource TextSecondary}"
+                                                                                       TextTrimming="CharacterEllipsis" MaxLines="2"/>
+                                                                            <TextBlock Text="{Binding ChangeDescription}" FontSize="10"
+                                                                                       Foreground="{StaticResource TextMuted}"
+                                                                                       IsVisible="{Binding ChangeDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                                        </StackPanel>
+                                                                        <StackPanel Grid.Column="2" VerticalAlignment="Top"
+                                                                                    HorizontalAlignment="Right">
+                                                                            <TextBlock Text="{Binding TimeAgo}" FontSize="10"
+                                                                                       Foreground="{StaticResource TextDisabled}"/>
+                                                                            <TextBlock Text="{Binding AffectedUsersDisplay}" FontSize="9"
+                                                                                       Foreground="{StaticResource TextMuted}"
+                                                                                       IsVisible="{Binding HasAffectedUsers}"/>
+                                                                        </StackPanel>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </Grid>
