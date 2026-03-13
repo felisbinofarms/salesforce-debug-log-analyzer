@@ -1204,6 +1204,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedLogChanged(LogAnalysis? value)
     {
+      try
+      {
         if (value != null)
         {
             // Show onboarding tour on first-ever log analysis
@@ -1631,6 +1633,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             TestingLimits = null; HasTestingLimits = false;
             ParserDebugInfo = "";
         }
+      }
+      catch (Exception ex)
+      {
+          Log.Error(ex, "Error in OnSelectedLogChanged");
+          StatusMessage = $"Error displaying log: {ex.Message}";
+      }
     }
     
     /// <summary>
