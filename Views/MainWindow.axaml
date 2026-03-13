@@ -569,8 +569,27 @@
                                     <!-- Summary Tab (Index 0) -->
                                     <ScrollViewer x:Name="SummaryTabContent"
                                                   IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=0}">
-                                        <StackPanel Margin="24" Spacing="20">
-                                            <!-- Hero Stats -->
+                                        <StackPanel Margin="24" Spacing="16">
+
+                                            <!-- Entry Point + Status Badge -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding HeroEntryPoint}" FontSize="16" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextPrimary}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" CornerRadius="10" Padding="10,4"
+                                                        Background="{StaticResource SuccessSubtle}">
+                                                    <TextBlock Text="{Binding HeroStatus}" FontSize="11" FontWeight="Bold"
+                                                               Foreground="{StaticResource Success}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Hero Stats Row -->
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -579,82 +598,165 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <Border Grid.Column="0" Classes="elevated-card" Margin="0,0,8,0">
-                                                    <StackPanel Spacing="4">
-                                                        <TextBlock Text="Duration" FontSize="11"
-                                                                   Foreground="{StaticResource TextMuted}"/>
-                                                        <TextBlock Text="{Binding HeroDuration}" FontSize="24" FontWeight="Bold"
+                                                <!-- Duration Card -->
+                                                <Border Grid.Column="0" Classes="elevated-card" Margin="0,0,6,0">
+                                                    <StackPanel Spacing="2">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <mi:MaterialIcon Kind="TimerOutline" Width="14" Height="14"
+                                                                             Foreground="{StaticResource TextMuted}"/>
+                                                            <TextBlock Text="Duration" FontSize="11"
+                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding HeroDuration}" FontSize="22" FontWeight="Bold"
                                                                    Foreground="{StaticResource TextPrimary}"/>
+                                                        <TextBlock Text="{Binding SpeedRating}" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"/>
                                                     </StackPanel>
                                                 </Border>
 
-                                                <Border Grid.Column="1" Classes="elevated-card" Margin="4,0,4,0">
-                                                    <StackPanel Spacing="4">
-                                                        <TextBlock Text="SOQL" FontSize="11"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                <!-- SOQL Card with Progress -->
+                                                <Border Grid.Column="1" Classes="elevated-card" Margin="3,0,3,0">
+                                                    <StackPanel Spacing="2">
                                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="{Binding StatSoqlCount}" FontSize="24" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding SoqlStatusIcon}" FontSize="11"/>
+                                                            <TextBlock Text="SOQL" FontSize="11"
+                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatSoqlCount}" FontSize="22" FontWeight="Bold"/>
                                                             <TextBlock Text="{Binding StatSoqlLimit, StringFormat=/ {0}}"
-                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
-                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                                       FontSize="12" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,2"/>
                                                         </StackPanel>
+                                                        <!-- Progress Bar -->
+                                                        <Grid Height="4" Margin="0,2,0,0">
+                                                            <Border CornerRadius="2" Background="{StaticResource BgTertiary}"/>
+                                                            <Border CornerRadius="2" Background="{StaticResource AccentPrimary}"
+                                                                    HorizontalAlignment="Left">
+                                                                <Border.Width>
+                                                                    <MultiBinding StringFormat="{}{0}%">
+                                                                        <Binding Path="SoqlPercent"/>
+                                                                    </MultiBinding>
+                                                                </Border.Width>
+                                                            </Border>
+                                                        </Grid>
                                                     </StackPanel>
                                                 </Border>
 
-                                                <Border Grid.Column="2" Classes="elevated-card" Margin="4,0,4,0">
-                                                    <StackPanel Spacing="4">
-                                                        <TextBlock Text="DML" FontSize="11"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                <!-- DML Card with Progress -->
+                                                <Border Grid.Column="2" Classes="elevated-card" Margin="3,0,3,0">
+                                                    <StackPanel Spacing="2">
                                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="{Binding StatDmlCount}" FontSize="24" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding DmlStatusIcon}" FontSize="11"/>
+                                                            <TextBlock Text="DML" FontSize="11"
+                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatDmlCount}" FontSize="22" FontWeight="Bold"/>
                                                             <TextBlock Text="{Binding DmlLimit, StringFormat=/ {0}}"
-                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
-                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                                       FontSize="12" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,2"/>
                                                         </StackPanel>
+                                                        <Grid Height="4" Margin="0,2,0,0">
+                                                            <Border CornerRadius="2" Background="{StaticResource BgTertiary}"/>
+                                                            <Border CornerRadius="2" Background="{StaticResource AccentPrimary}"
+                                                                    HorizontalAlignment="Left">
+                                                                <Border.Width>
+                                                                    <MultiBinding StringFormat="{}{0}%">
+                                                                        <Binding Path="DmlPercent"/>
+                                                                    </MultiBinding>
+                                                                </Border.Width>
+                                                            </Border>
+                                                        </Grid>
                                                     </StackPanel>
                                                 </Border>
 
-                                                <Border Grid.Column="3" Classes="elevated-card" Margin="8,0,0,0">
-                                                    <StackPanel Spacing="4">
-                                                        <TextBlock Text="CPU Time" FontSize="11"
-                                                                   Foreground="{StaticResource TextMuted}"/>
+                                                <!-- CPU Card with Progress -->
+                                                <Border Grid.Column="3" Classes="elevated-card" Margin="6,0,0,0">
+                                                    <StackPanel Spacing="2">
                                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="{Binding StatCpuTime}" FontSize="24" FontWeight="Bold"/>
-                                                            <TextBlock Text="{Binding StatCpuLimit, StringFormat=/ {0}ms}"
-                                                                       FontSize="13" Foreground="{StaticResource TextMuted}"
-                                                                       VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                                                            <TextBlock Text="{Binding CpuStatusIcon}" FontSize="11"/>
+                                                            <TextBlock Text="CPU" FontSize="11"
+                                                                       Foreground="{StaticResource TextMuted}"/>
                                                         </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="{Binding StatCpuTime}" FontSize="22" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding StatCpuLimit, StringFormat=/ {0}ms}"
+                                                                       FontSize="12" Foreground="{StaticResource TextMuted}"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                                                        </StackPanel>
+                                                        <Grid Height="4" Margin="0,2,0,0">
+                                                            <Border CornerRadius="2" Background="{StaticResource BgTertiary}"/>
+                                                            <Border CornerRadius="2" Background="{StaticResource AccentPrimary}"
+                                                                    HorizontalAlignment="Left">
+                                                                <Border.Width>
+                                                                    <MultiBinding StringFormat="{}{0}%">
+                                                                        <Binding Path="CpuPercent"/>
+                                                                    </MultiBinding>
+                                                                </Border.Width>
+                                                            </Border>
+                                                        </Grid>
                                                     </StackPanel>
                                                 </Border>
                                             </Grid>
 
-                                            <!-- Health Score Card -->
-                                            <Border Classes="card" IsVisible="{Binding HasHealthData}">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel Grid.Column="0" Margin="0,0,24,0"
-                                                                VerticalAlignment="Center">
+                                            <!-- Health Score + What Happened (side by side) -->
+                                            <Grid IsVisible="{Binding HasHealthData}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" MinWidth="160"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Health Score Card -->
+                                                <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+                                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
                                                         <TextBlock Text="{Binding HealthGrade}" FontSize="48" FontWeight="Bold"
                                                                    Foreground="{StaticResource AccentPrimary}"
                                                                    HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding HealthScore, StringFormat={}{0:N0}/100}"
                                                                    FontSize="12" Foreground="{StaticResource TextMuted}"
                                                                    HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding HealthPlainStatement}" FontSize="11"
+                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                   TextWrapping="Wrap" TextAlignment="Center"
+                                                                   MaxWidth="140"/>
                                                     </StackPanel>
-                                                    <StackPanel Grid.Column="1" Spacing="8">
-                                                        <TextBlock Text="Health Assessment" FontSize="15" FontWeight="SemiBold"/>
-                                                        <TextBlock Text="{Binding HealthPlainStatement}" FontSize="13"
+                                                </Border>
+
+                                                <!-- What Happened -->
+                                                <Border Grid.Column="1" Classes="card">
+                                                    <StackPanel Spacing="8">
+                                                        <TextBlock Text="What Happened" FontSize="15" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding PlainEnglishSummary}" FontSize="13"
                                                                    Foreground="{StaticResource TextSecondary}"
                                                                    TextWrapping="Wrap"/>
+                                                        <!-- Quick stats row -->
+                                                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <mi:MaterialIcon Kind="Bug" Width="14" Height="14"
+                                                                                 Foreground="{StaticResource Danger}"/>
+                                                                <TextBlock Text="{Binding StatErrorCount, StringFormat={}{0} errors}"
+                                                                           FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <mi:MaterialIcon Kind="AlertOutline" Width="14" Height="14"
+                                                                                 Foreground="{StaticResource Warning}"/>
+                                                                <TextBlock Text="{Binding StatWarningCount, StringFormat={}{0} warnings}"
+                                                                           FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <mi:MaterialIcon Kind="Function" Width="14" Height="14"
+                                                                                 Foreground="{StaticResource Info}"/>
+                                                                <TextBlock Text="{Binding StatMethodCount, StringFormat={}{0} methods}"
+                                                                           FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                            </StackPanel>
+                                                        </StackPanel>
                                                     </StackPanel>
-                                                </Grid>
-                                            </Border>
+                                                </Border>
+                                            </Grid>
 
-                                            <!-- Plain English Summary -->
-                                            <Border Classes="card">
+                                            <!-- What Happened (solo when no health data) -->
+                                            <Border Classes="card" IsVisible="{Binding !HasHealthData}">
                                                 <StackPanel Spacing="8">
                                                     <TextBlock Text="What Happened" FontSize="15" FontWeight="SemiBold"/>
                                                     <TextBlock Text="{Binding PlainEnglishSummary}" FontSize="13"
@@ -663,10 +765,72 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- Timeline Strip (chronological phases) -->
+                                            <Border Classes="card" IsVisible="{Binding HasTimelineData}">
+                                                <StackPanel Spacing="8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Execution Timeline" FontSize="15" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding TimelineTotalDurationMs, StringFormat={}{0:N0}ms total}"
+                                                                   FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                    </Grid>
+                                                    <!-- Horizontal phase bar -->
+                                                    <ItemsControl ItemsSource="{Binding TimelineSegments}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="2"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Height="24" MinWidth="4" CornerRadius="4"
+                                                                        Background="{StaticResource AccentPrimary}"
+                                                                        ToolTip.Tip="{Binding Name}">
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <!-- Phase legend -->
+                                                    <ItemsControl ItemsSource="{Binding TimelineSegments}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,2,0,0">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="60"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="12"
+                                                                               Margin="0,0,6,0"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
+                                                                               FontSize="11" Foreground="{StaticResource TextMuted}"
+                                                                               Margin="8,0"/>
+                                                                    <TextBlock Grid.Column="3"
+                                                                               Text="{Binding Percent, StringFormat={}{0:N0}%}"
+                                                                               FontSize="11" Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Right"/>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
                                             <!-- Issues -->
                                             <Border Classes="card">
                                                 <StackPanel Spacing="8">
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="AlertCircle" Width="18" Height="18"
+                                                                         Foreground="{StaticResource Danger}"/>
                                                         <TextBlock Text="Issues" FontSize="15" FontWeight="SemiBold"/>
                                                         <Border Classes="badge-danger"
                                                                 IsVisible="{Binding !!Issues.Count}">
@@ -677,15 +841,31 @@
                                                     <ItemsControl ItemsSource="{Binding Issues}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Border Background="{StaticResource BgTertiary}"
+                                                                <Border Background="{StaticResource DangerSubtle}"
                                                                         CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                                                    <TextBlock Text="{Binding}" FontSize="13"
-                                                                               Foreground="{StaticResource TextSecondary}"
-                                                                               TextWrapping="Wrap"/>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <TextBlock Text="●" FontSize="8"
+                                                                                   Foreground="{StaticResource Danger}"
+                                                                                   VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding}" FontSize="13"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap"/>
+                                                                    </StackPanel>
                                                                 </Border>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
+                                                    <!-- Clean bill of health -->
+                                                    <Border Background="{StaticResource SuccessSubtle}"
+                                                            CornerRadius="6" Padding="12,8"
+                                                            IsVisible="{Binding IsAllClear}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <mi:MaterialIcon Kind="CheckCircle" Width="16" Height="16"
+                                                                             Foreground="{StaticResource Success}"/>
+                                                            <TextBlock Text="No issues found — this log looks healthy!"
+                                                                       FontSize="13" Foreground="{StaticResource Success}"/>
+                                                        </StackPanel>
+                                                    </Border>
                                                 </StackPanel>
                                             </Border>
 
@@ -694,11 +874,16 @@
                                                 <StackPanel Spacing="8">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Recommendations" FontSize="15" FontWeight="SemiBold"/>
-                                                        <Button Grid.Column="1" Classes="ghost"
+                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                            <mi:MaterialIcon Kind="LightbulbOnOutline" Width="18" Height="18"
+                                                                             Foreground="{StaticResource Warning}"/>
+                                                            <TextBlock Text="Recommendations" FontSize="15" FontWeight="SemiBold"/>
+                                                        </StackPanel>
+                                                        <Button Grid.Column="2" Classes="ghost"
                                                                 Command="{Binding CopyRecommendationsCommand}"
                                                                 ToolTip.Tip="Copy recommendations">
                                                             <mi:MaterialIcon Kind="ContentCopy" Width="14" Height="14"
@@ -710,9 +895,51 @@
                                                             <DataTemplate>
                                                                 <Border Background="{StaticResource BgTertiary}"
                                                                         CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                                                    <TextBlock Text="{Binding}" FontSize="13"
-                                                                               Foreground="{StaticResource TextSecondary}"
-                                                                               TextWrapping="Wrap"/>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <TextBlock Text="→" FontSize="13"
+                                                                                   Foreground="{StaticResource AccentPrimary}"/>
+                                                                        <TextBlock Text="{Binding}" FontSize="13"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Duplicate Queries Warning -->
+                                            <Border Classes="card" IsVisible="{Binding HasDuplicateQueries}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="ContentDuplicate" Width="18" Height="18"
+                                                                         Foreground="{StaticResource Warning}"/>
+                                                        <TextBlock Text="Duplicate Queries (N+1 Pattern)" FontSize="15" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="These queries ran multiple times — a sign of queries inside loops."
+                                                               FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                                                    <ItemsControl ItemsSource="{Binding DuplicateQueries}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource WarningSubtle}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Text="{Binding ExampleQuery}" FontSize="12"
+                                                                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                                                                   MaxLines="2"/>
+                                                                        <Border Grid.Column="1" CornerRadius="8" Padding="8,2"
+                                                                                Background="{StaticResource Warning}" Margin="8,0,0,0">
+                                                                            <TextBlock Text="{Binding ExecutionCount, StringFormat=×{0}}"
+                                                                                       FontSize="11" FontWeight="Bold" Foreground="#1C2128"/>
+                                                                        </Border>
+                                                                    </Grid>
                                                                 </Border>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
@@ -725,96 +952,539 @@
                                     <!-- Tree Tab (Index 1) -->
                                     <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=1}">
                                         <StackPanel Margin="24" Spacing="12">
-                                            <TextBlock Text="Execution Tree" FontSize="18" FontWeight="Bold"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Execution Tree" FontSize="18" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="1" FontSize="12"
+                                                           Foreground="{StaticResource TextMuted}" VerticalAlignment="Center">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}Expand nodes to trace execution flow">
+                                                            <Binding Path="HasExecutionTree"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </Grid>
                                             <TreeView ItemsSource="{Binding ExecutionTreeNodes}"
                                                       Background="Transparent">
                                                 <TreeView.ItemTemplate>
                                                     <TreeDataTemplate ItemsSource="{Binding Children}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                                            <TextBlock Text="{Binding Name}" FontSize="13"
-                                                                       Foreground="{StaticResource TextPrimary}"/>
-                                                            <TextBlock Text="{Binding Duration, StringFormat={}{0:N1}ms}"
-                                                                       FontSize="11" Foreground="{StaticResource TextMuted}"/>
-                                                        </StackPanel>
+                                                        <Grid Margin="0,2,0,2">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <!-- Type Icon + Name -->
+                                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="{Binding TypeIcon}" FontSize="13"
+                                                                           VerticalAlignment="Center"/>
+                                                                <TextBlock Text="{Binding Name}" FontSize="13"
+                                                                           Foreground="{StaticResource TextPrimary}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           MaxWidth="500"/>
+                                                            </StackPanel>
+                                                            <!-- Duration Badge -->
+                                                            <Border Grid.Column="2" CornerRadius="6" Padding="6,2"
+                                                                    Background="{StaticResource BgTertiary}"
+                                                                    Margin="8,0,0,0"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding DurationDisplay}" FontSize="11"
+                                                                           Foreground="{StaticResource TextMuted}"
+                                                                           FontFamily="Cascadia Code,Consolas,monospace"/>
+                                                            </Border>
+                                                        </Grid>
                                                     </TreeDataTemplate>
                                                 </TreeView.ItemTemplate>
                                             </TreeView>
+                                            <!-- Empty state -->
+                                            <StackPanel HorizontalAlignment="Center" Spacing="8"
+                                                        IsVisible="{Binding !HasExecutionTree}" Margin="0,24,0,0">
+                                                <mi:MaterialIcon Kind="FileTreeOutline" Width="36" Height="36"
+                                                                 Foreground="{StaticResource TextDisabled}"
+                                                                 HorizontalAlignment="Center"/>
+                                                <TextBlock Text="No execution tree data available"
+                                                           FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </ScrollViewer>
 
                                     <!-- Timeline Tab (Index 2) -->
                                     <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=2}">
-                                        <StackPanel Margin="24" Spacing="12">
-                                            <TextBlock Text="Timeline" FontSize="18" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding TimelineTotalDurationMs, StringFormat=Total: {0:N0}ms}"
-                                                       FontSize="13" Foreground="{StaticResource TextMuted}"/>
+                                        <StackPanel Margin="24" Spacing="16">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Execution Timeline" FontSize="18" FontWeight="Bold"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                                    <TextBlock Text="{Binding TimelineTotalDurationMs, StringFormat=Total: {0:N0}ms}"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource AccentPrimary}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock Text="Each bar shows the relative time spent in each execution phase, in chronological order."
+                                                       FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+
+                                            <!-- Phase bars with proportional widths -->
                                             <ItemsControl ItemsSource="{Binding TimelineSegments}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,0,0,4">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="120"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="80"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding Name}"
-                                                                       FontSize="12" Foreground="{StaticResource TextSecondary}"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <Border Grid.Column="1" Height="8" CornerRadius="4"
-                                                                    Background="{StaticResource AccentPrimary}"
-                                                                    HorizontalAlignment="Left"
-                                                                    Margin="8,0"/>
-                                                            <TextBlock Grid.Column="2" Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
-                                                                       FontSize="11" Foreground="{StaticResource TextMuted}"
-                                                                       HorizontalAlignment="Right"/>
-                                                        </Grid>
+                                                        <Border Margin="0,0,0,2" CornerRadius="6"
+                                                                Background="{StaticResource BgTertiary}"
+                                                                Padding="12,10">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="140"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="70"/>
+                                                                    <ColumnDefinition Width="50"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <!-- Phase Icon -->
+                                                                <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14"
+                                                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                <!-- Phase Name -->
+                                                                <TextBlock Grid.Column="1" Text="{Binding Name}"
+                                                                           FontSize="13" FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource TextPrimary}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           VerticalAlignment="Center"/>
+                                                                <!-- Duration Bar (proportional) -->
+                                                                <Grid Grid.Column="2" Height="12" VerticalAlignment="Center"
+                                                                      Margin="8,0">
+                                                                    <Border CornerRadius="3" Background="{StaticResource BgInput}"/>
+                                                                    <Border CornerRadius="3" HorizontalAlignment="Left"
+                                                                            Background="{StaticResource AccentPrimary}">
+                                                                        <Border.Width>
+                                                                            <MultiBinding StringFormat="{}{0}%">
+                                                                                <Binding Path="Percent"/>
+                                                                            </MultiBinding>
+                                                                        </Border.Width>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <!-- Duration -->
+                                                                <TextBlock Grid.Column="3"
+                                                                           Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
+                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource TextSecondary}"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"/>
+                                                                <!-- Percent -->
+                                                                <TextBlock Grid.Column="4"
+                                                                           Text="{Binding Percent, StringFormat={}{0:N0}%}"
+                                                                           FontSize="11" Foreground="{StaticResource TextMuted}"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
+
+                                            <!-- Slowest phase callout -->
+                                            <Border Classes="card" IsVisible="{Binding TimelineSlowestLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                    Background="{StaticResource WarningSubtle}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <mi:MaterialIcon Kind="AlertOutline" Width="16" Height="16"
+                                                                     Foreground="{StaticResource Warning}"/>
+                                                    <TextBlock Text="Slowest phase:" FontSize="12"
+                                                               Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text="{Binding TimelineSlowestLabel}" FontSize="12"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource Warning}"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Detailed Timeline Items -->
+                                            <Border Classes="card" IsVisible="{Binding HasTimelineDetails}">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Text="Detailed Execution Order" FontSize="15" FontWeight="SemiBold"/>
+                                                    <ItemsControl ItemsSource="{Binding TimelineDetails}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,4">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="70"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="70"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0"
+                                                                               Text="{Binding StartOffsetMs, StringFormat={}{0:N0}ms}"
+                                                                               FontSize="11"
+                                                                               FontFamily="Cascadia Code,Consolas,monospace"
+                                                                               Foreground="{StaticResource TextDisabled}"/>
+                                                                    <Border Grid.Column="1" Width="2" Margin="4,0,8,0"
+                                                                            Background="{StaticResource BorderDefault}"/>
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding Name}"
+                                                                               FontSize="12"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="3"
+                                                                               Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
+                                                                               FontSize="11"
+                                                                               Foreground="{StaticResource TextMuted}"
+                                                                               HorizontalAlignment="Right"/>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Empty state -->
+                                            <StackPanel HorizontalAlignment="Center" Spacing="8"
+                                                        IsVisible="{Binding !HasTimelineData}" Margin="0,24,0,0">
+                                                <mi:MaterialIcon Kind="TimelineClockOutline" Width="36" Height="36"
+                                                                 Foreground="{StaticResource TextDisabled}"
+                                                                 HorizontalAlignment="Center"/>
+                                                <TextBlock Text="No timeline data available for this log"
+                                                           FontSize="13" Foreground="{StaticResource TextMuted}"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </ScrollViewer>
 
                                     <!-- Queries Tab (Index 3) -->
                                     <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=3}">
-                                        <StackPanel Margin="24" Spacing="12">
-                                            <TextBlock Text="Database Operations" FontSize="18" FontWeight="Bold"/>
+                                        <StackPanel Margin="24" Spacing="16">
+                                            <!-- Header with stats -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Database Operations" FontSize="18" FontWeight="Bold"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                                    <Border CornerRadius="8" Padding="8,3"
+                                                            Background="{StaticResource InfoSubtle}">
+                                                        <TextBlock Text="{Binding StatSoqlCount, StringFormat={}{0} SOQL}"
+                                                                   FontSize="11" FontWeight="Bold"
+                                                                   Foreground="{StaticResource Info}"/>
+                                                    </Border>
+                                                    <Border CornerRadius="8" Padding="8,3"
+                                                            Background="{StaticResource AccentSubtle}">
+                                                        <TextBlock Text="{Binding StatDmlCount, StringFormat={}{0} DML}"
+                                                                   FontSize="11" FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentPrimary}"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Managed package SOQL note -->
+                                            <Border Background="{StaticResource InfoSubtle}" CornerRadius="6"
+                                                    Padding="12,8" IsVisible="{Binding HasManagedPackageQueries}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <mi:MaterialIcon Kind="PackageVariantClosed" Width="14" Height="14"
+                                                                     Foreground="{StaticResource Info}"/>
+                                                    <TextBlock FontSize="12" Foreground="{StaticResource TextSecondary}">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0} SOQL from your code + {1} from managed packages">
+                                                                <Binding Path="RegularSoqlCount"/>
+                                                                <Binding Path="ManagedPackageSoqlCount"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Duplicate Queries (N+1 warning) -->
+                                            <Border Classes="card" IsVisible="{Binding HasDuplicateQueries}"
+                                                    Background="{StaticResource WarningSubtle}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="AlertOutline" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Warning}"/>
+                                                        <TextBlock Text="Duplicate Queries Detected (N+1 Pattern)"
+                                                                   FontSize="13" FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource Warning}"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding DuplicateQueries}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,4">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Border Grid.Column="0" CornerRadius="8" Padding="6,2"
+                                                                            Background="{StaticResource Warning}" Margin="0,0,8,0"
+                                                                            VerticalAlignment="Top">
+                                                                        <TextBlock Text="{Binding ExecutionCount, StringFormat=×{0}}"
+                                                                                   FontSize="10" FontWeight="Bold" Foreground="#1C2128"/>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding ExampleQuery}" FontSize="12"
+                                                                               FontFamily="Cascadia Code,Consolas,monospace"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               TextWrapping="Wrap" MaxLines="2"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Top Queries section -->
+                                            <Border Classes="card" IsVisible="{Binding HasTopQueries}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="DatabaseClock" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Danger}"/>
+                                                        <TextBlock Text="Slowest Queries" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding TopQueries}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource BgTertiary}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <StackPanel Spacing="4">
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                            <TextBlock Text="{Binding TimeDisplay}" FontSize="12"
+                                                                                       FontWeight="Bold"
+                                                                                       Foreground="{StaticResource Danger}"/>
+                                                                            <TextBlock Text="{Binding CountBadge}" FontSize="11"
+                                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                                        </StackPanel>
+                                                                        <TextBlock Text="{Binding Query}" FontSize="12"
+                                                                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap" MaxLines="3"
+                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- All Operations -->
+                                            <TextBlock Text="All Operations (chronological)" FontSize="14" FontWeight="SemiBold"
+                                                       Margin="0,4,0,0"/>
                                             <ItemsControl ItemsSource="{Binding DatabaseOperations}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Classes="card" Margin="0,0,0,8">
+                                                        <Border Background="{StaticResource BgTertiary}"
+                                                                CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
                                                             <StackPanel Spacing="4">
                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <Border Classes="badge"
+                                                                    <Border CornerRadius="4" Padding="6,1"
                                                                             Background="{StaticResource InfoSubtle}">
                                                                         <TextBlock Text="{Binding OperationType}"
                                                                                    FontSize="10" FontWeight="Bold"
                                                                                    Foreground="{StaticResource Info}"/>
                                                                     </Border>
-                                                                    <TextBlock Text="{Binding Duration, StringFormat={}{0:N1}ms}"
+                                                                    <TextBlock Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
                                                                                FontSize="11" Foreground="{StaticResource TextMuted}"/>
-                                                                    <TextBlock Text="{Binding RowCount, StringFormat={}{0} rows}"
+                                                                    <TextBlock Text="{Binding RowsAffected, StringFormat={}{0} rows}"
                                                                                FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                                    <!-- Line number -->
+                                                                    <TextBlock FontSize="10"
+                                                                               Foreground="{StaticResource TextDisabled}">
+                                                                        <TextBlock.Text>
+                                                                            <MultiBinding StringFormat="L{0}">
+                                                                                <Binding Path="LineNumber"/>
+                                                                            </MultiBinding>
+                                                                        </TextBlock.Text>
+                                                                    </TextBlock>
                                                                 </StackPanel>
                                                                 <TextBlock Text="{Binding Query}"
                                                                            FontSize="12" FontFamily="Cascadia Code,Consolas,monospace"
                                                                            Foreground="{StaticResource TextSecondary}"
-                                                                           TextWrapping="Wrap"/>
+                                                                           TextWrapping="Wrap" MaxLines="4"
+                                                                           TextTrimming="CharacterEllipsis"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
+
+                                            <!-- Callouts section -->
+                                            <Border Classes="card" IsVisible="{Binding HasCallouts}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="WebSync" Width="16" Height="16"
+                                                                         Foreground="{StaticResource AccentPrimary}"/>
+                                                        <TextBlock Text="External Callouts" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Callouts}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource BgTertiary}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <StackPanel Spacing="2">
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                            <TextBlock Text="{Binding HttpMethod}" FontSize="11"
+                                                                                       FontWeight="Bold"
+                                                                                       Foreground="{StaticResource AccentPrimary}"/>
+                                                                            <TextBlock Text="{Binding StatusCode}" FontSize="11"
+                                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                                            <TextBlock Text="{Binding DurationMs, StringFormat={}{0:N0}ms}"
+                                                                                       FontSize="11"
+                                                                                       Foreground="{StaticResource TextMuted}"/>
+                                                                        </StackPanel>
+                                                                        <TextBlock Text="{Binding Endpoint}" FontSize="12"
+                                                                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
                                         </StackPanel>
                                     </ScrollViewer>
 
                                     <!-- Explain Tab (Index 4) -->
                                     <ScrollViewer IsVisible="{Binding SelectedTabIndex, Converter={StaticResource EqualsInt}, ConverterParameter=4}">
-                                        <StackPanel Margin="24" Spacing="12">
+                                        <StackPanel Margin="24" Spacing="16">
                                             <TextBlock Text="Plain English Explanation" FontSize="18" FontWeight="Bold"/>
+
+                                            <!-- User Wait Time -->
                                             <Border Classes="card">
-                                                <TextBlock Text="{Binding FullSummaryText}" FontSize="13"
-                                                           Foreground="{StaticResource TextSecondary}"
-                                                           TextWrapping="Wrap"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Margin="0,0,20,0"
+                                                                VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding UserWaitTimeSeconds}" FontSize="36" FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentPrimary}"
+                                                                   HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="seconds" FontSize="11"
+                                                                   Foreground="{StaticResource TextMuted}"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="4">
+                                                        <TextBlock Text="User Wait Time" FontSize="14" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding UserWaitExplanation}" FontSize="13"
+                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                   TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding ResourceUsageExplanation}" FontSize="12"
+                                                                   Foreground="{StaticResource TextMuted}"
+                                                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Full Summary -->
+                                            <Border Classes="card">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Text="What This Log Shows" FontSize="14" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding FullSummaryText}" FontSize="13"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Problems in plain English -->
+                                            <Border Classes="card" IsVisible="{Binding HasProblems}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="AlertCircle" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Danger}"/>
+                                                        <TextBlock Text="Problems Found" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding PlainEnglishProblems}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource DangerSubtle}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <StackPanel Spacing="2">
+                                                                        <TextBlock Text="{Binding Title}" FontSize="13"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource TextPrimary}"/>
+                                                                        <TextBlock Text="{Binding Description}" FontSize="12"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Recommendations in plain English -->
+                                            <Border Classes="card" IsVisible="{Binding HasRecommendations}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="LightbulbOnOutline" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Success}"/>
+                                                        <TextBlock Text="What You Can Do" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding PlainEnglishRecommendations}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource SuccessSubtle}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <StackPanel Spacing="2">
+                                                                        <TextBlock Text="{Binding Title}" FontSize="13"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource TextPrimary}"/>
+                                                                        <TextBlock Text="{Binding Description}" FontSize="12"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Learning Items -->
+                                            <Border Classes="card" IsVisible="{Binding HasLearningItems}">
+                                                <StackPanel Spacing="8">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <mi:MaterialIcon Kind="School" Width="16" Height="16"
+                                                                         Foreground="{StaticResource Info}"/>
+                                                        <TextBlock Text="Learn More" FontSize="14" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding LearningItems}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="{StaticResource InfoSubtle}"
+                                                                        CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
+                                                                    <StackPanel Spacing="2">
+                                                                        <TextBlock Text="{Binding Concept}" FontSize="13"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource Info}"/>
+                                                                        <TextBlock Text="{Binding Explanation}" FontSize="12"
+                                                                                   Foreground="{StaticResource TextSecondary}"
+                                                                                   TextWrapping="Wrap"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- All-clear state -->
+                                            <Border Background="{StaticResource SuccessSubtle}"
+                                                    CornerRadius="8" Padding="20"
+                                                    IsVisible="{Binding IsAllClear}"
+                                                    HorizontalAlignment="Center">
+                                                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                                                    <mi:MaterialIcon Kind="CheckCircle" Width="32" Height="32"
+                                                                     Foreground="{StaticResource Success}"
+                                                                     HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="This log looks healthy — no significant issues detected."
+                                                               FontSize="14" Foreground="{StaticResource Success}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
                                             </Border>
                                         </StackPanel>
                                     </ScrollViewer>
