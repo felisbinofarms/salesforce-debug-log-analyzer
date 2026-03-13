@@ -2561,13 +2561,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task UploadLog()
     {
-        StatusMessage = "Opening file selector...";
-        
         try
         {
-            // TODO: Implement Avalonia file picker dialog
-            Log.Information("Upload log requested — file picker not yet implemented in Avalonia");
-            StatusMessage = "📂 Drag a log file onto the window to load it";
+            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow
+                : null;
+            if (topLevel == null) return;
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Open Salesforce Debug Log",
+                AllowMultiple = true,
+                FileTypeFilter = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Debug Logs") { Patterns = new[] { "*.log", "*.txt" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                }
+            });
+
+            foreach (var file in files)
+            {
+                var path = file.Path.LocalPath;
+                await LoadLogFromPath(path);
+            }
         }
         catch (Exception ex)
         {
@@ -2662,9 +2678,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // TODO: Implement Avalonia folder picker
-            Log.Information("Folder import requested — folder picker not yet implemented in Avalonia");
-            StatusMessage = "📂 Folder import — coming soon. Use drag & drop for now.";
+            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow
+                : null;
+            if (topLevel == null) return;
+
+            var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+            {
+                Title = "Select Folder with Debug Logs",
+                AllowMultiple = false
+            });
+
+            if (folders.Count > 0)
+            {
+                var path = folders[0].Path.LocalPath;
+                await LoadLogFolderFromPath(path);
+            }
         }
         catch (Exception ex)
         {
