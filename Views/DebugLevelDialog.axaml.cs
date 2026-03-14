@@ -55,7 +55,7 @@ public partial class DebugLevelDialog : Window
             CreatedDebugLevelId = id;
             Close(true);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Show error inline - could enhance with a status TextBlock
             CreateButton.IsEnabled = true;

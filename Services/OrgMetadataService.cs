@@ -190,7 +190,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = "SELECT Id, Name, Username, Email FROM User WHERE IsActive = true";
                 var response = await _apiService.QueryAsync<UserRecord>(query);
 
-                foreach (var user in response.Records)
+                foreach (var user in response.Records ?? [])
                 {
                     metadata.Users[user.Id] = new UserMetadata
                     {
@@ -217,7 +217,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = "SELECT Id, Name, NamespacePrefix, ApiVersion FROM ApexClass";
                 var response = await _apiService.QueryAsync<ApexClassRecord>(query);
 
-                foreach (var cls in response.Records)
+                foreach (var cls in response.Records ?? [])
                 {
                     var fullName = string.IsNullOrEmpty(cls.NamespacePrefix)
                         ? cls.Name
@@ -248,7 +248,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = "SELECT Id, Name, TableEnumOrId, Status FROM ApexTrigger";
                 var response = await _apiService.QueryAsync<ApexTriggerRecord>(query);
 
-                foreach (var trigger in response.Records)
+                foreach (var trigger in response.Records ?? [])
                 {
                     metadata.ApexTriggers[trigger.Name] = new ApexTriggerMetadata
                     {
@@ -275,7 +275,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = "SELECT Id, ApiName, Label, ProcessType, Status FROM FlowDefinitionView WHERE IsActive = true";
                 var response = await _apiService.QueryAsync<FlowRecord>(query);
 
-                foreach (var flow in response.Records)
+                foreach (var flow in response.Records ?? [])
                 {
                     metadata.Flows[flow.ApiName] = new FlowMetadata
                     {
@@ -302,7 +302,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = "SELECT Id, Name, DeveloperName, SobjectType FROM RecordType WHERE IsActive = true";
                 var response = await _apiService.QueryAsync<RecordTypeRecord>(query);
 
-                foreach (var rt in response.Records)
+                foreach (var rt in response.Records ?? [])
                 {
                     var key = $"{rt.SobjectType}.{rt.DeveloperName}";
                     metadata.RecordTypes[key] = new RecordTypeMetadata
@@ -330,7 +330,7 @@ namespace SalesforceDebugAnalyzer.Services
                 // Query Organization to get OrgId
                 var query = "SELECT Id, Name FROM Organization";
                 var response = await _apiService.QueryAsync<OrganizationRecord>(query);
-                return response.Records.FirstOrDefault()?.Id ?? "unknown";
+                return (response.Records ?? []).FirstOrDefault()?.Id ?? "unknown";
             }
             catch
             {
@@ -428,7 +428,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var query = $"SELECT {nameField} FROM {objectMeta.ApiName} WHERE Id = '{safeId}' LIMIT 1";
                 var response = await _apiService.QueryAsync<Dictionary<string, object>>(query);
 
-                if (response.Records.Count > 0 && response.Records[0].TryGetValue(nameField, out var name))
+                if (response.Records is { Count: > 0 } && response.Records[0].TryGetValue(nameField, out var name))
                 {
                     return $"{name} ({objectMeta.Label})";
                 }

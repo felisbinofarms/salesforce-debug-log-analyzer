@@ -2929,22 +2929,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task ExportReport()
+    private Task ExportReport()
     {
         if (RequiresPro(LicenseFeature.ExportReports))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         if (SelectedLog == null)
         {
             StatusMessage = "⚠️ Please select a log to export";
-            return;
+            return Task.CompletedTask;
         }
 
         try
         {
-            // TODO: Implement Avalonia SaveFileDialog
+            // TODO: Implement Avalonia SaveFileDialog (GH#19)
             Log.Information("Export report requested — save dialog not yet implemented in Avalonia");
             StatusMessage = "📄 Export — coming soon";
         }
@@ -2957,6 +2957,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsLoading = false;
         }
+
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
@@ -3891,7 +3893,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case "folder": _ = LoadLogFolder(); break;
             case "download": _ = LoadRecentLogsAsync(); break;
             case "live": _ = ToggleStreaming(); break;
-            case "export": ExportReport(); break;
+            case "export": _ = ExportReport(); break;
             case "connect": ShowUpgradeDialog(); break;
             case "manage": ManageDebugLogs(); break;
             case "tab0": SelectTab(0); break;

@@ -17,16 +17,14 @@ public partial class ConnectionDialog : Window
         UseSandboxCheckBox.IsChecked = isSandbox;
     }
 
-    private async void OAuthLoginButton_Click(object? sender, RoutedEventArgs e)
+    private void OAuthLoginButton_Click(object? sender, RoutedEventArgs e)
     {
         StatusTextBlock.Text = "Opening browser...";
         OAuthLoginButton.IsEnabled = false;
 
         try
         {
-            var useSandbox = UseSandboxCheckBox.IsChecked ?? false;
-
-            // TODO: Implement full OAuth browser flow for Avalonia
+            // TODO: Implement full OAuth browser flow for Avalonia (GH#5)
             // For now, direct user to manual token tab
             StatusTextBlock.Text = "OAuth browser flow coming soon — use Access Token tab for now.";
         }

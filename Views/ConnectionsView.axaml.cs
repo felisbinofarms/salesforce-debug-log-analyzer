@@ -99,7 +99,7 @@ public partial class ConnectionsView : UserControl
 
             if (result is { Success: true })
             {
-                await _apiService.AuthenticateAsync(result.InstanceUrl, result.AccessToken, result.RefreshToken);
+                await _apiService.AuthenticateAsync(result.InstanceUrl, result.AccessToken, result.RefreshToken ?? string.Empty);
 
                 var orgName = await GetOrgNameAsync(result.InstanceUrl, result.AccessToken);
 
