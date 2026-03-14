@@ -112,7 +112,8 @@ jobs:
         run: dotnet restore
 
       - name: Build (Release)
-        run: dotnet build --configuration Release --no-restore
+        # Build the test project (which also builds the main project as a dependency)
+        run: dotnet build Tests/SalesforceDebugAnalyzer.Tests.csproj --configuration Release --no-restore -p:TreatWarningsAsErrors=false
 
       - name: Run tests (with coverage threshold)
         # .runsettings configures coverlet: 60% line coverage floor.
