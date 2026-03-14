@@ -1,4 +1,3 @@
-using SalesforceDebugAnalyzer.Models;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -6,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -25,15 +25,15 @@ public class LicenseService
     private const string LsApiBase = "https://api.lemonsqueezy.com/v1/licenses/";
 
     // Checkout URLs — replace with real LemonSqueezy variant share URLs after creating products
-    public const string CheckoutMonthlyUrl   = "https://blackwidow.lemonsqueezy.com/buy/pro-monthly";
-    public const string CheckoutAnnualUrl    = "https://blackwidow.lemonsqueezy.com/buy/pro-annual";
-    public const string CheckoutTeamUrl      = "https://blackwidow.lemonsqueezy.com/buy/team-monthly";
-    public const string CustomerPortalUrl    = "https://app.lemonsqueezy.com/my-orders";
+    public const string CheckoutMonthlyUrl = "https://blackwidow.lemonsqueezy.com/buy/pro-monthly";
+    public const string CheckoutAnnualUrl = "https://blackwidow.lemonsqueezy.com/buy/pro-annual";
+    public const string CheckoutTeamUrl = "https://blackwidow.lemonsqueezy.com/buy/team-monthly";
+    public const string CustomerPortalUrl = "https://app.lemonsqueezy.com/my-orders";
 
     // AES-256 encryption key derived at build time
     private static readonly byte[] _encryptionKey = SHA256.HashData(
         Encoding.UTF8.GetBytes("BlackWidow-2026-Production-Key-Do-Not-Share"));
-    
+
     public LicenseService()
     {
         _appDataPath = Path.Combine(
@@ -43,20 +43,22 @@ public class LicenseService
         Directory.CreateDirectory(_appDataPath);
         _licensePath = Path.Combine(_appDataPath, "license.dat");
     }
-    
+
     #region Public Methods
-    
+
     /// <summary>
     /// Get current license status
     /// </summary>
     public async Task<License> GetCurrentLicenseAsync()
     {
         if (_currentLicense != null)
+        {
             return _currentLicense;
-        
+        }
+
         // Try to load from disk
         _currentLicense = await LoadLicenseFromDiskAsync().ConfigureAwait(false);
-        
+
         // If no license, create free tier default
         if (_currentLicense == null)
         {
@@ -73,16 +75,16 @@ public class LicenseService
             };
             await SaveLicenseToDiskAsync(_currentLicense).ConfigureAwait(false);
         }
-        
+
         // Check if validation needed
         if (_currentLicense.NeedsOnlineValidation && _currentLicense.Tier != LicenseTier.Free)
         {
             _ = Task.Run(async () => await ValidateOnlineAsync());
         }
-        
+
         return _currentLicense;
     }
-    
+
     /// <summary>
     /// Check if user can access a Pro feature.
     /// Currently all features are unlocked — monetization gates will be
@@ -93,7 +95,7 @@ public class LicenseService
         await Task.CompletedTask.ConfigureAwait(false);
         return true;
     }
-    
+
     /// <summary>
     /// Apply (activate) a LemonSqueezy license key on this device.
     /// Calls the LS /activate endpoint and stores the returned instance_id for future validation.
@@ -104,11 +106,15 @@ public class LicenseService
         {
             licenseKey = licenseKey.Trim();
             if (string.IsNullOrWhiteSpace(licenseKey) || licenseKey.Length < 10)
+            {
                 return (false, "Invalid license key format.");
+            }
 
             // Local trial keys bypass the online API
             if (licenseKey.StartsWith("TRIAL-", StringComparison.OrdinalIgnoreCase))
+            {
                 return await ActivateTrialLocallyAsync(licenseKey, email).ConfigureAwait(false);
+            }
 
             var instanceName = GenerateDeviceInstanceName();
             var body = new FormUrlEncodedContent(new[]
@@ -130,15 +136,15 @@ public class LicenseService
             var tier = DetectTierFromLsResponse(result.Meta);
             var license = new License
             {
-                LicenseKey        = licenseKey,
-                Email             = email.Trim(),
-                Tier              = tier,
-                Status            = LicenseStatus.Active,
-                IsTrialLicense    = false,
-                IssuedDate        = DateTime.UtcNow,
-                ExpiresDate       = result.LicenseKeyData?.ExpiresAt ?? DateTime.MaxValue,
-                LastValidated     = DateTime.UtcNow,
-                MaxDevices        = result.LicenseKeyData?.ActivationLimit ?? 2,
+                LicenseKey = licenseKey,
+                Email = email.Trim(),
+                Tier = tier,
+                Status = LicenseStatus.Active,
+                IsTrialLicense = false,
+                IssuedDate = DateTime.UtcNow,
+                ExpiresDate = result.LicenseKeyData?.ExpiresAt ?? DateTime.MaxValue,
+                LastValidated = DateTime.UtcNow,
+                MaxDevices = result.LicenseKeyData?.ActivationLimit ?? 2,
                 DeviceFingerprint = GenerateDeviceFingerprint(),
                 LemonSqueezyInstanceId = result.Instance?.Id ?? string.Empty
             };
@@ -167,7 +173,9 @@ public class LicenseService
         var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
 
         if (license.Tier == LicenseTier.Free)
+        {
             return LicenseStatus.Active;
+        }
 
         // Local trials validate against their expiry date only
         if (license.IsTrialLicense)
@@ -202,7 +210,9 @@ public class LicenseService
 
             // Refresh expiry from server
             if (result.LicenseKeyData?.ExpiresAt.HasValue == true)
+            {
                 license.ExpiresDate = result.LicenseKeyData.ExpiresAt.Value;
+            }
 
             license.Status = license.IsExpired ? LicenseStatus.Expired : LicenseStatus.Active;
             license.LastValidated = DateTime.UtcNow;
@@ -254,7 +264,7 @@ public class LicenseService
         await ResetToFreeAsync().ConfigureAwait(false);
         return (true, "License deactivated. You can now activate on another device.");
     }
-    
+
     /// <summary>
     /// Get upgrade message for feature gating
     /// </summary>
@@ -268,29 +278,33 @@ public class LicenseService
             ["FolderImport"] = "📁 Folder import is a Pro feature.\n\nFree tier: Upload individual log files (up to 30MB)\nPro tier: Load entire folders for batch analysis\n\nStart your 14-day free trial!",
             ["MarketplaceSubmit"] = "🏪 Marketplace submission is a Pro feature.\n\nFree tier: Browse and use marketplace templates\nPro tier: Submit your own analysis templates\n\nUpgrade to Pro!"
         };
-        
-        return messages.TryGetValue(featureName, out var message) 
-            ? message 
+
+        return messages.TryGetValue(featureName, out var message)
+            ? message
             : "This is a Pro feature. Upgrade to unlock!";
     }
-    
+
     /// <summary>
     /// Start a 14-day local Pro trial (no credit card, no server call).
     /// </summary>
     public async Task<(bool Success, string Message)> StartTrialAsync(string email)
     {
         if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+        {
             return (false, "Please enter a valid email address.");
+        }
 
         var currentLicense = await GetCurrentLicenseAsync().ConfigureAwait(false);
 
         if (currentLicense.Tier != LicenseTier.Free)
+        {
             return (false, "You already have an active license on this device.");
+        }
 
         var trialKey = $"TRIAL-{Guid.NewGuid():N}";
         return await ActivateTrialLocallyAsync(trialKey, email).ConfigureAwait(false);
     }
-    
+
     /// <summary>
     /// Check if a specific feature is available for the current license.
     /// Currently all features are unlocked — monetization gates will be
@@ -321,7 +335,10 @@ public class LicenseService
         {
             var license = GetCurrentLicenseAsync().GetAwaiter().GetResult();
             if (license.Tier == LicenseTier.Free || license.Tier == LicenseTier.Trial)
+            {
                 return false;
+            }
+
             return !(license.IsExpired && !license.InGracePeriod);
         }
     }
@@ -330,7 +347,11 @@ public class LicenseService
     public int TrialDaysRemaining()
     {
         var license = GetCurrentLicenseAsync().GetAwaiter().GetResult();
-        if (license.ExpiresDate == default) return 0;
+        if (license.ExpiresDate == default)
+        {
+            return 0;
+        }
+
         return (int)Math.Max(0, (license.ExpiresDate - DateTime.UtcNow).TotalDays);
     }
 
@@ -341,9 +362,14 @@ public class LicenseService
         {
             var license = await GetCurrentLicenseAsync().ConfigureAwait(false);
             if (license.Tier == LicenseTier.Free)
+            {
                 return new LicenseValidationResult { IsValid = true };
+            }
+
             if (!license.NeedsOnlineValidation)
+            {
                 return new LicenseValidationResult { IsValid = true };
+            }
 
             var status = await ValidateOnlineAsync().ConfigureAwait(false);
             return new LicenseValidationResult
@@ -362,12 +388,14 @@ public class LicenseService
     #endregion
 
     #region Private Helper Methods
-    
+
     private async Task<License?> LoadLicenseFromDiskAsync()
     {
         if (!File.Exists(_licensePath))
+        {
             return null;
-        
+        }
+
         try
         {
             var encryptedBytes = await File.ReadAllBytesAsync(_licensePath).ConfigureAwait(false);
@@ -381,14 +409,14 @@ public class LicenseService
             return null;
         }
     }
-    
+
     private async Task SaveLicenseToDiskAsync(License license)
     {
         try
         {
-            var json = JsonSerializer.Serialize(license, new JsonSerializerOptions 
-            { 
-                WriteIndented = true 
+            var json = JsonSerializer.Serialize(license, new JsonSerializerOptions
+            {
+                WriteIndented = true
             });
             var encryptedBytes = EncryptData(json);
             await File.WriteAllBytesAsync(_licensePath, encryptedBytes).ConfigureAwait(false);
@@ -398,61 +426,61 @@ public class LicenseService
             System.Diagnostics.Debug.WriteLine($"Failed to save license: {ex.Message}");
         }
     }
-    
+
     private byte[] EncryptData(string plaintext)
     {
         using var aes = Aes.Create();
         aes.Key = _encryptionKey;
         aes.GenerateIV();
-        
+
         using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
         using var ms = new MemoryStream();
-        
+
         // Write IV first (needed for decryption)
         ms.Write(aes.IV, 0, aes.IV.Length);
-        
+
         using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
         using (var sw = new StreamWriter(cs))
         {
             sw.Write(plaintext);
         }
-        
+
         return ms.ToArray();
     }
-    
+
     private string DecryptData(byte[] ciphertext)
     {
         using var aes = Aes.Create();
         aes.Key = _encryptionKey;
-        
+
         // Read IV from beginning of ciphertext
         var iv = new byte[aes.IV.Length];
         Array.Copy(ciphertext, 0, iv, 0, iv.Length);
         aes.IV = iv;
-        
+
         using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
         using var ms = new MemoryStream(ciphertext, iv.Length, ciphertext.Length - iv.Length);
         using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
         using var sr = new StreamReader(cs);
-        
+
         return sr.ReadToEnd();
     }
-    
+
     private async Task<(bool Success, string Message)> ActivateTrialLocallyAsync(string trialKey, string email)
     {
         var expires = DateTime.UtcNow.AddDays(14);
         var license = new License
         {
-            LicenseKey             = trialKey,
-            Email                  = email.Trim(),
-            Tier                   = LicenseTier.Trial,
-            Status                 = LicenseStatus.Trial,
-            IsTrialLicense         = true,
-            IssuedDate             = DateTime.UtcNow,
-            ExpiresDate            = expires,
-            LastValidated          = DateTime.UtcNow,
-            MaxDevices             = 1,
-            DeviceFingerprint      = GenerateDeviceFingerprint(),
+            LicenseKey = trialKey,
+            Email = email.Trim(),
+            Tier = LicenseTier.Trial,
+            Status = LicenseStatus.Trial,
+            IsTrialLicense = true,
+            IssuedDate = DateTime.UtcNow,
+            ExpiresDate = expires,
+            LastValidated = DateTime.UtcNow,
+            MaxDevices = 1,
+            DeviceFingerprint = GenerateDeviceFingerprint(),
             LemonSqueezyInstanceId = string.Empty
         };
         await SaveLicenseToDiskAsync(license).ConfigureAwait(false);
@@ -464,13 +492,13 @@ public class LicenseService
     {
         _currentLicense = new License
         {
-            Tier              = LicenseTier.Free,
-            Status            = LicenseStatus.Active,
-            LicenseKey        = "FREE",
-            IssuedDate        = DateTime.UtcNow,
-            ExpiresDate       = DateTime.MaxValue,
-            LastValidated     = DateTime.UtcNow,
-            Email             = string.Empty,
+            Tier = LicenseTier.Free,
+            Status = LicenseStatus.Active,
+            LicenseKey = "FREE",
+            IssuedDate = DateTime.UtcNow,
+            ExpiresDate = DateTime.MaxValue,
+            LastValidated = DateTime.UtcNow,
+            Email = string.Empty,
             DeviceFingerprint = GenerateDeviceFingerprint()
         };
         await SaveLicenseToDiskAsync(_currentLicense).ConfigureAwait(false);
@@ -478,11 +506,22 @@ public class LicenseService
 
     private static LicenseTier DetectTierFromLsResponse(LsMeta? meta)
     {
-        if (meta == null) return LicenseTier.Pro;
+        if (meta == null)
+        {
+            return LicenseTier.Pro;
+        }
         // Map LemonSqueezy variant names to our tiers
         var name = meta.VariantName?.ToLowerInvariant() ?? string.Empty;
-        if (name.Contains("team"))       return LicenseTier.Team;
-        if (name.Contains("enterprise")) return LicenseTier.Enterprise;
+        if (name.Contains("team"))
+        {
+            return LicenseTier.Team;
+        }
+
+        if (name.Contains("enterprise"))
+        {
+            return LicenseTier.Enterprise;
+        }
+
         return LicenseTier.Pro;
     }
 
@@ -503,46 +542,46 @@ public class LicenseService
         var hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
     }
-    
+
     #endregion
 }
 // ── LemonSqueezy API response DTOs ──────────────────────────────────────────
 
 internal sealed class LsActivateResponse
 {
-    [JsonPropertyName("activated")]   public bool Activated { get; set; }
-    [JsonPropertyName("error")]       public string? Error { get; set; }
-    [JsonPropertyName("instance")]    public LsInstance? Instance { get; set; }
+    [JsonPropertyName("activated")] public bool Activated { get; set; }
+    [JsonPropertyName("error")] public string? Error { get; set; }
+    [JsonPropertyName("instance")] public LsInstance? Instance { get; set; }
     [JsonPropertyName("license_key")] public LsLicenseKeyData? LicenseKeyData { get; set; }
-    [JsonPropertyName("meta")]        public LsMeta? Meta { get; set; }
+    [JsonPropertyName("meta")] public LsMeta? Meta { get; set; }
 }
 
 internal sealed class LsValidateResponse
 {
-    [JsonPropertyName("valid")]       public bool Valid { get; set; }
-    [JsonPropertyName("error")]       public string? Error { get; set; }
-    [JsonPropertyName("instance")]    public LsInstance? Instance { get; set; }
+    [JsonPropertyName("valid")] public bool Valid { get; set; }
+    [JsonPropertyName("error")] public string? Error { get; set; }
+    [JsonPropertyName("instance")] public LsInstance? Instance { get; set; }
     [JsonPropertyName("license_key")] public LsLicenseKeyData? LicenseKeyData { get; set; }
 }
 
 internal sealed class LsInstance
 {
-    [JsonPropertyName("id")]   public string Id { get; set; } = string.Empty;
+    [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
     [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
 }
 
 internal sealed class LsLicenseKeyData
 {
-    [JsonPropertyName("status")]           public string Status { get; set; } = string.Empty;
+    [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
     [JsonPropertyName("activation_limit")] public int? ActivationLimit { get; set; }
     [JsonPropertyName("activation_usage")] public int? ActivationUsage { get; set; }
-    [JsonPropertyName("expires_at")]       public DateTime? ExpiresAt { get; set; }
+    [JsonPropertyName("expires_at")] public DateTime? ExpiresAt { get; set; }
 }
 
 internal sealed class LsMeta
 {
-    [JsonPropertyName("store_id")]     public int StoreId { get; set; }
-    [JsonPropertyName("product_id")]   public int ProductId { get; set; }
-    [JsonPropertyName("variant_id")]   public int VariantId { get; set; }
+    [JsonPropertyName("store_id")] public int StoreId { get; set; }
+    [JsonPropertyName("product_id")] public int ProductId { get; set; }
+    [JsonPropertyName("variant_id")] public int VariantId { get; set; }
     [JsonPropertyName("variant_name")] public string? VariantName { get; set; }
 }

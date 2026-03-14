@@ -1,9 +1,9 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.ViewModels;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -21,12 +21,17 @@ public partial class AlertDetailDialog : Window
         _viewModel = viewModel;
 
         if (_alert != null)
+        {
             LoadAlertDetails();
+        }
     }
 
     private void LoadAlertDetails()
     {
-        if (_alert == null) return;
+        if (_alert == null)
+        {
+            return;
+        }
 
         TitleText.Text = _alert.Title;
         DescriptionText.Text = _alert.Description;
@@ -127,7 +132,10 @@ public partial class AlertDetailDialog : Window
 
     private async Task SubmitFeedback(string feedback)
     {
-        if (_alert == null || _viewModel == null) return;
+        if (_alert == null || _viewModel == null)
+        {
+            return;
+        }
 
         try
         {

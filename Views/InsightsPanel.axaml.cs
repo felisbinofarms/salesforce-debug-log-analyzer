@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using SalesforceDebugAnalyzer.ViewModels;
@@ -25,7 +25,10 @@ public partial class InsightsPanel : UserControl
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (sender is not MainViewModel vm) return;
+        if (sender is not MainViewModel vm)
+        {
+            return;
+        }
 
         switch (e.PropertyName)
         {
@@ -70,7 +73,10 @@ public partial class InsightsPanel : UserControl
     private void SetBarWidth(Border bar, double percent)
     {
         var parent = bar.Parent as Grid;
-        if (parent == null) return;
+        if (parent == null)
+        {
+            return;
+        }
 
         var clampedPercent = Math.Max(0, Math.Min(100, percent));
         // Use relative width via binding later; for now set via pixel estimate

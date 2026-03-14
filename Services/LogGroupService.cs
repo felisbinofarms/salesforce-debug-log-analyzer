@@ -167,7 +167,10 @@ public class LogGroupService
     /// </summary>
     private bool DetectSequentialLoading(List<DebugLogMetadata> logs)
     {
-        if (logs.Count < 2) return false;
+        if (logs.Count < 2)
+        {
+            return false;
+        }
 
         var sorted = logs.OrderBy(l => l.Timestamp).ToList();
 
@@ -196,7 +199,10 @@ public class LogGroupService
     /// </summary>
     private double CalculateParallelSavings(List<DebugLogMetadata> logs)
     {
-        if (logs.Count < 2) return 0;
+        if (logs.Count < 2)
+        {
+            return 0;
+        }
 
         // Sequential: sum of all durations
         var sequentialTotal = logs.Sum(l => l.DurationMs);
@@ -386,7 +392,10 @@ public class LogGroupService
     /// </summary>
     public string ExtractRecordId(string logContent)
     {
-        if (string.IsNullOrWhiteSpace(logContent)) return string.Empty;
+        if (string.IsNullOrWhiteSpace(logContent))
+        {
+            return string.Empty;
+        }
 
         // Look for common Salesforce ID patterns (001, 003, 005, 500, etc.)
         var match = RecordIdPattern.Match(logContent);

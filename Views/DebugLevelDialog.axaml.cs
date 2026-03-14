@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using SalesforceDebugAnalyzer.Models;
@@ -22,10 +22,16 @@ public partial class DebugLevelDialog : Window
 
     private async void CreateButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
 
         var name = NameTextBox.Text?.Trim() ?? "";
-        if (string.IsNullOrEmpty(name)) return;
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
 
         CreateButton.IsEnabled = false;
 
@@ -66,14 +72,20 @@ public partial class DebugLevelDialog : Window
         var sanitized = Regex.Replace(name, @"[^a-zA-Z0-9_]", "_");
         sanitized = Regex.Replace(sanitized, @"_+", "_").Trim('_');
         if (sanitized.Length == 0 || !char.IsLetter(sanitized[0]))
+        {
             sanitized = "BW_" + sanitized;
+        }
+
         return sanitized;
     }
 
     private static string GetComboBoxValue(ComboBox comboBox)
     {
         if (comboBox.SelectedItem is ComboBoxItem item)
+        {
             return item.Content?.ToString() ?? "INFO";
+        }
+
         return "INFO";
     }
 }

@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -65,7 +65,10 @@ public class BackgroundMonitoringService : IDisposable
         }
 
         // Stop any existing monitoring first (cleans up Shield references before DB disposal)
-        if (_isRunning) Stop();
+        if (_isRunning)
+        {
+            Stop();
+        }
 
         // Initialize database for the connected org
         var orgId = ExtractOrgIdentifier();
@@ -86,7 +89,10 @@ public class BackgroundMonitoringService : IDisposable
         {
             var recentIds = await _dbService.GetRecentLogIdsAsync(500);
             foreach (var id in recentIds)
+            {
                 _processedLogIds.TryAdd(id, 0);
+            }
+
             Log.Information("Seeded {Count} already-processed log IDs from database", recentIds.Count);
         }
         catch (Exception ex)
@@ -124,7 +130,10 @@ public class BackgroundMonitoringService : IDisposable
     /// </summary>
     private async Task InitializeShieldAsync()
     {
-        if (_dbService == null) return;
+        if (_dbService == null)
+        {
+            return;
+        }
 
         try
         {
@@ -172,7 +181,10 @@ public class BackgroundMonitoringService : IDisposable
     /// </summary>
     public void Stop()
     {
-        if (!_isRunning) return;
+        if (!_isRunning)
+        {
+            return;
+        }
 
         _pollTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         _pollTimer?.Dispose();
@@ -210,7 +222,11 @@ public class BackgroundMonitoringService : IDisposable
 
     private async void OnPollTimerElapsed(object? state)
     {
-        if (!_pollLock.Wait(0)) return; // Skip if previous poll still running
+        if (!_pollLock.Wait(0))
+        {
+            return; // Skip if previous poll still running
+        }
+
         try
         {
             await PollAndProcessLogsAsync();
@@ -228,7 +244,11 @@ public class BackgroundMonitoringService : IDisposable
 
     private async void OnAnalysisTimerElapsed(object? state)
     {
-        if (_trendService == null) return;
+        if (_trendService == null)
+        {
+            return;
+        }
+
         try
         {
             await _trendService.RunAnalysisCycleAsync();
@@ -241,7 +261,11 @@ public class BackgroundMonitoringService : IDisposable
 
     private async void OnShieldTimerElapsed(object? state)
     {
-        if (_shieldService == null || _shieldDetector == null) return;
+        if (_shieldService == null || _shieldDetector == null)
+        {
+            return;
+        }
+
         try
         {
             var eventsProcessed = await _shieldService.PollAndProcessAsync();
@@ -264,7 +288,9 @@ public class BackgroundMonitoringService : IDisposable
         _toastService?.ShowAlert(alert);
         // Route to email / Slack (fire-and-forget; errors are logged inside the service)
         if (_alertRouter != null)
+        {
             _ = _alertRouter.RouteAlertAsync(alert);
+        }
         // Relay to subscribers (e.g., MainViewModel for in-app alert center)
         AlertGenerated?.Invoke(this, alert);
     }
@@ -276,7 +302,11 @@ public class BackgroundMonitoringService : IDisposable
     /// </summary>
     private async void OnAutoTraceFlagRequested(object? sender, string userId)
     {
-        if (!_apiService.IsConnected || _dbService == null) return;
+        if (!_apiService.IsConnected || _dbService == null)
+        {
+            return;
+        }
+
         try
         {
             // Resolve and cache a suitable DebugLevel ID (query once per monitoring session)
@@ -322,7 +352,10 @@ public class BackgroundMonitoringService : IDisposable
                 CreatedAt = DateTime.UtcNow
             };
             if (_dbService != null)
+            {
                 await _dbService.InsertAlertAsync(infoAlert);
+            }
+
             AlertGenerated?.Invoke(this, infoAlert);
         }
         catch (Exception ex)
@@ -333,7 +366,10 @@ public class BackgroundMonitoringService : IDisposable
 
     private async Task PollAndProcessLogsAsync()
     {
-        if (!_apiService.IsConnected || _dbService == null) return;
+        if (!_apiService.IsConnected || _dbService == null)
+        {
+            return;
+        }
 
         // Refresh token if needed
         var authOk = await _apiService.EnsureAuthenticatedAsync();
@@ -359,7 +395,10 @@ public class BackgroundMonitoringService : IDisposable
         var newLogsCount = 0;
         foreach (var log in recentLogs)
         {
-            if (_processedLogIds.ContainsKey(log.Id)) continue;
+            if (_processedLogIds.ContainsKey(log.Id))
+            {
+                continue;
+            }
 
             try
             {
@@ -419,28 +458,40 @@ public class BackgroundMonitoringService : IDisposable
         // Prefer using OrgId (globally unique) when available
         var orgId = _apiService.Connection?.OrgId;
         if (!string.IsNullOrEmpty(orgId))
+        {
             return orgId;
+        }
 
         var instanceUrl = _apiService.Connection?.InstanceUrl ?? "";
         if (instanceUrl.Contains(".my.salesforce.com"))
         {
             var start = instanceUrl.IndexOf("//") + 2;
             var end = instanceUrl.IndexOf(".my.salesforce.com");
-            if (end > start) return instanceUrl[start..end];
+            if (end > start)
+            {
+                return instanceUrl[start..end];
+            }
         }
         else if (instanceUrl.Contains(".sandbox.salesforce.com"))
         {
             // Extract subdomain to differentiate sandboxes (e.g., "cs42" from "cs42.sandbox.salesforce.com")
             var start = instanceUrl.IndexOf("//") + 2;
             var end = instanceUrl.IndexOf(".sandbox.salesforce.com");
-            if (end > start) return $"sandbox-{instanceUrl[start..end]}";
+            if (end > start)
+            {
+                return $"sandbox-{instanceUrl[start..end]}";
+            }
         }
         return "unknown";
     }
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         Stop();

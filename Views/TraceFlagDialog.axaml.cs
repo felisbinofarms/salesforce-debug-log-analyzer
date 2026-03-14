@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using SalesforceDebugAnalyzer.Models;
 using SalesforceDebugAnalyzer.Services;
@@ -38,7 +38,11 @@ public partial class TraceFlagDialog : Window
 
     private async void TraceFlagDialog_Loaded(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
+
         await LoadInitialDataAsync();
     }
 
@@ -57,7 +61,9 @@ public partial class TraceFlagDialog : Window
             _debugLevels = await _apiService.QueryDebugLevelsAsync();
             DebugLevelComboBox.ItemsSource = _debugLevels.Select(d => d.MasterLabel).ToList();
             if (_debugLevels.Any())
+            {
                 DebugLevelComboBox.SelectedIndex = 0;
+            }
 
             await RefreshTraceFlagsAsync();
             await RefreshLogsAsync();
@@ -71,11 +77,17 @@ public partial class TraceFlagDialog : Window
 
     private async void EnableLoggingButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null || DebugLevelComboBox.SelectedIndex < 0) return;
+        if (_apiService == null || DebugLevelComboBox.SelectedIndex < 0)
+        {
+            return;
+        }
 
         var selectedDebugLevel = _debugLevels[DebugLevelComboBox.SelectedIndex];
         var connection = _apiService.Connection;
-        if (connection == null || string.IsNullOrEmpty(connection.UserId)) return;
+        if (connection == null || string.IsNullOrEmpty(connection.UserId))
+        {
+            return;
+        }
 
         SetLoading(true, "Creating trace flag...");
         EnableLoggingButton.IsEnabled = false;
@@ -152,10 +164,16 @@ public partial class TraceFlagDialog : Window
 
     private async void DownloadLogButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null || _parserService == null) return;
+        if (_apiService == null || _parserService == null)
+        {
+            return;
+        }
 
         var selectedLog = LogsDataGrid.SelectedItem as ApexLog;
-        if (selectedLog == null) return;
+        if (selectedLog == null)
+        {
+            return;
+        }
 
         SetLoading(true, $"Downloading log (Size: {selectedLog.LogLength / 1024}KB)...");
         DownloadLogButton.IsEnabled = false;
@@ -191,7 +209,10 @@ public partial class TraceFlagDialog : Window
 
     private async void CreateDebugLevelButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
 
         var dialog = new DebugLevelDialog(_apiService);
         var result = await dialog.ShowDialog<bool>(this);

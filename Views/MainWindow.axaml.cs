@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -44,7 +44,10 @@ public partial class MainWindow : Window
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
         var vm = ViewModel;
-        if (vm == null) return;
+        if (vm == null)
+        {
+            return;
+        }
 
         if (e.KeyModifiers == KeyModifiers.Control)
         {
@@ -53,17 +56,26 @@ public partial class MainWindow : Window
                 case Key.K:
                     vm.IsCommandPaletteOpen = !vm.IsCommandPaletteOpen;
                     if (vm.IsCommandPaletteOpen)
+                    {
                         CommandPaletteBox?.Focus();
+                    }
+
                     e.Handled = true;
                     break;
                 case Key.O:
                     if (vm.UploadLogCommand.CanExecute(null))
+                    {
                         vm.UploadLogCommand.Execute(null);
+                    }
+
                     e.Handled = true;
                     break;
                 case Key.E:
                     if (vm.ExportReportCommand.CanExecute(null))
+                    {
                         vm.ExportReportCommand.Execute(null);
+                    }
+
                     e.Handled = true;
                     break;
                 case Key.F:
@@ -72,7 +84,10 @@ public partial class MainWindow : Window
                     break;
                 case Key.OemComma:
                     if (vm.OpenSettingsCommand.CanExecute(null))
+                    {
                         vm.OpenSettingsCommand.Execute(null);
+                    }
+
                     e.Handled = true;
                     break;
             }
@@ -82,7 +97,10 @@ public partial class MainWindow : Window
             if (e.Key == Key.O)
             {
                 if (vm.LoadLogFolderCommand.CanExecute(null))
+                {
                     vm.LoadLogFolderCommand.Execute(null);
+                }
+
                 e.Handled = true;
             }
         }
@@ -110,7 +128,9 @@ public partial class MainWindow : Window
     private void CommandPaletteBackdrop_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (ViewModel is { } vm)
+        {
             vm.IsCommandPaletteOpen = false;
+        }
     }
 
     private void CommandPaletteBox_TextChanged(object? sender, TextChangedEventArgs e)
@@ -141,7 +161,10 @@ public partial class MainWindow : Window
                 // TODO: Execute PaletteCommand action
             }
             if (ViewModel is { } vm2)
+            {
                 vm2.IsCommandPaletteOpen = false;
+            }
+
             e.Handled = true;
         }
         else if (e.Key == Key.Down)
@@ -172,9 +195,16 @@ public partial class MainWindow : Window
 
     private async void OnFileDrop(object? sender, DragEventArgs e)
     {
-        if (ViewModel is not { } vm) return;
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+
         var files = e.Data.GetFiles();
-        if (files == null) return;
+        if (files == null)
+        {
+            return;
+        }
 
         foreach (var item in files)
         {

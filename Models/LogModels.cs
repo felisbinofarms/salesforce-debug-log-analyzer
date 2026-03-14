@@ -88,17 +88,17 @@ public class DatabaseOperation
     public int AggregationCount { get; set; }
     public long DurationMs { get; set; }
     public int LineNumber { get; set; }
-    
+
     /// <summary>
     /// Query execution plan from SOQL_EXECUTE_EXPLAIN (index usage, cardinality, cost)
     /// </summary>
     public string? ExecutionPlan { get; set; }
-    
+
     /// <summary>
     /// Relative cost from execution plan (higher = worse, >1.0 often means table scan)
     /// </summary>
     public double RelativeCost { get; set; }
-    
+
     /// <summary>
     /// True if this query targets a Custom Metadata Type (__mdt object).
     /// CMDT queries don't count against the SOQL governor limit.
@@ -118,19 +118,19 @@ public class CalloutOperation
     public long DurationMs { get; set; }
     public int LineNumber { get; set; }
     public Dictionary<string, string> Metadata { get; set; } = new();
-    
+
     /// <summary>
     /// True if the callout returned an HTTP error (4xx or 5xx).
     /// StatusCode 0 means status was not captured — not an error.
     /// </summary>
     public bool IsError => StatusCode >= 400;
-    
+
     /// <summary>
     /// The Named Credential used for this callout (e.g., "RabbitMQ", "TruckCare_API").
     /// Empty if the callout used a hardcoded URL instead.
     /// </summary>
     public string NamedCredentialName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// True if the callout used a Named Credential (best practice for security).
     /// </summary>
@@ -174,7 +174,7 @@ public class GovernorLimitSnapshot
     public int Callouts { get; set; }
     public int CalloutsLimit { get; set; }
     public int LineNumber { get; set; }
-    
+
     /// <summary>
     /// Namespace this snapshot belongs to (e.g., "(default)", "CloudingoAgent", "et4ae5")
     /// </summary>
@@ -212,41 +212,41 @@ public class LogAnalysis
     public ExecutionNode RootNode { get; set; } = new();
     public List<DatabaseOperation> DatabaseOperations { get; set; } = new();
     public List<GovernorLimitSnapshot> LimitSnapshots { get; set; } = new();
-    
+
     /// <summary>
     /// Governor limits broken down by namespace (managed packages).
     /// Excludes the (default) namespace which is in LimitSnapshots.
     /// </summary>
     public List<GovernorLimitSnapshot> NamespaceLimitSnapshots { get; set; } = new();
-    
+
     /// <summary>
     /// Governor limits consumed only by test code (from TESTING_LIMITS section).
     /// Helps distinguish test overhead from actual code performance.
     /// </summary>
     public GovernorLimitSnapshot? TestingLimits { get; set; }
-    
+
     public List<ExecutionNode> Errors { get; set; } = new();
-    
+
     /// <summary>
     /// Entry point that started this transaction (e.g., "CaseTrigger on Case (BeforeInsert)")
     /// </summary>
     public string EntryPoint { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Exceptions that were caught by try/catch blocks (informational, not errors)
     /// </summary>
     public List<ExecutionNode> HandledExceptions { get; set; } = new();
-    
+
     /// <summary>
     /// True only if there are unhandled exceptions or fatal errors
     /// </summary>
     public bool TransactionFailed { get; set; }
-    
+
     /// <summary>
     /// CPU time from governor limits (actual processing time)
     /// </summary>
     public int CpuTimeMs { get; set; }
-    
+
     /// <summary>
     /// Wall clock duration (includes waiting time, async gaps, etc.)
     /// </summary>
@@ -256,7 +256,7 @@ public class LogAnalysis
     public string Summary { get; set; } = string.Empty;
     public List<string> Issues { get; set; } = new();
     public List<string> Recommendations { get; set; } = new();
-    
+
     /// <summary>
     /// Cumulative profiling data (from CUMULATIVE_PROFILING section at end of log)
     /// </summary>
@@ -267,12 +267,12 @@ public class LogAnalysis
     /// When true but CumulativeProfiling is null, the section existed but parsing produced no data.
     /// </summary>
     public bool CumulativeProfilingFound { get; set; } = false;
-    
+
     /// <summary>
     /// Log user name from USER_INFO line
     /// </summary>
     public string LogUser { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Icon representing the operation type (trigger, flow, class, etc.)
     /// </summary>
@@ -290,7 +290,7 @@ public class LogAnalysis
         var ep when ep.Contains("test") => "🧪",
         _ => "📦" // Default for classes
     };
-    
+
     /// <summary>
     /// Human-readable operation type label
     /// </summary>
@@ -308,103 +308,103 @@ public class LogAnalysis
         var ep when ep.Contains("test") => "Test Class",
         _ => "Apex Class"
     };
-    
+
     /// <summary>
     /// Log file length in lines
     /// </summary>
     public int LogLength { get; set; }
-    
+
     /// <summary>
     /// Is this a test class execution?
     /// </summary>
     public bool IsTestExecution { get; set; }
-    
+
     /// <summary>
     /// Test class name if IsTestExecution is true
     /// </summary>
     public string TestClassName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Order of execution timeline showing major phases
     /// </summary>
     public ExecutionTimeline? Timeline { get; set; }
-    
+
     /// <summary>
     /// HTTP callouts to external services (CALLOUT_REQUEST/CALLOUT_RESPONSE events)
     /// </summary>
     public List<CalloutOperation> Callouts { get; set; } = new();
-    
+
     /// <summary>
     /// Flow/Process Builder interviews that executed during this transaction
     /// </summary>
     public List<FlowExecution> Flows { get; set; } = new();
-    
+
     /// <summary>
     /// Health score (0-100) and actionable issues prioritized for fixing
     /// </summary>
     public HealthScore? Health { get; set; }
-    
+
     /// <summary>
     /// Execution units found in the log (from EXECUTION_STARTED/FINISHED pairs).
     /// Async logs (e.g., @future, Queueable) can have multiple execution units.
     /// </summary>
     public List<ExecutionUnit> ExecutionUnits { get; set; } = new();
-    
+
     /// <summary>
     /// True if this log contains async-level governor limits (200 SOQL, 60000ms CPU).
     /// Detected from the governor limit values themselves.
     /// </summary>
     public bool IsAsyncExecution { get; set; }
-    
+
     /// <summary>
     /// Total heap allocated during execution (sum of HEAP_ALLOCATE events in bytes)
     /// </summary>
     public long TotalHeapAllocated { get; set; }
-    
+
     /// <summary>
     /// True if the log was truncated by Salesforce (exceeded max log size).
     /// Detected when CODE_UNIT_STARTED has no matching CODE_UNIT_ENDED or LIMIT_USAGE_FOR_NS is missing.
     /// </summary>
     public bool IsLogTruncated { get; set; }
-    
+
     /// <summary>
     /// Duplicate SOQL queries detected (same normalized query text executed multiple times).
     /// Key = normalized query, Value = (count, total rows, locations)
     /// </summary>
     public List<DuplicateQueryInfo> DuplicateQueries { get; set; } = new();
-    
+
     /// <summary>
     /// Flow element errors (FLOW_ELEMENT_ERROR) — distinct from FLOW_ELEMENT_FAULT.
     /// These represent DML failures, validation errors, etc. within Flow execution.
     /// </summary>
     public List<FlowError> FlowErrors { get; set; } = new();
-    
+
     /// <summary>
     /// Workflow rules evaluated during this transaction (WF_RULE_EVAL events)
     /// </summary>
     public List<WorkflowRuleEvaluation> WorkflowRules { get; set; } = new();
-    
+
     /// <summary>
     /// Trigger re-entry tracking — shows how many times each trigger fired
     /// </summary>
     public List<TriggerReEntry> TriggerReEntries { get; set; } = new();
-    
+
     /// <summary>
     /// Count of SOQL queries that target Custom Metadata Types (__mdt).
     /// These don't count against the SOQL governor limit.
     /// </summary>
     public int CustomMetadataQueryCount { get; set; }
-    
+
     /// <summary>
     /// Count of regular SOQL queries (excluding CMDT). These DO count against limits.
     /// </summary>
     public int RegularSoqlCount { get; set; }
-    
+
     /// <summary>
     /// Bulk safety grade: A (fully bulkified), B (mostly safe), C (some risk), D (not bulk-safe), F (will fail in bulk)
     /// </summary>
     public string BulkSafetyGrade { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Explanation of the bulk safety grade
     /// </summary>
@@ -465,19 +465,19 @@ public class ExecutionUnit
 {
     /// <summary>The operation name (e.g., "execute_anonymous_apex", "FutureHandler")</summary>
     public string OperationName { get; set; } = string.Empty;
-    
+
     /// <summary>Line number where EXECUTION_STARTED appeared</summary>
     public int StartLine { get; set; }
-    
+
     /// <summary>Line number where EXECUTION_FINISHED appeared</summary>
     public int EndLine { get; set; }
-    
+
     /// <summary>Timestamp of EXECUTION_STARTED</summary>
     public DateTime StartTime { get; set; }
-    
+
     /// <summary>Timestamp of EXECUTION_FINISHED</summary>
     public DateTime EndTime { get; set; }
-    
+
     /// <summary>Duration in milliseconds</summary>
     public long DurationMs => EndTime > StartTime ? (long)(EndTime - StartTime).TotalMilliseconds : 0;
 }
@@ -490,16 +490,16 @@ public class FlowError
 {
     /// <summary>The Flow element that failed (e.g., "Update_Case_Owner")</summary>
     public string ElementName { get; set; } = string.Empty;
-    
+
     /// <summary>The error type/code (e.g., "INVALID_CROSS_REFERENCE_KEY")</summary>
     public string ErrorCode { get; set; } = string.Empty;
-    
+
     /// <summary>Full error message</summary>
     public string ErrorMessage { get; set; } = string.Empty;
-    
+
     /// <summary>Line number in the debug log</summary>
     public int LineNumber { get; set; }
-    
+
     /// <summary>The Flow name this error belongs to (if determinable)</summary>
     public string FlowName { get; set; } = string.Empty;
 }
@@ -511,13 +511,13 @@ public class WorkflowRuleEvaluation
 {
     /// <summary>The workflow rule's filter criteria (e.g., "Service Name contains QuikQ_CreatePolicies")</summary>
     public string RuleName { get; set; } = string.Empty;
-    
+
     /// <summary>The object type being evaluated (from WF_RULE_EVAL_BEGIN context)</summary>
     public string ObjectType { get; set; } = string.Empty;
-    
+
     /// <summary>Whether the rule criteria was met (true = rule fired)</summary>
     public bool Matched { get; set; }
-    
+
     /// <summary>Line number in the debug log</summary>
     public int LineNumber { get; set; }
 }
@@ -530,19 +530,19 @@ public class TriggerReEntry
 {
     /// <summary>The trigger name (e.g., "ContactTrigger")</summary>
     public string TriggerName { get; set; } = string.Empty;
-    
+
     /// <summary>The SObject type (e.g., "Contact")</summary>
     public string ObjectType { get; set; } = string.Empty;
-    
+
     /// <summary>The events it fired on (e.g., ["BeforeInsert", "AfterInsert", "BeforeUpdate", "AfterUpdate"])</summary>
     public List<string> Events { get; set; } = new();
-    
+
     /// <summary>Total number of times this trigger fired</summary>
     public int TotalFireCount { get; set; }
-    
+
     /// <summary>Number of times it re-entered (fires beyond the expected before+after pair)</summary>
     public int ReEntryCount { get; set; }
-    
+
     /// <summary>True if the trigger fired more than the expected 2 times (before + after) for a single operation</summary>
     public bool HasReEntry => ReEntryCount > 0;
 }
@@ -554,16 +554,16 @@ public class DuplicateQueryInfo
 {
     /// <summary>The normalized query text (with literal values replaced)</summary>
     public string NormalizedQuery { get; set; } = string.Empty;
-    
+
     /// <summary>One example of the actual query text</summary>
     public string ExampleQuery { get; set; } = string.Empty;
-    
+
     /// <summary>Number of times this query was executed</summary>
     public int ExecutionCount { get; set; }
-    
+
     /// <summary>Total rows returned across all executions</summary>
     public int TotalRows { get; set; }
-    
+
     /// <summary>Line numbers where this query appeared</summary>
     public List<int> LineNumbers { get; set; } = new();
 }
@@ -578,14 +578,14 @@ public class HealthScore
     public string Status { get; set; } = string.Empty; // Excellent, Good, Needs Work, Poor, Critical
     public string StatusIcon { get; set; } = string.Empty; // 🎯, ⚡, ⚠️, 🔥
     public string Reasoning { get; set; } = string.Empty;
-    
+
     public List<ActionableIssue> CriticalIssues { get; set; } = new();
     public List<ActionableIssue> HighPriorityIssues { get; set; } = new();
     public List<ActionableIssue> QuickWins { get; set; } = new(); // Easy fixes
-    
+
     public int TotalIssues => CriticalIssues.Count + HighPriorityIssues.Count + QuickWins.Count;
-    public int TotalEstimatedMinutes => CriticalIssues.Sum(i => i.EstimatedFixTimeMinutes) + 
-                                          HighPriorityIssues.Sum(i => i.EstimatedFixTimeMinutes) + 
+    public int TotalEstimatedMinutes => CriticalIssues.Sum(i => i.EstimatedFixTimeMinutes) +
+                                          HighPriorityIssues.Sum(i => i.EstimatedFixTimeMinutes) +
                                           QuickWins.Sum(i => i.EstimatedFixTimeMinutes);
 }
 
@@ -604,18 +604,18 @@ public class ActionableIssue
     public string CodeExample { get; set; } = string.Empty; // Optional code snippet
     public int EstimatedFixTimeMinutes { get; set; }
     public int Priority { get; set; } // 1 = highest
-    
+
     /// <summary>
     /// True if this fix requires a developer (Apex code changes).
     /// False if a Salesforce admin can fix it (Setup changes, validation rules, flows).
     /// </summary>
     public bool RequiresDeveloper { get; set; } = true;
-    
+
     /// <summary>
     /// Human-readable role label: "👩‍💻 Developer Fix" or "🔧 Admin Can Fix"
     /// </summary>
     public string RoleBadge => RequiresDeveloper ? "👩‍💻 Developer Fix" : "🔧 Admin Can Fix";
-    
+
     public string SeverityIcon => Severity switch
     {
         IssueSeverity.Critical => "🔴",
@@ -624,7 +624,7 @@ public class ActionableIssue
         IssueSeverity.Low => "🟢",
         _ => "⚪"
     };
-    
+
     public string DifficultyBadge => Difficulty switch
     {
         IssueDifficulty.Easy => "✅ Easy",
@@ -712,16 +712,16 @@ public class TimelinePhase
     /// <summary>Short human-readable OOE label used in the timeline UI badge.</summary>
     public string OoePhaseLabel => OoePhase switch
     {
-        Models.OoePhase.BeforeTrigger   => "Before Trigger",
+        Models.OoePhase.BeforeTrigger => "Before Trigger",
         Models.OoePhase.SystemValidation => "Validation",
-        Models.OoePhase.AfterTrigger    => "After Trigger",
-        Models.OoePhase.Workflow        => "Workflow",
-        Models.OoePhase.AfterSaveFlow   => "After-Save Flow",
-        Models.OoePhase.Process         => "Process",
-        Models.OoePhase.FieldUpdate     => "Field Update",
-        Models.OoePhase.ReEntry         => "Re-Entry ⚠",
-        Models.OoePhase.Async           => "Async",
-        _                               => string.Empty
+        Models.OoePhase.AfterTrigger => "After Trigger",
+        Models.OoePhase.Workflow => "Workflow",
+        Models.OoePhase.AfterSaveFlow => "After-Save Flow",
+        Models.OoePhase.Process => "Process",
+        Models.OoePhase.FieldUpdate => "Field Update",
+        Models.OoePhase.ReEntry => "Re-Entry ⚠",
+        Models.OoePhase.Async => "Async",
+        _ => string.Empty
     };
 }
 
@@ -746,7 +746,7 @@ public class CumulativeQuery
     public string Query { get; set; } = string.Empty;
     public int ExecutionCount { get; set; }
     public int TotalDurationMs { get; set; }
-    
+
     /// <summary>Display format: "Class.Method:Line"</summary>
     public string Location => $"{ClassName}.{MethodName}:{LineNumber}";
 }
@@ -763,10 +763,10 @@ public class CumulativeDml
     public string ObjectType { get; set; } = string.Empty;
     public int ExecutionCount { get; set; }
     public int TotalDurationMs { get; set; }
-    
+
     /// <summary>Display format: "Operation ObjectType"</summary>
     public string OperationDescription => $"{Operation}: {ObjectType}";
-    
+
     /// <summary>Display format: "Class.Method:Line"</summary>
     public string Location => $"{ClassName}.{MethodName}:{LineNumber}";
 }
@@ -783,7 +783,7 @@ public class CumulativeMethod
     public int ExecutionCount { get; set; }
     public int TotalDurationMs { get; set; }
     public int AverageDurationMs => ExecutionCount > 0 ? TotalDurationMs / ExecutionCount : 0;
-    
+
     /// <summary>Display format: "Class.Method:Line"</summary>
     public string Location => LineNumber > 0 ? $"{ClassName}.{MethodName}:{LineNumber}" : $"{ClassName}.{MethodName}";
 }
@@ -857,7 +857,7 @@ public class LogGroup
     public Dictionary<string, int> ReentryPatterns { get; set; } = new();
     public int TotalReentryCount { get; set; }
     public string SlowestOperation { get; set; } = string.Empty;
-    
+
     // Aggregate metrics
     public int TotalSoqlQueries { get; set; }
     public int TotalQueryRows { get; set; }
@@ -866,15 +866,15 @@ public class LogGroup
     public int TotalCpuTime { get; set; }
     public int TotalHeapSize { get; set; }
     public int ErrorCount { get; set; }
-    
+
     // Recommendations
     public List<string> Recommendations { get; set; } = new();
-    
+
     // UI Properties
-    public string DisplayName => IsSingleLog 
+    public string DisplayName => IsSingleLog
         ? $"Single Log - {Logs.FirstOrDefault()?.MethodName ?? "Unknown"}"
         : $"Transaction Group - {Logs.Count} logs";
-    
+
     public string DurationDisplay => TotalDuration > 10000
         ? $"{TotalDuration / 1000:N1}s 🔥🔥🔥"
         : TotalDuration > 5000
@@ -897,7 +897,7 @@ public class LogPhase
     public double ParallelSavings { get; set; }
     public bool HasAsyncOperations { get; set; }
     public double GapToNextPhase { get; set; }
-    
+
     public string DurationDisplay => DurationMs > 5000
         ? $"{DurationMs / 1000:N1}s"
         : $"{DurationMs:N0}ms";
@@ -922,57 +922,57 @@ public class StackDepthAnalysis
     /// Maximum stack depth observed during execution
     /// </summary>
     public int MaxDepth { get; set; }
-    
+
     /// <summary>
     /// Line number where max depth occurred
     /// </summary>
     public int MaxDepthLine { get; set; }
-    
+
     /// <summary>
     /// Method name at max depth point
     /// </summary>
     public string MaxDepthMethod { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Estimated total stack frames (including debug overhead)
     /// </summary>
     public int EstimatedTotalFrames { get; set; }
-    
+
     /// <summary>
     /// Whether FINEST logging is enabled (adds massive overhead)
     /// </summary>
     public bool HasFinestLogging { get; set; }
-    
+
     /// <summary>
     /// Debug log level settings detected
     /// </summary>
     public string DebugLevelSettings { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Estimated frames added by debug logging overhead
     /// </summary>
     public int DebugLoggingOverhead { get; set; }
-    
+
     /// <summary>
     /// Risk level: Safe, Warning, Critical
     /// </summary>
     public StackRiskLevel RiskLevel { get; set; }
-    
+
     /// <summary>
     /// Methods called in a loop pattern (high frequency)
     /// </summary>
     public List<LoopMethodPattern> LoopPatterns { get; set; } = new();
-    
+
     /// <summary>
     /// Deepest call chains detected
     /// </summary>
     public List<CallChain> DeepestCallChains { get; set; } = new();
-    
+
     /// <summary>
     /// Whether stack overflow is imminent (estimated > 800 frames)
     /// </summary>
     public bool IsStackOverflowRisk => EstimatedTotalFrames > 800;
-    
+
     /// <summary>
     /// Human-readable summary
     /// </summary>
@@ -1010,8 +1010,8 @@ public class CallChain
     public List<string> Methods { get; set; } = new();
     public int Depth => Methods.Count;
     public int LineNumber { get; set; }
-    
-    public string Display => string.Join(" → ", Methods.Take(5)) + 
+
+    public string Display => string.Join(" → ", Methods.Take(5)) +
         (Methods.Count > 5 ? $" → ... ({Methods.Count - 5} more)" : "");
 }
 
@@ -1022,44 +1022,56 @@ public class CallChain
 public class Interaction
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    
+
     /// <summary>When the recording started</summary>
     public DateTime StartTime { get; set; }
-    
+
     /// <summary>When the recording ended</summary>
     public DateTime EndTime { get; set; }
-    
+
     /// <summary>Total wait time the user experienced (from action to page reload)</summary>
     public double UserWaitTimeMs => (EndTime - StartTime).TotalMilliseconds;
-    
+
     /// <summary>Raw logs captured during the recording</summary>
     public List<LogAnalysis> CapturedLogs { get; set; } = new();
-    
+
     /// <summary>Logs grouped into transactions</summary>
     public List<LogGroup> LogGroups { get; set; } = new();
-    
+
     /// <summary>User-editable display name</summary>
     public string DisplayName { get; set; } = "";
-    
+
     /// <summary>Auto-generated name from entry point</summary>
     public string AutoName
     {
         get
         {
-            if (CapturedLogs.Count == 0) return $"Recording at {StartTime:HH:mm:ss}";
+            if (CapturedLogs.Count == 0)
+            {
+                return $"Recording at {StartTime:HH:mm:ss}";
+            }
+
             var firstEntry = CapturedLogs.FirstOrDefault()?.EntryPoint ?? "";
             // Extract meaningful name from entry point
-            if (firstEntry.Contains(".")) firstEntry = firstEntry.Split('.').Last();
-            if (firstEntry.Contains("(")) firstEntry = firstEntry.Split('(').First();
-            return string.IsNullOrEmpty(firstEntry) 
+            if (firstEntry.Contains("."))
+            {
+                firstEntry = firstEntry.Split('.').Last();
+            }
+
+            if (firstEntry.Contains("("))
+            {
+                firstEntry = firstEntry.Split('(').First();
+            }
+
+            return string.IsNullOrEmpty(firstEntry)
                 ? $"Recording at {StartTime:HH:mm:ss}"
                 : $"{firstEntry} ({StartTime:HH:mm:ss})";
         }
     }
-    
+
     /// <summary>Name to display (user name or auto-generated)</summary>
     public string Name => string.IsNullOrEmpty(DisplayName) ? AutoName : DisplayName;
-    
+
     /// <summary>Brief summary of the interaction</summary>
     public string Summary
     {
@@ -1069,28 +1081,31 @@ public class Interaction
             var duration = UserWaitTimeMs;
             var issueCount = CapturedLogs.Sum(l => l.Issues?.Count ?? 0);
             var durationStr = duration < 1000 ? $"{duration:N0}ms" : $"{duration / 1000.0:N1}s";
-            
+
             if (issueCount > 0)
+            {
                 return $"{logCount} logs • {durationStr} • {issueCount} issues";
+            }
+
             return $"{logCount} logs • {durationStr}";
         }
     }
-    
+
     /// <summary>Total server-side processing time across all logs</summary>
     public double TotalServerTimeMs => CapturedLogs.Sum(l => l.DurationMs);
-    
+
     /// <summary>Time spent waiting (network, rendering) vs server processing</summary>
     public double OverheadMs => UserWaitTimeMs - TotalServerTimeMs;
-    
+
     /// <summary>Whether any captured log has errors</summary>
     public bool HasErrors => CapturedLogs.Any(l => l.HasErrors);
-    
+
     /// <summary>Total SOQL queries across all logs</summary>
-    public int TotalSoqlQueries => CapturedLogs.Sum(l => 
+    public int TotalSoqlQueries => CapturedLogs.Sum(l =>
         l.LimitSnapshots?.LastOrDefault()?.SoqlQueries ?? 0);
-    
+
     /// <summary>Total DML statements across all logs</summary>
-    public int TotalDmlStatements => CapturedLogs.Sum(l => 
+    public int TotalDmlStatements => CapturedLogs.Sum(l =>
         l.LimitSnapshots?.LastOrDefault()?.DmlStatements ?? 0);
 }
 
@@ -1127,16 +1142,16 @@ public class LogExplanation
     public List<string> WhatYourCodeDid { get; set; } = new();
     public string PerformanceVerdict { get; set; } = "";
     public string VerdictIcon { get; set; } = "✅";
-    
+
     // ===== DETAILED ISSUES =====
     public List<DetailedIssue> Issues { get; set; } = new();
-    
+
     // ===== RECOMMENDATIONS WITH CODE =====
     public List<DetailedRecommendation> Recommendations { get; set; } = new();
-    
+
     // ===== LEARNING SECTION =====
     public List<LearningItem> WhatYouLearned { get; set; } = new();
-    
+
     // ===== OVERALL ASSESSMENT =====
     public string OverallAssessment { get; set; } = "";
     public string Priority { get; set; } = "Low"; // Low, Medium, High, Critical
@@ -1233,20 +1248,20 @@ public class PiiMatch
 
     public string SeverityColor => Severity switch
     {
-        "High"   => "#F85149",
+        "High" => "#F85149",
         "Medium" => "#D29922",
-        "Low"    => "#57F287",
-        _        => "#80848E"
+        "Low" => "#57F287",
+        _ => "#80848E"
     };
 
     public string PiiTypeIcon => PiiType switch
     {
-        "Email"       => "📧",
-        "Phone"       => "📞",
-        "SSN"         => "🔒",
+        "Email" => "📧",
+        "Phone" => "📞",
+        "SSN" => "🔒",
         "Credit Card" => "💳",
-        "IP Address"  => "🌐",
-        _             => "⚠️"
+        "IP Address" => "🌐",
+        _ => "⚠️"
     };
 }
 
@@ -1266,29 +1281,41 @@ public class PiiScanResult
     {
         get
         {
-            if (Matches.Any(m => m.Severity == "High"))   return "High";
-            if (Matches.Any(m => m.Severity == "Medium")) return "Medium";
-            if (Matches.Any(m => m.Severity == "Low"))    return "Low";
+            if (Matches.Any(m => m.Severity == "High"))
+            {
+                return "High";
+            }
+
+            if (Matches.Any(m => m.Severity == "Medium"))
+            {
+                return "Medium";
+            }
+
+            if (Matches.Any(m => m.Severity == "Low"))
+            {
+                return "Low";
+            }
+
             return "Clean";
         }
     }
 
     public string RiskColor => RiskLevel switch
     {
-        "High"   => "#F85149",
+        "High" => "#F85149",
         "Medium" => "#D29922",
-        "Low"    => "#57F287",
-        "Clean"  => "#57F287",
-        _        => "#80848E"
+        "Low" => "#57F287",
+        "Clean" => "#57F287",
+        _ => "#80848E"
     };
 
     public string RiskIcon => RiskLevel switch
     {
-        "High"   => "🔴",
+        "High" => "🔴",
         "Medium" => "🟡",
-        "Low"    => "🟢",
-        "Clean"  => "✅",
-        _        => "⚪"
+        "Low" => "🟢",
+        "Clean" => "✅",
+        _ => "⚪"
     };
 
     public string SummaryText => RiskLevel == "Clean"

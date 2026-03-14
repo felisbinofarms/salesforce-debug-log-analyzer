@@ -1,9 +1,9 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
+using SalesforceDebugAnalyzer.Services;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -36,7 +36,11 @@ public partial class DebugSetupWizard : UserControl
 
     private async void DebugSetupWizard_Loaded(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
+
         await LoadInitialDataAsync();
     }
 
@@ -63,7 +67,8 @@ public partial class DebugSetupWizard : UserControl
             var msgBox = new Window
             {
                 Title = "Error",
-                Width = 400, Height = 150,
+                Width = 400,
+                Height = 150,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Content = new StackPanel
                 {
@@ -79,20 +84,26 @@ public partial class DebugSetupWizard : UserControl
             ((Button)((StackPanel)msgBox.Content).Children[1]).Click += (_, _) => msgBox.Close();
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel is Window parentWindow)
+            {
                 await msgBox.ShowDialog(parentWindow);
+            }
         }
     }
 
     private void AnotherUserRadio_CheckedChanged(object? sender, RoutedEventArgs e)
     {
         if (UserIdPanel != null)
+        {
             UserIdPanel.IsVisible = AnotherUserRadio.IsChecked == true;
+        }
     }
 
     private void CustomLevelRadio_CheckedChanged(object? sender, RoutedEventArgs e)
     {
         if (CustomLevelPanel != null)
+        {
             CustomLevelPanel.IsVisible = CustomLevelRadio.IsChecked == true;
+        }
     }
 
     private void NextToStep2_Click(object? sender, RoutedEventArgs e)
@@ -121,7 +132,10 @@ public partial class DebugSetupWizard : UserControl
         if (CustomLevelRadio.IsChecked == true)
         {
             if (DebugLevelComboBox.SelectedIndex < 0)
+            {
                 return;
+            }
+
             _selectedDebugLevelId = _debugLevels[DebugLevelComboBox.SelectedIndex].Id;
         }
         else
@@ -153,8 +167,15 @@ public partial class DebugSetupWizard : UserControl
 
     private void DurationSlider_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (e.Property != Slider.ValueProperty) return;
-        if (DurationDisplay == null || DurationRecommendation == null) return;
+        if (e.Property != Slider.ValueProperty)
+        {
+            return;
+        }
+
+        if (DurationDisplay == null || DurationRecommendation == null)
+        {
+            return;
+        }
 
         var hours = (int)(double)e.NewValue!;
         DurationDisplay.Text = $"Expires in {hours} hour{(hours > 1 ? "s" : "")}";
@@ -178,7 +199,10 @@ public partial class DebugSetupWizard : UserControl
 
     private async void EnableLogging_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
 
         EnableButton.IsEnabled = false;
         EnableProgressBar.IsVisible = true;
@@ -237,7 +261,10 @@ public partial class DebugSetupWizard : UserControl
 
     private async void CreateDebugLevel_Click(object? sender, RoutedEventArgs e)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
 
         var createDialog = new DebugLevelDialog(_apiService);
         var topLevel = TopLevel.GetTopLevel(this);
@@ -252,7 +279,10 @@ public partial class DebugSetupWizard : UserControl
                 if (createDialog.CreatedDebugLevelId != null)
                 {
                     var idx = _debugLevels.FindIndex(l => l.Id == createDialog.CreatedDebugLevelId);
-                    if (idx >= 0) DebugLevelComboBox.SelectedIndex = idx;
+                    if (idx >= 0)
+                    {
+                        DebugLevelComboBox.SelectedIndex = idx;
+                    }
                 }
             }
         }
@@ -270,9 +300,13 @@ public partial class DebugSetupWizard : UserControl
         var transparent = Brushes.Transparent;
         IBrush accentBrush;
         if (this.TryFindResource("AccentPrimary", this.ActualThemeVariant, out var res) && res is Color accentColor)
+        {
             accentBrush = new SolidColorBrush(Color.FromArgb(40, accentColor.R, accentColor.G, accentColor.B));
+        }
         else
+        {
             accentBrush = new SolidColorBrush(Color.FromArgb(40, 139, 92, 246));
+        }
 
         Step1Border.Background = step == 1 ? accentBrush : transparent;
         Step2Border.Background = step == 2 ? accentBrush : transparent;

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -8,8 +8,8 @@ using System.Web;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Serilog;
 using SalesforceDebugAnalyzer.Services;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -313,12 +313,16 @@ public partial class OAuthBrowserDialog : Window
                 : "https://login.salesforce.com/services/oauth2/authorize";
 
             if (string.IsNullOrEmpty(_codeVerifier))
+            {
                 _codeVerifier = GenerateCodeVerifier();
+            }
 
             var codeChallenge = GenerateCodeChallenge(_codeVerifier);
 
             if (string.IsNullOrEmpty(_expectedState))
+            {
                 _expectedState = Guid.NewGuid().ToString("N");
+            }
 
             var authUrl = $"{authEndpoint}?" +
                          $"response_type=code&" +

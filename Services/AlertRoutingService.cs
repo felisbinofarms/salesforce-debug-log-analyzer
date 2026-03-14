@@ -1,10 +1,10 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Text;
 using Newtonsoft.Json;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -32,18 +32,26 @@ public class AlertRoutingService
 
         // Respect alert routing filter
         if (settings.AlertRoutingCriticalOnly && alert.Severity != "critical")
+        {
             return;
+        }
 
         var tasks = new List<Task>();
 
         if (settings.EmailAlertsEnabled && !string.IsNullOrWhiteSpace(settings.AlertEmailTo))
+        {
             tasks.Add(TrySendEmailAsync(alert, settings));
+        }
 
         if (settings.SlackAlertsEnabled && !string.IsNullOrWhiteSpace(settings.SlackWebhookUrl))
+        {
             tasks.Add(TrySendSlackAsync(alert, settings));
+        }
 
         if (tasks.Count > 0)
+        {
             await Task.WhenAll(tasks);
+        }
     }
 
     private async Task TrySendEmailAsync(MonitoringAlert alert, AppSettings settings)
@@ -58,7 +66,9 @@ public class AlertRoutingService
             };
 
             if (!string.IsNullOrWhiteSpace(settings.SmtpUsername))
+            {
                 smtp.Credentials = new NetworkCredential(settings.SmtpUsername, settings.SmtpPassword);
+            }
 
             var severityEmoji = alert.Severity switch
             {
@@ -79,11 +89,15 @@ public class AlertRoutingService
             body.AppendLine($"<p>{WebUtility.HtmlEncode(alert.Description)}</p>");
 
             if (!string.IsNullOrEmpty(alert.EntryPoint))
+            {
                 body.AppendLine($"<p><strong>User/Entry Point:</strong> {WebUtility.HtmlEncode(alert.EntryPoint)}</p>");
+            }
 
             if (alert.CurrentValue.HasValue)
+            {
                 body.AppendLine($"<p><strong>Metric:</strong> {alert.MetricName} = {alert.CurrentValue:F0}" +
                                (alert.ThresholdValue.HasValue ? $" (threshold: {alert.ThresholdValue:F0})" : "") + "</p>");
+            }
 
             body.AppendLine("<hr/><p style=\"color:#888;font-size:12px;\">Sent by Black Widow 🕷️ — Salesforce Debug Log Analyzer</p>");
             body.AppendLine("</body></html>");
@@ -99,7 +113,9 @@ public class AlertRoutingService
             };
 
             foreach (var addr in settings.AlertEmailTo.Split(',', ';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
                 message.To.Add(addr);
+            }
 
             await smtp.SendMailAsync(message);
             Log.Information("Alert email sent for '{Title}' to {To}", alert.Title, settings.AlertEmailTo);
@@ -149,9 +165,13 @@ public class AlertRoutingService
 
             var response = await _httpClient.PostAsync(settings.SlackWebhookUrl, content);
             if (!response.IsSuccessStatusCode)
+            {
                 Log.Warning("Slack webhook returned {Status} for alert '{Title}'", response.StatusCode, alert.Title);
+            }
             else
+            {
                 Log.Information("Slack alert sent for '{Title}'", alert.Title);
+            }
         }
         catch (Exception ex)
         {
@@ -168,13 +188,18 @@ public class AlertRoutingService
         };
 
         if (!string.IsNullOrEmpty(alert.EntryPoint))
+        {
             fields.Add(new { title = "User / Entry Point", value = alert.EntryPoint, @short = true });
+        }
 
         if (alert.CurrentValue.HasValue)
         {
             var metricText = $"{alert.CurrentValue:F0}";
             if (alert.ThresholdValue.HasValue)
+            {
                 metricText += $" (threshold: {alert.ThresholdValue:F0})";
+            }
+
             fields.Add(new { title = alert.MetricName ?? "Metric", value = metricText, @short = true });
         }
 

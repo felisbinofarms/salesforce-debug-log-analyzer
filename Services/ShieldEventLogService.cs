@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -44,7 +44,10 @@ public class ShieldEventLogService
     /// </summary>
     public async Task<bool> ProbeShieldAvailabilityAsync()
     {
-        if (_shieldAvailable.HasValue) return _shieldAvailable.Value;
+        if (_shieldAvailable.HasValue)
+        {
+            return _shieldAvailable.Value;
+        }
 
         try
         {
@@ -76,7 +79,9 @@ public class ShieldEventLogService
     public async Task<int> PollAndProcessAsync()
     {
         if (_shieldAvailable != true || !_apiService.IsConnected || _apiService.Connection == null)
+        {
             return 0;
+        }
 
         var authOk = await _apiService.EnsureAuthenticatedAsync();
         if (!authOk)
@@ -101,7 +106,9 @@ public class ShieldEventLogService
         }
 
         if (totalEvents > 0)
+        {
             Log.Information("Shield poll: processed {Count} new events", totalEvents);
+        }
 
         return totalEvents;
     }
@@ -127,7 +134,9 @@ public class ShieldEventLogService
         }
 
         if (result.Records == null || result.Records.Count == 0)
+        {
             return 0;
+        }
 
         var totalEvents = 0;
 
@@ -135,14 +144,18 @@ public class ShieldEventLogService
         {
             // Skip already-processed files
             if (await _dbService.IsLogFileProcessedAsync(logFile.Id))
+            {
                 continue;
+            }
 
             try
             {
                 // Download CSV content
                 var csvContent = await DownloadEventLogFileAsync(logFile.Id);
                 if (string.IsNullOrEmpty(csvContent))
+                {
                     continue;
+                }
 
                 // Parse CSV into events
                 var events = ParseCsv(csvContent, eventType);
@@ -180,7 +193,10 @@ public class ShieldEventLogService
     /// </summary>
     private async Task<string?> DownloadEventLogFileAsync(string logFileId)
     {
-        if (_apiService.Connection == null) return null;
+        if (_apiService.Connection == null)
+        {
+            return null;
+        }
 
         var endpoint = $"/services/data/{SalesforceApiService.ApiVersionString}/sobjects/EventLogFile/{logFileId}/LogFile";
 
@@ -204,19 +220,27 @@ public class ShieldEventLogService
     {
         var events = new List<ShieldEvent>();
         var rows = SplitCsvRows(csvContent);
-        if (rows.Count < 2) return events;
+        if (rows.Count < 2)
+        {
+            return events;
+        }
 
         // Parse header
         var headers = ParseCsvLine(rows[0]);
         var headerIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         for (int i = 0; i < headers.Length; i++)
+        {
             headerIndex[headers[i].Trim('"').Trim()] = i;
+        }
 
         // Parse data rows
         for (int row = 1; row < rows.Count; row++)
         {
             var line = rows[row].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
+            if (string.IsNullOrEmpty(line))
+            {
+                continue;
+            }
 
             var fields = ParseCsvLine(line);
             try
@@ -241,18 +265,26 @@ public class ShieldEventLogService
                 if (double.TryParse(GetField(fields, headerIndex, "RUN_TIME")
                                     ?? GetField(fields, headerIndex, "EXEC_TIME")
                                     ?? GetField(fields, headerIndex, "DURATION"), out var duration))
+                {
                     ev.DurationMs = duration;
+                }
 
                 if (double.TryParse(GetField(fields, headerIndex, "CPU_TIME"), out var cpuTime))
+                {
                     ev.CpuTimeMs = cpuTime;
+                }
 
                 if (int.TryParse(GetField(fields, headerIndex, "ROWS_PROCESSED")
                                  ?? GetField(fields, headerIndex, "ROW_COUNT"), out var rowCount))
+                {
                     ev.RowCount = rowCount;
+                }
 
                 if (int.TryParse(GetField(fields, headerIndex, "STATUS_CODE")
                                  ?? GetField(fields, headerIndex, "HTTP_STATUS_CODE"), out var statusCode))
+                {
                     ev.StatusCode = statusCode;
+                }
 
                 // For Login events, capture extra details and derive IsSuccess from LOGIN_STATUS
                 if (eventType == "Login")
@@ -264,7 +296,9 @@ public class ShieldEventLogService
 
                     // Salesforce Login CSVs don't have a "SUCCESS" column — derive from LOGIN_STATUS
                     if (loginStatus != null)
+                    {
                         ev.IsSuccess = loginStatus.Equals("LOGIN_NO_ERROR", StringComparison.OrdinalIgnoreCase);
+                    }
 
                     if (loginType != null || platform != null || browser != null || loginStatus != null)
                     {
@@ -288,7 +322,9 @@ public class ShieldEventLogService
 
                     // Use EXCEPTION_TYPE as the grouping key if URI is missing
                     if (string.IsNullOrEmpty(ev.Uri) && !string.IsNullOrEmpty(exType))
+                    {
                         ev.Uri = exType;
+                    }
 
                     if (exType != null || exMessage != null || stackTrace != null)
                     {
@@ -307,11 +343,15 @@ public class ShieldEventLogService
                 {
                     if (double.TryParse(GetField(fields, headerIndex, "EFFECTIVE_PAGE_TIME")
                                         ?? GetField(fields, headerIndex, "PAGE_TIME"), out var ept))
+                    {
                         ev.DurationMs = ept;
+                    }
 
                     var pageName = GetField(fields, headerIndex, "PAGE_APP_NAME");
                     if (pageName != null)
+                    {
                         ev.ExtraJson = JsonConvert.SerializeObject(new { pageName });
+                    }
                 }
 
                 // For ReportExport, capture export details (data exfiltration detection)
@@ -326,10 +366,13 @@ public class ShieldEventLogService
                                        ?? GetField(fields, headerIndex, "NUMBER_FIELDS");
 
                     if (int.TryParse(rowsExported, out var exportedRows))
+                    {
                         ev.RowCount = exportedRows;
+                    }
 
                     ev.Uri = reportId ?? sobjectType ?? "report";
                     if (operation != null || sobjectType != null || reportId != null)
+                    {
                         ev.ExtraJson = JsonConvert.SerializeObject(new
                         {
                             operation,
@@ -338,6 +381,7 @@ public class ShieldEventLogService
                             format,
                             rowsExported
                         });
+                    }
                 }
 
                 // For SetupAuditTrail, capture setup/permission changes
@@ -351,6 +395,7 @@ public class ShieldEventLogService
 
                     ev.Uri = section ?? action ?? "setup";
                     if (action != null || section != null || display != null)
+                    {
                         ev.ExtraJson = JsonConvert.SerializeObject(new
                         {
                             action,
@@ -358,6 +403,7 @@ public class ShieldEventLogService
                             display,
                             delegatedUser
                         });
+                    }
                 }
 
                 // For BulkApi, capture operation details (bulk data movement)
@@ -370,10 +416,13 @@ public class ShieldEventLogService
                                         ?? GetField(fields, headerIndex, "NUMBER_RECORDS_LOADED");
 
                     if (int.TryParse(rowsProcessed, out var bulkRows))
+                    {
                         ev.RowCount = bulkRows;
+                    }
 
                     ev.Uri = sobjectType ?? operation ?? "bulk";
                     if (operation != null || sobjectType != null || jobId != null)
+                    {
                         ev.ExtraJson = JsonConvert.SerializeObject(new
                         {
                             operation,
@@ -381,6 +430,7 @@ public class ShieldEventLogService
                             jobId,
                             rowsProcessed
                         });
+                    }
                 }
 
                 events.Add(ev);
@@ -479,11 +529,16 @@ public class ShieldEventLogService
             {
                 // End of logical row (skip \r\n as a unit)
                 if (c == '\r' && i + 1 < csvContent.Length && csvContent[i + 1] == '\n')
+                {
                     i++;
+                }
 
                 var row = current.ToString().Trim();
                 if (!string.IsNullOrEmpty(row))
+                {
                     rows.Add(row);
+                }
+
                 current.Clear();
             }
             else
@@ -495,7 +550,9 @@ public class ShieldEventLogService
         // Add last row
         var lastRow = current.ToString().Trim();
         if (!string.IsNullOrEmpty(lastRow))
+        {
             rows.Add(lastRow);
+        }
 
         return rows;
     }
@@ -503,7 +560,10 @@ public class ShieldEventLogService
     private static string? GetField(string[] fields, Dictionary<string, int> headerIndex, string columnName)
     {
         if (!headerIndex.TryGetValue(columnName, out var index) || index >= fields.Length)
+        {
             return null;
+        }
+
         var value = fields[index].Trim().Trim('"');
         return string.IsNullOrEmpty(value) ? null : value;
     }
@@ -516,7 +576,9 @@ public class ShieldEventLogService
     {
         // Already ISO 8601 format (starts with digit and contains '-')
         if (rawDate.Length > 10 && rawDate[4] == '-')
+        {
             return rawDate;
+        }
 
         // Salesforce compact format: "20260305020937.259"
         if (rawDate.Length >= 14 && char.IsDigit(rawDate[0]) && !rawDate.Contains('-'))
@@ -549,7 +611,11 @@ public class ShieldEventLogService
             int fixedCount = 0;
             foreach (var evt in loginEvents)
             {
-                if (evt.ExtraJson == null) continue;
+                if (evt.ExtraJson == null)
+                {
+                    continue;
+                }
+
                 try
                 {
                     var extra = Newtonsoft.Json.Linq.JObject.Parse(evt.ExtraJson);
@@ -572,13 +638,17 @@ public class ShieldEventLogService
             // 2. Delete events with garbled event_date (contains "column" or can't be parsed)
             var deletedCount = await _dbService.DeleteCorruptedEventsAsync();
             if (deletedCount > 0)
+            {
                 Log.Information("Data repair: removed {Count} corrupted shield events", deletedCount);
+            }
 
             // 3. Clear processed shield_log_files to allow re-download of ApexUnexpectedException
             // (these were parsed with broken multi-line CSV handling)
             var clearedCount = await _dbService.ClearProcessedLogFilesAsync("ApexUnexpectedException");
             if (clearedCount > 0)
+            {
                 Log.Information("Data repair: cleared {Count} ApexUnexpectedException log file records for re-download", clearedCount);
+            }
         }
         catch (Exception ex)
         {

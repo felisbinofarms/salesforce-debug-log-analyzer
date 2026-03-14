@@ -1,4 +1,4 @@
-﻿namespace SalesforceDebugAnalyzer.Services.Abstractions;
+namespace SalesforceDebugAnalyzer.Services.Abstractions;
 
 public enum DialogButton { OK, OKCancel, YesNo, YesNoCancel }
 public enum DialogResult { None, OK, Cancel, Yes, No }

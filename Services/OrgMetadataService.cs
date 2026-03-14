@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services
 {
@@ -23,7 +23,7 @@ namespace SalesforceDebugAnalyzer.Services
         public OrgMetadataService(SalesforceApiService apiService)
         {
             _apiService = apiService;
-            
+
             // Store metadata in %APPDATA%/BlackWidow/orgs/{orgId}/
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             _cacheDirectory = Path.Combine(appData, "BlackWidow", "orgs");
@@ -115,7 +115,7 @@ namespace SalesforceDebugAnalyzer.Services
             {
                 // Use Salesforce Describe API to get all objects
                 var response = await _apiService.ExecuteRequestAsync<DescribeGlobalResponse>(
-                    "GET", 
+                    "GET",
                     "/services/data/v60.0/sobjects"
                 );
 
@@ -156,7 +156,9 @@ namespace SalesforceDebugAnalyzer.Services
                 );
 
                 if (!metadata.Objects.ContainsKey(objectName))
+                {
                     return;
+                }
 
                 var objectMeta = metadata.Objects[objectName];
                 objectMeta.Fields = new Dictionary<string, FieldMetadata>();
@@ -217,8 +219,8 @@ namespace SalesforceDebugAnalyzer.Services
 
                 foreach (var cls in response.Records)
                 {
-                    var fullName = string.IsNullOrEmpty(cls.NamespacePrefix) 
-                        ? cls.Name 
+                    var fullName = string.IsNullOrEmpty(cls.NamespacePrefix)
+                        ? cls.Name
                         : $"{cls.NamespacePrefix}.{cls.Name}";
 
                     metadata.ApexClasses[fullName] = new ApexClassMetadata
@@ -359,7 +361,9 @@ namespace SalesforceDebugAnalyzer.Services
         public string EnrichEntryPoint(string entryPoint, OrgMetadata metadata)
         {
             if (string.IsNullOrEmpty(entryPoint))
+            {
                 return entryPoint;
+            }
 
             // Extract trigger name (e.g., "CaseTrigger on Case" → "CaseTrigger")
             var triggerName = entryPoint.Split(' ').FirstOrDefault();
@@ -384,7 +388,9 @@ namespace SalesforceDebugAnalyzer.Services
         public string EnrichUserId(string userId, OrgMetadata metadata)
         {
             if (string.IsNullOrEmpty(userId) || !userId.StartsWith("005"))
+            {
                 return userId;
+            }
 
             if (metadata.Users.TryGetValue(userId, out var user))
             {
@@ -400,14 +406,18 @@ namespace SalesforceDebugAnalyzer.Services
         public async Task<string> EnrichRecordIdAsync(string recordId, OrgMetadata metadata)
         {
             if (string.IsNullOrEmpty(recordId) || recordId.Length < 15)
+            {
                 return recordId;
+            }
 
             // Determine object type from key prefix
             var keyPrefix = recordId.Substring(0, 3);
             var objectMeta = metadata.Objects.Values.FirstOrDefault(o => o.KeyPrefix == keyPrefix);
-            
+
             if (objectMeta == null)
+            {
                 return recordId;
+            }
 
             try
             {
@@ -417,7 +427,7 @@ namespace SalesforceDebugAnalyzer.Services
                 var nameField = objectMeta.ApiName == "Case" ? "CaseNumber" : "Name";
                 var query = $"SELECT {nameField} FROM {objectMeta.ApiName} WHERE Id = '{safeId}' LIMIT 1";
                 var response = await _apiService.QueryAsync<Dictionary<string, object>>(query);
-                
+
                 if (response.Records.Count > 0 && response.Records[0].TryGetValue(nameField, out var name))
                 {
                     return $"{name} ({objectMeta.Label})";
