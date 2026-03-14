@@ -180,7 +180,7 @@ public class ShieldAnomalyDetector
         foreach (var login in recentLogins.Where(l => l.IsSuccess))
         {
             if (DateTime.TryParse(login.EventDate, null,
-                    System.Globalization.DateTimeStyles.RoundtripKind | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
                     out var loginTime))
             {
                 var hour = loginTime.Hour;

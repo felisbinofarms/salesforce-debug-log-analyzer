@@ -198,19 +198,18 @@ public class ShieldAnomalyDetectorTests : IDisposable
     [Fact]
     public async Task DetectsUnusualHourLogin()
     {
-        // The detector queries events from the last hour, then checks if the parsed
-        // EventDate has hour between 0-5 (QuietHourStart..QuietHourEnd).
-        // For a reliable test, we insert the event with EventDate = UtcNow - 5 min
-        // so it falls within the 1-hour query window, then check if the current
-        // UTC hour would trigger unusual_hour detection (0-4).
-        var recentTime = DateTime.UtcNow.AddMinutes(-5);
+        // Use a fixed 2 AM UTC timestamp so the test always exercises the unusual-hour
+        // detection path regardless of when CI runs. The anchor becomes 2 AM (the
+        // MAX event_date), so GetRecentShieldEventsAsync queries [1 AM, 2 AM] and the
+        // event is included. Hour 2 is within QuietHourStart(0)..QuietHourEnd(5).
+        var unusualHour = DateTime.UtcNow.Date.AddHours(2); // 02:00 UTC today, always quiet hours
         var events = new List<ShieldEvent>
         {
             new()
             {
                 OrgId = _testOrgId,
                 EventType = "Login",
-                EventDate = recentTime.ToString("O"),
+                EventDate = unusualHour.ToString("O"),
                 UserId = "night-owl",
                 ClientIp = "10.0.0.1",
                 IsSuccess = true
@@ -220,20 +219,10 @@ public class ShieldAnomalyDetectorTests : IDisposable
 
         await _detector.RunDetectionAsync();
 
-        // This alert only fires when the current UTC hour is 0-4 (unusual hours).
-        // We verify the detector runs without error and produces the correct behavior.
-        if (recentTime.Hour >= 0 && recentTime.Hour < 5)
-        {
-            _generatedAlerts.Should().Contain(a =>
-                a.AlertType == "shield_login_anomaly" &&
-                a.MetricName == "unusual_hour_login");
-        }
-        else
-        {
-            // Outside unusual hours — no alert expected
-            _generatedAlerts.Where(a => a.MetricName == "unusual_hour_login")
-                .Should().BeEmpty();
-        }
+        _generatedAlerts.Should().Contain(a =>
+            a.AlertType == "shield_login_anomaly" &&
+            a.MetricName == "unusual_hour_login",
+            "a login at 02:00 UTC falls within the quiet hours window (0-5)");
     }
 
     [Fact]
