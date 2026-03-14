@@ -53,10 +53,10 @@ jobs:
 
           echo ""
           echo "Logic files changed:"
-          echo "${LOGIC:-  (none)"}"
+          echo "${LOGIC:-(none)}"
           echo ""
           echo "Test files changed:"
-          echo "${TESTS:-  (none)"}"
+          echo "${TESTS:-(none)}"
 
           # Export for next step
           if [ -n "$LOGIC" ]; then
