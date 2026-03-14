@@ -1,10 +1,10 @@
-﻿using Avalonia;
+using System.Reflection;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using SalesforceDebugAnalyzer.Services;
-using System.Reflection;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -35,7 +35,10 @@ public partial class SettingsDialog : Window
     private void HighlightTab(Button btn)
     {
         if (_activeTabButton != null)
+        {
             _activeTabButton.Background = Brushes.Transparent;
+        }
+
         _activeTabButton = btn;
         btn.Background = new SolidColorBrush(Color.Parse("#1A4493F8"));
     }
@@ -96,7 +99,9 @@ public partial class SettingsDialog : Window
         maxBox.TextChanged += (_, _) =>
         {
             if (int.TryParse(maxBox.Text, out int v))
+            {
                 _settings.MaxConnectionHistory = Math.Max(1, Math.Min(50, v));
+            }
         };
         ContentPanel.Children.Add(maxBox);
     }
@@ -126,7 +131,9 @@ public partial class SettingsDialog : Window
         maxLog.TextChanged += (_, _) =>
         {
             if (int.TryParse(maxLog.Text, out int v))
+            {
                 _settings.MaxLogSizeMB = Math.Max(1, Math.Min(500, v));
+            }
         };
         ContentPanel.Children.Add(maxLog);
     }
@@ -148,7 +155,9 @@ public partial class SettingsDialog : Window
         cacheBox.TextChanged += (_, _) =>
         {
             if (int.TryParse(cacheBox.Text, out int v))
+            {
                 _settings.CacheRetentionDays = Math.Max(1, Math.Min(90, v));
+            }
         };
         ContentPanel.Children.Add(cacheBox);
 
@@ -279,7 +288,9 @@ public partial class SettingsDialog : Window
         _settings = new AppSettings();
         // Reload current tab to reflect defaults
         if (_activeTabButton?.Tag is string tag && int.TryParse(tag, out int index))
+        {
             LoadTab(index);
+        }
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)

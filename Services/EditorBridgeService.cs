@@ -26,7 +26,7 @@ public class EditorBridgeService : IDisposable
 
     public bool IsConnected => _connectedClient?.State == WebSocketState.Open;
     public string? WorkspacePath => _workspacePath;
-    
+
     public event EventHandler<bool>? ConnectionStatusChanged;
     public event EventHandler<string>? WorkspacePathReceived;
 
@@ -35,7 +35,10 @@ public class EditorBridgeService : IDisposable
     /// </summary>
     public Task StartAsync()
     {
-        if (_isRunning) return Task.CompletedTask;
+        if (_isRunning)
+        {
+            return Task.CompletedTask;
+        }
 
         try
         {
@@ -317,7 +320,10 @@ public class EditorBridgeService : IDisposable
 
         foreach (var searchPath in searchPaths)
         {
-            if (!Directory.Exists(searchPath)) continue;
+            if (!Directory.Exists(searchPath))
+            {
+                continue;
+            }
 
             var filePath = Path.Combine(searchPath, $"{classNameOnly}.cls");
             if (File.Exists(filePath))
@@ -341,7 +347,10 @@ public class EditorBridgeService : IDisposable
     /// </summary>
     public void Stop()
     {
-        if (!_isRunning) return;
+        if (!_isRunning)
+        {
+            return;
+        }
 
         try
         {

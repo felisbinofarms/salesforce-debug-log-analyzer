@@ -1,9 +1,9 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -52,12 +52,12 @@ public class SalesforceApiService : IDisposable
         {
             var userInfoUrl = $"{_connection.InstanceUrl}/services/oauth2/userinfo";
             var response = await _httpClient.GetAsync(userInfoUrl);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var userInfo = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
-                
+
                 if (userInfo != null)
                 {
                     _connection.UserId = userInfo.ContainsKey("user_id") ? userInfo["user_id"].ToString() ?? "" : "";
@@ -65,7 +65,7 @@ public class SalesforceApiService : IDisposable
                     _connection.Username = userInfo.ContainsKey("preferred_username") ? userInfo["preferred_username"].ToString() ?? "" : "";
                     // Use display name if available, fall back to org id
                     _connection.OrgName = userInfo.ContainsKey("organization_id") ? userInfo["organization_id"].ToString() ?? "" : "";
-                    
+
                     // Also try to get email if username not available
                     if (string.IsNullOrEmpty(_connection.Username) && userInfo.ContainsKey("email"))
                     {
@@ -89,7 +89,9 @@ public class SalesforceApiService : IDisposable
     public async Task<List<ApexLog>> QueryLogsAsync(int limit = 100)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var query = $"SELECT Id,Application,DurationMilliseconds,Location,LogLength,LogUserId,Operation,Request,StartTime,Status " +
                     $"FROM ApexLog ORDER BY StartTime DESC LIMIT {limit}";
@@ -112,20 +114,22 @@ public class SalesforceApiService : IDisposable
     public async Task<string?> GetLogBodyAsync(string logId)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{logId}/Body";
 
         try
         {
             var response = await _httpClient.GetAsync(url);
-            
+
             // If log was deleted, return null instead of throwing
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return null;
             }
-            
+
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
         }
@@ -143,11 +147,17 @@ public class SalesforceApiService : IDisposable
     public async Task<string?> GetAuthenticatedStringAsync(string relativeEndpoint)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             return null;
+        }
 
         var url = $"{_connection.InstanceUrl}{relativeEndpoint}";
         var response = await _httpClient.GetAsync(url);
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
         return await response.Content.ReadAsStringAsync();
     }
 
@@ -162,7 +172,9 @@ public class SalesforceApiService : IDisposable
     public async Task<int> DeleteOldLogsAsync(int hoursOld = 1)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         try
         {
@@ -179,7 +191,9 @@ public class SalesforceApiService : IDisposable
             var result = JsonConvert.DeserializeObject<QueryResult<ApexLog>>(content);
 
             if (result?.Records == null || result.Records.Count == 0)
+            {
                 return 0;
+            }
 
             // Delete logs in batches (max 200 per request)
             int deleted = 0;
@@ -188,7 +202,9 @@ public class SalesforceApiService : IDisposable
                 var deleteUrl = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{log.Id}";
                 var deleteResponse = await _httpClient.DeleteAsync(deleteUrl);
                 if (deleteResponse.IsSuccessStatusCode)
+                {
                     deleted++;
+                }
             }
 
             return deleted;
@@ -205,7 +221,9 @@ public class SalesforceApiService : IDisposable
     public async Task<List<DebugLevel>> QueryDebugLevelsAsync()
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var query = "SELECT Id,DeveloperName,MasterLabel,ApexCode,ApexProfiling,Database,System,Validation,Visualforce,Workflow,Callout FROM DebugLevel";
         var encodedQuery = Uri.EscapeDataString(query);
@@ -226,11 +244,13 @@ public class SalesforceApiService : IDisposable
     public async Task<string> CreateTraceFlagAsync(string userId, string debugLevelId, DateTime expirationDate)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         // First, check if a TraceFlag already exists for this user
         var existingFlag = await GetExistingTraceFlagAsync(userId);
-        
+
         if (existingFlag != null)
         {
             // Update the existing TraceFlag instead of creating a new one
@@ -251,7 +271,7 @@ public class SalesforceApiService : IDisposable
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync(url, content);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
@@ -269,7 +289,10 @@ public class SalesforceApiService : IDisposable
     /// </summary>
     private async Task<TraceFlag?> GetExistingTraceFlagAsync(string userId)
     {
-        if (_connection == null) return null;
+        if (_connection == null)
+        {
+            return null;
+        }
 
         try
         {
@@ -280,7 +303,10 @@ public class SalesforceApiService : IDisposable
             var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/query/?q={encodedQuery}";
 
             var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             var content = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<QueryResult<TraceFlag>>(content);
@@ -299,7 +325,9 @@ public class SalesforceApiService : IDisposable
     private async Task<string> UpdateTraceFlagAsync(string traceFlagId, string debugLevelId, DateTime expirationDate)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var updateData = new
         {
@@ -319,7 +347,7 @@ public class SalesforceApiService : IDisposable
         };
 
         var response = await _httpClient.SendAsync(request);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
@@ -335,7 +363,9 @@ public class SalesforceApiService : IDisposable
     public async Task<string> CreateDebugLevelAsync(DebugLevel debugLevel)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/DebugLevel";
         var json = JsonConvert.SerializeObject(debugLevel);
@@ -356,7 +386,9 @@ public class SalesforceApiService : IDisposable
     public async Task<List<TraceFlag>> QueryTraceFlagsAsync()
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var query = "SELECT Id,DebugLevelId,ExpirationDate,LogType,TracedEntityId,StartDate FROM TraceFlag";
         var encodedQuery = Uri.EscapeDataString(query);
@@ -377,7 +409,9 @@ public class SalesforceApiService : IDisposable
     public async Task DeleteLogAsync(string logId)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/ApexLog/{logId}";
         var response = await _httpClient.DeleteAsync(url);
@@ -390,7 +424,9 @@ public class SalesforceApiService : IDisposable
     public async Task DeleteTraceFlagAsync(string traceFlagId)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/tooling/sobjects/TraceFlag/{traceFlagId}";
         var response = await _httpClient.DeleteAsync(url);
@@ -403,7 +439,9 @@ public class SalesforceApiService : IDisposable
     public async Task<QueryResult<T>> QueryAsync<T>(string soql)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var encodedQuery = Uri.EscapeDataString(soql);
         var url = $"{_connection.InstanceUrl}/services/data/{ApiVersion}/query/?q={encodedQuery}";
@@ -423,7 +461,9 @@ public class SalesforceApiService : IDisposable
     public async Task<T> ExecuteRequestAsync<T>(string method, string endpoint)
     {
         if (_connection == null || !_connection.IsConnected)
+        {
             throw new InvalidOperationException("Not connected to Salesforce");
+        }
 
         var url = $"{_connection.InstanceUrl}{endpoint}";
         var request = new HttpRequestMessage(new HttpMethod(method), url);
@@ -443,11 +483,16 @@ public class SalesforceApiService : IDisposable
     /// </summary>
     public async Task<bool> EnsureAuthenticatedAsync()
     {
-        if (_connection == null) return false;
+        if (_connection == null)
+        {
+            return false;
+        }
 
         // Still valid with comfortable margin? No refresh needed.
         if (DateTime.UtcNow < _connection.TokenExpiresAt.AddMinutes(-15))
+        {
             return true;
+        }
 
         // No refresh token? Can't auto-refresh.
         if (string.IsNullOrEmpty(_connection.RefreshToken))
@@ -461,7 +506,9 @@ public class SalesforceApiService : IDisposable
         {
             // Double-check after acquiring lock (another thread may have refreshed)
             if (DateTime.UtcNow < _connection.TokenExpiresAt.AddMinutes(-15))
+            {
                 return true;
+            }
 
             return await RefreshTokenAsync();
         }
@@ -477,7 +524,9 @@ public class SalesforceApiService : IDisposable
     private async Task<bool> RefreshTokenAsync()
     {
         if (_connection == null || string.IsNullOrEmpty(_connection.RefreshToken))
+        {
             return false;
+        }
 
         try
         {

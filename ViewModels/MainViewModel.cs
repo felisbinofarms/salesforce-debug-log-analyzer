@@ -1,13 +1,13 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using SalesforceDebugAnalyzer.Models;
-using SalesforceDebugAnalyzer.Services;
-using Serilog;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using SalesforceDebugAnalyzer.Models;
+using SalesforceDebugAnalyzer.Services;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.ViewModels;
 
@@ -62,21 +62,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _hasLogs = false;
-    
+
     // Aggregate metrics displayed when a LogGroup is selected
     [ObservableProperty]
     private string _groupSummary = "";
-    
+
     [ObservableProperty]
     private string _groupPhaseBreakdown = "";
-    
+
     // Mixed context warning details
     [ObservableProperty]
     private bool _showMixedContextWarning = false;
-    
+
     [ObservableProperty]
     private string _mixedContextExplanation = "";
-    
+
     [ObservableProperty]
     private ObservableCollection<string> _contextBreakdown = new();
 
@@ -122,7 +122,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedLogGroupChanged(LogGroup? value)
     {
-        if (value == null) 
+        if (value == null)
         {
             ShowMixedContextWarning = false;
             return;
@@ -134,18 +134,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _ = LoadLogFromPath(firstLog.FilePath);
         }
-        
+
         // Generate aggregate summary
         var logCount = value.Logs.Count;
         var totalDuration = value.TotalDuration;
         var userName = value.UserName ?? "Unknown User";
-        
+
         GroupSummary = $"Transaction Group: {userName} • {logCount} logs • {totalDuration:F0}ms total user wait time";
-        
+
         // Generate phase breakdown text
         if (value.Phases != null && value.Phases.Any())
         {
-            var phaseLines = value.Phases.Select(p => 
+            var phaseLines = value.Phases.Select(p =>
                 $"  • {p.Name}: {p.DurationMs:F0}ms ({(totalDuration > 0 ? p.DurationMs / totalDuration * 100 : 0):F1}%)");
             GroupPhaseBreakdown = $"Execution Phases:\n{string.Join("\n", phaseLines)}";
         }
@@ -153,10 +153,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             GroupPhaseBreakdown = "";
         }
-        
+
         // Check for mixed contexts (governance issue)
         ShowMixedContextWarning = value.HasMixedContexts;
-        
+
         if (value.HasMixedContexts)
         {
             // Count logs by context
@@ -165,10 +165,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 .Select(g => new { Context = g.Key, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .ToList();
-            
+
             var userActionCount = contextCounts.FirstOrDefault(x => x.Context == Models.ExecutionContext.Interactive)?.Count ?? 0;
             var totalLogs = value.Logs.Count;
-            
+
             // Generate friendly explanation
             if (userActionCount > 0 && userActionCount < totalLogs)
             {
@@ -178,7 +178,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 MixedContextExplanation = "Multiple execution contexts detected in the same user account. This makes debugging harder because you can't tell which logs are yours.";
             }
-            
+
             // Generate context breakdown
             ContextBreakdown.Clear();
             foreach (var ctx in contextCounts)
@@ -217,11 +217,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _hasStackRisk = false;
 
     // ===== VISUAL DASHBOARD PROPERTIES =====
-    
+
     // Hero Stats
     [ObservableProperty]
     private string _heroStatus = ""; // "SUCCESS", "WARNING", "FAILED"
-    
+
     [ObservableProperty]
     private string _heroDuration = "0ms";
 
@@ -230,58 +230,58 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _durationConfidenceTooltip = "";
-    
+
     [ObservableProperty]
     private string _heroEntryPoint = "";
-    
+
     // Stat Cards
     [ObservableProperty]
     private int _statSoqlCount = 0;
-    
+
     [ObservableProperty]
     private int _statSoqlLimit = 100;
-    
+
     [ObservableProperty]
     private int _statDmlCount = 0;
-    
+
     [ObservableProperty]
     private int _statDmlLimit = 150;
-    
+
     [ObservableProperty]
     private int _statCpuTime = 0;
-    
+
     [ObservableProperty]
     private int _statCpuLimit = 10000;
-    
+
     [ObservableProperty]
     private int _statMethodCount = 0;
-    
+
     [ObservableProperty]
     private int _statErrorCount = 0;
-    
+
     [ObservableProperty]
     private int _statWarningCount = 0;
-    
+
     // Governor Limit Percentages (for progress bars)
     [ObservableProperty]
     private double _soqlPercent = 0;
-    
+
     [ObservableProperty]
     private double _dmlPercent = 0;
-    
+
     [ObservableProperty]
     private double _cpuPercent = 0;
-    
+
     // Timing breakdown
     [ObservableProperty]
     private double _wallClockMs = 0;
-    
+
     [ObservableProperty]
     private double _cpuTimeMs = 0;
-    
+
     [ObservableProperty]
     private double _overheadMs = 0;
-    
+
     [ObservableProperty]
     private bool _showTimingBreakdown = false;
 
@@ -351,69 +351,69 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _streamingUsername = "";
 
     // ===== INTERACTION RECORDING PROPERTIES =====
-    
+
     [ObservableProperty]
     private bool _isRecording = false;
-    
+
     [ObservableProperty]
     private DateTime _recordingStartTime;
-    
+
     [ObservableProperty]
     private string _recordingElapsedTime = "00:00";
-    
+
     /// <summary>Buffer for logs captured during recording</summary>
     private List<LogAnalysis> _recordingBuffer = new();
-    
+
     /// <summary>Timer to update elapsed time display</summary>
     private DispatcherTimer? _recordingTimer;
-    
+
     /// <summary>Buffer for streaming logs before adding to UI (throttling)</summary>
     private readonly Queue<StreamingLogEntry> _streamingBuffer = new();
-    
+
     /// <summary>Timer to batch streaming log updates (reduces UI lag)</summary>
     private DispatcherTimer? _streamingThrottleTimer;
-    
+
     /// <summary>Lock for thread-safe streaming buffer access</summary>
     private readonly object _streamingLock = new();
-    
+
     /// <summary>User-configured streaming options (filters, performance settings)</summary>
     private StreamingOptions? _streamingOptions;
-    
+
     [ObservableProperty]
     private ObservableCollection<Interaction> _interactions = new();
-    
+
     [ObservableProperty]
     private Interaction? _selectedInteraction;
-    
+
     // ===== HEALTH SCORE & ACTIONABLE ISSUES =====
-    
+
     [ObservableProperty]
     private int _healthScore = 0;
-    
+
     [ObservableProperty]
     private string _healthGrade = "";
-    
+
     [ObservableProperty]
     private string _healthStatus = "";
-    
+
     [ObservableProperty]
     private string _healthStatusIcon = "";
-    
+
     [ObservableProperty]
     private string _healthReasoning = "";
-    
+
     [ObservableProperty]
     private ObservableCollection<ActionableIssue> _criticalIssues = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<ActionableIssue> _highPriorityIssues = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<ActionableIssue> _quickWins = new();
-    
+
     [ObservableProperty]
     private int _totalEstimatedMinutes = 0;
-    
+
     [ObservableProperty]
     private bool _hasHealthData = false;
 
@@ -433,88 +433,88 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string _cpuStatusIcon = "";
     [ObservableProperty]
     private string _errorStatusIcon = "";
-    
+
     // ===== FULL ANALYSIS SUMMARY =====
-    
+
     [ObservableProperty]
     private string _fullSummaryText = "";
-    
+
     // ===== PLAIN-ENGLISH INSIGHTS (for non-technical users) =====
-    
+
     [ObservableProperty]
     private string _plainEnglishSummary = "";
-    
+
     [ObservableProperty]
     private string _userWaitTimeSeconds = "0";
-    
+
     [ObservableProperty]
     private string _userWaitExplanation = "";
-    
+
     [ObservableProperty]
     private string _speedRating = "Fast"; // Fast, Moderate, Slow, Very Slow
-    
+
     [ObservableProperty]
     private string _resourceUsageExplanation = "";
-    
+
     [ObservableProperty]
     private int _soqlCount = 0;
-    
+
     [ObservableProperty]
     private int _soqlLimit = 100;
-    
+
     [ObservableProperty]
     private int _dmlCount = 0;
-    
+
     [ObservableProperty]
     private int _dmlLimit = 150;
-    
+
     [ObservableProperty]
     private int _cpuPercentValue = 0;
-    
+
     [ObservableProperty]
     private ObservableCollection<PlainEnglishProblem> _plainEnglishProblems = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<PlainEnglishRecommendation> _plainEnglishRecommendations = new();
-    
+
     [ObservableProperty]
     private bool _hasProblems = false;
-    
+
     [ObservableProperty]
     private bool _hasRecommendations = false;
-    
+
     [ObservableProperty]
     private bool _isAllClear = false;
-    
+
     // ===== DEEP EXPLANATION (LogExplainerService output) =====
-    
+
     [ObservableProperty]
     private LogExplanation? _currentExplanation;
-    
+
     [ObservableProperty]
     private bool _hasExplanation = false;
-    
+
     [ObservableProperty]
     private ObservableCollection<DetailedIssue> _detailedIssues = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<DetailedRecommendation> _detailedRecommendations = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<LearningItem> _learningItems = new();
-    
+
     [ObservableProperty]
     private bool _hasDetailedIssues = false;
-    
+
     [ObservableProperty]
     private bool _hasDetailedRecommendations = false;
-    
+
     [ObservableProperty]
     private bool _hasLearningItems = false;
-    
+
     [ObservableProperty]
     private ObservableCollection<string> _whatYourCodeDid = new();
-    
+
     // ===== PII COMPLIANCE SCANNER =====
 
     [ObservableProperty]
@@ -530,32 +530,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string _piiScanStatus = "Run a scan to check this log for personal data.";
 
     // ===== ALWAYS-USEFUL: TOP METHODS & QUERIES =====
-    
+
     [ObservableProperty]
     private ObservableCollection<MethodDisplayItem> _topMethods = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<QueryDisplayItem> _topQueries = new();
-    
+
     [ObservableProperty]
     private bool _hasTopMethods = false;
-    
+
     [ObservableProperty]
     private bool _hasTopQueries = false;
-    
+
     // ===== EXECUTION TREE =====
-    
+
     [ObservableProperty]
     private ObservableCollection<TreeNodeViewModel> _executionTreeNodes = new();
-    
+
     [ObservableProperty]
     private bool _hasExecutionTree = false;
-    
+
     // ===== DETAILED TIMELINE =====
-    
+
     [ObservableProperty]
     private ObservableCollection<TimelineDetailItem> _timelineDetails = new();
-    
+
     [ObservableProperty]
     private bool _hasTimelineDetails = false;
 
@@ -649,7 +649,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     // Editor Bridge (VSCode Integration)
     [ObservableProperty]
     private bool _isEditorConnected = false;
-    
+
     [ObservableProperty]
     private string _editorConnectionStatus = "VSCode: Not Connected";
 
@@ -766,8 +766,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _settingsService = new SettingsService();
         _metadataService = new OrgMetadataService(_apiService);
         _explainerService = new LogExplainerService();
-        _licenseService   = new LicenseService();
-        _piiScanner       = new PiiScannerService();
+        _licenseService = new LicenseService();
+        _piiScanner = new PiiScannerService();
 
         // Apply initial license state immediately (from local cache, no network)
         RefreshLicenseDisplay();
@@ -780,18 +780,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // Check CLI installation
         IsCliInstalled = _cliService.IsInstalled;
-        
+
         // Subscribe to CLI events
         _cliService.StatusChanged += OnCliStatusChanged;
-        
+
         // Subscribe to Editor Bridge events
         _editorBridge.ConnectionStatusChanged += OnEditorConnectionChanged;
         _editorBridge.WorkspacePathReceived += OnWorkspacePathReceived;
-        
+
         // Start Editor Bridge server
         _ = StartEditorBridgeAsync();
         _cliService.LogReceived += OnLogReceived;
-        
+
         // Initialize streaming throttle timer (batches updates every 500ms to prevent UI lag)
         _streamingThrottleTimer = new DispatcherTimer
         {
@@ -810,15 +810,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void RefreshLicenseDisplay()
     {
         CurrentLicenseTier = _licenseService.CurrentTier;
-        IsProUser          = _licenseService.IsProOrAbove;
-        TierDisplayName    = CurrentLicenseTier switch
+        IsProUser = _licenseService.IsProOrAbove;
+        TierDisplayName = CurrentLicenseTier switch
         {
-            LicenseTier.Free       => "Free",
-            LicenseTier.Trial      => $"Pro Trial",
-            LicenseTier.Pro        => "Pro",
-            LicenseTier.Team       => "Team",
+            LicenseTier.Free => "Free",
+            LicenseTier.Trial => $"Pro Trial",
+            LicenseTier.Pro => "Pro",
+            LicenseTier.Team => "Team",
             LicenseTier.Enterprise => "Enterprise",
-            _                      => "Free"
+            _ => "Free"
         };
 
         if (CurrentLicenseTier == LicenseTier.Trial)
@@ -868,7 +868,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private bool RequiresPro(LicenseFeature feature)
     {
-        if (_licenseService.IsFeatureAvailable(feature)) return false;
+        if (_licenseService.IsFeatureAvailable(feature))
+        {
+            return false;
+        }
+
         ShowUpgradeDialog();
         return true;
     }
@@ -891,11 +895,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsConnected = true;
         ConnectionStatus = $"Connected: {_apiService.Connection?.InstanceUrl}";
-        
+
         // Extract org name from instance URL (e.g., "acme" from "acme.my.salesforce.com")
         var instanceUrl = _apiService.Connection?.InstanceUrl ?? "";
         var orgName = "Salesforce";
-        
+
         if (instanceUrl.Contains(".my.salesforce.com"))
         {
             var start = instanceUrl.IndexOf("//") + 2;
@@ -909,7 +913,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             orgName = "Sandbox";
         }
-        
+
         ConnectionDisplayName = orgName;
         StatusMessage = $"✓ Connected to {orgName}";
 
@@ -951,7 +955,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private async Task PersistLogSnapshotAsync(LogAnalysis analysis)
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
 
         try
         {
@@ -1025,7 +1032,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             // If they still didn't connect, bail out
             if (!_apiService.IsConnected)
+            {
                 return;
+            }
         }
 
         await StartMonitoringAsync();
@@ -1054,7 +1063,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task LoadAlertsFromDatabaseAsync()
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
+
         try
         {
             var alerts = await _monitoringDb.GetAlertsAsync(limit: 50);
@@ -1062,7 +1075,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 MonitoringAlerts.Clear();
                 foreach (var alert in alerts)
+                {
                     MonitoringAlerts.Add(alert);
+                }
+
                 UnreadAlertCount = MonitoringAlerts.Count(a => !a.IsRead);
                 Log.Information("Loaded {Count} alerts from database ({Unread} unread)", alerts.Count, UnreadAlertCount);
             });
@@ -1076,12 +1092,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task MarkAllAlertsRead()
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
+
         try
         {
             await _monitoringDb.MarkAllReadAsync();
             foreach (var alert in MonitoringAlerts)
+            {
                 alert.IsRead = true;
+            }
+
             UnreadAlertCount = 0;
         }
         catch (Exception ex)
@@ -1093,13 +1116,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     public async Task DismissAlert(long alertId)
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
+
         try
         {
             await _monitoringDb.DismissAlertAsync(alertId);
             var alert = MonitoringAlerts.FirstOrDefault(a => a.Id == alertId);
             if (alert != null)
+            {
                 MonitoringAlerts.Remove(alert);
+            }
+
             UnreadAlertCount = MonitoringAlerts.Count(a => !a.IsRead);
         }
         catch (Exception ex)
@@ -1116,7 +1146,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public async Task<bool> NavigateToLogByIdAsync(string logId)
     {
-        if (string.IsNullOrWhiteSpace(logId)) return false;
+        if (string.IsNullOrWhiteSpace(logId))
+        {
+            return false;
+        }
 
         // 1. Already loaded? Just select it.
         var existing = Logs.FirstOrDefault(l =>
@@ -1183,7 +1216,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public async Task SubmitAlertFeedback(long alertId, string feedback)
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
+
         try
         {
             await _monitoringDb.UpdateAlertFeedbackAsync(alertId, feedback);
@@ -1204,450 +1241,450 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedLogChanged(LogAnalysis? value)
     {
-      try
-      {
-        if (value != null)
+        try
         {
-            // Show onboarding tour on first-ever log analysis
-            if (!_settingsService.Load().OnboardingShown)
-                ShowOnboardingTour = true;
+            if (value != null)
+            {
+                // Show onboarding tour on first-ever log analysis
+                if (!_settingsService.Load().OnboardingShown)
+                    ShowOnboardingTour = true;
 
-            // Warn if profiling section was present but couldn't be parsed
-            HasProfilingWarning = value.CumulativeProfilingFound && value.CumulativeProfiling == null;
+                // Warn if profiling section was present but couldn't be parsed
+                HasProfilingWarning = value.CumulativeProfilingFound && value.CumulativeProfiling == null;
 
-            // Simple summary title
-            if (value.IsTestExecution)
-            {
-                SummaryText = $"🧪 Test: {value.TestClassName}";
-            }
-            else
-            {
-                SummaryText = value.EntryPoint ?? "Log Analysis";
-            }
-            
-            // FULL SUMMARY - the rich markdown-like analysis
-            FullSummaryText = value.Summary ?? "";
-            
-            // ISSUES - Only show real problems
-            var simpleIssues = new List<string>();
-            
-            // Real errors
-            if (value.Errors?.Any() == true)
-            {
-                simpleIssues.Add($"❌ {value.Errors.Count} ERROR(S)");
-                foreach (var error in value.Errors.Take(3))
+                // Simple summary title
+                if (value.IsTestExecution)
                 {
-                    simpleIssues.Add($"   {error.Name}");
+                    SummaryText = $"🧪 Test: {value.TestClassName}";
                 }
-            }
-            
-            // Governor limits only if close to limit
-            var lastLimit = value.LimitSnapshots?.LastOrDefault();
-            if (lastLimit != null)
-            {
-                var soqlPct = lastLimit.SoqlQueriesLimit > 0 ? (lastLimit.SoqlQueries * 100.0) / lastLimit.SoqlQueriesLimit : 0;
-                var dmlPct = lastLimit.DmlStatementsLimit > 0 ? (lastLimit.DmlStatements * 100.0) / lastLimit.DmlStatementsLimit : 0;
-                var cpuPct = lastLimit.CpuTimeLimit > 0 ? (lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit : 0;
-                
-                if (soqlPct > 80) simpleIssues.Add($"🔥 SOQL at {soqlPct:F0}% ({lastLimit.SoqlQueries}/{lastLimit.SoqlQueriesLimit})");
-                if (dmlPct > 80) simpleIssues.Add($"🔥 DML at {dmlPct:F0}% ({lastLimit.DmlStatements}/{lastLimit.DmlStatementsLimit})");
-                if (cpuPct > 80) simpleIssues.Add($"🔥 CPU at {cpuPct:F0}% ({lastLimit.CpuTime}/{lastLimit.CpuTimeLimit}ms)");
-            }
-            
-            Issues = simpleIssues.Any() ? new ObservableCollection<string>(simpleIssues) : new ObservableCollection<string> { "✅ No issues found" };
-            
-            // RECOMMENDATIONS - Show only what matters
-            var simpleRecs = new List<string>();
-            
-            // Slow operations (only if > 2 seconds)
-            if (value.MethodStats?.Any() == true)
-            {
-                var slowMethods = value.MethodStats
-                    .Where(m => m.Value.MaxDurationMs > 2000)
-                    .OrderByDescending(m => m.Value.MaxDurationMs)
-                    .Take(3);
-                
-                if (slowMethods.Any())
+                else
                 {
-                    simpleRecs.Add("⏱️ SLOW CODE:");
-                    foreach (var method in slowMethods)
+                    SummaryText = value.EntryPoint ?? "Log Analysis";
+                }
+
+                // FULL SUMMARY - the rich markdown-like analysis
+                FullSummaryText = value.Summary ?? "";
+
+                // ISSUES - Only show real problems
+                var simpleIssues = new List<string>();
+
+                // Real errors
+                if (value.Errors?.Any() == true)
+                {
+                    simpleIssues.Add($"❌ {value.Errors.Count} ERROR(S)");
+                    foreach (var error in value.Errors.Take(3))
                     {
-                        var name = ExtractClassName(method.Key);
-                        simpleRecs.Add($"   {name} takes {method.Value.MaxDurationMs}ms");
+                        simpleIssues.Add($"   {error.Name}");
                     }
                 }
-            }
-            
-            // High frequency methods (called > 100 times)
-            if (value.MethodStats?.Any() == true)
-            {
-                var hotMethods = value.MethodStats
-                    .Where(m => m.Value.CallCount > 100)
-                    .OrderByDescending(m => m.Value.CallCount)
-                    .Take(3);
-                
-                if (hotMethods.Any())
+
+                // Governor limits only if close to limit
+                var lastLimit = value.LimitSnapshots?.LastOrDefault();
+                if (lastLimit != null)
+                {
+                    var soqlPct = lastLimit.SoqlQueriesLimit > 0 ? (lastLimit.SoqlQueries * 100.0) / lastLimit.SoqlQueriesLimit : 0;
+                    var dmlPct = lastLimit.DmlStatementsLimit > 0 ? (lastLimit.DmlStatements * 100.0) / lastLimit.DmlStatementsLimit : 0;
+                    var cpuPct = lastLimit.CpuTimeLimit > 0 ? (lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit : 0;
+
+                    if (soqlPct > 80) simpleIssues.Add($"🔥 SOQL at {soqlPct:F0}% ({lastLimit.SoqlQueries}/{lastLimit.SoqlQueriesLimit})");
+                    if (dmlPct > 80) simpleIssues.Add($"🔥 DML at {dmlPct:F0}% ({lastLimit.DmlStatements}/{lastLimit.DmlStatementsLimit})");
+                    if (cpuPct > 80) simpleIssues.Add($"🔥 CPU at {cpuPct:F0}% ({lastLimit.CpuTime}/{lastLimit.CpuTimeLimit}ms)");
+                }
+
+                Issues = simpleIssues.Any() ? new ObservableCollection<string>(simpleIssues) : new ObservableCollection<string> { "✅ No issues found" };
+
+                // RECOMMENDATIONS - Show only what matters
+                var simpleRecs = new List<string>();
+
+                // Slow operations (only if > 2 seconds)
+                if (value.MethodStats?.Any() == true)
+                {
+                    var slowMethods = value.MethodStats
+                        .Where(m => m.Value.MaxDurationMs > 2000)
+                        .OrderByDescending(m => m.Value.MaxDurationMs)
+                        .Take(3);
+
+                    if (slowMethods.Any())
+                    {
+                        simpleRecs.Add("⏱️ SLOW CODE:");
+                        foreach (var method in slowMethods)
+                        {
+                            var name = ExtractClassName(method.Key);
+                            simpleRecs.Add($"   {name} takes {method.Value.MaxDurationMs}ms");
+                        }
+                    }
+                }
+
+                // High frequency methods (called > 100 times)
+                if (value.MethodStats?.Any() == true)
+                {
+                    var hotMethods = value.MethodStats
+                        .Where(m => m.Value.CallCount > 100)
+                        .OrderByDescending(m => m.Value.CallCount)
+                        .Take(3);
+
+                    if (hotMethods.Any())
+                    {
+                        if (simpleRecs.Any()) simpleRecs.Add("");
+                        simpleRecs.Add("🔄 CALLED TOO OFTEN:");
+                        foreach (var method in hotMethods)
+                        {
+                            var name = ExtractClassName(method.Key);
+                            simpleRecs.Add($"   {name} called {method.Value.CallCount}x");
+                        }
+                    }
+                }
+
+                // Recursion detection
+                if (value.Timeline?.RecursionCount > 0)
                 {
                     if (simpleRecs.Any()) simpleRecs.Add("");
-                    simpleRecs.Add("🔄 CALLED TOO OFTEN:");
-                    foreach (var method in hotMethods)
-                    {
-                        var name = ExtractClassName(method.Key);
-                        simpleRecs.Add($"   {name} called {method.Value.CallCount}x");
-                    }
+                    simpleRecs.Add($"⚠️ RECURSION: {value.Timeline.RecursionCount} recursive calls detected");
                 }
-            }
-            
-            // Recursion detection
-            if (value.Timeline?.RecursionCount > 0)
-            {
-                if (simpleRecs.Any()) simpleRecs.Add("");
-                simpleRecs.Add($"⚠️ RECURSION: {value.Timeline.RecursionCount} recursive calls detected");
-            }
-            
-            Recommendations = simpleRecs.Any() ? new ObservableCollection<string>(simpleRecs) : new ObservableCollection<string> { "✅ Looks good" };
-            DatabaseOperations = new ObservableCollection<DatabaseOperation>(value.DatabaseOperations ?? new List<DatabaseOperation>());
-            
-            // Stack analysis display
-            if (value.StackAnalysis != null)
-            {
-                StackAnalysisSummary = value.StackAnalysis.Summary ?? "";
-                HasStackRisk = value.StackAnalysis.RiskLevel >= StackRiskLevel.Warning;
+
+                Recommendations = simpleRecs.Any() ? new ObservableCollection<string>(simpleRecs) : new ObservableCollection<string> { "✅ Looks good" };
+                DatabaseOperations = new ObservableCollection<DatabaseOperation>(value.DatabaseOperations ?? new List<DatabaseOperation>());
+
+                // Stack analysis display
+                if (value.StackAnalysis != null)
+                {
+                    StackAnalysisSummary = value.StackAnalysis.Summary ?? "";
+                    HasStackRisk = value.StackAnalysis.RiskLevel >= StackRiskLevel.Warning;
+                }
+                else
+                {
+                    StackAnalysisSummary = "";
+                    HasStackRisk = false;
+                }
+
+                // ===== POPULATE VISUAL DASHBOARD =====
+
+                // Hero section
+                HeroEntryPoint = value.EntryPoint ?? "";
+                HeroDuration = FormatDuration(value.DurationMs);
+
+                // Duration confidence indicator — tells admin how reliable this time figure is
+                (DurationPrefix, DurationConfidenceTooltip) = value.DurationSource switch
+                {
+                    Models.DurationSource.NanosecondPrecise => ("", "Precise — measured with nanosecond counters from the log."),
+                    Models.DurationSource.DateTimeDerived => ("~", "Estimated — this log uses second-precision timestamps. Actual time may differ slightly."),
+                    Models.DurationSource.Incomplete => (">", "Minimum — the log was truncated before finishing. The operation took at least this long."),
+                    Models.DurationSource.Async => ("", "Async — this is the synchronous portion only. Async work continues after this log ends."),
+                    _ => ("", "")
+                };
+
+                if (value.TransactionFailed)
+                    HeroStatus = "FAILED";
+                else if (value.IsTestExecution)
+                    HeroStatus = "TEST"; // NEW: Show test badge
+                else if (value.HandledExceptions?.Count > 0 || value.HasErrors)
+                    HeroStatus = "WARNING";
+                else
+                    HeroStatus = "SUCCESS";
+
+                // Governor limits snapshot — extracted first; authoritative source for all limit consumption data
+                var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
+
+                // Stat cards — prefer snapshot values (exact governor limit slots used) over raw op counts
+                StatSoqlCount = lastSnapshot?.SoqlQueries ?? value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
+                StatDmlCount = lastSnapshot?.DmlStatements ?? value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+                StatMethodCount = value.MethodStats?.Count ?? 0;
+                StatErrorCount = value.Errors?.Count ?? 0;
+                StatWarningCount = value.HandledExceptions?.Count ?? 0;
+
+                // Managed-package breakdown: when governor total > event-parsed count, the delta
+                // is SOQL/DML from managed packages/platform code that doesn't appear in log events.
+                var parsedDml = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
+                EventParsedDmlCount = parsedDml;
+                ManagedPackageSoqlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.SoqlQueries - value.RegularSoqlCount) : 0;
+                HasManagedPackageQueries = ManagedPackageSoqlCount > 0;
+                ManagedPackageDmlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.DmlStatements - parsedDml) : 0;
+                HasManagedPackageDml = ManagedPackageDmlCount > 0;
+
+                // Governor limits display
+                if (lastSnapshot != null)
+                {
+                    StatSoqlLimit = lastSnapshot.SoqlQueriesLimit;
+                    StatDmlLimit = lastSnapshot.DmlStatementsLimit;
+                    StatCpuTime = lastSnapshot.CpuTime;
+                    StatCpuLimit = lastSnapshot.CpuTimeLimit;
+
+                    // Calculate percentages for progress bars
+                    SoqlPercent = lastSnapshot.SoqlQueriesLimit > 0
+                        ? (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit
+                        : 0;
+                    DmlPercent = lastSnapshot.DmlStatementsLimit > 0
+                        ? (lastSnapshot.DmlStatements * 100.0) / lastSnapshot.DmlStatementsLimit
+                        : 0;
+                    CpuPercent = lastSnapshot.CpuTimeLimit > 0
+                        ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit
+                        : 0;
+                }
+                else
+                {
+                    SoqlPercent = 0;
+                    DmlPercent = 0;
+                    CpuPercent = 0;
+                }
+
+                // Timing breakdown
+                WallClockMs = value.WallClockMs > 0 ? value.WallClockMs : value.DurationMs;
+                CpuTimeMs = value.CpuTimeMs;
+                OverheadMs = Math.Max(0, WallClockMs - CpuTimeMs);
+                ShowTimingBreakdown = OverheadMs > 1000 && WallClockMs > 2000;
+
+                // Timeline strip (top-level phases)
+                if (value.Timeline?.Phases?.Any() == true)
+                {
+                    var phases = value.Timeline.Phases;
+                    double total = Math.Max(1d, phases.Sum(p => Math.Max(0d, (double)p.DurationMs)));
+                    // Fall back to wall clock if phases sum is tiny
+                    if (total < 1 && WallClockMs > 0) total = WallClockMs;
+
+                    var slowest = phases.OrderByDescending(p => p.DurationMs).FirstOrDefault();
+
+                    TimelineSegments = new ObservableCollection<TimelineSegment>(
+                        phases.Select(p => new TimelineSegment
+                        {
+                            Name = p.Name,
+                            Type = p.Type,
+                            DurationMs = Math.Max(0, p.DurationMs),
+                            Percent = total > 0 ? (Math.Max(0, p.DurationMs) * 100.0) / total : 0,
+                            Icon = p.Icon,
+                            IsRecursive = p.IsRecursive,
+                            IsSlowest = slowest != null && p.Name == slowest.Name && p.DurationMs == slowest.DurationMs
+                        }));
+
+                    TimelineTotalDurationMs = total;
+                    TimelineSummary = value.Timeline.Summary ?? string.Empty;
+                    TimelineSlowestLabel = slowest != null
+                        ? $"{slowest.Icon} {slowest.Type}: {slowest.Name} • {slowest.DurationMs}ms"
+                        : string.Empty;
+                    HasTimelineData = TimelineSegments.Any();
+                }
+                else
+                {
+                    HasTimelineData = false;
+                    TimelineSegments.Clear();
+                    TimelineTotalDurationMs = 0;
+                    TimelineSummary = string.Empty;
+                    TimelineSlowestLabel = string.Empty;
+                }
+
+                // ===== POPULATE HEALTH SCORE & ACTIONABLE ISSUES =====
+                if (value.Health != null)
+                {
+                    HasHealthData = true;
+                    HealthScore = value.Health.Score;
+                    AnimateHealthScore(value.Health.Score);
+                    HealthGrade = value.Health.Grade;
+                    HealthStatus = value.Health.Status;
+                    HealthStatusIcon = value.Health.StatusIcon;
+                    HealthReasoning = value.Health.Reasoning;
+
+                    CriticalIssues = new ObservableCollection<ActionableIssue>(value.Health.CriticalIssues);
+                    HighPriorityIssues = new ObservableCollection<ActionableIssue>(value.Health.HighPriorityIssues);
+                    QuickWins = new ObservableCollection<ActionableIssue>(value.Health.QuickWins);
+                    TotalEstimatedMinutes = value.Health.TotalEstimatedMinutes;
+
+                    // "Clean bill of health" when score is good and no serious issues
+                    IsCleanBillOfHealth = value.Health.Score >= 80
+                        && value.Health.CriticalIssues.Count == 0
+                        && value.Health.HighPriorityIssues.Count == 0;
+
+                    // Plain-language health phrase (replaces academic letter grade)
+                    HealthPlainStatement = value.Health.CriticalIssues.Count > 0
+                        ? "This log has critical problems"
+                        : value.Health.HighPriorityIssues.Count > 0
+                            ? "This log needs attention"
+                            : value.Health.Score >= 80
+                                ? "This log is healthy"
+                                : "Review recommended";
+                }
+                else
+                {
+                    HasHealthData = false;
+                    IsCleanBillOfHealth = false;
+                    HealthScore = 0;
+                    HealthGrade = "";
+                    HealthStatus = "";
+                    HealthStatusIcon = "";
+                    HealthReasoning = "";
+                    CriticalIssues.Clear();
+                    HighPriorityIssues.Clear();
+                    QuickWins.Clear();
+                    TotalEstimatedMinutes = 0;
+                    HealthPlainStatement = "";
+                }
+
+                // Traffic-light status icons (computed after percentages and health are set)
+                SoqlStatusIcon = SoqlPercent >= 80 ? "🔴" : SoqlPercent >= 50 ? "🟡" : "🟢";
+                DmlStatusIcon = DmlPercent >= 80 ? "🔴" : DmlPercent >= 50 ? "🟡" : "🟢";
+                CpuStatusIcon = CpuPercent >= 80 ? "🔴" : CpuPercent >= 50 ? "🟡" : "🟢";
+                ErrorStatusIcon = (value.Errors?.Count > 0 || value.TransactionFailed) ? "🔴" : "🟢";
+
+                // ===== ALWAYS-USEFUL: TOP METHODS (even for clean logs) =====
+                PopulateTopMethods(value);
+                PopulateTopQueries(value);
+                PopulateExecutionTree(value);
+                PopulateTimelineDetails(value);
+                TranslateToPlainEnglish(value); // NEW: Generate plain-English insights
+
+                // ===== PLATFORM EVENTS =====
+                PlatformEventPublishes = new ObservableCollection<Models.PlatformEventPublish>(
+                    value.PlatformEventPublishes ?? new List<Models.PlatformEventPublish>());
+                HasPlatformEvents = PlatformEventPublishes.Any();
+
+                // ===== NAMESPACE LIMITS =====
+                NamespaceLimitItems = new ObservableCollection<Models.GovernorLimitSnapshot>(
+                    value.NamespaceLimitSnapshots ?? new List<Models.GovernorLimitSnapshot>());
+                HasNamespaceLimits = NamespaceLimitItems.Any();
+
+                // ===== FLOW FAULTS =====
+                FaultedFlows = new ObservableCollection<Models.FlowExecution>(
+                    value.Flows?.Where(f => f.HasFault).ToList() ?? new List<Models.FlowExecution>());
+                HasFlowFaults = FaultedFlows.Any();
+
+                // ===== CALLOUTS =====
+                Callouts = new ObservableCollection<Models.CalloutOperation>(
+                    value.Callouts ?? new List<Models.CalloutOperation>());
+                HasCallouts = Callouts.Any();
+
+                // ===== LOG CONTEXT FLAGS =====
+                IsLogTruncated = value.IsLogTruncated;
+                IsAsyncExecution = value.IsAsyncExecution;
+
+                // ===== BULK SAFETY =====
+                BulkSafetyGrade = value.BulkSafetyGrade ?? "";
+                BulkSafetyReason = value.BulkSafetyReason ?? "";
+
+                // ===== DUPLICATE QUERIES =====
+                DuplicateQueries = new ObservableCollection<Models.DuplicateQueryInfo>(
+                    value.DuplicateQueries ?? new List<Models.DuplicateQueryInfo>());
+                HasDuplicateQueries = DuplicateQueries.Any();
+
+                // ===== WORKFLOW RULES =====
+                WorkflowRules = new ObservableCollection<Models.WorkflowRuleEvaluation>(
+                    value.WorkflowRules ?? new List<Models.WorkflowRuleEvaluation>());
+                HasWorkflowRules = WorkflowRules.Any();
+
+                // ===== FLOW ERRORS (DML/validation failures inside flows) =====
+                FlowErrors = new ObservableCollection<Models.FlowError>(
+                    value.FlowErrors ?? new List<Models.FlowError>());
+                HasFlowErrors = FlowErrors.Any();
+
+                // ===== HEAP & CMDT STATS =====
+                TotalHeapAllocated = value.TotalHeapAllocated;
+                CustomMetadataQueryCount = value.CustomMetadataQueryCount;
+                RegularSoqlCount = value.RegularSoqlCount;
+
+                // ===== TESTING LIMITS =====
+                TestingLimits = value.TestingLimits;
+                HasTestingLimits = value.TestingLimits != null;
+
+                // ===== PARSER DEBUG INFO =====
+                if (IsParserDebugMode)
+                    ParserDebugInfo = BuildParserDebugInfo(value);
             }
             else
             {
+                SummaryText = "";
+                FullSummaryText = "";
+                Issues.Clear();
+                Recommendations.Clear();
+                DatabaseOperations.Clear();
                 StackAnalysisSummary = "";
                 HasStackRisk = false;
-            }
-            
-            // ===== POPULATE VISUAL DASHBOARD =====
-            
-            // Hero section
-            HeroEntryPoint = value.EntryPoint ?? "";
-            HeroDuration = FormatDuration(value.DurationMs);
 
-            // Duration confidence indicator — tells admin how reliable this time figure is
-            (DurationPrefix, DurationConfidenceTooltip) = value.DurationSource switch
-            {
-                Models.DurationSource.NanosecondPrecise => ("",  "Precise — measured with nanosecond counters from the log."),
-                Models.DurationSource.DateTimeDerived   => ("~", "Estimated — this log uses second-precision timestamps. Actual time may differ slightly."),
-                Models.DurationSource.Incomplete        => (">", "Minimum — the log was truncated before finishing. The operation took at least this long."),
-                Models.DurationSource.Async             => ("",  "Async — this is the synchronous portion only. Async work continues after this log ends."),
-                _                                       => ("",  "")
-            };
-            
-            if (value.TransactionFailed)
-                HeroStatus = "FAILED";
-            else if (value.IsTestExecution)
-                HeroStatus = "TEST"; // NEW: Show test badge
-            else if (value.HandledExceptions?.Count > 0 || value.HasErrors)
-                HeroStatus = "WARNING";
-            else
-                HeroStatus = "SUCCESS";
-            
-            // Governor limits snapshot — extracted first; authoritative source for all limit consumption data
-            var lastSnapshot = value.LimitSnapshots?.LastOrDefault();
-
-            // Stat cards — prefer snapshot values (exact governor limit slots used) over raw op counts
-            StatSoqlCount = lastSnapshot?.SoqlQueries ?? value.DatabaseOperations?.Count(d => d.OperationType == "SOQL") ?? 0;
-            StatDmlCount  = lastSnapshot?.DmlStatements ?? value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
-            StatMethodCount = value.MethodStats?.Count ?? 0;
-            StatErrorCount = value.Errors?.Count ?? 0;
-            StatWarningCount = value.HandledExceptions?.Count ?? 0;
-
-            // Managed-package breakdown: when governor total > event-parsed count, the delta
-            // is SOQL/DML from managed packages/platform code that doesn't appear in log events.
-            var parsedDml = value.DatabaseOperations?.Count(d => d.OperationType == "DML") ?? 0;
-            EventParsedDmlCount = parsedDml;
-            ManagedPackageSoqlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.SoqlQueries - value.RegularSoqlCount) : 0;
-            HasManagedPackageQueries = ManagedPackageSoqlCount > 0;
-            ManagedPackageDmlCount = lastSnapshot != null ? Math.Max(0, lastSnapshot.DmlStatements - parsedDml) : 0;
-            HasManagedPackageDml = ManagedPackageDmlCount > 0;
-
-            // Governor limits display
-            if (lastSnapshot != null)
-            {
-                StatSoqlLimit = lastSnapshot.SoqlQueriesLimit;
-                StatDmlLimit = lastSnapshot.DmlStatementsLimit;
-                StatCpuTime = lastSnapshot.CpuTime;
-                StatCpuLimit = lastSnapshot.CpuTimeLimit;
-                
-                // Calculate percentages for progress bars
-                SoqlPercent = lastSnapshot.SoqlQueriesLimit > 0 
-                    ? (lastSnapshot.SoqlQueries * 100.0) / lastSnapshot.SoqlQueriesLimit 
-                    : 0;
-                DmlPercent = lastSnapshot.DmlStatementsLimit > 0 
-                    ? (lastSnapshot.DmlStatements * 100.0) / lastSnapshot.DmlStatementsLimit 
-                    : 0;
-                CpuPercent = lastSnapshot.CpuTimeLimit > 0 
-                    ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit 
-                    : 0;
-            }
-            else
-            {
+                // Reset visual dashboard
+                HeroStatus = "";
+                HeroDuration = "";
+                HeroEntryPoint = "";
+                StatSoqlCount = 0;
+                StatDmlCount = 0;
+                StatMethodCount = 0;
+                StatErrorCount = 0;
+                StatWarningCount = 0;
                 SoqlPercent = 0;
                 DmlPercent = 0;
                 CpuPercent = 0;
-            }
-            
-            // Timing breakdown
-            WallClockMs = value.WallClockMs > 0 ? value.WallClockMs : value.DurationMs;
-            CpuTimeMs = value.CpuTimeMs;
-            OverheadMs = Math.Max(0, WallClockMs - CpuTimeMs);
-            ShowTimingBreakdown = OverheadMs > 1000 && WallClockMs > 2000;
+                ShowTimingBreakdown = false;
 
-            // Timeline strip (top-level phases)
-            if (value.Timeline?.Phases?.Any() == true)
-            {
-                var phases = value.Timeline.Phases;
-                double total = Math.Max(1d, phases.Sum(p => Math.Max(0d, (double)p.DurationMs)));
-                // Fall back to wall clock if phases sum is tiny
-                if (total < 1 && WallClockMs > 0) total = WallClockMs;
-
-                var slowest = phases.OrderByDescending(p => p.DurationMs).FirstOrDefault();
-
-                TimelineSegments = new ObservableCollection<TimelineSegment>(
-                    phases.Select(p => new TimelineSegment
-                    {
-                        Name = p.Name,
-                        Type = p.Type,
-                        DurationMs = Math.Max(0, p.DurationMs),
-                        Percent = total > 0 ? (Math.Max(0, p.DurationMs) * 100.0) / total : 0,
-                        Icon = p.Icon,
-                        IsRecursive = p.IsRecursive,
-                        IsSlowest = slowest != null && p.Name == slowest.Name && p.DurationMs == slowest.DurationMs
-                    }));
-
-                TimelineTotalDurationMs = total;
-                TimelineSummary = value.Timeline.Summary ?? string.Empty;
-                TimelineSlowestLabel = slowest != null
-                    ? $"{slowest.Icon} {slowest.Type}: {slowest.Name} • {slowest.DurationMs}ms"
-                    : string.Empty;
-                HasTimelineData = TimelineSegments.Any();
-            }
-            else
-            {
-                HasTimelineData = false;
-                TimelineSegments.Clear();
-                TimelineTotalDurationMs = 0;
-                TimelineSummary = string.Empty;
-                TimelineSlowestLabel = string.Empty;
-            }
-            
-            // ===== POPULATE HEALTH SCORE & ACTIONABLE ISSUES =====
-            if (value.Health != null)
-            {
-                HasHealthData = true;
-                HealthScore = value.Health.Score;
-                AnimateHealthScore(value.Health.Score);
-                HealthGrade = value.Health.Grade;
-                HealthStatus = value.Health.Status;
-                HealthStatusIcon = value.Health.StatusIcon;
-                HealthReasoning = value.Health.Reasoning;
-                
-                CriticalIssues = new ObservableCollection<ActionableIssue>(value.Health.CriticalIssues);
-                HighPriorityIssues = new ObservableCollection<ActionableIssue>(value.Health.HighPriorityIssues);
-                QuickWins = new ObservableCollection<ActionableIssue>(value.Health.QuickWins);
-                TotalEstimatedMinutes = value.Health.TotalEstimatedMinutes;
-                
-                // "Clean bill of health" when score is good and no serious issues
-                IsCleanBillOfHealth = value.Health.Score >= 80
-                    && value.Health.CriticalIssues.Count == 0
-                    && value.Health.HighPriorityIssues.Count == 0;
-
-                // Plain-language health phrase (replaces academic letter grade)
-                HealthPlainStatement = value.Health.CriticalIssues.Count > 0
-                    ? "This log has critical problems"
-                    : value.Health.HighPriorityIssues.Count > 0
-                        ? "This log needs attention"
-                        : value.Health.Score >= 80
-                            ? "This log is healthy"
-                            : "Review recommended";
-            }
-            else
-            {
+                // Reset health score
                 HasHealthData = false;
                 IsCleanBillOfHealth = false;
                 HealthScore = 0;
                 HealthGrade = "";
                 HealthStatus = "";
+                HealthPlainStatement = "";
+                SoqlStatusIcon = ""; DmlStatusIcon = ""; CpuStatusIcon = ""; ErrorStatusIcon = "";
+                HasTimelineData = false;
+                TimelineSegments.Clear();
+                TimelineTotalDurationMs = 0;
+                TimelineSummary = string.Empty;
+                TimelineSlowestLabel = string.Empty;
                 HealthStatusIcon = "";
                 HealthReasoning = "";
                 CriticalIssues.Clear();
                 HighPriorityIssues.Clear();
                 QuickWins.Clear();
                 TotalEstimatedMinutes = 0;
-                HealthPlainStatement = "";
+                TopMethods.Clear();
+                TopQueries.Clear();
+                HasTopMethods = false;
+                HasTopQueries = false;
+                ExecutionTreeNodes.Clear();
+                HasExecutionTree = false;
+                TimelineDetails.Clear();
+                HasTimelineDetails = false;
+
+                // Reset deep explanation
+                CurrentExplanation = null;
+                HasExplanation = false;
+                DetailedIssues.Clear();
+                DetailedRecommendations.Clear();
+                LearningItems.Clear();
+                WhatYourCodeDid.Clear();
+                HasDetailedIssues = false;
+                HasDetailedRecommendations = false;
+                HasLearningItems = false;
+
+                // Reset new collections
+                PlatformEventPublishes.Clear();
+                HasPlatformEvents = false;
+                NamespaceLimitItems.Clear();
+                HasNamespaceLimits = false;
+                FaultedFlows.Clear();
+                HasFlowFaults = false;
+
+                // Reset expanded collections
+                Callouts.Clear(); HasCallouts = false;
+                IsLogTruncated = false; IsAsyncExecution = false;
+                BulkSafetyGrade = ""; BulkSafetyReason = "";
+                DuplicateQueries.Clear(); HasDuplicateQueries = false;
+                WorkflowRules.Clear(); HasWorkflowRules = false;
+                FlowErrors.Clear(); HasFlowErrors = false;
+                TotalHeapAllocated = 0; CustomMetadataQueryCount = 0; RegularSoqlCount = 0;
+                ManagedPackageSoqlCount = 0; HasManagedPackageQueries = false;
+                EventParsedDmlCount = 0; ManagedPackageDmlCount = 0; HasManagedPackageDml = false;
+                TestingLimits = null; HasTestingLimits = false;
+                ParserDebugInfo = "";
             }
-
-            // Traffic-light status icons (computed after percentages and health are set)
-            SoqlStatusIcon  = SoqlPercent >= 80 ? "🔴" : SoqlPercent >= 50 ? "🟡" : "🟢";
-            DmlStatusIcon   = DmlPercent  >= 80 ? "🔴" : DmlPercent  >= 50 ? "🟡" : "🟢";
-            CpuStatusIcon   = CpuPercent  >= 80 ? "🔴" : CpuPercent  >= 50 ? "🟡" : "🟢";
-            ErrorStatusIcon = (value.Errors?.Count > 0 || value.TransactionFailed) ? "🔴" : "🟢";
-            
-            // ===== ALWAYS-USEFUL: TOP METHODS (even for clean logs) =====
-            PopulateTopMethods(value);
-            PopulateTopQueries(value);
-            PopulateExecutionTree(value);
-            PopulateTimelineDetails(value);
-            TranslateToPlainEnglish(value); // NEW: Generate plain-English insights
-
-            // ===== PLATFORM EVENTS =====
-            PlatformEventPublishes = new ObservableCollection<Models.PlatformEventPublish>(
-                value.PlatformEventPublishes ?? new List<Models.PlatformEventPublish>());
-            HasPlatformEvents = PlatformEventPublishes.Any();
-
-            // ===== NAMESPACE LIMITS =====
-            NamespaceLimitItems = new ObservableCollection<Models.GovernorLimitSnapshot>(
-                value.NamespaceLimitSnapshots ?? new List<Models.GovernorLimitSnapshot>());
-            HasNamespaceLimits = NamespaceLimitItems.Any();
-
-            // ===== FLOW FAULTS =====
-            FaultedFlows = new ObservableCollection<Models.FlowExecution>(
-                value.Flows?.Where(f => f.HasFault).ToList() ?? new List<Models.FlowExecution>());
-            HasFlowFaults = FaultedFlows.Any();
-
-            // ===== CALLOUTS =====
-            Callouts = new ObservableCollection<Models.CalloutOperation>(
-                value.Callouts ?? new List<Models.CalloutOperation>());
-            HasCallouts = Callouts.Any();
-
-            // ===== LOG CONTEXT FLAGS =====
-            IsLogTruncated = value.IsLogTruncated;
-            IsAsyncExecution = value.IsAsyncExecution;
-
-            // ===== BULK SAFETY =====
-            BulkSafetyGrade = value.BulkSafetyGrade ?? "";
-            BulkSafetyReason = value.BulkSafetyReason ?? "";
-
-            // ===== DUPLICATE QUERIES =====
-            DuplicateQueries = new ObservableCollection<Models.DuplicateQueryInfo>(
-                value.DuplicateQueries ?? new List<Models.DuplicateQueryInfo>());
-            HasDuplicateQueries = DuplicateQueries.Any();
-
-            // ===== WORKFLOW RULES =====
-            WorkflowRules = new ObservableCollection<Models.WorkflowRuleEvaluation>(
-                value.WorkflowRules ?? new List<Models.WorkflowRuleEvaluation>());
-            HasWorkflowRules = WorkflowRules.Any();
-
-            // ===== FLOW ERRORS (DML/validation failures inside flows) =====
-            FlowErrors = new ObservableCollection<Models.FlowError>(
-                value.FlowErrors ?? new List<Models.FlowError>());
-            HasFlowErrors = FlowErrors.Any();
-
-            // ===== HEAP & CMDT STATS =====
-            TotalHeapAllocated = value.TotalHeapAllocated;
-            CustomMetadataQueryCount = value.CustomMetadataQueryCount;
-            RegularSoqlCount = value.RegularSoqlCount;
-
-            // ===== TESTING LIMITS =====
-            TestingLimits = value.TestingLimits;
-            HasTestingLimits = value.TestingLimits != null;
-
-            // ===== PARSER DEBUG INFO =====
-            if (IsParserDebugMode)
-                ParserDebugInfo = BuildParserDebugInfo(value);
         }
-        else
+        catch (Exception ex)
         {
-            SummaryText = "";
-            FullSummaryText = "";
-            Issues.Clear();
-            Recommendations.Clear();
-            DatabaseOperations.Clear();
-            StackAnalysisSummary = "";
-            HasStackRisk = false;
-            
-            // Reset visual dashboard
-            HeroStatus = "";
-            HeroDuration = "";
-            HeroEntryPoint = "";
-            StatSoqlCount = 0;
-            StatDmlCount = 0;
-            StatMethodCount = 0;
-            StatErrorCount = 0;
-            StatWarningCount = 0;
-            SoqlPercent = 0;
-            DmlPercent = 0;
-            CpuPercent = 0;
-            ShowTimingBreakdown = false;
-            
-            // Reset health score
-            HasHealthData = false;
-            IsCleanBillOfHealth = false;
-            HealthScore = 0;
-            HealthGrade = "";
-            HealthStatus = "";
-            HealthPlainStatement = "";
-            SoqlStatusIcon = ""; DmlStatusIcon = ""; CpuStatusIcon = ""; ErrorStatusIcon = "";
-            HasTimelineData = false;
-            TimelineSegments.Clear();
-            TimelineTotalDurationMs = 0;
-            TimelineSummary = string.Empty;
-            TimelineSlowestLabel = string.Empty;
-            HealthStatusIcon = "";
-            HealthReasoning = "";
-            CriticalIssues.Clear();
-            HighPriorityIssues.Clear();
-            QuickWins.Clear();
-            TotalEstimatedMinutes = 0;
-            TopMethods.Clear();
-            TopQueries.Clear();
-            HasTopMethods = false;
-            HasTopQueries = false;
-            ExecutionTreeNodes.Clear();
-            HasExecutionTree = false;
-            TimelineDetails.Clear();
-            HasTimelineDetails = false;
-            
-            // Reset deep explanation
-            CurrentExplanation = null;
-            HasExplanation = false;
-            DetailedIssues.Clear();
-            DetailedRecommendations.Clear();
-            LearningItems.Clear();
-            WhatYourCodeDid.Clear();
-            HasDetailedIssues = false;
-            HasDetailedRecommendations = false;
-            HasLearningItems = false;
-
-            // Reset new collections
-            PlatformEventPublishes.Clear();
-            HasPlatformEvents = false;
-            NamespaceLimitItems.Clear();
-            HasNamespaceLimits = false;
-            FaultedFlows.Clear();
-            HasFlowFaults = false;
-
-            // Reset expanded collections
-            Callouts.Clear(); HasCallouts = false;
-            IsLogTruncated = false; IsAsyncExecution = false;
-            BulkSafetyGrade = ""; BulkSafetyReason = "";
-            DuplicateQueries.Clear(); HasDuplicateQueries = false;
-            WorkflowRules.Clear(); HasWorkflowRules = false;
-            FlowErrors.Clear(); HasFlowErrors = false;
-            TotalHeapAllocated = 0; CustomMetadataQueryCount = 0; RegularSoqlCount = 0;
-            ManagedPackageSoqlCount = 0; HasManagedPackageQueries = false;
-            EventParsedDmlCount = 0; ManagedPackageDmlCount = 0; HasManagedPackageDml = false;
-            TestingLimits = null; HasTestingLimits = false;
-            ParserDebugInfo = "";
+            Log.Error(ex, "Error in OnSelectedLogChanged");
+            StatusMessage = $"Error displaying log: {ex.Message}";
         }
-      }
-      catch (Exception ex)
-      {
-          Log.Error(ex, "Error in OnSelectedLogChanged");
-          StatusMessage = $"Error displaying log: {ex.Message}";
-      }
     }
-    
+
     /// <summary>
     /// Populate top methods by total time (always useful, even for clean logs)
     /// </summary>
     private void PopulateTopMethods(LogAnalysis analysis)
     {
         var methods = new List<MethodDisplayItem>();
-        
+
         // Prefer cumulative profiling (more accurate)
         if (analysis.CumulativeProfiling?.TopMethods?.Any() == true)
         {
@@ -1682,18 +1719,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 })
                 .ToList();
         }
-        
+
         TopMethods = new ObservableCollection<MethodDisplayItem>(methods);
         HasTopMethods = methods.Any();
     }
-    
+
     /// <summary>
     /// Populate top queries by execution count and time
     /// </summary>
     private void PopulateTopQueries(LogAnalysis analysis)
     {
         var queries = new List<QueryDisplayItem>();
-        
+
         if (analysis.CumulativeProfiling?.TopQueries?.Any() == true)
         {
             queries = analysis.CumulativeProfiling.TopQueries
@@ -1727,18 +1764,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 })
                 .ToList();
         }
-        
+
         TopQueries = new ObservableCollection<QueryDisplayItem>(queries);
         HasTopQueries = queries.Any();
     }
-    
+
     /// <summary>
     /// Build execution tree from RootNode for the Tree tab
     /// </summary>
     private void PopulateExecutionTree(LogAnalysis analysis)
     {
         var nodes = new List<TreeNodeViewModel>();
-        
+
         if (analysis.RootNode?.Children?.Any() == true)
         {
             foreach (var child in analysis.RootNode.Children)
@@ -1746,11 +1783,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 nodes.Add(BuildTreeNode(child, 0));
             }
         }
-        
+
         ExecutionTreeNodes = new ObservableCollection<TreeNodeViewModel>(nodes);
         HasExecutionTree = nodes.Any();
     }
-    
+
     private TreeNodeViewModel BuildTreeNode(ExecutionNode node, int depth)
     {
         var vm = new TreeNodeViewModel
@@ -1775,28 +1812,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
             },
             HasChildren = node.Children?.Any() == true
         };
-        
+
         if (node.Children?.Any() == true)
         {
             foreach (var child in node.Children)
             {
                 // Skip noise: system methods under 1ms with no children
                 if (child.Type == ExecutionNodeType.SystemMethod && child.DurationMs < 1 && !(child.Children?.Any() == true))
+                {
                     continue;
+                }
+
                 vm.Children.Add(BuildTreeNode(child, depth + 1));
             }
         }
-        
+
         return vm;
     }
-    
+
     /// <summary>
     /// Populate detailed timeline for the Timeline tab
     /// </summary>
     private void PopulateTimelineDetails(LogAnalysis analysis)
     {
         var details = new List<TimelineDetailItem>();
-        
+
         if (analysis.Timeline?.Phases?.Any() == true)
         {
             double cumulativeMs = 0;
@@ -1817,11 +1857,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 cumulativeMs += Math.Max(0, phase.DurationMs);
             }
         }
-        
+
         TimelineDetails = new ObservableCollection<TimelineDetailItem>(details);
         HasTimelineDetails = details.Any();
     }
-    
+
     /// <summary>
     /// Translate technical log analysis into plain English for non-technical users
     /// </summary>
@@ -1831,29 +1871,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (analysis.IsTestExecution)
         {
             PlainEnglishSummary = $"Salesforce ran a test called \"{analysis.TestClassName}\". ";
-            PlainEnglishSummary += analysis.TransactionFailed 
-                ? "❌ The test failed." 
+            PlainEnglishSummary += analysis.TransactionFailed
+                ? "❌ The test failed."
                 : "✅ The test passed.";
         }
         else if (!string.IsNullOrEmpty(analysis.EntryPoint))
         {
             PlainEnglishSummary = $"A user {analysis.LogUser} triggered \"{analysis.EntryPoint}\". ";
-            PlainEnglishSummary += analysis.TransactionFailed 
-                ? "❌ The operation failed." 
+            PlainEnglishSummary += analysis.TransactionFailed
+                ? "❌ The operation failed."
                 : "✅ The operation completed successfully.";
         }
         else
         {
             PlainEnglishSummary = "Salesforce processed a user action. ";
-            PlainEnglishSummary += analysis.TransactionFailed 
-                ? "❌ Something went wrong." 
+            PlainEnglishSummary += analysis.TransactionFailed
+                ? "❌ Something went wrong."
                 : "✅ Everything worked.";
         }
-        
+
         // 2. WAIT TIME (User Experience)
         double seconds = analysis.DurationMs / 1000.0;
         UserWaitTimeSeconds = seconds < 1 ? seconds.ToString("0.00") : seconds.ToString("0.0");
-        
+
         if (seconds < 0.5)
         {
             UserWaitExplanation = "This was instant! Users didn't notice any delay.";
@@ -1874,7 +1914,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             UserWaitExplanation = $"This took {seconds:0.0} seconds, which is very slow. Users will complain about performance.";
             SpeedRating = "Very Slow";
         }
-        
+
         // 3. RESOURCE USAGE
         var lastLimit = analysis.LimitSnapshots?.LastOrDefault();
         if (lastLimit != null)
@@ -1883,10 +1923,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SoqlLimit = lastLimit.SoqlQueriesLimit;
             DmlCount = lastLimit.DmlStatements;
             DmlLimit = lastLimit.DmlStatementsLimit;
-            CpuPercentValue = lastLimit.CpuTimeLimit > 0 
-                ? (int)((lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit) 
+            CpuPercentValue = lastLimit.CpuTimeLimit > 0
+                ? (int)((lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit)
                 : 0;
-            
+
             ResourceUsageExplanation = $"Salesforce queried the database {SoqlCount} times (limit: {SoqlLimit}) and saved data {DmlCount} times (limit: {DmlLimit}). ";
             ResourceUsageExplanation += $"The code used {CpuPercentValue}% of available processing power.";
         }
@@ -1897,10 +1937,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             CpuPercentValue = 0;
             ResourceUsageExplanation = "No resource usage data available.";
         }
-        
+
         // 4. PROBLEMS FOUND
         var problems = new List<PlainEnglishProblem>();
-        
+
         // Critical errors
         if (analysis.Errors?.Any() == true)
         {
@@ -1914,7 +1954,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ImpactLabel = "🔴 Critical - Operation failed"
             });
         }
-        
+
         // Trigger re-entry
         if (analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true)
         {
@@ -1928,14 +1968,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ImpactLabel = "⚠️ High - Wastes time and resources"
             });
         }
-        
+
         // Governor limit warnings
         if (lastLimit != null)
         {
             var soqlPct = lastLimit.SoqlQueriesLimit > 0 ? (lastLimit.SoqlQueries * 100.0) / lastLimit.SoqlQueriesLimit : 0;
             var dmlPct = lastLimit.DmlStatementsLimit > 0 ? (lastLimit.DmlStatements * 100.0) / lastLimit.DmlStatementsLimit : 0;
             var cpuPct = lastLimit.CpuTimeLimit > 0 ? (lastLimit.CpuTime * 100.0) / lastLimit.CpuTimeLimit : 0;
-            
+
             if (soqlPct > 80)
             {
                 problems.Add(new PlainEnglishProblem
@@ -1947,7 +1987,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     ImpactLabel = soqlPct > 90 ? "🔴 Critical - Near limit!" : "⚠️ Warning - Getting close"
                 });
             }
-            
+
             if (dmlPct > 80)
             {
                 problems.Add(new PlainEnglishProblem
@@ -1959,7 +1999,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     ImpactLabel = dmlPct > 90 ? "🔴 Critical - Near limit!" : "⚠️ Warning - Getting close"
                 });
             }
-            
+
             if (cpuPct > 80)
             {
                 problems.Add(new PlainEnglishProblem
@@ -1972,7 +2012,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 });
             }
         }
-        
+
         // Bulk safety grade
         if (!string.IsNullOrEmpty(analysis.BulkSafetyGrade) && (analysis.BulkSafetyGrade == "D" || analysis.BulkSafetyGrade == "F"))
         {
@@ -1985,13 +2025,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ImpactLabel = "⚠️ High - Will fail with more records"
             });
         }
-        
+
         PlainEnglishProblems = new ObservableCollection<PlainEnglishProblem>(problems);
         HasProblems = problems.Any();
-        
+
         // 5. RECOMMENDATIONS
         var recommendations = new List<PlainEnglishRecommendation>();
-        
+
         // Fix trigger re-entry
         if (analysis.TriggerReEntries?.Any(t => t.HasReEntry) == true)
         {
@@ -2003,7 +2043,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 EstimatedMinutes = 15
             });
         }
-        
+
         // Optimize slow methods
         if (analysis.MethodStats?.Any(m => m.Value.MaxDurationMs > 2000) == true)
         {
@@ -2016,7 +2056,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 EstimatedMinutes = 30
             });
         }
-        
+
         // Reduce SOQL queries
         if (lastLimit != null && lastLimit.SoqlQueries > 50)
         {
@@ -2027,30 +2067,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 EstimatedMinutes = 45
             });
         }
-        
+
         PlainEnglishRecommendations = new ObservableCollection<PlainEnglishRecommendation>(recommendations);
         HasRecommendations = recommendations.Any();
-        
+
         // 6. ALL CLEAR?
         IsAllClear = !HasProblems && !analysis.TransactionFailed && (lastLimit?.SoqlQueries ?? 0) < 50;
-        
+
         // 7. DEEP EXPLANATION — rich analogies, before/after code, learning
         try
         {
             var explanation = _explainerService.Explain(analysis);
             CurrentExplanation = explanation;
             HasExplanation = true;
-            
+
             // Populate bindable collections
             WhatYourCodeDid = new ObservableCollection<string>(explanation.WhatYourCodeDid);
             DetailedIssues = new ObservableCollection<DetailedIssue>(explanation.Issues);
             DetailedRecommendations = new ObservableCollection<DetailedRecommendation>(explanation.Recommendations);
             LearningItems = new ObservableCollection<LearningItem>(explanation.WhatYouLearned);
-            
+
             HasDetailedIssues = explanation.Issues.Any();
             HasDetailedRecommendations = explanation.Recommendations.Any();
             HasLearningItems = explanation.WhatYouLearned.Any();
-            
+
             // Override the basic summary with the rich one
             PlainEnglishSummary = explanation.WhatHappened;
         }
@@ -2155,11 +2195,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private string FormatDuration(double ms)
     {
-        if (ms < 1000) return $"{ms:N0}ms";
-        if (ms < 60000) return $"{ms / 1000.0:N1}s";
+        if (ms < 1000)
+        {
+            return $"{ms:N0}ms";
+        }
+
+        if (ms < 60000)
+        {
+            return $"{ms / 1000.0:N1}s";
+        }
+
         return $"{ms / 60000.0:N1}m";
     }
-    
+
     /// <summary>
     /// Extract clean class name from method signature
     /// Example: "MyClass.myMethod" -> "MyClass.myMethod"
@@ -2176,11 +2224,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return $"{triggerName} (trigger)";
             }
         }
-        
+
         // Return as-is if already clean
         return methodName;
     }
-    
+
     [RelayCommand]
     private void SelectLog(LogAnalysis? log)
     {
@@ -2254,7 +2302,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task LoadGovernorArchaeologyAsync()
     {
-        if (_monitoringDb == null) return;
+        if (_monitoringDb == null)
+        {
+            return;
+        }
 
         IsGovernorArchaeologyLoading = true;
         try
@@ -2284,7 +2335,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanScanForPii))]
     private async Task ScanForPii()
     {
-        if (SelectedLog == null) return;
+        if (SelectedLog == null)
+        {
+            return;
+        }
 
         IsPiiScanning = true;
         PiiScanStatus = "Scanning for personal data…";
@@ -2337,7 +2391,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             .Distinct()
             .ToList();
 
-        if (allUserIds.Count == 0) return;
+        if (allUserIds.Count == 0)
+        {
+            return;
+        }
 
         // SOQL query to resolve user IDs to names (batch in groups of 100 for SOQL IN limit)
         var userMap = new Dictionary<string, string>();
@@ -2358,8 +2415,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         string username = record.Username?.ToString() ?? "";
                         bool isActive = record.IsActive ?? true;
                         var display = !string.IsNullOrEmpty(name) ? name : username;
-                        if (!isActive) display += " (inactive)";
-                        if (!string.IsNullOrEmpty(id)) userMap[id] = display;
+                        if (!isActive)
+                        {
+                            display += " (inactive)";
+                        }
+
+                        if (!string.IsNullOrEmpty(id))
+                        {
+                            userMap[id] = display;
+                        }
                     }
                 }
             }
@@ -2384,7 +2448,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 // Replace user IDs with names in the detail text
                 foreach (var (id, name) in userMap)
+                {
                     insight.Detail = insight.Detail.Replace(id, name);
+                }
             }
         }
     }
@@ -2397,7 +2463,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         settings.OnboardingShown = true;
         _settingsService.Save(settings);
     }
-    
+
     /// <summary>
     /// Open file in VSCode at specific line (from actionable issue location)
     /// </summary>
@@ -2409,13 +2475,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = "No location specified";
             return;
         }
-        
+
         if (!_editorBridge.IsConnected)
         {
             StatusMessage = "⚠️ VSCode not connected. Install Black Widow VSCode extension.";
             return;
         }
-        
+
         try
         {
             // Parse location: "MyClass.myMethod:154" or "MyClass:42"
@@ -2425,25 +2491,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = "Invalid location format";
                 return;
             }
-            
+
             var classAndMethod = parts[0];
             var lineNumber = int.Parse(parts[1]);
-            
+
             // Extract class name (remove method if present)
             var className = classAndMethod.Split('.')[0];
-            
+
             // Find file in workspace
             var filePath = _editorBridge.FindApexFile(className);
-            
+
             if (string.IsNullOrEmpty(filePath))
             {
                 StatusMessage = $"⚠️ Could not find {className}.cls in workspace";
                 return;
             }
-            
+
             // Send command to VSCode
             var success = await _editorBridge.OpenFileInEditorAsync(filePath, lineNumber);
-            
+
             if (success)
             {
                 StatusMessage = $"✓ Opened {Path.GetFileName(filePath)}:{lineNumber} in VSCode";
@@ -2458,7 +2524,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"✗ Error: {ex.Message}";
         }
     }
-    
+
     /// <summary>
     /// Start Editor Bridge server on app startup
     /// </summary>
@@ -2468,7 +2534,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             await _editorBridge.StartAsync();
             StatusMessage = "✓ Editor Bridge ready (waiting for VSCode connection)";
-            
+
             // Request workspace path after connection
             await Task.Delay(1000);
             if (_editorBridge.IsConnected)
@@ -2481,7 +2547,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"⚠️ Editor Bridge failed: {ex.Message}";
         }
     }
-    
+
     /// <summary>
     /// Handle Editor Bridge connection status changes
     /// </summary>
@@ -2489,7 +2555,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsEditorConnected = isConnected;
         EditorConnectionStatus = isConnected ? "VSCode: ✓ Connected" : "VSCode: Not Connected";
-        
+
         if (isConnected)
         {
             StatusMessage = "✓ VSCode extension connected";
@@ -2500,7 +2566,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = "VSCode extension disconnected";
         }
     }
-    
+
     /// <summary>
     /// Handle workspace path received from VSCode
     /// </summary>
@@ -2508,21 +2574,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         StatusMessage = $"✓ Workspace: {path}";
     }
-    
+
     [RelayCommand]
     private void ViewInteraction(Interaction interaction)
     {
-        if (interaction == null) return;
-        
+        if (interaction == null)
+        {
+            return;
+        }
+
         SelectedInteraction = interaction;
-        
+
         // Show all captured logs in the main list
         Logs.Clear();
         foreach (var log in interaction.CapturedLogs)
         {
             Logs.Add(log);
         }
-        
+
         // Select the first log for detailed view
         if (interaction.CapturedLogs.Count > 0)
         {
@@ -2533,7 +2602,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             StatusMessage = "⚠️ This interaction has no captured logs";
         }
-        
+
         // Show grouped analysis if available
         if (interaction.LogGroups?.Count > 0)
         {
@@ -2544,7 +2613,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             SelectedLogGroup = interaction.LogGroups[0];
         }
-        
+
         StatusMessage = $"🎬 Viewing interaction: {interaction.Name} ({interaction.CapturedLogs.Count} logs)";
     }
 
@@ -2574,7 +2643,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                 ? desktop.MainWindow
                 : null;
-            if (topLevel == null) return;
+            if (topLevel == null)
+            {
+                return;
+            }
 
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
             {
@@ -2599,7 +2671,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsLoading = false;
         }
     }
-    
+
     /// <summary>
     /// Loads and parses a log file from the given path (called from drag-drop or paste)
     /// </summary>
@@ -2612,7 +2684,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"⚠️ File not found: {filePath}";
                 return;
             }
-            
+
             // Validate file extension
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             if (ext != ".log" && ext != ".txt")
@@ -2620,12 +2692,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"⚠️ Unsupported file type ({ext}). Use .log or .txt files from Salesforce Debug Logs.";
                 return;
             }
-            
+
             // ── License gate: Free tier has a 30 MB file size cap ──────────
             if (!_licenseService.IsFeatureAvailable(LicenseFeature.UnlimitedFileSize))
             {
                 var fileInfo = new FileInfo(filePath);
-                var fileMB   = fileInfo.Length / (1024.0 * 1024.0);
+                var fileMB = fileInfo.Length / (1024.0 * 1024.0);
                 if (fileMB > LicenseService.FreeTierMaxFileSizeMB)
                 {
                     StatusMessage = $"⚠️ File too large for Free tier ({fileMB:F0} MB > {LicenseService.FreeTierMaxFileSizeMB} MB). Upgrade to Pro for unlimited file sizes.";
@@ -2640,7 +2712,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsLoading = true;
 
             var fileName = Path.GetFileName(filePath);
-            
+
             // Read file on background thread to prevent UI freeze
             var logContent = await Task.Run(() => File.ReadAllText(filePath));
 
@@ -2655,7 +2727,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = "Parsing log...";
             var analysis = await Task.Run(() => _parserService.ParseLog(logContent, fileName));
             analysis.SourcePath = filePath;
-            
+
             // Enrich with org metadata (user names, trigger locations, etc.)
             await EnrichLogWithMetadataAsync(analysis);
 
@@ -2680,7 +2752,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task LoadLogFolder()
     {
-        if (RequiresPro(LicenseFeature.FolderImport)) return;
+        if (RequiresPro(LicenseFeature.FolderImport))
+        {
+            return;
+        }
 
         StatusMessage = "Select folder containing debug logs...";
 
@@ -2689,7 +2764,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                 ? desktop.MainWindow
                 : null;
-            if (topLevel == null) return;
+            if (topLevel == null)
+            {
+                return;
+            }
 
             var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
             {
@@ -2735,11 +2813,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 LogGroups.Clear();
                 foreach (var group in groups)
+                {
                     LogGroups.Add(group);
+                }
+
                 ShowGroupedView = true;
                 StatusMessage = $"\u2713 Loaded {metadata.Count} logs grouped into {groups.Count} transaction(s)";
                 if (LogGroups.Any())
+                {
                     SelectedLogGroup = LogGroups.First();
+                }
             });
         }
         catch (Exception ex)
@@ -2790,7 +2873,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 try
                 {
                     var body = await _apiService.GetLogBodyAsync(apexLog.Id);
-                    if (string.IsNullOrWhiteSpace(body)) continue;
+                    if (string.IsNullOrWhiteSpace(body))
+                    {
+                        continue;
+                    }
 
                     var logName = $"{apexLog.Operation ?? "Apex"} ({apexLog.StartTime:HH:mm:ss})";
                     var analysis = await Task.Run(() => _parserService.ParseLog(body, logName));
@@ -2811,12 +2897,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             var msg = $"✓ Loaded {downloaded} log{(downloaded != 1 ? "s" : "")} from org";
-            if (failed > 0) msg += $" ({failed} failed)";
+            if (failed > 0)
+            {
+                msg += $" ({failed} failed)";
+            }
+
             StatusMessage = msg;
 
             // Select the most recent if nothing is selected
             if (SelectedLog == null && Logs.Count > 0)
+            {
                 SelectedLog = Logs[0];
+            }
         }
         catch (Exception ex)
         {
@@ -2839,7 +2931,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ExportReport()
     {
-        if (RequiresPro(LicenseFeature.ExportReports)) return;
+        if (RequiresPro(LicenseFeature.ExportReports))
+        {
+            return;
+        }
 
         if (SelectedLog == null)
         {
@@ -2909,7 +3004,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             // Open trace flag dialog to view/manage logs
             StatusMessage = "Opening logs view...";
-            
+
             // TODO: Implement Avalonia TraceFlagDialog
             Log.Information("TraceFlagDialog requested — not yet implemented in Avalonia");
             StatusMessage = "📋 Debug log management — coming soon";
@@ -2930,11 +3025,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         // Pro-gated feature
-        if (RequiresPro(LicenseFeature.LiveStreaming)) return;
+        if (RequiresPro(LicenseFeature.LiveStreaming))
+        {
+            return;
+        }
 
         await StartStreamingAsync();
     }
-    
+
     [RelayCommand]
     private void StartRecording()
     {
@@ -2943,14 +3041,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = "⚠️ Start streaming first before recording an interaction";
             return;
         }
-        
+
         IsRecording = true;
         RecordingStartTime = DateTime.Now;
         _recordingBuffer.Clear();
         RecordingElapsedTime = "00:00";
-        
+
         StatusMessage = "🔴 RECORDING - Perform your Salesforce action now...";
-        
+
         // Start timer to update elapsed time
         _recordingTimer = new DispatcherTimer
         {
@@ -2962,9 +3060,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RecordingElapsedTime = $"{(int)elapsed.TotalMinutes:D2}:{elapsed.Seconds:D2}";
         };
         _recordingTimer.Start();
-        
+
         StatusMessage = "🔴 Recording interaction... Perform your action in Salesforce";
-        
+
         StreamingLogs.Insert(0, new StreamingLogEntry
         {
             Timestamp = DateTime.Now,
@@ -2972,16 +3070,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsError = false
         });
     }
-    
+
     [RelayCommand]
     private async Task StopRecordingAsync()
     {
-        if (!IsRecording) return;
-        
+        if (!IsRecording)
+        {
+            return;
+        }
+
         _recordingTimer?.Stop();
         _recordingTimer = null;
         IsRecording = false;
-        
+
         var endTime = DateTime.Now;
         var interaction = new Interaction
         {
@@ -2989,7 +3090,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             EndTime = endTime,
             CapturedLogs = new List<LogAnalysis>(_recordingBuffer)
         };
-        
+
         // Group the captured logs into transactions
         if (_recordingBuffer.Count > 1)
         {
@@ -2998,7 +3099,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 // Use consistent UserId for all logs so they can be grouped together
                 // The grouping algorithm matches by UserId + time window
                 var streamingUserId = StreamingUsername?.GetHashCode().ToString("X8") ?? "UNKNOWN";
-                
+
                 var metadata = _recordingBuffer.Select(log => new DebugLogMetadata
                 {
                     LogId = log.LogId,
@@ -3012,7 +3113,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     DmlStatements = log.LimitSnapshots.FirstOrDefault()?.DmlStatements ?? 0,
                     CpuTime = log.CpuTimeMs
                 }).ToList();
-                
+
                 interaction.LogGroups = await Task.Run(() => _groupService.GroupRelatedLogs(metadata));
             }
             catch (Exception ex)
@@ -3020,21 +3121,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Debug.WriteLine($"Failed to group interaction logs: {ex.Message}");
             }
         }
-        
+
         // Add to interactions list
         Interactions.Insert(0, interaction);
         SelectedInteraction = interaction;
-        
+
         _recordingBuffer.Clear();
-        
+
         StatusMessage = $"✅ Recording stopped - Captured {interaction.CapturedLogs.Count} logs";
-        
-        var durationStr = interaction.UserWaitTimeMs < 1000 
-            ? $"{interaction.UserWaitTimeMs:N0}ms" 
+
+        var durationStr = interaction.UserWaitTimeMs < 1000
+            ? $"{interaction.UserWaitTimeMs:N0}ms"
             : $"{interaction.UserWaitTimeMs / 1000.0:N1}s";
-        
+
         StatusMessage = $"✅ Interaction recorded: {interaction.CapturedLogs.Count} logs, {durationStr} total wait time";
-        
+
         StreamingLogs.Insert(0, new StreamingLogEntry
         {
             Timestamp = DateTime.Now,
@@ -3049,14 +3150,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _cliService.StopStreaming();
         IsStreaming = false;
         StreamingUsername = null;
-        
+
         StreamingLogs.Insert(0, new StreamingLogEntry
         {
             Timestamp = DateTime.Now,
             Message = "⏸️ Streaming stopped",
             IsError = false
         });
-        
+
         StatusMessage = "Streaming stopped";
     }
 
@@ -3082,7 +3183,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             FilterByUser = true,
             Username = defaultUsername
         };
-        
+
         // Determine which username to use for API queries
         var username = _streamingOptions.FilterByUser && !string.IsNullOrEmpty(_streamingOptions.Username)
             ? _streamingOptions.Username
@@ -3094,11 +3195,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // Pass the API service to CLI service (no CLI needed anymore!)
         var success = await _cliService.StartStreamingAsync(_apiService, username);
-        
+
         if (success)
         {
             IsStreaming = true;
-            
+
             // Show active filters in status
             var filterInfo = _streamingOptions.FilterByUser ? $" (user: {_streamingOptions.Username})" : "";
             StreamingStatus = $"🔴 LIVE - {username}{filterInfo}";
@@ -3154,61 +3255,89 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private (string insight, string icon) GenerateLogInsight(LogAnalysis? analysis)
     {
-        if (analysis == null) return ("No analysis available", "❓");
-        
+        if (analysis == null)
+        {
+            return ("No analysis available", "❓");
+        }
+
         // Priority 1: Errors (most important)
         if (analysis.Errors?.Count > 0)
         {
             var firstError = analysis.Errors[0].Name;
             return (firstError, "❌");
         }
-        
+
         // Priority 2: Issues detected
         if (analysis.Issues?.Count > 0)
         {
             var firstIssue = analysis.Issues[0];
-            
+
             // Simplify technical jargon
             if (firstIssue.Contains("SOQL", StringComparison.OrdinalIgnoreCase))
+            {
                 return ("⚠️ Database query issue detected", "⚠️");
+            }
+
             if (firstIssue.Contains("DML", StringComparison.OrdinalIgnoreCase))
+            {
                 return ("⚠️ Database update issue detected", "⚠️");
+            }
+
             if (firstIssue.Contains("CPU", StringComparison.OrdinalIgnoreCase))
+            {
                 return ("⚠️ Slow processing detected", "⚠️");
+            }
+
             if (firstIssue.Contains("recursion", StringComparison.OrdinalIgnoreCase))
+            {
                 return ("⚠️ Code ran multiple times (recursion)", "⚠️");
-            
+            }
+
             return (firstIssue, "⚠️");
         }
-        
+
         // Priority 3: Recommendations (potential improvements)
         if (analysis.Recommendations?.Count > 0)
         {
             var firstRec = analysis.Recommendations[0];
             return ($"💡 {firstRec}", "💡");
         }
-        
+
         // Priority 4: Show database activity if significant
         var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
         if (lastSnapshot != null)
         {
             if (lastSnapshot.SoqlQueries > 50)
+            {
                 return ($"Ran {lastSnapshot.SoqlQueries} database queries", "📊");
+            }
+
             if (lastSnapshot.DmlStatements > 50)
+            {
                 return ($"Modified {lastSnapshot.DmlStatements} records", "📊");
+            }
+
             if (analysis.CpuTimeMs > 5000)
+            {
                 return ($"Heavy processing: {analysis.CpuTimeMs}ms CPU time", "🔥");
+            }
         }
-        
+
         // Priority 5: All good!
         if (analysis.DurationMs < 1000)
+        {
             return ("Executed successfully, no issues", "✓");
+        }
         else if (analysis.DurationMs < 5000)
+        {
             return ($"Completed in {analysis.DurationMs}ms", "✓");
+        }
         else
+        {
             return ($"⏱️ Slow execution: {analysis.DurationMs}ms", "⏱️");
+        }
     }
-    
+
     private void OnLogReceived(object? sender, LogReceivedEventArgs e)
     {
         // Use InvokeAsync to properly handle async lambda (Invoke(async ...) causes async-void fire-and-forget)
@@ -3220,7 +3349,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                 // Parse the log content
                 var logId = !string.IsNullOrEmpty(e.LogId) ? e.LogId.Substring(0, 8) : $"Stream_{e.Timestamp:HHmmss}";
-                
+
                 // PERFORMANCE: Skip slow logs if user opted out (prevents UI freeze)
                 if (_streamingOptions?.SkipSlowLogs == true)
                 {
@@ -3231,9 +3360,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         return;
                     }
                 }
-                
+
                 var analysis = await Task.Run(() => _parserService.ParseLog(e.LogContent, logId));
-                
+
                 // Enrich with org metadata
                 await EnrichLogWithMetadataAsync(analysis);
 
@@ -3248,7 +3377,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         return; // Skip successful logs
                     }
                 }
-                
+
                 // FILTER: User filter (if specified)
                 if (_streamingOptions?.FilterByUser == true && !string.IsNullOrEmpty(_streamingOptions.Username))
                 {
@@ -3258,7 +3387,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         return; // Skip logs from other users
                     }
                 }
-                
+
                 // Extract operation type from entry point or root node
                 var operationType = "Unknown";
                 if (!string.IsNullOrEmpty(analysis.EntryPoint))
@@ -3275,76 +3404,76 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         ExecutionNodeType.Method => "Apex Method",
                         _ => analysis.RootNode.Type.ToString()
                     };
-                    
+
                     // Check if it's Execute Anonymous
                     if (analysis.Summary?.Contains("Execute Anonymous", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         operationType = "Execute Anonymous";
                     }
                 }
-                
+
                 // FILTER: Operation type filters
                 if (_streamingOptions != null)
                 {
                     var shouldSkip = false;
-                    
+
                     // Check against operation type filters
-                    if (!_streamingOptions.IncludeApex && 
-                        (operationType.Contains("Trigger") || operationType.Contains("Class") || 
+                    if (!_streamingOptions.IncludeApex &&
+                        (operationType.Contains("Trigger") || operationType.Contains("Class") ||
                          operationType.Contains("Execute Anonymous") || analysis.RootNode?.Type == ExecutionNodeType.CodeUnit))
                     {
                         shouldSkip = true;
                     }
-                    
-                    if (!_streamingOptions.IncludeFlows && 
+
+                    if (!_streamingOptions.IncludeFlows &&
                         (operationType.Contains("Flow") || analysis.RootNode?.Type == ExecutionNodeType.Flow))
                     {
                         shouldSkip = true;
                     }
-                    
-                    if (!_streamingOptions.IncludeValidation && 
+
+                    if (!_streamingOptions.IncludeValidation &&
                         (operationType.Contains("Validation") || analysis.RootNode?.Type == ExecutionNodeType.Validation))
                     {
                         shouldSkip = true;
                     }
-                    
-                    if (!_streamingOptions.IncludeLightning && 
+
+                    if (!_streamingOptions.IncludeLightning &&
                         (operationType.Contains("Aura") || operationType.Contains("LWC") || operationType.Contains("Lightning")))
                     {
                         shouldSkip = true;
                     }
-                    
-                    if (!_streamingOptions.IncludeApi && 
+
+                    if (!_streamingOptions.IncludeApi &&
                         (operationType.Contains("API") || operationType.Contains("REST") || operationType.Contains("SOAP")))
                     {
                         shouldSkip = true;
                     }
-                    
-                    if (!_streamingOptions.IncludeBatch && 
+
+                    if (!_streamingOptions.IncludeBatch &&
                         (operationType.Contains("Batch") || operationType.Contains("Scheduled") || operationType.Contains("Queueable")))
                     {
                         shouldSkip = true;
                     }
-                    
+
                     if (shouldSkip)
                     {
                         StatusMessage = $"⏭️ Filtered out: {operationType}";
                         return; // Skip this log based on operation type filter
                     }
                 }
-                
+
                 // Add to logs list
                 Logs.Insert(0, analysis);
-                
+
                 // Only auto-switch if user enabled it (prevents crash when viewing different log)
                 if (_streamingOptions?.AutoSwitchToNewest == true)
                 {
                     SelectedLog = analysis;
                 }
-                
+
                 // Generate plain English insight for non-experts
                 var (insight, icon) = GenerateLogInsight(analysis);
-                
+
                 // Create rich streaming log entry
                 var streamingEntry = new StreamingLogEntry
                 {
@@ -3361,28 +3490,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     Insight = insight,
                     InsightIcon = icon
                 };
-                
+
                 // If recording, add to buffer
                 if (IsRecording)
                 {
                     _recordingBuffer.Add(analysis);
                     streamingEntry.Message = $"🔴 [Recording #{_recordingBuffer.Count}] {operationType}";
                 }
-                
+
                 // Queue to buffer instead of inserting directly (prevents UI lag from rapid updates)
                 lock (_streamingLock)
                 {
                     _streamingBuffer.Enqueue(streamingEntry);
                 }
-                
+
                 // Start timer if not already running
                 if (_streamingThrottleTimer != null && !_streamingThrottleTimer.IsEnabled)
                 {
                     _streamingThrottleTimer.Start();
                 }
 
-                StatusMessage = IsRecording 
-                    ? $"🔴 Recording... Log #{_recordingBuffer.Count} captured" 
+                StatusMessage = IsRecording
+                    ? $"🔴 Recording... Log #{_recordingBuffer.Count} captured"
                     : $"🕷️ Caught a log! {analysis.Summary}";
             }
             catch (Exception ex)
@@ -3400,7 +3529,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         });
     }
-    
+
     /// <summary>
     /// Timer tick handler that processes queued streaming logs in batches.
     /// This prevents UI lag when many logs arrive rapidly (batches updates every 500ms).
@@ -3408,7 +3537,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OnStreamingThrottleTick(object? sender, EventArgs e)
     {
         var logsToAdd = new List<StreamingLogEntry>();
-        
+
         lock (_streamingLock)
         {
             // Process up to 10 logs per tick (500ms)
@@ -3420,19 +3549,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     logsToAdd.Add(_streamingBuffer.Dequeue());
                 }
             }
-            
+
             // Stop timer if buffer is empty
             if (_streamingBuffer.Count == 0)
             {
                 _streamingThrottleTimer?.Stop();
             }
         }
-        
+
         // Add to UI on dispatcher thread
         foreach (var entry in logsToAdd)
         {
             StreamingLogs.Insert(0, entry);
-            
+
             // Maintain 100-log limit (FIFO removal)
             while (StreamingLogs.Count > 100)
             {
@@ -3440,18 +3569,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         }
     }
-    
+
     /// <summary>
     /// Quick validation: does this file content look like a Salesforce debug log?
     /// Checks the first 50 lines for well-known Salesforce log markers.
     /// </summary>
     private static bool LooksLikeSalesforceLog(string content)
     {
-        if (string.IsNullOrWhiteSpace(content)) return false;
-        
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return false;
+        }
+
         // Check first ~4000 chars (first 50 lines or so)
         var snippet = content.Length > 4000 ? content[..4000] : content;
-        
+
         // Salesforce debug logs always contain at least one of these markers
         string[] markers = [
             "EXECUTION_STARTED",
@@ -3465,35 +3597,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "FLOW_START",
             "LIMIT_USAGE_FOR_NS"
         ];
-        
+
         return markers.Any(marker => snippet.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
-    
+
     /// <summary>
     /// Enriches log analysis with org metadata to make it human-readable.
     /// Replaces cryptic IDs and API names with actual labels, user names, and context.
     /// </summary>
     private async Task EnrichLogWithMetadataAsync(LogAnalysis log)
     {
-        if (!IsConnected) return; // Need SF connection for metadata
-        
+        if (!IsConnected)
+        {
+            return; // Need SF connection for metadata
+        }
+
         try
         {
             // Fetch org metadata (cached, so fast after first call)
             var metadata = await _metadataService.GetOrgMetadataAsync();
-            
+
             // Enrich entry point (e.g., "CaseTrigger" → "CaseTrigger.apxt on Case")
             if (!string.IsNullOrEmpty(log.EntryPoint))
             {
                 log.EntryPoint = _metadataService.EnrichEntryPoint(log.EntryPoint, metadata);
             }
-            
+
             // Enrich user (e.g., "005xx" → "John Smith (john@example.com)")
             if (!string.IsNullOrEmpty(log.LogUser))
             {
                 log.LogUser = _metadataService.EnrichUserId(log.LogUser, metadata);
             }
-            
+
             // Enrich execution tree nodes (add context to triggers, classes, methods)
             if (log.RootNode?.Children != null && log.RootNode.Children.Count > 0)
             {
@@ -3506,7 +3641,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Log.Debug("Failed to enrich log with metadata: {Error}", ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Recursively enriches execution tree nodes with metadata
     /// </summary>
@@ -3523,7 +3658,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     node.Name = $"{triggerName}.apxt on {trigger.ObjectName}";
                 }
             }
-            
+
             // Enrich class/method names
             if (node.Type == ExecutionNodeType.Method && node.Name.Contains('.'))
             {
@@ -3533,7 +3668,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     node.Name = $"{cls.FullName}.{node.Name.Split('.').LastOrDefault()}";
                 }
             }
-            
+
             // Recursively enrich children
             if (node.Children?.Count > 0)
             {
@@ -3541,7 +3676,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         }
     }
-    
+
     /// <summary>
     /// Shows a simple dialog to paste a file path
     /// TODO: Implement as proper Avalonia dialog
@@ -3553,10 +3688,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     // ===== SALESFORCE CONNECTION MANAGEMENT =====
-    
+
     [ObservableProperty]
     private string _connectionDisplayName = "Not Connected";
-    
+
     [RelayCommand]
     private async Task RefreshMetadataAsync()
     {
@@ -3565,21 +3700,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = "⚠️ Connect to Salesforce first";
             return;
         }
-        
+
         try
         {
             IsLoading = true;
             StatusMessage = "🔄 Refreshing org metadata...";
-            
+
             // Force refresh by clearing cache
             var metadata = await _metadataService.GetOrgMetadataAsync(forceRefresh: true);
-            
+
             if (metadata != null)
             {
                 // Re-enrich all currently loaded logs with fresh metadata
                 var enrichmentTasks = Logs.Select(log => EnrichLogWithMetadataAsync(log));
                 await Task.WhenAll(enrichmentTasks);
-                
+
                 StatusMessage = $"✓ Metadata refreshed - {metadata.Users.Count} users, {metadata.Objects.Count} objects, " +
                                $"{metadata.ApexClasses.Count} classes, {metadata.ApexTriggers.Count} triggers";
             }
@@ -3597,7 +3732,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsLoading = false;
         }
     }
-    
+
     [RelayCommand]
     private void ManageConnections()
     {
@@ -3621,7 +3756,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void SortLogs(string property)
     {
         if (LogSortProperty == property)
+        {
             LogSortAscending = !LogSortAscending;
+        }
         else
         {
             LogSortProperty = property;
@@ -3642,7 +3779,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
 
         Logs.Clear();
-        foreach (var log in sorted) Logs.Add(log);
+        foreach (var log in sorted)
+        {
+            Logs.Add(log);
+        }
+
         _ = ShowToastAsync($"Sorted by {property}", "info", 1500);
     }
 
@@ -3658,7 +3799,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DeleteSelectedLog()
     {
-        if (SelectedLog == null) return;
+        if (SelectedLog == null)
+        {
+            return;
+        }
+
         var name = SelectedLog.LogName;
         Logs.Remove(SelectedLog);
         SelectedLog = Logs.FirstOrDefault();
@@ -3734,25 +3879,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ExecutePaletteItem(PaletteCommand? item)
     {
-        if (item == null) return;
+        if (item == null)
+        {
+            return;
+        }
+
         IsCommandPaletteOpen = false;
         switch (item.Action)
         {
-            case "upload":   _ = UploadLog(); break;
-            case "folder":   _ = LoadLogFolder(); break;
+            case "upload": _ = UploadLog(); break;
+            case "folder": _ = LoadLogFolder(); break;
             case "download": _ = LoadRecentLogsAsync(); break;
-            case "live":     _ = ToggleStreaming(); break;
-            case "export":   ExportReport(); break;
-            case "connect":  ShowUpgradeDialog(); break;
-            case "manage":   ManageDebugLogs(); break;
-            case "tab0":     SelectTab(0); break;
-            case "tab1":     SelectTab(1); break;
-            case "tab2":     SelectTab(2); break;
-            case "tab3":     SelectTab(3); break;
-            case "tab4":     SelectTab(4); break;
+            case "live": _ = ToggleStreaming(); break;
+            case "export": ExportReport(); break;
+            case "connect": ShowUpgradeDialog(); break;
+            case "manage": ManageDebugLogs(); break;
+            case "tab0": SelectTab(0); break;
+            case "tab1": SelectTab(1); break;
+            case "tab2": SelectTab(2); break;
+            case "tab3": SelectTab(3); break;
+            case "tab4": SelectTab(4); break;
             case "sort-duration": SortLogs("Duration"); break;
-            case "sort-date":     SortLogs("Date"); break;
-            case "clear":    ClearSelectedLog(); break;
+            case "sort-date": SortLogs("Date"); break;
+            case "clear": ClearSelectedLog(); break;
         }
     }
 
@@ -3771,7 +3920,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         // Unsubscribe event handlers to prevent leaks
@@ -3782,7 +3935,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _editorBridge.ConnectionStatusChanged -= OnEditorConnectionChanged;
             _editorBridge.WorkspacePathReceived -= OnWorkspacePathReceived;
             if (_streamingThrottleTimer != null)
+            {
                 _streamingThrottleTimer.Tick -= OnStreamingThrottleTick;
+            }
         }
         catch { }
 
@@ -3815,7 +3970,7 @@ public class MethodDisplayItem
     public long AvgTimeMs { get; set; }
     public string Location { get; set; } = string.Empty;
     public double PercentOfTotal { get; set; }
-    
+
     public string TimeDisplay => TotalTimeMs >= 1000 ? $"{TotalTimeMs / 1000.0:N1}s" : $"{TotalTimeMs}ms";
     public string AvgDisplay => AvgTimeMs >= 1000 ? $"{AvgTimeMs / 1000.0:N1}s" : $"{AvgTimeMs}ms";
     public string BarWidth => $"{Math.Max(5, Math.Min(100, PercentOfTotal))}";
@@ -3831,7 +3986,7 @@ public class QueryDisplayItem
     public int TotalTimeMs { get; set; }
     public string Location { get; set; } = string.Empty;
     public bool IsNPlusOne { get; set; }
-    
+
     public string TimeDisplay => TotalTimeMs >= 1000 ? $"{TotalTimeMs / 1000.0:N1}s" : $"{TotalTimeMs}ms";
     public string CountBadge => ExecutionCount > 1 ? $"{ExecutionCount}x" : "1x";
     public string NPlusOneBadge => IsNPlusOne ? "⚠️ N+1" : "";
@@ -3850,7 +4005,7 @@ public class TreeNodeViewModel
     public bool IsExpanded { get; set; }
     public bool HasChildren { get; set; }
     public ObservableCollection<TreeNodeViewModel> Children { get; set; } = new();
-    
+
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
     public Avalonia.Thickness IndentMargin => new Avalonia.Thickness(Depth * 24, 0, 0, 0);
     public string ExpanderIcon => HasChildren ? (IsExpanded ? "▾" : "▸") : "  ";
@@ -3876,24 +4031,24 @@ public class TimelineDetailItem
     /// <summary>Short label shown as a badge in the timeline UI. Empty when OoePhase is null or Other.</summary>
     public string OoePhaseLabel => OoePhase switch
     {
-        Models.OoePhase.BeforeTrigger    => "Before Trigger",
+        Models.OoePhase.BeforeTrigger => "Before Trigger",
         Models.OoePhase.SystemValidation => "Validation",
-        Models.OoePhase.AfterTrigger     => "After Trigger",
-        Models.OoePhase.Workflow         => "Workflow",
-        Models.OoePhase.AfterSaveFlow    => "After-Save Flow",
-        Models.OoePhase.Process          => "Process",
-        Models.OoePhase.FieldUpdate      => "Field Update",
-        Models.OoePhase.ReEntry          => "Re-Entry ⚠",
-        Models.OoePhase.Async            => "Async",
-        _                                => string.Empty
+        Models.OoePhase.AfterTrigger => "After Trigger",
+        Models.OoePhase.Workflow => "Workflow",
+        Models.OoePhase.AfterSaveFlow => "After-Save Flow",
+        Models.OoePhase.Process => "Process",
+        Models.OoePhase.FieldUpdate => "Field Update",
+        Models.OoePhase.ReEntry => "Re-Entry ⚠",
+        Models.OoePhase.Async => "Async",
+        _ => string.Empty
     };
 
     public bool HasOoePhaseLabel => !string.IsNullOrEmpty(OoePhaseLabel);
-    
+
     public string DurationDisplay => DurationMs >= 1000 ? $"{DurationMs / 1000.0:N1}s" : $"{DurationMs}ms";
     public string PercentDisplay => $"{PercentOfTotal:N1}%";
     public Avalonia.Thickness IndentMargin => new Avalonia.Thickness(Depth * 16, 0, 0, 0);
-    
+
     public string TypeColor => Type switch
     {
         "Trigger" => "#8B5CF6",
@@ -3914,7 +4069,7 @@ public class StreamingLogEntry
     public string Message { get; set; } = "";
     public bool IsError { get; set; }
     public LogAnalysis? Analysis { get; set; }
-    
+
     // Enhanced details for better UX
     public string LogId { get; set; } = "";
     public string User { get; set; } = "";

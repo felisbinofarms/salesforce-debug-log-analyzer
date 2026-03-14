@@ -1,5 +1,5 @@
-using System.Text.RegularExpressions;
 using System.IO;
+using System.Text.RegularExpressions;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -44,7 +44,9 @@ public class LogMetadataExtractor
             {
                 footerQueue.Enqueue(line);
                 if (footerQueue.Count > 1000)
+                {
                     footerQueue.Dequeue();
+                }
             }
             var footerLines = footerQueue.ToList();
             var allSampleLines = headerLines.Concat(footerLines).ToList();
@@ -90,7 +92,11 @@ public class LogMetadataExtractor
             {
                 var duration = (endTime.Value - startTime.Value).TotalMilliseconds;
                 // Guard against midnight-crossing logs where end timestamp wraps to next day
-                if (duration < 0) duration += TimeSpan.FromDays(1).TotalMilliseconds;
+                if (duration < 0)
+                {
+                    duration += TimeSpan.FromDays(1).TotalMilliseconds;
+                }
+
                 metadata.DurationMs = duration;
             }
 
@@ -134,32 +140,50 @@ public class LogMetadataExtractor
                         if (limitLine.Contains("SOQL queries"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.SoqlQueries = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.SoqlQueries = int.Parse(match.Groups[1].Value);
+                            }
                         }
                         else if (limitLine.Contains("query rows"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.QueryRows = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.QueryRows = int.Parse(match.Groups[1].Value);
+                            }
                         }
                         else if (limitLine.Contains("DML statements"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.DmlStatements = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.DmlStatements = int.Parse(match.Groups[1].Value);
+                            }
                         }
                         else if (limitLine.Contains("DML rows"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.DmlRows = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.DmlRows = int.Parse(match.Groups[1].Value);
+                            }
                         }
                         else if (limitLine.Contains("CPU time"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.CpuTime = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.CpuTime = int.Parse(match.Groups[1].Value);
+                            }
                         }
                         else if (limitLine.Contains("heap size"))
                         {
                             var match = Regex.Match(limitLine, @"(\d+)\s+out of");
-                            if (match.Success) metadata.HeapSize = int.Parse(match.Groups[1].Value);
+                            if (match.Success)
+                            {
+                                metadata.HeapSize = int.Parse(match.Groups[1].Value);
+                            }
                         }
                     }
                     break;
@@ -228,7 +252,7 @@ public class LogMetadataExtractor
 
         // Search recursively; collect .log, .txt, and no-extension files that look like SF logs
         var allFiles = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-        
+
         System.Diagnostics.Debug.WriteLine($"[LogMetadataExtractor] Scanning folder: {directoryPath}");
         System.Diagnostics.Debug.WriteLine($"[LogMetadataExtractor] Total files found: {allFiles.Length}");
 
@@ -236,13 +260,13 @@ public class LogMetadataExtractor
         {
             var ext = Path.GetExtension(f).ToLowerInvariant();
             var fileName = Path.GetFileName(f);
-            
+
             if (ext == ".log" || ext == ".txt")
             {
                 System.Diagnostics.Debug.WriteLine($"  ✓ Accepted: {fileName} (extension: {ext})");
                 return true;
             }
-            
+
             // No extension: accept if filename looks like a Salesforce log ID (07L...)
             // or if it starts with the numeric debug log prefix
             if (ext == "")
@@ -250,12 +274,17 @@ public class LogMetadataExtractor
                 var name = Path.GetFileNameWithoutExtension(f);
                 bool matches = name.StartsWith("07L", StringComparison.OrdinalIgnoreCase) || LooksLikeSalesforceLog(f);
                 if (matches)
+                {
                     System.Diagnostics.Debug.WriteLine($"  ✓ Accepted: {fileName} (no extension, SF log pattern)");
+                }
                 else
+                {
                     System.Diagnostics.Debug.WriteLine($"  ✗ Rejected: {fileName} (no extension, not SF pattern)");
+                }
+
                 return matches;
             }
-            
+
             System.Diagnostics.Debug.WriteLine($"  ✗ Rejected: {fileName} (extension: {ext})");
             return false;
         }).ToList();
@@ -283,10 +312,16 @@ public class LogMetadataExtractor
             for (int i = 0; i < 3; i++)
             {
                 var line = reader.ReadLine();
-                if (line == null) break;
+                if (line == null)
+                {
+                    break;
+                }
+
                 if (line.Contains("APEX_CODE") || line.Contains("Execute Anonymous") ||
                     line.Contains("USER_INFO") || line.Contains("EXECUTION_STARTED"))
+                {
                     return true;
+                }
             }
         }
         catch { /* ignore unreadable files */ }
@@ -305,7 +340,9 @@ public class LogMetadataExtractor
     private bool IsValidRecordId(string id)
     {
         if (id.Length != 15 && id.Length != 18)
+        {
             return false;
+        }
 
         // Common Salesforce object prefixes
         var validPrefixes = new[]
@@ -327,7 +364,7 @@ public class LogMetadataExtractor
         var combinedText = string.Join(" ", headerLines.Take(500)).ToLower();
 
         // Check for Batch Apex
-        if (combinedText.Contains("batchable") || 
+        if (combinedText.Contains("batchable") ||
             combinedText.Contains("database.batchable") ||
             codeUnitName.Contains("Batch", StringComparison.OrdinalIgnoreCase) ||
             methodName.Contains("execute") && codeUnitName.Contains("Batch"))

@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -97,7 +97,7 @@ public class OAuthService
 
             // Wait for callback
             var tcs = new TaskCompletionSource<string?>();
-            
+
             _ = Task.Run(async () =>
             {
                 try
@@ -109,7 +109,7 @@ public class OAuthService
                     // Parse query parameters
                     var query = request.Url?.Query;
                     var queryParams = System.Web.HttpUtility.ParseQueryString(query ?? "");
-                    
+
                     var code = queryParams["code"];
                     var state = queryParams["state"];
                     var error = queryParams["error"];
@@ -165,7 +165,7 @@ public class OAuthService
     private async Task<OAuthResult> ExchangeCodeForTokenAsync(string authCode, string codeVerifier, string tokenEndpoint, string actualRedirectUri)
     {
         using var httpClient = new HttpClient();
-        
+
         var parameters = new Dictionary<string, string>
         {
             { "grant_type", "authorization_code" },
@@ -183,15 +183,15 @@ public class OAuthService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new OAuthResult 
-                { 
-                    Success = false, 
-                    Error = $"Token exchange failed: {responseContent}" 
+                return new OAuthResult
+                {
+                    Success = false,
+                    Error = $"Token exchange failed: {responseContent}"
                 };
             }
 
             var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseContent);
-            
+
             if (tokenResponse == null)
             {
                 return new OAuthResult { Success = false, Error = "Failed to parse token response" };

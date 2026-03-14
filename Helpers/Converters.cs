@@ -12,14 +12,20 @@ public class InverseBooleanConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
+        {
             return !boolValue;
+        }
+
         return true;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
+        {
             return !boolValue;
+        }
+
         return false;
     }
 }
@@ -34,7 +40,11 @@ public class BooleanToVisibilityConverter : IValueConverter
         if (value is bool boolValue)
         {
             bool invert = parameter is string str && str.Equals("Inverse", StringComparison.OrdinalIgnoreCase);
-            if (invert) boolValue = !boolValue;
+            if (invert)
+            {
+                boolValue = !boolValue;
+            }
+
             return boolValue;
         }
         return false;
@@ -61,7 +71,9 @@ public class IntEqualsToVisibilityConverter : IValueConverter
         if (value is int intValue && parameter != null)
         {
             if (int.TryParse(parameter.ToString(), out int targetValue))
+            {
                 return intValue == targetValue;
+            }
         }
         return false;
     }
@@ -110,8 +122,16 @@ public class PercentToSeverityConverter : IValueConverter
     {
         if (value is double percent)
         {
-            if (percent >= 80) return "Critical";
-            if (percent >= 50) return "Warning";
+            if (percent >= 80)
+            {
+                return "Critical";
+            }
+
+            if (percent >= 50)
+            {
+                return "Warning";
+            }
+
             return "Normal";
         }
         return "Normal";
@@ -128,9 +148,21 @@ public class GreaterThanZeroConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is int intValue) return intValue > 0;
-        if (value is double doubleValue) return doubleValue > 0;
-        if (value is long longValue) return longValue > 0;
+        if (value is int intValue)
+        {
+            return intValue > 0;
+        }
+
+        if (value is double doubleValue)
+        {
+            return doubleValue > 0;
+        }
+
+        if (value is long longValue)
+        {
+            return longValue > 0;
+        }
+
         return false;
     }
 
@@ -145,8 +177,16 @@ public class GreaterThanZeroToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is int intValue) return intValue > 0;
-        if (value is double doubleValue) return doubleValue > 0;
+        if (value is int intValue)
+        {
+            return intValue > 0;
+        }
+
+        if (value is double doubleValue)
+        {
+            return doubleValue > 0;
+        }
+
         return false;
     }
 
@@ -162,7 +202,10 @@ public class InverseBooleanToVisibilityConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is bool boolValue)
+        {
             return !boolValue;
+        }
+
         return true;
     }
 
@@ -179,13 +222,23 @@ public class ArcPathConverter : IValueConverter
     {
         double percent;
         if (value is double d)
+        {
             percent = d;
+        }
         else if (value is int i)
+        {
             percent = i;
+        }
         else
+        {
             return null;
+        }
+
         percent = Math.Max(0, Math.Min(100, percent));
-        if (percent <= 0) return null;
+        if (percent <= 0)
+        {
+            return null;
+        }
 
         const double radius = 56;
         const double center = 60;
@@ -260,8 +313,16 @@ public class ZeroToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is int intValue) return intValue == 0;
-        if (value is double doubleValue) return doubleValue == 0;
+        if (value is int intValue)
+        {
+            return intValue == 0;
+        }
+
+        if (value is double doubleValue)
+        {
+            return doubleValue == 0;
+        }
+
         return true;
     }
 
@@ -318,7 +379,10 @@ public class UserToColorConverter : IValueConverter
         {
             int hash = 0;
             foreach (char c in username)
+            {
                 hash = ((hash << 5) - hash) + c;
+            }
+
             hash &= 0x7FFFFFFF;
             int index = Math.Abs(hash) % UserColors.Length;
             return new SolidColorBrush(Avalonia.Media.Color.Parse(UserColors[index]));
@@ -339,11 +403,25 @@ public class DoubleGreaterThanConverter : IValueConverter
     {
         double threshold = 0;
         if (parameter is string paramStr)
+        {
             double.TryParse(paramStr, NumberStyles.Any, CultureInfo.InvariantCulture, out threshold);
+        }
 
-        if (value is double d) return d > threshold;
-        if (value is float f) return f > threshold;
-        if (value is int i) return i > threshold;
+        if (value is double d)
+        {
+            return d > threshold;
+        }
+
+        if (value is float f)
+        {
+            return f > threshold;
+        }
+
+        if (value is int i)
+        {
+            return i > threshold;
+        }
+
         return false;
     }
 
@@ -371,13 +449,18 @@ public class MultiBooleanToVisibilityConverter : IMultiValueConverter
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values == null || values.Count == 0)
+        {
             return false;
+        }
 
         foreach (var value in values)
         {
             if (value is bool boolValue)
             {
-                if (!boolValue) return false;
+                if (!boolValue)
+                {
+                    return false;
+                }
             }
             else
             {

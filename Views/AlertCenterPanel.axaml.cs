@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using SalesforceDebugAnalyzer.Models;
@@ -24,7 +24,10 @@ public partial class AlertCenterPanel : UserControl
 
     public void RefreshAlerts()
     {
-        if (_viewModel == null) return;
+        if (_viewModel == null)
+        {
+            return;
+        }
 
         var alerts = _viewModel.MonitoringAlerts;
 
@@ -44,7 +47,9 @@ public partial class AlertCenterPanel : UserControl
     private void Close_Click(object? sender, RoutedEventArgs e)
     {
         if (_viewModel != null)
+        {
             _viewModel.ShowAlertCenter = false;
+        }
     }
 
     private void AlertItem_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -52,7 +57,10 @@ public partial class AlertCenterPanel : UserControl
         if (sender is Border border && border.Tag is MonitoringAlert alert && _viewModel != null)
         {
             var parentWindow = TopLevel.GetTopLevel(this) as Window;
-            if (parentWindow == null) return;
+            if (parentWindow == null)
+            {
+                return;
+            }
 
             var dialog = new AlertDetailDialog(alert, _viewModel);
             dialog.ShowDialog(parentWindow);
@@ -79,9 +87,19 @@ public partial class AlertCenterPanel : UserControl
     {
         if (sender is RadioButton radio && radio.IsChecked == true)
         {
-            if (radio == FilterAllRadio) _severityFilter = "all";
-            else if (radio == FilterCriticalRadio) _severityFilter = "critical";
-            else if (radio == FilterWarningRadio) _severityFilter = "warning";
+            if (radio == FilterAllRadio)
+            {
+                _severityFilter = "all";
+            }
+            else if (radio == FilterCriticalRadio)
+            {
+                _severityFilter = "critical";
+            }
+            else if (radio == FilterWarningRadio)
+            {
+                _severityFilter = "warning";
+            }
+
             RefreshAlerts();
         }
     }

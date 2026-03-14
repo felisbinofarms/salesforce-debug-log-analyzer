@@ -174,10 +174,26 @@ public class MonitoringAlert
         get
         {
             var elapsed = DateTime.UtcNow - CreatedAt;
-            if (elapsed.TotalMinutes < 1) return "Just now";
-            if (elapsed.TotalMinutes < 60) return $"{(int)elapsed.TotalMinutes}m ago";
-            if (elapsed.TotalHours < 24) return $"{(int)elapsed.TotalHours}h ago";
-            if (elapsed.TotalDays < 7) return $"{(int)elapsed.TotalDays}d ago";
+            if (elapsed.TotalMinutes < 1)
+            {
+                return "Just now";
+            }
+
+            if (elapsed.TotalMinutes < 60)
+            {
+                return $"{(int)elapsed.TotalMinutes}m ago";
+            }
+
+            if (elapsed.TotalHours < 24)
+            {
+                return $"{(int)elapsed.TotalHours}h ago";
+            }
+
+            if (elapsed.TotalDays < 7)
+            {
+                return $"{(int)elapsed.TotalDays}d ago";
+            }
+
             return CreatedAt.ToString("MMM dd");
         }
     }
@@ -385,10 +401,17 @@ public class ShieldDashboardData
         List<SparklinePoint> points, double width, double height)
     {
         var col = new Avalonia.Collections.AvaloniaList<Avalonia.Point>();
-        if (points.Count < 2) return col;
+        if (points.Count < 2)
+        {
+            return col;
+        }
 
         var maxVal = points.Max(p => p.Value);
-        if (maxVal <= 0) maxVal = 1;
+        if (maxVal <= 0)
+        {
+            maxVal = 1;
+        }
+
         var steps = points.Count - 1;
 
         for (int i = 0; i < points.Count; i++)

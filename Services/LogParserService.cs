@@ -10,7 +10,7 @@ public class LogParserService
 {
     private static readonly Regex LogLinePattern = new(@"^(\d{2}:\d{2}:\d{2}\.\d+)\s+\((\d+)\)\|([A-Z_]+)\|(.*)$", RegexOptions.Compiled);
     private static readonly Regex LimitPattern = new(@"Number of (\w+(?:\s+\w+)*?):\s*(\d+)\s+out of\s+(\d+)", RegexOptions.Compiled);
-    
+
     private readonly LogExplainerService _explainer = new();
 
     /// <summary>
@@ -34,12 +34,15 @@ public class LogParserService
         var lines = logContent.Split('\n');
         analysis.LineCount = lines.Length;
         var logLines = new List<LogLine>();
-        
+
         // Phase 1: Tokenize all lines
         for (int i = 0; i < lines.Length; i++)
         {
             var line = lines[i].Trim();
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
 
             var match = LogLinePattern.Match(line);
             if (match.Success)
@@ -73,7 +76,7 @@ public class LogParserService
 
         // Phase 3b: Extract callout operations
         analysis.Callouts = ExtractCallouts(logLines);
-        
+
         // Phase 3c: Extract Flow/Process Builder executions
         analysis.Flows = ExtractFlows(logLines);
 
@@ -83,7 +86,7 @@ public class LogParserService
         // Phase 5b: Find and classify exceptions (handled vs unhandled)
         ClassifyExceptions(logLines, analysis);
         analysis.HasErrors = analysis.Errors.Count > 0;
-        analysis.TransactionFailed = analysis.Errors.Any(e => 
+        analysis.TransactionFailed = analysis.Errors.Any(e =>
             e.Severity == ExceptionSeverity.Fatal || e.Severity == ExceptionSeverity.Unhandled);
 
         // Phase 6: Calculate method statistics
@@ -100,9 +103,12 @@ public class LogParserService
         for (int i = lines.Length - 1; i >= Math.Max(0, lines.Length - 50); i--)
         {
             lastNs = ParseNanoseconds(lines[i]);
-            if (lastNs > 0) break;
+            if (lastNs > 0)
+            {
+                break;
+            }
         }
-        
+
         if (lastNs > firstNs && firstNs >= 0)
         {
             analysis.DurationMs = (lastNs - firstNs) / 1_000_000.0;
@@ -115,7 +121,7 @@ public class LogParserService
             analysis.WallClockMs = analysis.RootNode.DurationMs;
             analysis.DurationSource = DurationSource.DateTimeDerived;
         }
-        
+
         // Extract CPU time from governor limits
         var lastSnapshot = analysis.LimitSnapshots.LastOrDefault();
         if (lastSnapshot != null)
@@ -125,40 +131,40 @@ public class LogParserService
 
         // Phase 8: Parse cumulative profiling (before summary so data is available)
         (analysis.CumulativeProfiling, analysis.CumulativeProfilingFound) = ParseCumulativeProfiling(lines);
-        
+
         // Phase 9: Parse CUMULATIVE_LIMIT_USAGE for accurate governor limits/CPU/Heap
         ParseCumulativeLimitUsage(lines, analysis);
-        
+
         // Phase 10: Detect test class execution (before summary so test info is available)
         DetectTestExecution(logLines, analysis);
-        
+
         // Phase 10b: Extract execution unit boundaries (EXECUTION_STARTED/FINISHED)
         ExtractExecutionUnits(logLines, analysis);
-        
+
         // Phase 10c: Track heap allocations (HEAP_ALLOCATE)
         TrackHeapAllocations(logLines, analysis);
-        
+
         // Phase 10d: Detect async execution context from governor limits
         DetectAsyncContext(analysis);
-        
+
         // Phase 10e: Detect FLOW_ELEMENT_ERROR events (DML failures inside Flows)
         DetectFlowErrors(logLines, analysis);
-        
+
         // Phase 10f: Detect log truncation (missing CODE_UNIT_ENDED for opened units)
         DetectLogTruncation(logLines, lines, analysis);
-        
+
         // Phase 10g: Detect duplicate SOQL queries
         DetectDuplicateQueries(analysis);
-        
+
         // Phase 10h: Parse workflow rule evaluations (WF_RULE_EVAL events)
         ExtractWorkflowRules(logLines, analysis);
-        
+
         // Phase 10i: Detect trigger re-entry patterns (same trigger firing multiple times)
         DetectTriggerReEntries(logLines, analysis);
-        
+
         // Phase 10j: Calculate CMDT vs regular SOQL split
         CalculateCmdtSplit(analysis);
-        
+
         // Phase 10k: Grade bulk safety (will this code work when processing 200 records?)
         GradeBulkSafety(analysis);
 
@@ -169,17 +175,17 @@ public class LogParserService
         analysis.Summary = GenerateSummary(analysis);
         analysis.Issues = DetectIssues(analysis);
         analysis.Recommendations = GenerateRecommendations(analysis);
-        
+
         // NEW: Generate detailed, educational explanations with code examples
         analysis.DetailedSummary = _explainer.GenerateDetailedSummary(analysis);
         analysis.DetailedIssues = _explainer.GenerateDetailedIssues(analysis);
-        
+
         // Phase 12: Build order of execution timeline
         analysis.Timeline = BuildExecutionTimeline(logLines, analysis);
-        
+
         // Phase 13: Calculate health score and generate actionable issues
         analysis.Health = CalculateHealthScore(analysis);
-        
+
         // Extract user info
         var userInfoLine = logLines.FirstOrDefault(l => l.EventType == "USER_INFO");
         if (userInfoLine != null)
@@ -199,9 +205,13 @@ public class LogParserService
 
         // Post-fix DurationSource: context flags set during later parse phases override the initial value
         if (analysis.IsLogTruncated)
+        {
             analysis.DurationSource = DurationSource.Incomplete;
+        }
         else if (analysis.IsAsyncExecution)
+        {
             analysis.DurationSource = DurationSource.Async;
+        }
 
         return analysis;
     }
@@ -214,7 +224,7 @@ public class LogParserService
         }
         return DateTime.MinValue;
     }
-    
+
     /// <summary>
     /// Parse timestamp with nanosecond precision from Salesforce log lines.
     /// Format: "21:56:02.0 (225728779)" where the value in parentheses is nanoseconds since transaction start.
@@ -224,7 +234,10 @@ public class LogParserService
     {
         var match = Regex.Match(rawLine, @"\((\d+)\)\|");
         if (match.Success && long.TryParse(match.Groups[1].Value, out var ns))
+        {
             return ns;
+        }
+
         return 0;
     }
 
@@ -444,14 +457,19 @@ public class LogParserService
     /// </summary>
     private string GetCodeUnitName(string[] details)
     {
-        if (details.Length == 0) return "Unknown";
+        if (details.Length == 0)
+        {
+            return "Unknown";
+        }
 
         // Try from last to first, looking for the best human-readable name
         for (int i = details.Length - 1; i >= 0; i--)
         {
             var cleaned = CleanCodeUnitName(details[i]);
             if (!string.IsNullOrEmpty(cleaned) && !IsSalesforceId(cleaned))
+            {
                 return cleaned;
+            }
         }
 
         // Fallback: return any non-empty cleaned value
@@ -467,11 +485,15 @@ public class LogParserService
     {
         // Prefer Details[2] (human-readable name like "Global_Util.getRecordType(String, String)")
         if (details.Length > 2 && !string.IsNullOrEmpty(details[2]))
+        {
             return details[2];
+        }
 
         // Fallback to Details[1] if it's not a Salesforce ID
         if (details.Length > 1 && !string.IsNullOrEmpty(details[1]) && !IsSalesforceId(details[1]))
+        {
             return details[1];
+        }
 
         // Last resort
         return details.Length > 1 ? details[1] : "Unknown Method";
@@ -482,10 +504,16 @@ public class LogParserService
     /// </summary>
     private bool IsSalesforceId(string value)
     {
-        if (string.IsNullOrEmpty(value)) return false;
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
         // Salesforce IDs are 15 or 18 characters, alphanumeric
         if ((value.Length == 15 || value.Length == 18) && value.All(c => char.IsLetterOrDigit(c)))
+        {
             return true;
+        }
+
         return false;
     }
 
@@ -589,12 +617,18 @@ public class LogParserService
                     if (detail.StartsWith("Op:"))
                     {
                         var parts = detail.Split(':');
-                        if (parts.Length > 1) currentOp.DmlOperation = parts[1];
+                        if (parts.Length > 1)
+                        {
+                            currentOp.DmlOperation = parts[1];
+                        }
                     }
                     else if (detail.StartsWith("Type:"))
                     {
                         var parts = detail.Split(':');
-                        if (parts.Length > 1) currentOp.ObjectType = parts[1];
+                        if (parts.Length > 1)
+                        {
+                            currentOp.ObjectType = parts[1];
+                        }
                     }
                     else if (detail.StartsWith("Rows:"))
                     {
@@ -704,19 +738,31 @@ public class LogParserService
                     currentCallout.Endpoint = endpointMatch.Groups[1].Value;
                     var ncMatch = Regex.Match(currentCallout.Endpoint, @"^callout:/?/?([^/]+)");
                     if (ncMatch.Success)
+                    {
                         currentCallout.NamedCredentialName = ncMatch.Groups[1].Value;
+                    }
                 }
                 var methodMatch = Regex.Match(rawDetail, @"Method=([A-Z]+)");
-                if (methodMatch.Success) currentCallout.HttpMethod = methodMatch.Groups[1].Value;
+                if (methodMatch.Success)
+                {
+                    currentCallout.HttpMethod = methodMatch.Groups[1].Value;
+                }
             }
             else if (line.EventType == "CALLOUT_RESPONSE" && currentCallout != null)
             {
                 var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                 var statusMatch = Regex.Match(rawDetail, @"Status=([^,\]]+)");
-                if (statusMatch.Success) currentCallout.StatusMessage = statusMatch.Groups[1].Value;
+                if (statusMatch.Success)
+                {
+                    currentCallout.StatusMessage = statusMatch.Groups[1].Value;
+                }
+
                 var codeMatch = Regex.Match(rawDetail, @"StatusCode=(\d+)");
                 if (codeMatch.Success && int.TryParse(codeMatch.Groups[1].Value, out var code))
+                {
                     currentCallout.StatusCode = code;
+                }
+
                 currentCallout.DurationMs = nsStart > 0 && line.NanosecondCounter > nsStart
                     ? (line.NanosecondCounter - nsStart) / 1_000_000 : 0;
                 callouts.Add(currentCallout);
@@ -733,7 +779,9 @@ public class LogParserService
                     {
                         currentCallout.Metadata["ResolvedEndpoint"] = endpointMatch.Groups[1].Value;
                         if (currentCallout.Endpoint.StartsWith("callout:", StringComparison.OrdinalIgnoreCase))
+                        {
                             currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                        }
                     }
                 }
                 else
@@ -743,9 +791,16 @@ public class LogParserService
                     currentCallout = new CalloutOperation { LineNumber = line.LineNumber };
                     var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                     var endpointMatch = Regex.Match(rawDetail, @"Endpoint=([^,\]]+)");
-                    if (endpointMatch.Success) currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                    if (endpointMatch.Success)
+                    {
+                        currentCallout.Endpoint = endpointMatch.Groups[1].Value;
+                    }
+
                     var methodMatch = Regex.Match(rawDetail, @"Method=([A-Z]+)");
-                    if (methodMatch.Success) currentCallout.HttpMethod = methodMatch.Groups[1].Value;
+                    if (methodMatch.Success)
+                    {
+                        currentCallout.HttpMethod = methodMatch.Groups[1].Value;
+                    }
                 }
             }
             else if (line.EventType == "NAMED_CREDENTIAL_RESPONSE")
@@ -754,17 +809,25 @@ public class LogParserService
                 {
                     var rawDetail = line.Details.Length > 1 ? line.Details[1] : "";
                     var statusMatch = Regex.Match(rawDetail, @"Status=([^,\]]+)");
-                    if (statusMatch.Success) currentCallout.StatusMessage = statusMatch.Groups[1].Value;
+                    if (statusMatch.Success)
+                    {
+                        currentCallout.StatusMessage = statusMatch.Groups[1].Value;
+                    }
+
                     var codeMatch = Regex.Match(rawDetail, @"StatusCode=(\d+)");
                     if (codeMatch.Success && int.TryParse(codeMatch.Groups[1].Value, out var code))
+                    {
                         currentCallout.StatusCode = code;
+                    }
                 }
             }
         }
 
         // Handle any dangling callout that never got a response (e.g., log truncated)
         if (currentCallout != null)
+        {
             callouts.Add(currentCallout);
+        }
 
         return callouts;
     }
@@ -778,7 +841,7 @@ public class LogParserService
         // Track flow names from FLOW_CREATE_INTERVIEW_END events
         // Format: FLOW_CREATE_INTERVIEW_END|{interviewGuid}|{Flow Name}
         var flowNames = new Dictionary<string, FlowExecution>();
-        
+
         // Also track flows from FLOW_START_INTERVIEWS_BEGIN for scheduled/auto-launched flows
         // that may not have FLOW_CREATE_INTERVIEW_END
 
@@ -821,7 +884,9 @@ public class LogParserService
                 // Count flow elements for the most recent interview
                 var lastFlow = flowNames.Values.LastOrDefault();
                 if (lastFlow != null)
+                {
                     lastFlow.ElementCount++;
+                }
             }
             else if (line.EventType == "FLOW_ELEMENT_FAULT")
             {
@@ -878,7 +943,7 @@ public class LogParserService
             if (line.EventType == "CODE_UNIT_STARTED")
             {
                 var details = string.Join("|", line.Details);
-                
+
                 // Parse trigger format: "__sfdc_trigger/CaseTrigger" or "CaseTrigger on Case trigger event BeforeInsert"
                 if (details.Contains("trigger", StringComparison.OrdinalIgnoreCase))
                 {
@@ -888,7 +953,7 @@ public class LogParserService
                     {
                         return $"{match.Groups[1].Value} on {match.Groups[2].Value} ({match.Groups[3].Value})";
                     }
-                    
+
                     // Fallback: extract trigger name from __sfdc_trigger/TriggerName
                     match = Regex.Match(details, @"__sfdc_trigger/(\w+)");
                     if (match.Success)
@@ -896,7 +961,7 @@ public class LogParserService
                         return match.Groups[1].Value;
                     }
                 }
-                
+
                 // Parse flow format
                 if (details.Contains("Flow", StringComparison.OrdinalIgnoreCase))
                 {
@@ -906,13 +971,13 @@ public class LogParserService
                         return $"Flow: {match.Groups[1].Value}";
                     }
                 }
-                
+
                 // Parse VF/Lightning Controller
                 if (details.Contains("VF") || details.Contains("Aura") || details.Contains("LWC"))
                 {
                     return CleanCodeUnitName(line.Details.LastOrDefault() ?? "Unknown Controller");
                 }
-                
+
                 // Generic code unit
                 var cleanName = CleanCodeUnitName(line.Details.LastOrDefault() ?? "");
                 if (!string.IsNullOrEmpty(cleanName) && !cleanName.Contains("[EXTERNAL]"))
@@ -921,7 +986,7 @@ public class LogParserService
                 }
             }
         }
-        
+
         return string.Empty;
     }
 
@@ -932,16 +997,16 @@ public class LogParserService
     {
         var allExceptions = new List<ExecutionNode>();
         FindErrorsRecursive(analysis.RootNode, allExceptions);
-        
+
         // Check for FATAL_ERROR anywhere in the log - this means transaction failed
         bool hasFatalError = logLines.Any(l => l.EventType == "FATAL_ERROR");
-        
+
         // Find all EXCEPTION_THROWN lines to analyze context
         var exceptionLines = logLines
             .Select((line, index) => new { Line = line, Index = index })
             .Where(x => x.Line.EventType == "EXCEPTION_THROWN")
             .ToList();
-        
+
         foreach (var exception in allExceptions)
         {
             // FATAL_ERROR is always Fatal severity
@@ -951,31 +1016,31 @@ public class LogParserService
                 analysis.Errors.Add(exception);
                 continue;
             }
-            
+
             // Find this exception in the log lines
-            var exceptionLine = exceptionLines.FirstOrDefault(x => 
+            var exceptionLine = exceptionLines.FirstOrDefault(x =>
                 x.Line.LineNumber == exception.StartLineNumber);
-            
+
             if (exceptionLine != null)
             {
                 // Look ahead to see what happens after the exception
                 bool isHandled = false;
                 bool causedFatal = false;
-                
+
                 // Check the next 20 lines to see if code continues or fails
                 for (int i = exceptionLine.Index + 1; i < Math.Min(exceptionLine.Index + 20, logLines.Count); i++)
                 {
                     var nextLine = logLines[i];
-                    
+
                     // If we see FATAL_ERROR immediately after, it's unhandled
                     if (nextLine.EventType == "FATAL_ERROR")
                     {
                         causedFatal = true;
                         break;
                     }
-                    
+
                     // If we see normal code execution continuing, it was handled
-                    if (nextLine.EventType == "METHOD_ENTRY" || 
+                    if (nextLine.EventType == "METHOD_ENTRY" ||
                         nextLine.EventType == "METHOD_EXIT" ||
                         nextLine.EventType == "STATEMENT_EXECUTE" ||
                         nextLine.EventType == "USER_DEBUG" ||
@@ -984,7 +1049,7 @@ public class LogParserService
                         isHandled = true;
                         break;
                     }
-                    
+
                     // If we see another EXCEPTION_THROWN (re-throw), check if it's the same one
                     if (nextLine.EventType == "EXCEPTION_THROWN")
                     {
@@ -992,7 +1057,7 @@ public class LogParserService
                         continue;
                     }
                 }
-                
+
                 if (causedFatal)
                 {
                     exception.Severity = ExceptionSeverity.Unhandled;
@@ -1043,7 +1108,7 @@ public class LogParserService
 
     private void CalculateStatsRecursive(ExecutionNode node, Dictionary<string, MethodStatistics> stats)
     {
-        if ((node.Type == ExecutionNodeType.Method || node.Type == ExecutionNodeType.CodeUnit || node.Type == ExecutionNodeType.Constructor) 
+        if ((node.Type == ExecutionNodeType.Method || node.Type == ExecutionNodeType.CodeUnit || node.Type == ExecutionNodeType.Constructor)
             && node.EndTime.HasValue)
         {
             if (!stats.ContainsKey(node.Name))
@@ -1104,7 +1169,7 @@ public class LogParserService
 
         // Detect FINEST logging (adds massive overhead)
         analysis.HasFinestLogging = debugLevelSettings.Contains("FINEST");
-        
+
         // Calculate debug overhead frames
         if (analysis.HasFinestLogging)
         {
@@ -1135,17 +1200,20 @@ public class LogParserService
                     currentDepth++;
                     // Extract human-readable name (field 3) instead of ID (field 2)
                     // Format: CODE_UNIT_STARTED|[EXTERNAL]|{ID}|{ClassName.MethodName}
-                    var methodName = line.Details.Length >= 3 && !string.IsNullOrEmpty(line.Details[2]) 
+                    var methodName = line.Details.Length >= 3 && !string.IsNullOrEmpty(line.Details[2])
                         ? line.Details[2]  // Use ClassName.MethodName
-                        : line.Details.Length > 1 ? line.Details[1] 
+                        : line.Details.Length > 1 ? line.Details[1]
                         : (line.Details.Length > 0 ? line.Details[0] : "Unknown");
                     currentStack.Push(methodName);
-                    
+
                     // Track method call counts
                     if (!methodCallCounts.ContainsKey(methodName))
+                    {
                         methodCallCounts[methodName] = 0;
+                    }
+
                     methodCallCounts[methodName]++;
-                    
+
                     if (currentDepth > maxDepth)
                     {
                         maxDepth = currentDepth;
@@ -1163,7 +1231,9 @@ public class LogParserService
                     {
                         currentDepth--;
                         if (currentStack.Count > 0)
+                        {
                             currentStack.Pop();
+                        }
                     }
                     break;
             }
@@ -1186,7 +1256,7 @@ public class LogParserService
                 ParentContext = "Loop iteration"
             })
             .ToList();
-        
+
         analysis.LoopPatterns = loopPatterns;
 
         // Calculate estimated total frames
@@ -1212,16 +1282,23 @@ public class LogParserService
                     case "CONSTRUCTOR_ENTRY":
                         currentRealDepth++;
                         if (currentRealDepth > realDepth)
+                        {
                             realDepth = currentRealDepth;
+                        }
+
                         break;
                     case "CODE_UNIT_FINISHED":
                     case "METHOD_EXIT":
                     case "CONSTRUCTOR_EXIT":
-                        if (currentRealDepth > 0) currentRealDepth--;
+                        if (currentRealDepth > 0)
+                        {
+                            currentRealDepth--;
+                        }
+
                         break;
                 }
             }
-            
+
             // Use the real depth (user code only, no system methods)
             analysis.EstimatedTotalFrames = realDepth;
             // Store original inflated count for reference
@@ -1256,11 +1333,20 @@ public class LogParserService
     {
         // Methods that call other methods add more frames
         if (methodName.Contains("getRecordType", StringComparison.OrdinalIgnoreCase))
+        {
             return 3; // getRecordType → getRecordTypeFromMap → putRecordTypeInMap
+        }
+
         if (methodName.Contains("handle", StringComparison.OrdinalIgnoreCase))
+        {
             return 2;
+        }
+
         if (methodName.Contains("TriggerHandler", StringComparison.OrdinalIgnoreCase))
+        {
             return 4;
+        }
+
         return 1;
     }
 
@@ -1270,7 +1356,7 @@ public class LogParserService
     private string GenerateStackSummary(StackDepthAnalysis analysis)
     {
         var sb = new System.Text.StringBuilder();
-        
+
         if (analysis.RiskLevel == StackRiskLevel.Critical)
         {
             sb.AppendLine($"🚨 **CRITICAL: Stack Overflow Risk Detected!**");
@@ -1312,7 +1398,7 @@ public class LogParserService
     private void ExtractExecutionUnits(List<LogLine> logLines, LogAnalysis analysis)
     {
         ExecutionUnit? currentUnit = null;
-        
+
         foreach (var line in logLines)
         {
             if (line.EventType == "EXECUTION_STARTED")
@@ -1322,7 +1408,7 @@ public class LogParserService
                 {
                     analysis.ExecutionUnits.Add(currentUnit);
                 }
-                
+
                 currentUnit = new ExecutionUnit
                 {
                     OperationName = line.Details.Length > 0 ? line.Details[0] : "Unknown",
@@ -1338,7 +1424,7 @@ public class LogParserService
                 currentUnit = null;
             }
         }
-        
+
         // Save any dangling unit (log truncated before EXECUTION_FINISHED)
         if (currentUnit != null)
         {
@@ -1385,7 +1471,7 @@ public class LogParserService
         if (lastSnapshot != null)
         {
             // Async execution uses higher governor limits
-            analysis.IsAsyncExecution = lastSnapshot.SoqlQueriesLimit >= 200 
+            analysis.IsAsyncExecution = lastSnapshot.SoqlQueriesLimit >= 200
                                      || lastSnapshot.CpuTimeLimit >= 60000
                                      || lastSnapshot.HeapSizeLimit >= 12000000;
         }
@@ -1402,7 +1488,7 @@ public class LogParserService
     {
         string currentFlowName = "";
         string currentElementName = "";
-        
+
         foreach (var line in logLines)
         {
             // Track current Flow name
@@ -1410,22 +1496,22 @@ public class LogParserService
             {
                 currentFlowName = line.Details[1];
             }
-            
+
             // Track current Flow element
-            if ((line.EventType == "FLOW_ELEMENT_BEGIN" || line.EventType == "FLOW_BULK_ELEMENT_BEGIN") 
+            if ((line.EventType == "FLOW_ELEMENT_BEGIN" || line.EventType == "FLOW_BULK_ELEMENT_BEGIN")
                 && line.Details.Length > 1)
             {
                 // Details format: FlowRecordUpdate|Update_Case_Owner or similar
-                currentElementName = line.Details.Length > 2 ? line.Details[2] : 
+                currentElementName = line.Details.Length > 2 ? line.Details[2] :
                                      line.Details.Length > 1 ? line.Details[1] : "";
             }
-            
+
             // Detect FLOW_ELEMENT_ERROR
             if (line.EventType == "FLOW_ELEMENT_ERROR")
             {
                 var errorMessage = line.Details.Length > 0 ? string.Join("|", line.Details) : "Unknown Flow error";
                 var errorCode = "";
-                
+
                 // Extract error code from message (e.g., "INVALID_CROSS_REFERENCE_KEY: Owner ID: owner cannot be blank")
                 var colonIdx = errorMessage.IndexOf(':');
                 if (colonIdx > 0)
@@ -1437,7 +1523,7 @@ public class LogParserService
                         errorCode = possibleCode;
                     }
                 }
-                
+
                 analysis.FlowErrors.Add(new FlowError
                 {
                     ElementName = currentElementName,
@@ -1446,7 +1532,7 @@ public class LogParserService
                     LineNumber = line.LineNumber,
                     FlowName = currentFlowName
                 });
-                
+
                 // Also add as an error node for the existing error tracking
                 var errorNode = new ExecutionNode
                 {
@@ -1460,13 +1546,13 @@ public class LogParserService
                 errorNode.Metadata["FlowName"] = currentFlowName;
                 errorNode.Metadata["ElementName"] = currentElementName;
                 errorNode.Metadata["Message"] = errorMessage;
-                
+
                 analysis.Errors.Add(errorNode);
                 analysis.HasErrors = true;
             }
         }
     }
-    
+
     /// <summary>
     /// Detect if the log was truncated by Salesforce (exceeded max log size).
     /// Truncation indicators:
@@ -1479,13 +1565,13 @@ public class LogParserService
         // Check 1: Look for CODE_UNIT_STARTED without CODE_UNIT_ENDED
         int codeUnitStarts = logLines.Count(l => l.EventType == "CODE_UNIT_STARTED");
         int codeUnitEnds = logLines.Count(l => l.EventType == "CODE_UNIT_FINISHED");
-        
+
         if (codeUnitStarts > 0 && codeUnitEnds == 0)
         {
             analysis.IsLogTruncated = true;
             return;
         }
-        
+
         // Check 2: For non-trivial logs (>100 lines), check for LIMIT_USAGE_FOR_NS
         if (rawLines.Length > 100)
         {
@@ -1499,7 +1585,7 @@ public class LogParserService
                     break;
                 }
             }
-            
+
             // Only flag truncation if there are code units but no limit section
             if (!hasLimitUsage && codeUnitStarts > 0)
             {
@@ -1507,7 +1593,7 @@ public class LogParserService
             }
         }
     }
-    
+
     /// <summary>
     /// Detect duplicate SOQL queries — same normalized query text executed multiple times.
     /// This catches "almost identical" queries where only bind variable values differ.
@@ -1518,14 +1604,17 @@ public class LogParserService
             .Where(d => d.OperationType == "SOQL" && !string.IsNullOrEmpty(d.Query) && !d.IsCustomMetadataQuery)
             .ToList();
 
-        if (soqlOps.Count < 3) return;
+        if (soqlOps.Count < 3)
+        {
+            return;
+        }
 
         var grouped = soqlOps
             .GroupBy(d => SimplifyQuery(d.Query))
             .Where(g => g.Count() >= 3) // 3+ executions required — 2x can be intentional (before/after pattern)
             .OrderByDescending(g => g.Count())
             .ToList();
-        
+
         foreach (var group in grouped)
         {
             analysis.DuplicateQueries.Add(new DuplicateQueryInfo
@@ -1547,7 +1636,7 @@ public class LogParserService
     {
         bool inEvalBlock = false;
         string currentObjectType = "";
-        
+
         foreach (var line in logLines)
         {
             if (line.EventType == "WF_RULE_EVAL_BEGIN")
@@ -1562,7 +1651,7 @@ public class LogParserService
                 var filterText = line.Details.Length > 0 ? line.Details[0] : "";
                 // Clean up bracket formatting
                 filterText = filterText.Trim('[', ']', ' ');
-                
+
                 analysis.WorkflowRules.Add(new WorkflowRuleEvaluation
                 {
                     RuleName = filterText,
@@ -1590,7 +1679,7 @@ public class LogParserService
             }
         }
     }
-    
+
     /// <summary>
     /// Detect trigger re-entry patterns — when a trigger fires more times than expected.
     /// Normal: BeforeInsert + AfterInsert = 2 fires (or BeforeUpdate + AfterUpdate = 2 fires)
@@ -1600,7 +1689,7 @@ public class LogParserService
     {
         // Track trigger fires: key = "TriggerName on Object", value = list of events
         var triggerFires = new Dictionary<string, List<string>>();
-        
+
         foreach (var line in logLines)
         {
             if (line.EventType == "CODE_UNIT_STARTED")
@@ -1616,16 +1705,19 @@ public class LogParserService
                         var objectType = triggerMatch.Groups[2].Value;
                         var eventType = triggerMatch.Groups[3].Value;
                         var key = $"{triggerName} on {objectType}";
-                        
+
                         if (!triggerFires.ContainsKey(key))
+                        {
                             triggerFires[key] = new List<string>();
+                        }
+
                         triggerFires[key].Add(eventType);
                         break;
                     }
                 }
             }
         }
-        
+
         foreach (var kvp in triggerFires)
         {
             var parts = kvp.Key.Split(" on ");
@@ -1633,13 +1725,13 @@ public class LogParserService
             var objectType = parts.Length > 1 ? parts[1] : "";
             var events = kvp.Value;
             var totalFires = events.Count;
-            
+
             // Expected fires: 2 per DML operation (Before + After)
             // Count unique DML types (Insert vs Update are separate operations)
             var distinctOperations = events.Select(e => e.Replace("Before", "").Replace("After", "")).Distinct().Count();
             var expectedFires = distinctOperations * 2; // Before + After for each operation type
             var reEntryCount = Math.Max(0, totalFires - expectedFires);
-            
+
             analysis.TriggerReEntries.Add(new TriggerReEntry
             {
                 TriggerName = triggerName,
@@ -1650,7 +1742,7 @@ public class LogParserService
             });
         }
     }
-    
+
     /// <summary>
     /// Calculate the split between Custom Metadata Type (CMDT) queries and regular SOQL.
     /// CMDT queries (__mdt objects) are free — they don't count against the SOQL governor limit.
@@ -1662,7 +1754,7 @@ public class LogParserService
         analysis.CustomMetadataQueryCount = soqlOps.Count(d => d.IsCustomMetadataQuery);
         analysis.RegularSoqlCount = soqlOps.Count - analysis.CustomMetadataQueryCount;
     }
-    
+
     /// <summary>
     /// Grade the bulk safety of the code in this transaction.
     /// Salesforce processes up to 200 records per trigger invocation.
@@ -1673,14 +1765,14 @@ public class LogParserService
         var score = 100;
         var reasons = new List<string>();
         var lastSnapshot = analysis.LimitSnapshots?.LastOrDefault();
-        
+
         if (lastSnapshot == null)
         {
             analysis.BulkSafetyGrade = "?";
             analysis.BulkSafetyReason = "No governor limit data available";
             return;
         }
-        
+
         // Factor 1: SOQL queries per trigger invocation
         // If processing 1 record uses 20+ SOQL, 200 records would use 4000+ (limit is 100)
         var soqlCount = lastSnapshot.SoqlQueries;
@@ -1689,7 +1781,7 @@ public class LogParserService
         {
             var soqlPerRecord = soqlCount; // Assume this was for ~1 record (conservative)
             var projectedAt200 = soqlPerRecord; // Would it scale linearly?
-            
+
             // Check for N+1 patterns (strong indicator of non-bulkified code)
             var hasN1Pattern = analysis.DuplicateQueries.Any(d => d.ExecutionCount >= 5);
             if (hasN1Pattern)
@@ -1698,7 +1790,7 @@ public class LogParserService
                 score -= 30;
                 reasons.Add($"N+1 pattern: same query runs {worstDupe.ExecutionCount}x — at 200 records this hits limits");
             }
-            
+
             // High SOQL usage even for single record = risky at scale
             var soqlPct = (soqlCount * 100.0) / soqlLimit;
             if (soqlPct > 50)
@@ -1712,7 +1804,7 @@ public class LogParserService
                 reasons.Add($"SOQL at {soqlPct:F0}% — moderate risk at higher volumes");
             }
         }
-        
+
         // Factor 2: DML usage
         var dmlCount = lastSnapshot.DmlStatements;
         if (dmlCount > 0)
@@ -1724,7 +1816,7 @@ public class LogParserService
                 reasons.Add($"DML at {dmlPct:F0}% — may fail with larger batches");
             }
         }
-        
+
         // Factor 3: CPU time
         var cpuPct = lastSnapshot.CpuTimeLimit > 0 ? (lastSnapshot.CpuTime * 100.0) / lastSnapshot.CpuTimeLimit : 0;
         if (cpuPct > 50)
@@ -1732,7 +1824,7 @@ public class LogParserService
             score -= 15;
             reasons.Add($"CPU at {cpuPct:F0}% — heavy processing may time out at scale");
         }
-        
+
         // Factor 4: Trigger re-entry (multiplies resource usage)
         var reEntries = analysis.TriggerReEntries.Where(t => t.HasReEntry).ToList();
         if (reEntries.Any())
@@ -1741,7 +1833,7 @@ public class LogParserService
             score -= 15;
             reasons.Add($"{worstReEntry.TriggerName} re-enters {worstReEntry.ReEntryCount}x — multiplies all limits");
         }
-        
+
         // Factor 5: Table scans (get slower with more data)
         var tableScans = analysis.DatabaseOperations
             .Count(d => d.ExecutionPlan != null && d.ExecutionPlan.Contains("TableScan"));
@@ -1750,9 +1842,9 @@ public class LogParserService
             score -= Math.Min(15, tableScans * 5);
             reasons.Add($"{tableScans} table scan{(tableScans > 1 ? "s" : "")} — performance degrades as data grows");
         }
-        
+
         score = Math.Max(0, score);
-        
+
         analysis.BulkSafetyGrade = score switch
         {
             >= 90 => "A",
@@ -1761,9 +1853,9 @@ public class LogParserService
             >= 40 => "D",
             _ => "F"
         };
-        
-        analysis.BulkSafetyReason = reasons.Any() 
-            ? string.Join("; ", reasons) 
+
+        analysis.BulkSafetyReason = reasons.Any()
+            ? string.Join("; ", reasons)
             : "Code appears well-bulkified — should handle 200 records safely";
     }
 
@@ -1810,7 +1902,7 @@ public class LogParserService
         {
             summary += $"• Called {methodCount} different method{(methodCount > 1 ? "s" : "")} (pieces of code)\n";
         }
-        
+
         // Database interactions
         var totalDbOps = soqlCount + soslCount + dmlCount;
         if (totalDbOps > 0)
@@ -1834,7 +1926,10 @@ public class LogParserService
                 }
             }
             if (soslCount > 0)
+            {
                 summary += $"  - Searched data {soslCount} time{(soslCount > 1 ? "s" : "")} (SOSL searches)\n";
+            }
+
             if (dmlCount > 0)
             {
                 summary += $"  - Wrote/updated data {dmlCount} time{(dmlCount > 1 ? "s" : "")} (inserts/updates)\n";
@@ -1847,7 +1942,7 @@ public class LogParserService
                 }
             }
         }
-        
+
         // Callouts
         if (analysis.Callouts.Count > 0)
         {
@@ -1862,33 +1957,40 @@ public class LogParserService
             }
             var hardcodedCallouts = analysis.Callouts.Count - ncCallouts;
             if (hardcodedCallouts > 0 && ncCallouts > 0)
+            {
                 summary += $"  - ℹ️ {hardcodedCallouts} with direct URL{(hardcodedCallouts > 1 ? "s" : "")}\n";
+            }
+
             if (failedCallouts > 0)
+            {
                 summary += $"  - ⚠️ {failedCallouts} callout{(failedCallouts > 1 ? "s" : "")} returned errors\n";
+            }
         }
-        
+
         // Flows
         if (analysis.Flows.Count > 0)
         {
             var faultedFlows = analysis.Flows.Count(f => f.HasFault);
             summary += $"• Triggered {analysis.Flows.Count} Flow{(analysis.Flows.Count > 1 ? "s" : "")}/Process Builder{(analysis.Flows.Count > 1 ? "s" : "")}\n";
             if (faultedFlows > 0)
+            {
                 summary += $"  - ⚠️ {faultedFlows} flow{(faultedFlows > 1 ? "s" : "")} had faults\n";
+            }
         }
-        
+
         // Flow element errors
         if (analysis.FlowErrors.Count > 0)
         {
             summary += $"• ❌ {analysis.FlowErrors.Count} Flow element error{(analysis.FlowErrors.Count > 1 ? "s" : "")} — " +
                 "data was NOT saved by the failing Flow action\n";
         }
-        
+
         // Log truncation warning
         if (analysis.IsLogTruncated)
         {
             summary += "• ⚠️ **Log was truncated** — Salesforce cut off this log (exceeded size limit). Some metrics may be incomplete.\n";
         }
-        
+
         // Duplicate queries
         if (analysis.DuplicateQueries.Count > 0)
         {
@@ -1900,7 +2002,7 @@ public class LogParserService
                     $"({totalDupeQueries} total redundant executions)\n";
             }
         }
-        
+
         // Workflow rules
         if (analysis.WorkflowRules.Count > 0)
         {
@@ -1908,7 +2010,7 @@ public class LogParserService
             summary += $"• ⚙️ {analysis.WorkflowRules.Count} workflow rule{(analysis.WorkflowRules.Count > 1 ? "s" : "")} evaluated" +
                 $" ({matchedRules} matched, {analysis.WorkflowRules.Count - matchedRules} skipped)\n";
         }
-        
+
         // Trigger re-entries
         var reEntries = analysis.TriggerReEntries.Where(t => t.HasReEntry).ToList();
         if (reEntries.Any())
@@ -1919,7 +2021,7 @@ public class LogParserService
                     $"(expected {re.TotalFireCount - re.ReEntryCount}, re-entered {re.ReEntryCount}x)\n";
             }
         }
-        
+
         // Bulk safety grade
         if (!string.IsNullOrEmpty(analysis.BulkSafetyGrade) && analysis.BulkSafetyGrade != "?")
         {
@@ -1945,12 +2047,12 @@ public class LogParserService
             var soqlPercent = SafePercent(lastLimitSnapshot.SoqlQueries, lastLimitSnapshot.SoqlQueriesLimit);
             var cpuPercent = SafePercent(lastLimitSnapshot.CpuTime, lastLimitSnapshot.CpuTimeLimit);
             var queryRowsPercent = SafePercent(lastLimitSnapshot.QueryRows, lastLimitSnapshot.QueryRowsLimit);
-            
+
             // Show wall clock vs CPU time breakdown
             var wallClockMs = analysis.WallClockMs > 0 ? analysis.WallClockMs : totalDuration;
             var cpuTimeMs = lastLimitSnapshot.CpuTime;
             var overheadMs = wallClockMs - cpuTimeMs;
-            
+
             if (overheadMs > 1000 && wallClockMs > 2000)
             {
                 summary += $"⏱️ **Timing breakdown:**\n";
@@ -1958,7 +2060,7 @@ public class LogParserService
                 summary += $"  - Your code (CPU): {FormatDuration(cpuTimeMs)}\n";
                 summary += $"  - Salesforce overhead: {FormatDuration((long)overheadMs)} (database I/O, async processing)\n\n";
             }
-            
+
             if (soqlPercent < 30 && cpuPercent < 30 && queryRowsPercent < 30)
             {
                 summary += "✓ Your code is using resources efficiently - plenty of room to spare!\n";
@@ -1992,7 +2094,7 @@ public class LogParserService
         {
             summary += $"**Result:** ⚠️ Completed successfully with {handledExceptionCount} caught exception{(handledExceptionCount > 1 ? "s" : "")} (handled gracefully).\n";
         }
-        else if (soqlCount > 100 || (lastLimitSnapshot != null && 
+        else if (soqlCount > 100 || (lastLimitSnapshot != null &&
                  (SafePercent(lastLimitSnapshot.SoqlQueries, lastLimitSnapshot.SoqlQueriesLimit) > 80 ||
                   SafePercent(lastLimitSnapshot.CpuTime, lastLimitSnapshot.CpuTimeLimit) > 80)))
         {
@@ -2008,8 +2110,16 @@ public class LogParserService
 
     private string FormatDuration(long ms)
     {
-        if (ms < 1000) return $"{ms}ms";
-        if (ms < 60000) return $"{ms / 1000.0:F1} seconds";
+        if (ms < 1000)
+        {
+            return $"{ms}ms";
+        }
+
+        if (ms < 60000)
+        {
+            return $"{ms / 1000.0:F1} seconds";
+        }
+
         return $"{ms / 60000.0:F1} minutes";
     }
 
@@ -2023,7 +2133,7 @@ public class LogParserService
     private List<string> DetectIssues(LogAnalysis analysis)
     {
         var issues = new List<string>();
-        
+
         // 🚨 NEW: Use cumulative profiling for specific N+1 patterns FIRST
         if (analysis.CumulativeProfiling != null)
         {
@@ -2031,7 +2141,7 @@ public class LogParserService
                 .Where(q => q.ExecutionCount > 1000)
                 .OrderByDescending(q => q.ExecutionCount)
                 .ToList();
-            
+
             foreach (var query in excessiveQueries.Take(3))
             {
                 issues.Add($"🚨 **N+1 QUERY PATTERN**: {query.Location} - Query executed {query.ExecutionCount:N0} times in {query.TotalDurationMs}ms");
@@ -2040,13 +2150,13 @@ public class LogParserService
                 issues.Add($"   💡 Fix: Move query outside loop, cache results, or batch using Map/Set");
                 issues.Add("");
             }
-            
+
             // Check for slow DML operations
             var slowDml = analysis.CumulativeProfiling.TopDmlOperations
                 .Where(d => d.TotalDurationMs > 2000)
                 .OrderByDescending(d => d.TotalDurationMs)
                 .ToList();
-            
+
             foreach (var dml in slowDml.Take(2))
             {
                 issues.Add($"🐌 **SLOW DML OPERATION**: {dml.OperationDescription} taking {dml.TotalDurationMs}ms");
@@ -2054,13 +2164,13 @@ public class LogParserService
                 issues.Add($"   💡 Fix: Check validation rules, workflow rules, or bulk operations");
                 issues.Add("");
             }
-            
+
             // Check for slow methods
             var slowMethods = analysis.CumulativeProfiling.TopMethods
                 .Where(m => m.TotalDurationMs > 3000)
                 .OrderByDescending(m => m.TotalDurationMs)
                 .ToList();
-            
+
             foreach (var method in slowMethods.Take(2))
             {
                 issues.Add($"⏱️ **SLOW METHOD**: {method.Location} taking {method.TotalDurationMs}ms total ({method.ExecutionCount}x calls, avg {method.AverageDurationMs}ms)");
@@ -2091,7 +2201,7 @@ public class LogParserService
                 $"which adds ~{analysis.StackAnalysis.DebugLoggingOverhead} extra stack frames. " +
                 $"Production may work where QA fails, but the underlying code is still risky!");
         }
-        
+
         // Check for trigger recursion from timeline
         if (analysis.Timeline != null && analysis.Timeline.RecursionCount > 0)
         {
@@ -2100,7 +2210,7 @@ public class LogParserService
                 .Select(p => p.Name.Split('.')[0])
                 .Distinct()
                 .ToList();
-            
+
             if (recursiveTriggers.Any())
             {
                 var triggerList = string.Join(", ", recursiveTriggers.Take(3));
@@ -2114,7 +2224,7 @@ public class LogParserService
         var dangerousLoopPatterns = analysis.StackAnalysis.LoopPatterns
             .Where(p => p.TotalFrames > 100)
             .ToList();
-        
+
         if (dangerousLoopPatterns.Any())
         {
             var topPattern = dangerousLoopPatterns.First();
@@ -2161,7 +2271,7 @@ public class LogParserService
                 .GroupBy(d => SimplifyQuery(d.Query))
                 .Where(g => g.Count() > 5)
                 .ToList();
-            
+
             if (queryCounts.Any())
             {
                 issues.Add($"🔁 **Repetitive Query Pattern (N+1)**: You're asking the database the same question multiple times. " +
@@ -2181,23 +2291,31 @@ public class LogParserService
             var queryRowsPercent = SafePercent(lastLimitSnapshot.QueryRows, lastLimitSnapshot.QueryRowsLimit);
 
             if (queryRowsPercent > 80)
+            {
                 issues.Add($"📊 **Query Rows Warning**: Your queries returned {lastLimitSnapshot.QueryRows:N0} out of {lastLimitSnapshot.QueryRowsLimit:N0} allowed rows ({queryRowsPercent:F0}%). " +
                     "You're retrieving too much data! Each query adds to this count. " +
                     "Add WHERE filters, use LIMIT clauses, or query only the fields you need.");
+            }
 
             if (soqlPercent > 80)
+            {
                 issues.Add($"⚠️ **Query Limit Warning**: You've used {lastLimitSnapshot.SoqlQueries} out of {lastLimitSnapshot.SoqlQueriesLimit} allowed queries ({soqlPercent:F0}%). " +
                     "You're dangerously close to the limit! If you hit 100%, your code will stop with an error.");
-            
+            }
+
             if (cpuPercent > 80)
+            {
                 issues.Add($"⏱️ **Processing Time Warning**: Your code used {lastLimitSnapshot.CpuTime}ms out of {lastLimitSnapshot.CpuTimeLimit}ms allowed ({cpuPercent:F0}%). " +
                     "You're running out of processing time! This means your code is doing too much work. " +
                     "Simplify logic or move heavy processing to background jobs.");
-            
+            }
+
             if (heapPercent > 80)
+            {
                 issues.Add($"💾 **Memory Warning**: You're using {lastLimitSnapshot.HeapSize} bytes out of {lastLimitSnapshot.HeapSizeLimit} allowed ({heapPercent:F0}%). " +
                     "Your code is holding too much data in memory at once. " +
                     "Process data in smaller batches to avoid running out of memory.");
+            }
         }
 
         // Check for expensive table scans from execution plans
@@ -2207,7 +2325,7 @@ public class LogParserService
                 .Where(d => d.ExecutionPlan != null && d.ExecutionPlan.Contains("TableScan") && d.RelativeCost > 1.0)
                 .GroupBy(d => d.Query)
                 .ToList();
-            
+
             foreach (var scan in tableScans.Take(3))
             {
                 var sample = scan.First();
@@ -2222,7 +2340,7 @@ public class LogParserService
         var triggerMethods = analysis.MethodStats
             .Where(m => m.Value.CallCount > 2 && m.Key.Contains("trigger", StringComparison.OrdinalIgnoreCase))
             .ToList();
-        
+
         if (triggerMethods.Any())
         {
             var triggerNames = string.Join(", ", triggerMethods.Select(t => t.Key));
@@ -2236,13 +2354,13 @@ public class LogParserService
         {
             var fatalErrors = analysis.Errors.Where(e => e.Severity == ExceptionSeverity.Fatal).ToList();
             var unhandledErrors = analysis.Errors.Where(e => e.Severity == ExceptionSeverity.Unhandled).ToList();
-            
+
             if (fatalErrors.Any())
             {
                 issues.Add($"💀 **Fatal Error - Transaction Failed**: The execution crashed with a fatal error. " +
                     "This is a complete failure - the transaction was rolled back and no changes were saved.");
             }
-            
+
             if (unhandledErrors.Any())
             {
                 if (unhandledErrors.Count == 1)
@@ -2257,7 +2375,7 @@ public class LogParserService
                 }
             }
         }
-        
+
         // Report handled exceptions as informational (not errors)
         if (analysis.HandledExceptions.Any())
         {
@@ -2327,11 +2445,11 @@ public class LogParserService
                 .OrderByDescending(d => d.ExecutionCount)
                 .Take(3)
                 .ToList();
-            
+
             foreach (var dupe in significantDupes)
             {
-                var queryPreview = dupe.ExampleQuery.Length > 80 
-                    ? dupe.ExampleQuery.Substring(0, 80) + "..." 
+                var queryPreview = dupe.ExampleQuery.Length > 80
+                    ? dupe.ExampleQuery.Substring(0, 80) + "..."
                     : dupe.ExampleQuery;
                 issues.Add($"🔁 **Duplicate Query**: `{queryPreview}` executed {dupe.ExecutionCount} times " +
                     $"returning {dupe.TotalRows} total rows. " +
@@ -2372,7 +2490,7 @@ public class LogParserService
             : analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
 
         // 🚨 NEW: Stack depth recommendations FIRST - this is often the critical issue!
-        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical || 
+        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical ||
             analysis.StackAnalysis.RiskLevel == StackRiskLevel.Warning)
         {
             recommendations.Add($"🚨 **Fix Stack Overflow Risk**: Your code is at risk of exceeding Salesforce's 1,000 stack frame limit. " +
@@ -2389,7 +2507,7 @@ public class LogParserService
             .Where(p => p.TotalFrames > 50)
             .Take(3)
             .ToList();
-        
+
         foreach (var pattern in topLoopPatterns)
         {
             if (pattern.MethodName.Contains("getRecordType", StringComparison.OrdinalIgnoreCase))
@@ -2452,7 +2570,7 @@ public class LogParserService
                 .GroupBy(d => SimplifyQuery(d.Query))
                 .Where(g => g.Count() > 5)
                 .ToList();
-            
+
             if (repeatedQueries.Any())
             {
                 recommendations.Add("🔁 **Repetitive Queries (N+1 Pattern)**: Your code is asking the same question over and over. " +
@@ -2475,14 +2593,14 @@ public class LogParserService
                     "Salesforce limits how many times you can query the database to keep things running smoothly for everyone. " +
                     "If you hit 100%, your code will fail. Reduce the number of queries by combining them or processing in batches.");
             }
-            
+
             if (cpuPercent > 80)
             {
                 recommendations.Add($"⏱️ **Running Out of Processing Time**: Your code used {cpuPercent:F0}% of allowed processing time. " +
                     "This means your code is doing a lot of work. Consider: (1) Doing fewer calculations, " +
                     "(2) Processing fewer records at once, or (3) Moving heavy processing to asynchronous jobs that run in the background.");
             }
-            
+
             if (heapPercent > 80)
             {
                 recommendations.Add($"💾 **Using Too Much Memory**: Your code is using {heapPercent:F0}% of available memory. " +
@@ -2505,7 +2623,7 @@ public class LogParserService
             .OrderByDescending(m => m.CallCount)
             .Take(3)
             .ToList();
-        
+
         if (frequentMethods.Any())
         {
             foreach (var method in frequentMethods)
@@ -2519,7 +2637,7 @@ public class LogParserService
         // Database time percentage
         var totalDbTime = analysis.DatabaseOperations.Sum(d => d.DurationMs);
         var totalExecution = analysis.RootNode.DurationMs;
-        
+
         if (totalDbTime > 0 && totalExecution > 0)
         {
             var dbPercent = (totalDbTime * 100.0) / totalExecution;
@@ -2534,7 +2652,7 @@ public class LogParserService
         var queriesWithoutLimit = analysis.DatabaseOperations
             .Where(d => d.OperationType == "SOQL" && !d.Query.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
             .ToList();
-            
+
         if (queriesWithoutLimit.Any())
         {
             recommendations.Add($"🎯 **Add Safety Limits**: {queriesWithoutLimit.Count} of your queries don't have LIMIT clauses. " +
@@ -2575,7 +2693,7 @@ public class LogParserService
                     "Ensure the endpoint URLs are correct, authentication tokens are valid, and the remote service is available. " +
                     "Add proper error handling (try/catch) around callouts and consider retry logic for transient failures.");
             }
-            
+
             var slowCallouts = analysis.Callouts.Where(c => c.DurationMs > 5000).ToList();
             if (slowCallouts.Count > 0)
             {
@@ -2596,7 +2714,7 @@ public class LogParserService
                     "Add fault connectors to handle errors gracefully. Flows without fault handling will fail silently " +
                     "or bubble up confusing error messages to users.");
             }
-            
+
             var heavyFlows = analysis.Flows.Where(f => f.ElementCount > 50).ToList();
             if (heavyFlows.Count > 0)
             {
@@ -2617,14 +2735,14 @@ public class LogParserService
 
         return recommendations;
     }
-    
+
     /// <summary>
     /// Parse CUMULATIVE_PROFILING section at end of log
     /// </summary>
     private (CumulativeProfiling? profiling, bool found) ParseCumulativeProfiling(string[] lines)
     {
         var profiling = new CumulativeProfiling();
-        
+
         var soqlPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
         // System/package code format: (System Code): [SELECT ...]: executed N time(s) in M ms
         var soqlSystemPattern = new Regex(@"^\((.+?)\):\s+\[(.+?)\]:\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
@@ -2632,7 +2750,7 @@ public class LogParserService
         var methodPattern = new Regex(@"^(.+?):\s+line\s+(\d+),\s+column\s+\d+:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled | RegexOptions.Singleline);
         // External entry point format (no line number): External entry point: <signature>: executed N time(s) in M ms
         var externalPattern = new Regex(@"^External entry point:\s+(.+?):\s+executed\s+(\d+)\s+times?\s+in\s+(\d+)\s+ms", RegexOptions.Compiled);
-        
+
         // Find the CUMULATIVE_PROFILING_BEGIN line first (search backwards for speed)
         int startIndex = -1;
         for (int i = lines.Length - 1; i >= Math.Max(0, lines.Length - 100); i--)
@@ -2643,61 +2761,85 @@ public class LogParserService
                 break;
             }
         }
-        
-        if (startIndex < 0) return (null, false);
-        
+
+        if (startIndex < 0)
+        {
+            return (null, false);
+        }
+
         // Pre-process: SOQL queries can span multiple physical lines (Salesforce formats
         // multi-line queries with newlines). Join continuation lines into logical entries
         // before regex matching.
         var logicalLines = new List<(string line, string section)>();
         string currentSection = "";
         string accumulated = "";
-        
+
         for (int i = startIndex + 1; i < lines.Length; i++)
         {
             var rawLine = lines[i];
-            
+
             if (rawLine.Contains("CUMULATIVE_PROFILING_END"))
             {
                 // Flush any accumulated entry
                 if (!string.IsNullOrWhiteSpace(accumulated))
+                {
                     logicalLines.Add((accumulated.Trim(), currentSection));
+                }
+
                 break;
             }
-            
+
             // Section header lines contain timestamps and CUMULATIVE_PROFILING|
             if (rawLine.Contains("CUMULATIVE_PROFILING|"))
             {
                 // Flush previous accumulated entry
                 if (!string.IsNullOrWhiteSpace(accumulated))
+                {
                     logicalLines.Add((accumulated.Trim(), currentSection));
+                }
+
                 accumulated = "";
-                
+
                 if (rawLine.Contains("SOQL operations|"))
+                {
                     currentSection = "SOQL";
+                }
                 else if (rawLine.Contains("DML operations|"))
+                {
                     currentSection = "DML";
+                }
                 else if (rawLine.Contains("method invocations|"))
+                {
                     currentSection = "METHOD";
+                }
                 else
+                {
                     currentSection = ""; // "No profiling information" lines
+                }
+
                 continue;
             }
-            
+
             var trimmed = rawLine.Trim();
-            if (string.IsNullOrEmpty(trimmed)) continue;
-            
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                continue;
+            }
+
             // A new entry starts with Class., Trigger., External, or ( — otherwise it's a continuation
             bool isNewEntry = trimmed.StartsWith("Class.", StringComparison.Ordinal)
                            || trimmed.StartsWith("Trigger.", StringComparison.Ordinal)
                            || trimmed.StartsWith("External ", StringComparison.Ordinal)
                            || trimmed.StartsWith("(", StringComparison.Ordinal);
-            
+
             if (isNewEntry)
             {
                 // Flush previous
                 if (!string.IsNullOrWhiteSpace(accumulated))
+                {
                     logicalLines.Add((accumulated.Trim(), currentSection));
+                }
+
                 accumulated = trimmed;
             }
             else
@@ -2706,7 +2848,7 @@ public class LogParserService
                 accumulated += " " + trimmed;
             }
         }
-        
+
         // Now parse each logical line against its section
         foreach (var (line, section) in logicalLines)
         {
@@ -2717,7 +2859,7 @@ public class LogParserService
                 {
                     var location = match.Groups[1].Value;
                     var parts = ParseLocation(location);
-                    
+
                     profiling.TopQueries.Add(new CumulativeQuery
                     {
                         ClassName = parts.className,
@@ -2752,7 +2894,7 @@ public class LogParserService
                 {
                     var location = match.Groups[1].Value;
                     var parts = ParseLocation(location);
-                    
+
                     profiling.TopDmlOperations.Add(new CumulativeDml
                     {
                         ClassName = parts.className,
@@ -2772,7 +2914,7 @@ public class LogParserService
                 {
                     var location = match.Groups[1].Value;
                     var parts = ParseLocation(location);
-                    
+
                     profiling.TopMethods.Add(new CumulativeMethod
                     {
                         ClassName = parts.className,
@@ -2802,7 +2944,7 @@ public class LogParserService
                 }
             }
         }
-        
+
         // Sort by execution count (descending)
         profiling.TopQueries = profiling.TopQueries.OrderByDescending(q => q.ExecutionCount).Take(10).ToList();
         profiling.TopDmlOperations = profiling.TopDmlOperations.OrderByDescending(d => d.TotalDurationMs).Take(10).ToList();
@@ -2811,7 +2953,7 @@ public class LogParserService
         var hasData = profiling.TopQueries.Any() || profiling.TopDmlOperations.Any() || profiling.TopMethods.Any();
         return (hasData ? profiling : null, true); // found=true because CUMULATIVE_PROFILING_BEGIN was present
     }
-    
+
     private (string className, string methodName) ParseLocation(string location)
     {
         // Handles: "Class.MyClass.myMethod", "Trigger.MyTrigger", "(System Code)"
@@ -2819,7 +2961,10 @@ public class LogParserService
         {
             var parts = location.Substring(6).Split('.');
             if (parts.Length >= 2)
+            {
                 return (parts[0], parts[1]);
+            }
+
             return (parts[0], "unknown");
         }
         else if (location.StartsWith("Trigger."))
@@ -2831,10 +2976,10 @@ public class LogParserService
         {
             return ("System", location.Trim('(', ')'));
         }
-        
+
         return ("Unknown", location);
     }
-    
+
     /// <summary>
     /// Parse CUMULATIVE_LIMIT_USAGE section for accurate final CPU/Heap values
     /// Fixes the "0ms CPU time" bug by reading the actual totals at end of log
@@ -2856,20 +3001,27 @@ public class LogParserService
                 break;
             }
         }
-        
-        if (startIndex < 0) return;
-        if (endIndex < 0) endIndex = Math.Min(startIndex + 500, lines.Length - 1);
-        
+
+        if (startIndex < 0)
+        {
+            return;
+        }
+
+        if (endIndex < 0)
+        {
+            endIndex = Math.Min(startIndex + 500, lines.Length - 1);
+        }
+
         // Parse all LIMIT_USAGE_FOR_NS sections and TESTING_LIMITS
         GovernorLimitSnapshot? currentSnapshot = null;
         string currentNamespace = "";
         bool inTestingLimits = false;
         bool foundDefaultNs = false;
-        
+
         for (int i = startIndex; i <= endIndex; i++)
         {
             var line = lines[i];
-            
+
             // Check for TESTING_LIMITS boundary
             if (line.Contains("|TESTING_LIMITS"))
             {
@@ -2879,18 +3031,18 @@ public class LogParserService
                 inTestingLimits = true;
                 continue;
             }
-            
+
             // Check for namespace boundary
             if (line.Contains("|LIMIT_USAGE_FOR_NS|"))
             {
                 // Save previous snapshot if we have one
                 SaveCurrentSnapshot(currentSnapshot, currentNamespace, startIndex, analysis, ref foundDefaultNs);
-                
+
                 // Extract namespace name from: |LIMIT_USAGE_FOR_NS|name|
                 var nsMatch = Regex.Match(line, @"\|LIMIT_USAGE_FOR_NS\|(.+?)\|");
                 currentNamespace = nsMatch.Success ? nsMatch.Groups[1].Value : "(unknown)";
                 currentSnapshot = new GovernorLimitSnapshot { Namespace = currentNamespace };
-                
+
                 // If we're in testing limits section, mark this as a testing snapshot
                 if (inTestingLimits)
                 {
@@ -2907,23 +3059,30 @@ public class LogParserService
                 }
                 continue;
             }
-            
-            if (currentSnapshot == null) continue;
-            
+
+            if (currentSnapshot == null)
+            {
+                continue;
+            }
+
             // Parse the indented limit lines
             var trimmed = line.Trim();
             ParseLimitLine(trimmed, currentSnapshot, analysis, inTestingLimits && currentNamespace == "(default)");
         }
-        
+
         // Save final snapshot
         SaveCurrentSnapshot(currentSnapshot, currentNamespace, startIndex, analysis, ref foundDefaultNs);
     }
-    
+
     private void SaveCurrentSnapshot(GovernorLimitSnapshot? snapshot, string ns, int lineNumber, LogAnalysis analysis, ref bool foundDefaultNs)
     {
-        if (snapshot == null) return;
+        if (snapshot == null)
+        {
+            return;
+        }
+
         snapshot.LineNumber = lineNumber;
-        
+
         if (snapshot.Namespace == "(default-test)")
         {
             // This is testing limits
@@ -2935,14 +3094,14 @@ public class LogParserService
             foundDefaultNs = true;
             analysis.LimitSnapshots.Add(snapshot);
         }
-        else if (snapshot.SoqlQueries > 0 || snapshot.SoslQueries > 0 || snapshot.DmlStatements > 0 || 
+        else if (snapshot.SoqlQueries > 0 || snapshot.SoslQueries > 0 || snapshot.DmlStatements > 0 ||
                  snapshot.CpuTime > 0 || snapshot.Callouts > 0 || snapshot.FutureCalls > 0)
         {
             // Only add namespace if it has meaningful data
             analysis.NamespaceLimitSnapshots.Add(snapshot);
         }
     }
-    
+
     private void ParseLimitLine(string trimmed, GovernorLimitSnapshot snapshot, LogAnalysis analysis, bool isTestingDefault)
     {
         var match = Regex.Match(trimmed, @"Number of SOQL queries:\s+(\d+)\s+out of\s+(\d+)");
@@ -2952,7 +3111,7 @@ public class LogParserService
             snapshot.SoqlQueriesLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of query rows:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -2960,7 +3119,7 @@ public class LogParserService
             snapshot.QueryRowsLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of DML statements:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -2968,7 +3127,7 @@ public class LogParserService
             snapshot.DmlStatementsLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of DML rows:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -2976,7 +3135,7 @@ public class LogParserService
             snapshot.DmlRowsLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Maximum CPU time:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -2988,7 +3147,7 @@ public class LogParserService
             }
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Maximum heap size:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -2996,7 +3155,7 @@ public class LogParserService
             snapshot.HeapSizeLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of future calls:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -3004,7 +3163,7 @@ public class LogParserService
             snapshot.FutureCallsLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of callouts:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -3012,7 +3171,7 @@ public class LogParserService
             snapshot.CalloutsLimit = int.Parse(match.Groups[2].Value);
             return;
         }
-        
+
         match = Regex.Match(trimmed, @"Number of SOSL queries:\s+(\d+)\s+out of\s+(\d+)");
         if (match.Success)
         {
@@ -3021,7 +3180,7 @@ public class LogParserService
             return;
         }
     }
-    
+
     /// <summary>
     /// Detect if this is a test class execution (vs production)
     /// </summary>
@@ -3030,18 +3189,18 @@ public class LogParserService
         // Look for CODE_UNIT_STARTED with class names ending in "_Test" or "Test"
         var testUnits = logLines
             .Where(l => l.EventType == "CODE_UNIT_STARTED" && l.Details.Length >= 3)
-            .Where(l => 
+            .Where(l =>
             {
                 var fullName = l.Details.Length >= 3 ? l.Details[2] : "";
                 // Extract just the class name (before the first dot/method)
                 var className = fullName.Split('.')[0];
-                return className.EndsWith("_Test") || 
+                return className.EndsWith("_Test") ||
                        className.EndsWith("Test") ||
                        className.EndsWith("_Tests") ||
                        fullName.Contains("testMethod");
             })
             .ToList();
-        
+
         // Also check if EntryPoint looks like a test
         if (!testUnits.Any() && !string.IsNullOrEmpty(analysis.EntryPoint))
         {
@@ -3053,7 +3212,7 @@ public class LogParserService
                 return;
             }
         }
-        
+
         if (testUnits.Any())
         {
             analysis.IsTestExecution = true;
@@ -3064,13 +3223,13 @@ public class LogParserService
                 var fullName = firstTest.Details[2];
                 var className = fullName.Split('.')[0];
                 analysis.TestClassName = className;
-                
+
                 // Update entry point to show test method
                 analysis.EntryPoint = $"Test: {fullName}";
             }
         }
     }
-    
+
     /// <summary>
     /// Parse EVENT_SERVICE_PUB_BEGIN / EVENT_SERVICE_PUB_END pairs into PlatformEventPublish records.
     /// These appear when code calls EventBus.publish() and the PlatformEvent log level is enabled.
@@ -3092,26 +3251,26 @@ public class LogParserService
                 if (line.Details.Length >= 3)
                 {
                     // [0] = lineRef like "[30]", [1] = publishId, [2] = typeName
-                    publishId    = line.Details[1];
+                    publishId = line.Details[1];
                     eventTypeName = line.Details[2];
                 }
                 else if (line.Details.Length == 2)
                 {
-                    publishId    = line.Details[0];
+                    publishId = line.Details[0];
                     eventTypeName = line.Details[1];
                 }
                 else
                 {
-                    publishId    = line.Details.Length > 0 ? line.Details[0] : $"pub_{line.LineNumber}";
+                    publishId = line.Details.Length > 0 ? line.Details[0] : $"pub_{line.LineNumber}";
                     eventTypeName = string.Empty;
                 }
 
                 var pub = new Models.PlatformEventPublish
                 {
-                    PublishId     = publishId,
+                    PublishId = publishId,
                     EventTypeName = eventTypeName,
-                    LineNumber    = line.LineNumber,
-                    StartTime     = line.Timestamp
+                    LineNumber = line.LineNumber,
+                    StartTime = line.Timestamp
                 };
                 openPublishes[publishId] = pub;
                 results.Add(pub);
@@ -3120,16 +3279,22 @@ public class LogParserService
             {
                 string publishId;
                 if (line.Details.Length >= 3)
+                {
                     publishId = line.Details[1];
+                }
                 else if (line.Details.Length >= 1)
+                {
                     publishId = line.Details[0];
+                }
                 else
+                {
                     continue;
+                }
 
                 if (openPublishes.TryGetValue(publishId, out var pub))
                 {
                     pub.DurationMs = (long)(line.Timestamp - pub.StartTime).TotalMilliseconds;
-                    pub.Completed  = true;
+                    pub.Completed = true;
                     openPublishes.Remove(publishId);
                 }
             }
@@ -3149,7 +3314,7 @@ public class LogParserService
         var openEventTimelinePhases = new Dictionary<string, TimelinePhase>(); // publishId → open platform-event phase for duration
         var allPhases = new List<TimelinePhase>();
         var triggerCounts = new Dictionary<string, int>();
-        
+
         foreach (var line in logLines)
         {
             if (line.EventType == "CODE_UNIT_STARTED")
@@ -3160,36 +3325,43 @@ public class LogParserService
                     LineNumber = line.LineNumber,
                     Depth = phaseStack.Count
                 };
-                
+
                 // Parse the name and type from details
                 // Details format: [EXTERNAL]|{ID}|{ClassName.MethodName}|{OptionalPath}
                 if (line.Details.Length >= 3 && !string.IsNullOrEmpty(line.Details[2]))
                 {
                     var fullName = line.Details[2];  // Human-readable name, not ID
                     phase.Name = fullName;
-                    
+
                     // Determine type and icon
                     if (fullName.Contains("Trigger"))
                     {
                         phase.Type = "Trigger";
                         phase.Icon = "🔧";
-                        
+
                         // Assign OOE phase from trigger event name: "CaseTrigger on Case (Before Insert)"
                         var nameLower = fullName.ToLowerInvariant();
                         if (nameLower.Contains("(before ") || nameLower.Contains("before insert") ||
                             nameLower.Contains("before update") || nameLower.Contains("before delete"))
+                        {
                             phase.OoePhase = Models.OoePhase.BeforeTrigger;
+                        }
                         else if (nameLower.Contains("(after ") || nameLower.Contains("after insert") ||
                                  nameLower.Contains("after update") || nameLower.Contains("after delete") ||
                                  nameLower.Contains("after undelete"))
+                        {
                             phase.OoePhase = Models.OoePhase.AfterTrigger;
-                        
+                        }
+
                         // Track trigger recursion
                         var triggerName = fullName.Split('.')[0];
                         if (!triggerCounts.ContainsKey(triggerName))
+                        {
                             triggerCounts[triggerName] = 0;
+                        }
+
                         triggerCounts[triggerName]++;
-                        
+
                         if (triggerCounts[triggerName] > 1)
                         {
                             phase.IsRecursive = true;
@@ -3264,7 +3436,7 @@ public class LogParserService
                         phase.Icon = "📦";
                     }
                 }
-                
+
                 // Add as child of current phase or root
                 if (phaseStack.Any())
                 {
@@ -3274,7 +3446,7 @@ public class LogParserService
                 {
                     timeline.Phases.Add(phase);
                 }
-                
+
                 phaseStack.Push(phase);
                 allPhases.Add(phase);
             }
@@ -3297,17 +3469,17 @@ public class LogParserService
                     Icon = "💾",
                     Depth = phaseStack.Count
                 };
-                
+
                 if (line.Details.Length >= 3)
                 {
                     phase.Name = $"{line.Details[1]}: {line.Details[2]}";
                 }
-                
+
                 if (phaseStack.Any())
                 {
                     phaseStack.Peek().Children.Add(phase);
                 }
-                
+
                 dmlPhaseStack.Push(phase); // track for DML_END duration
                 allPhases.Add(phase);
             }
@@ -3336,15 +3508,22 @@ public class LogParserService
                                   : "Platform Event";
                 phase.Name = $"Publish: {eventTypeName}";
                 if (phaseStack.Any())
+                {
                     phaseStack.Peek().Children.Add(phase);
+                }
                 else
+                {
                     timeline.Phases.Add(phase);
+                }
                 // Track by publishId for duration calc in EVENT_SERVICE_PUB_END
                 var pubIdTimeline = line.Details.Length >= 3 ? line.Details[1]
                                   : line.Details.Length >= 2 ? line.Details[0]
                                   : string.Empty;
                 if (!string.IsNullOrEmpty(pubIdTimeline))
+                {
                     openEventTimelinePhases[pubIdTimeline] = phase;
+                }
+
                 allPhases.Add(phase);
             }
             else if (line.EventType == "EVENT_SERVICE_PUB_END")
@@ -3379,27 +3558,30 @@ public class LogParserService
                     ? $"Field Update: {line.Details[1]}"
                     : "Workflow Field Update";
                 if (phaseStack.Any())
+                {
                     phaseStack.Peek().Children.Add(phase);
+                }
+
                 allPhases.Add(phase);
             }
         }
-        
+
         // Generate summary
         var triggerCount = allPhases.Count(p => p.Type == "Trigger");
         var flowCount = allPhases.Count(p => p.Type == "Flow");
         var validationCount = allPhases.Count(p => p.Type == "Validation");
         var dmlCount = allPhases.Count(p => p.Type == "DML");
-        
+
         timeline.Summary = $"{triggerCount} triggers, {flowCount} flows, {validationCount} validations, {dmlCount} DML operations";
-        
+
         if (timeline.RecursionCount > 0)
         {
             timeline.Summary += $" ⚠️ {timeline.RecursionCount} recursive calls";
         }
-        
+
         return timeline;
     }
-    
+
     /// <summary>
     /// Calculate health score (0-100) and generate prioritized actionable issues
     /// </summary>
@@ -3442,29 +3624,29 @@ public class LogParserService
                 ? (lastSnapshot.QueryRows * 100.0) / lastSnapshot.QueryRowsLimit : 0;
 
             // SOQL: 0 pts below 50%, scale 50-80% (-5), 80-90% (-10), >90% (-15)
-            if (soqlPct > 90)      { score -= 15; reasons.Add($"SOQL at {soqlPct:F0}% of limit (-15 pts)"); }
+            if (soqlPct > 90) { score -= 15; reasons.Add($"SOQL at {soqlPct:F0}% of limit (-15 pts)"); }
             else if (soqlPct > 80) { score -= 10; reasons.Add($"SOQL at {soqlPct:F0}% of limit (-10 pts)"); }
             else if (soqlPct > 50) { score -= 5; }
 
             // DML: same scale (was missing entirely before)
-            if (dmlPct > 90)      { score -= 15; reasons.Add($"DML at {dmlPct:F0}% of limit (-15 pts)"); }
+            if (dmlPct > 90) { score -= 15; reasons.Add($"DML at {dmlPct:F0}% of limit (-15 pts)"); }
             else if (dmlPct > 80) { score -= 10; reasons.Add($"DML at {dmlPct:F0}% of limit (-10 pts)"); }
             else if (dmlPct > 50) { score -= 5; }
 
             // CPU: same scale
-            if (cpuPct > 90)      { score -= 15; reasons.Add($"CPU at {cpuPct:F0}% of limit (-15 pts)"); }
+            if (cpuPct > 90) { score -= 15; reasons.Add($"CPU at {cpuPct:F0}% of limit (-15 pts)"); }
             else if (cpuPct > 80) { score -= 10; reasons.Add($"CPU at {cpuPct:F0}% of limit (-10 pts)"); }
             else if (cpuPct > 50) { score -= 5; }
 
             // Query rows
-            if (rowsPct > 90)      { score -= 10; reasons.Add($"Query rows at {rowsPct:F0}% of limit (-10 pts)"); }
+            if (rowsPct > 90) { score -= 10; reasons.Add($"Query rows at {rowsPct:F0}% of limit (-10 pts)"); }
             else if (rowsPct > 80) { score -= 5; }
         }
 
         // Factor 3: Performance (wall-clock)
         var durationSec = analysis.DurationMs / 1000.0;
-        if (durationSec > 20)     { score -= 15; reasons.Add($"Execution {durationSec:F1}s — very slow (-15 pts)"); }
-        else if (durationSec > 10){ score -= 10; reasons.Add($"Execution {durationSec:F1}s — slow (-10 pts)"); }
+        if (durationSec > 20) { score -= 15; reasons.Add($"Execution {durationSec:F1}s — very slow (-15 pts)"); }
+        else if (durationSec > 10) { score -= 10; reasons.Add($"Execution {durationSec:F1}s — slow (-10 pts)"); }
         else if (durationSec > 5) { score -= 5; }
 
         // Factor 4: Code Quality — recursion
@@ -3490,12 +3672,12 @@ public class LogParserService
         }
 
         health.Score = Math.Max(0, (int)score);
-        
+
         // Generate actionable issues BEFORE finalizing grade — issues may reveal
         // problems not caught by the score factors above (e.g., N+1 from CumulativeProfiling
         // when individual SOQL events were truncated from the log)
         GenerateActionableIssues(analysis, health, lastSnapshot);
-        
+
         // Reconcile: if GenerateActionableIssues found critical/warning issues that
         // the score factors above missed, apply additional deductions
         var criticalCount = health.CriticalIssues.Count(i => i.Severity == IssueSeverity.Critical);
@@ -3510,14 +3692,18 @@ public class LogParserService
             {
                 health.Score = Math.Max(0, health.Score - additionalDeduction);
                 if (criticalCount > 0)
+                {
                     reasons.Add($"{criticalCount} critical issue{(criticalCount > 1 ? "s" : "")} detected (-{additionalDeduction} pts)");
+                }
                 else
+                {
                     reasons.Add($"{warningCount} warning{(warningCount > 1 ? "s" : "")} detected (-{additionalDeduction} pts)");
+                }
             }
         }
-        
+
         health.Reasoning = reasons.Any() ? string.Join(", ", reasons) : "No major issues detected";
-        
+
         // Assign grade and status
         health.Grade = health.Score switch
         {
@@ -3527,7 +3713,7 @@ public class LogParserService
             >= 60 => "D",
             _ => "F"
         };
-        
+
         health.Status = health.Score switch
         {
             >= 90 => "Excellent",
@@ -3536,7 +3722,7 @@ public class LogParserService
             >= 40 => "Poor",
             _ => "Critical"
         };
-        
+
         health.StatusIcon = health.Score switch
         {
             >= 80 => "🎯",
@@ -3544,24 +3730,24 @@ public class LogParserService
             >= 40 => "⚠️",
             _ => "🔥"
         };
-        
+
         return health;
     }
-    
+
     /// <summary>
     /// Generate prioritized, actionable issues with specific fixes
     /// </summary>
     private void GenerateActionableIssues(LogAnalysis analysis, HealthScore health, GovernorLimitSnapshot? limits)
     {
         var priority = 1;
-        
+
         // CRITICAL: Transaction Failure (this is the #1 thing users need to know)
         if (analysis.TransactionFailed)
         {
             var fatalError = analysis.Errors.FirstOrDefault(e => e.Severity == ExceptionSeverity.Fatal);
             var errorName = fatalError?.Name?.Replace("Fatal Error: ", "") ?? "Unknown error";
             var errorLocation = fatalError?.Name ?? "Unknown";
-            
+
             health.CriticalIssues.Insert(0, new ActionableIssue
             {
                 Title = "❌ This Transaction Failed",
@@ -3576,13 +3762,13 @@ public class LogParserService
                 Priority = priority++
             });
         }
-        
+
         // HIGH: Unhandled exceptions that didn't kill the transaction but are still problems
         var unhandledExceptions = analysis.Errors
             .Where(e => e.Severity == ExceptionSeverity.Unhandled && !analysis.TransactionFailed)
             .Take(3)
             .ToList();
-        
+
         foreach (var exception in unhandledExceptions)
         {
             health.HighPriorityIssues.Add(new ActionableIssue
@@ -3599,7 +3785,7 @@ public class LogParserService
                 Priority = priority++
             });
         }
-        
+
         // CRITICAL: N+1 Query Patterns
         if (analysis.CumulativeProfiling != null)
         {
@@ -3607,7 +3793,7 @@ public class LogParserService
                 .Where(q => q.ExecutionCount > 1000)
                 .OrderByDescending(q => q.ExecutionCount)
                 .FirstOrDefault();
-            
+
             if (worstQuery != null)
             {
                 var objType = ExtractObjectType(worstQuery.Query);
@@ -3621,7 +3807,7 @@ public class LogParserService
                     Difficulty = IssueDifficulty.Easy,
                     RequiresDeveloper = true,
                     Fix = "Send to your developer — they need to move this query outside the loop so it runs once instead of {0} times.".Replace("{0}", worstQuery.ExecutionCount.ToString("N0")),
-                    
+
                     CodeExample = $"Map<String,{objType}> cache = new Map<String,{objType}>();\n" +
                                   $"// Query once before loop\nfor({objType} obj : cache.values()) {{\n    // Use obj here\n}}",
                     EstimatedFixTimeMinutes = 30,
@@ -3629,7 +3815,7 @@ public class LogParserService
                 });
             }
         }
-        
+
         // CRITICAL: Trigger Recursion
         if (analysis.Timeline?.RecursionCount > 0)
         {
@@ -3638,7 +3824,7 @@ public class LogParserService
                 .OrderByDescending(p => p.DurationMs)
                 .Take(2)
                 .ToList();
-            
+
             foreach (var trigger in recursiveTriggers)
             {
                 health.CriticalIssues.Add(new ActionableIssue
@@ -3651,14 +3837,14 @@ public class LogParserService
                     Difficulty = IssueDifficulty.Medium,
                     RequiresDeveloper = true,
                     Fix = "Send to your developer — they need to add recursion protection so this automation only runs once per record.",
-                    
+
                     CodeExample = "private static Set<Id> processedIds = new Set<Id>();\nif(processedIds.contains(record.Id)) continue;\nprocessedIds.add(record.Id);",
                     EstimatedFixTimeMinutes = 60,
                     Priority = priority++
                 });
             }
         }
-        
+
         // HIGH PRIORITY: Governor Limit Warnings
         if (limits != null)
         {
@@ -3680,7 +3866,7 @@ public class LogParserService
                 });
             }
         }
-        
+
         // QUICK WINS: Slow DML operations
         if (analysis.CumulativeProfiling != null)
         {
@@ -3689,7 +3875,7 @@ public class LogParserService
                 .OrderByDescending(d => d.TotalDurationMs)
                 .Take(2)
                 .ToList();
-            
+
             foreach (var dml in slowDml)
             {
                 health.QuickWins.Add(new ActionableIssue
@@ -3709,7 +3895,7 @@ public class LogParserService
             }
         }
     }
-    
+
     /// <summary>
     /// Extract object type from SOQL query (e.g., "SELECT Id FROM Account" => "Account")
     /// </summary>

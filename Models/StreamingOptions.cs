@@ -1,4 +1,4 @@
-﻿namespace SalesforceDebugAnalyzer.Models;
+namespace SalesforceDebugAnalyzer.Models;
 
 public class StreamingOptions
 {

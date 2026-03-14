@@ -1,5 +1,5 @@
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -36,7 +36,9 @@ public class ToastNotificationService
     {
         // Quiet hours check (critical alerts bypass quiet hours)
         if (IsQuietHours() && alert.Severity != "critical")
+        {
             return;
+        }
 
         // Rate limiting
         CleanupOldToasts();
@@ -86,7 +88,9 @@ public class ToastNotificationService
     {
         var settings = _settingsService.Load();
         if (!settings.QuietHoursEnabled)
+        {
             return false;
+        }
 
         var now = DateTime.Now.TimeOfDay;
         var quietStart = new TimeSpan(settings.QuietHoursStart, 0, 0);

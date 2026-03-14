@@ -1,5 +1,5 @@
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -92,7 +92,10 @@ public class TrendAnalysisService
         foreach (var ep in entryPoints)
         {
             var snapshots = await _db.GetSnapshotsSinceAsync(periodStart, ep);
-            if (snapshots.Count == 0) continue;
+            if (snapshots.Count == 0)
+            {
+                continue;
+            }
 
             var metrics = new Dictionary<string, List<double>>
             {
@@ -109,7 +112,10 @@ public class TrendAnalysisService
 
             foreach (var (metricName, values) in metrics)
             {
-                if (values.Count == 0) continue;
+                if (values.Count == 0)
+                {
+                    continue;
+                }
 
                 var sorted = values.OrderBy(v => v).ToList();
                 var agg = new MetricAggregate
@@ -145,7 +151,10 @@ public class TrendAnalysisService
         foreach (var ep in entryPoints)
         {
             var snapshots = await _db.GetSnapshotsSinceAsync(windowStart, ep);
-            if (snapshots.Count < MinBaselineSamples) continue;
+            if (snapshots.Count < MinBaselineSamples)
+            {
+                continue;
+            }
 
             var metricsToBaseline = new Dictionary<string, List<double>>
             {
@@ -161,7 +170,10 @@ public class TrendAnalysisService
 
             foreach (var (metricName, values) in metricsToBaseline)
             {
-                if (values.Count < MinBaselineSamples) continue;
+                if (values.Count < MinBaselineSamples)
+                {
+                    continue;
+                }
 
                 var baseline = new Baseline
                 {
@@ -190,7 +202,10 @@ public class TrendAnalysisService
         foreach (var ep in entryPoints)
         {
             var recentSnapshots = await _db.GetSnapshotsSinceAsync(recentWindow, ep);
-            if (recentSnapshots.Count == 0) continue;
+            if (recentSnapshots.Count == 0)
+            {
+                continue;
+            }
 
             // 1. Statistical deviation checks
             await CheckStatisticalDeviations(ep, recentSnapshots);
@@ -220,12 +235,17 @@ public class TrendAnalysisService
         {
             var baseline = await _db.GetBaselineAsync(entryPoint, metric);
             if (baseline == null || baseline.SampleCount < MinBaselineSamples || baseline.Stddev < 0.001)
+            {
                 continue;
+            }
 
             var currentAvg = recent.Average(s => extract(s));
             var z = (currentAvg - baseline.BaselineValue) / baseline.Stddev;
 
-            if (z < WarningZScore) continue;
+            if (z < WarningZScore)
+            {
+                continue;
+            }
 
             var severity = z >= CriticalZScore ? "critical" : "warning";
             var alertType = metric switch
@@ -387,7 +407,10 @@ public class TrendAnalysisService
         {
             var dailyAggs = await _db.GetAggregatesAsync(metricName, "daily", weekAgo, entryPoint);
 
-            if (dailyAggs.Count < 3) continue; // Need at least 3 data points
+            if (dailyAggs.Count < 3)
+            {
+                continue; // Need at least 3 data points
+            }
 
             var xValues = dailyAggs.Select((a, i) => (double)i).ToArray();
             var yValues = dailyAggs.Select(a => a.AvgValue).ToArray();
@@ -395,11 +418,17 @@ public class TrendAnalysisService
             var (slope, intercept) = LinearRegression(xValues, yValues);
 
             // Only alert if trending upward
-            if (slope <= 0) continue;
+            if (slope <= 0)
+            {
+                continue;
+            }
 
             // Project days until 100% (governor limit)
             var currentValue = yValues[^1];
-            if (currentValue >= 100) continue; // Already at limit
+            if (currentValue >= 100)
+            {
+                continue; // Already at limit
+            }
 
             var daysToLimit = (100 - currentValue) / slope;
 
@@ -441,7 +470,10 @@ public class TrendAnalysisService
         var existing = await _db.GetRecentAlertAsync(
             alert.AlertType, alert.EntryPoint, alert.MetricName);
 
-        if (existing != null) return;
+        if (existing != null)
+        {
+            return;
+        }
 
         await _db.InsertAlertAsync(alert);
         AlertGenerated?.Invoke(this, alert);
@@ -453,17 +485,29 @@ public class TrendAnalysisService
 
     private static double Percentile(List<double> sorted, double p)
     {
-        if (sorted.Count == 0) return 0;
+        if (sorted.Count == 0)
+        {
+            return 0;
+        }
+
         var index = p * (sorted.Count - 1);
         var lower = (int)Math.Floor(index);
         var upper = (int)Math.Ceiling(index);
-        if (lower == upper) return sorted[lower];
+        if (lower == upper)
+        {
+            return sorted[lower];
+        }
+
         return sorted[lower] + (index - lower) * (sorted[upper] - sorted[lower]);
     }
 
     private static double StdDev(List<double> values)
     {
-        if (values.Count < 2) return 0;
+        if (values.Count < 2)
+        {
+            return 0;
+        }
+
         var avg = values.Average();
         var sumSqDiff = values.Sum(v => (v - avg) * (v - avg));
         return Math.Sqrt(sumSqDiff / (values.Count - 1));
@@ -478,7 +522,10 @@ public class TrendAnalysisService
         var sumX2 = x.Sum(xi => xi * xi);
 
         var denom = n * sumX2 - sumX * sumX;
-        if (Math.Abs(denom) < 1e-10) return (0, y.Average());
+        if (Math.Abs(denom) < 1e-10)
+        {
+            return (0, y.Average());
+        }
 
         var slope = (n * sumXY - sumX * sumY) / denom;
         var intercept = (sumY - slope * sumX) / n;
