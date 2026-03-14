@@ -29,8 +29,31 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
 
+      # ── Step 1: Check for the skip label FIRST ───────────────────────────
+      # If 'skip-test-contract' label is present the rest of the job is skipped.
+      # This avoids the "earlier step failed so job is failed" problem.
+      - name: Check for skip label
+        id: skip_check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels \
+            --jq '.labels[].name')
+          echo "PR labels: $LABELS"
+          if echo "$LABELS" | grep -q "skip-test-contract"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Label 'skip-test-contract' found — test contract check skipped."
+            echo "Ensure PR description explains why tests are not required."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Step 2: Get changed files (only if not skipped) ──────────────────
       - name: Get changed files
         id: changed
+        if: steps.skip_check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -71,12 +94,14 @@ jobs:
             echo "tests_changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-          # Store lists for the failure message
+          # Store list for the failure message
           echo "logic_files<<EOF" >> "$GITHUB_OUTPUT"
           echo "$LOGIC" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
+      # ── Step 3: Enforce the contract (only if not skipped) ───────────────
       - name: Enforce test requirement
+        if: steps.skip_check.outputs.skip != 'true'
         env:
           LOGIC_CHANGED: ${{ steps.changed.outputs.logic_changed }}
           TESTS_CHANGED: ${{ steps.changed.outputs.tests_changed }}
@@ -98,22 +123,3 @@ jobs:
           else
             echo "Logic files changed AND tests updated — contract satisfied."
           fi
-
-      - name: Check for skip label override
-        # If the job failed above but the PR has 'skip-test-contract', re-pass.
-        # This gives an escape hatch for genuine exceptions (pure refactors, etc.)
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: |
-          LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels \
-            --jq '.labels[].name')
-          echo "PR labels: $LABELS"
-          if echo "$LABELS" | grep -q "skip-test-contract"; then
-            echo "Label 'skip-test-contract' found — override accepted."
-            echo "Ensure PR description explains why tests are not required."
-            exit 0
-          fi
-          exit 1
