@@ -12,10 +12,14 @@ public class SystemTrayService : IDisposable
     private bool _isMonitoringActive;
     private int _alertCount;
 
+    // These events are part of the planned tray API and will be wired up when
+    // platform-specific tray support is implemented (GH#TODO).
+#pragma warning disable CS0067
     public event EventHandler? ShowWindowRequested;
     public event EventHandler? ExitRequested;
     public event EventHandler<bool>? MonitoringToggled;
     public event EventHandler? AlertCenterRequested;
+#pragma warning restore CS0067
 
     public void Initialize()
     {

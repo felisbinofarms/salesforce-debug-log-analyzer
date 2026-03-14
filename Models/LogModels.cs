@@ -278,17 +278,17 @@ public class LogAnalysis
     /// </summary>
     public string OperationIcon => EntryPoint?.ToLower() switch
     {
-        var ep when ep.Contains("trigger") => "⚡",
-        var ep when ep.Contains("flow") || ep.Contains("interview") => "🔄",
-        var ep when ep.Contains("validation") => "✓",
-        var ep when ep.Contains("@future") || ep.Contains("queueable") => "🔮",
-        var ep when ep.Contains("@auraenabled") || ep.Contains("lightning") => "🎯",
-        var ep when ep.Contains("batch") => "📊",
-        var ep when ep.Contains("schedule") => "⏰",
-        var ep when ep.Contains("webservice") || ep.Contains("restresource") => "🌐",
-        var ep when ep.Contains("visualforce") => "📄",
-        var ep when ep.Contains("test") => "🧪",
-        _ => "📦" // Default for classes
+        var ep when ep is not null && ep.Contains("trigger") => "⚡",
+        var ep when ep is not null && (ep.Contains("flow") || ep.Contains("interview")) => "🔄",
+        var ep when ep is not null && ep.Contains("validation") => "✓",
+        var ep when ep is not null && (ep.Contains("@future") || ep.Contains("queueable")) => "🔮",
+        var ep when ep is not null && (ep.Contains("@auraenabled") || ep.Contains("lightning")) => "🎯",
+        var ep when ep is not null && ep.Contains("batch") => "📊",
+        var ep when ep is not null && ep.Contains("schedule") => "⏰",
+        var ep when ep is not null && (ep.Contains("webservice") || ep.Contains("restresource")) => "🌐",
+        var ep when ep is not null && ep.Contains("visualforce") => "📄",
+        var ep when ep is not null && ep.Contains("test") => "🧪",
+        _ => "📦" // Default for classes (also handles null EntryPoint)
     };
 
     /// <summary>
@@ -296,17 +296,17 @@ public class LogAnalysis
     /// </summary>
     public string OperationType => EntryPoint?.ToLower() switch
     {
-        var ep when ep.Contains("trigger") => "Apex Trigger",
-        var ep when ep.Contains("flow") || ep.Contains("interview") => "Flow",
-        var ep when ep.Contains("validation") => "Validation Rule",
-        var ep when ep.Contains("@future") || ep.Contains("queueable") => "Async Apex",
-        var ep when ep.Contains("@auraenabled") || ep.Contains("lightning") => "Lightning",
-        var ep when ep.Contains("batch") => "Batch Apex",
-        var ep when ep.Contains("schedule") => "Scheduled Apex",
-        var ep when ep.Contains("webservice") || ep.Contains("restresource") => "Web Service",
-        var ep when ep.Contains("visualforce") => "Visualforce",
-        var ep when ep.Contains("test") => "Test Class",
-        _ => "Apex Class"
+        var ep when ep is not null && ep.Contains("trigger") => "Apex Trigger",
+        var ep when ep is not null && (ep.Contains("flow") || ep.Contains("interview")) => "Flow",
+        var ep when ep is not null && ep.Contains("validation") => "Validation Rule",
+        var ep when ep is not null && (ep.Contains("@future") || ep.Contains("queueable")) => "Async Apex",
+        var ep when ep is not null && (ep.Contains("@auraenabled") || ep.Contains("lightning")) => "Lightning",
+        var ep when ep is not null && ep.Contains("batch") => "Batch Apex",
+        var ep when ep is not null && ep.Contains("schedule") => "Scheduled Apex",
+        var ep when ep is not null && (ep.Contains("webservice") || ep.Contains("restresource")) => "Web Service",
+        var ep when ep is not null && ep.Contains("visualforce") => "Visualforce",
+        var ep when ep is not null && ep.Contains("test") => "Test Class",
+        _ => "Apex Class" // Also handles null EntryPoint
     };
 
     /// <summary>

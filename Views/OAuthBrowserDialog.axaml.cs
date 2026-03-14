@@ -35,7 +35,7 @@ public partial class OAuthBrowserDialog : Window
         return _completionSource.Task;
     }
 
-    private async void OAuthBrowserDialog_Loaded(object? sender, RoutedEventArgs e)
+    private void OAuthBrowserDialog_Loaded(object? sender, RoutedEventArgs e)
     {
         try
         {
