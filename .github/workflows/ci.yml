@@ -109,7 +109,9 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        # Restore the test project specifically — this also restores the main
+        # project via its ProjectReference, giving us both assets files.
+        run: dotnet restore Tests/SalesforceDebugAnalyzer.Tests.csproj
 
       - name: Build (Release)
         # Build the test project (which also builds the main project as a dependency)
