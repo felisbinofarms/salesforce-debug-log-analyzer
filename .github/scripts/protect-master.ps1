@@ -89,16 +89,24 @@ $payload = @{
 $encodedBranch = [Uri]::EscapeDataString($Branch)
 $apiPath       = "repos/$Repo/branches/$encodedBranch/protection"
 
-gh api `
-    --method PUT `
-    -H "Accept: application/vnd.github+json" `
-    -H "X-GitHub-Api-Version: 2022-11-28" `
-    "$apiPath" `
-    --input - <<< $payload
+# Write payload to a temp file without BOM (PS 5.1 Set-Content -Encoding utf8 adds BOM)
+$tmpFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($tmpFile, $payload, [System.Text.UTF8Encoding]::new($false))
+
+try {
+    gh api `
+        --method PUT `
+        -H "Accept: application/vnd.github+json" `
+        -H "X-GitHub-Api-Version: 2022-11-28" `
+        "$apiPath" `
+        --input $tmpFile
+} finally {
+    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+}
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
-    Write-Host "✅ Branch protection applied successfully!" -ForegroundColor Green
+    Write-Host "Branch protection applied successfully!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Rules now active on '$Branch':" -ForegroundColor White
     Write-Host "  • Direct pushes blocked — PRs required" -ForegroundColor Gray
@@ -108,5 +116,5 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  • Enforce for admins: yes" -ForegroundColor Gray
     Write-Host "  • Force-push / deletion: blocked" -ForegroundColor Gray
 } else {
-    Write-Error "gh api call failed (exit $LASTEXITCODE). Check your token has 'repo' scope and admin rights on '$Repo'."
+    Write-Error "gh api call failed (exit $LASTEXITCODE). Check your token has 'repo' scope and admin rights on $Repo."
 }
