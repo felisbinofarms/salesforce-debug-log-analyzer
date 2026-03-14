@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -61,7 +61,10 @@ public class PiiScannerService
         for (int i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
 
             ScanLine(line, i + 1, result.Matches);
         }
@@ -82,11 +85,11 @@ public class PiiScannerService
 
     private static void ScanLine(string line, int lineNumber, List<PiiMatch> matches)
     {
-        CheckPattern(line, lineNumber, EmailRegex,      "Email",       "Medium", MaskEmail,      matches);
-        CheckPattern(line, lineNumber, SsnRegex,        "SSN",         "High",   MaskSsn,        matches);
-        CheckPattern(line, lineNumber, CreditCardRegex, "Credit Card", "High",   MaskCard,       matches);
-        CheckPattern(line, lineNumber, PhoneRegex,      "Phone",       "Medium", MaskPhone,      matches);
-        CheckPattern(line, lineNumber, IpAddressRegex,  "IP Address",  "Low",    MaskIpAddress,  matches);
+        CheckPattern(line, lineNumber, EmailRegex, "Email", "Medium", MaskEmail, matches);
+        CheckPattern(line, lineNumber, SsnRegex, "SSN", "High", MaskSsn, matches);
+        CheckPattern(line, lineNumber, CreditCardRegex, "Credit Card", "High", MaskCard, matches);
+        CheckPattern(line, lineNumber, PhoneRegex, "Phone", "Medium", MaskPhone, matches);
+        CheckPattern(line, lineNumber, IpAddressRegex, "IP Address", "Low", MaskIpAddress, matches);
     }
 
     private static void CheckPattern(
@@ -102,11 +105,11 @@ public class PiiScannerService
         {
             matches.Add(new PiiMatch
             {
-                LineNumber  = lineNumber,
-                PiiType     = piiType,
-                Severity    = severity,
+                LineNumber = lineNumber,
+                PiiType = piiType,
+                Severity = severity,
                 MaskedValue = masker(m.Value),
-                Context     = BuildContext(line, m.Index, m.Length)
+                Context = BuildContext(line, m.Index, m.Length)
             });
         }
     }
@@ -118,7 +121,7 @@ public class PiiScannerService
         const int ContextRadius = 30;
 
         int start = Math.Max(0, matchStart - ContextRadius);
-        int end   = Math.Min(line.Length, matchStart + matchLength + ContextRadius);
+        int end = Math.Min(line.Length, matchStart + matchLength + ContextRadius);
 
         var prefix = line[start..matchStart];
         var suffix = line[(matchStart + matchLength)..end];
@@ -131,9 +134,13 @@ public class PiiScannerService
     internal static string MaskEmail(string email)
     {
         var at = email.IndexOf('@');
-        if (at <= 0) return "***@***";
-        var local   = email[..at];
-        var domain  = email[(at + 1)..];
+        if (at <= 0)
+        {
+            return "***@***";
+        }
+
+        var local = email[..at];
+        var domain = email[(at + 1)..];
         var maskedLocal = local.Length <= 3
             ? new string('*', local.Length)
             : local[..2] + new string('*', local.Length - 2);
@@ -157,7 +164,10 @@ public class PiiScannerService
     {
         var digits = new string(phone.Where(char.IsDigit).ToArray());
         if (digits.Length >= 4)
+        {
             return "***-***-" + digits[^4..];
+        }
+
         return "***-***-****";
     }
 
@@ -165,7 +175,10 @@ public class PiiScannerService
     {
         var parts = ip.Split('.');
         if (parts.Length == 4)
+        {
             return $"{parts[0]}.{parts[1]}.***,***";
+        }
+
         return "***.***.***.***";
     }
 }

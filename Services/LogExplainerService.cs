@@ -1,5 +1,5 @@
-using SalesforceDebugAnalyzer.Models;
 using System.Text;
+using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -15,9 +15,9 @@ public class LogExplainerService
     public string GenerateDetailedSummary(LogAnalysis analysis)
     {
         var sb = new StringBuilder();
-        
+
         sb.AppendLine("# 📋 What Happened\n");
-        
+
         // Success/failure with friendly context
         if (analysis.TransactionFailed)
         {
@@ -48,7 +48,7 @@ public class LogExplainerService
             sb.AppendLine($"✅ **Your code was fast and efficient** - only took {FormatDuration((long)analysis.DurationMs)}!\n");
             sb.AppendLine("**What this means:** Users experienced instant responsiveness. This is ideal performance. Keep it up! 🎉\n");
         }
-        
+
         // Entry point explanation
         if (!string.IsNullOrEmpty(analysis.EntryPoint))
         {
@@ -57,14 +57,14 @@ public class LogExplainerService
             sb.AppendLine(ExplainEntryPoint(analysis.EntryPoint, analysis.OperationType));
             sb.AppendLine();
         }
-        
+
         // What the code did
         sb.AppendLine("## 🔧 What Your Code Did\n");
-        
+
         var soqlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "SOQL");
         var dmlCount = analysis.DatabaseOperations.Count(d => d.OperationType == "DML");
         var methodCount = analysis.MethodStats.Count;
-        
+
         if (methodCount > 0)
         {
             sb.AppendLine($"• **Called {methodCount} different methods** (functions/pieces of code)");
@@ -74,11 +74,11 @@ public class LogExplainerService
                     "This is fine, but watch out for 'spaghetti code' that's hard to debug.");
             }
         }
-        
+
         if (soqlCount > 0 || dmlCount > 0)
         {
             sb.AppendLine($"• **Talked to the database {soqlCount + dmlCount} times:**");
-            
+
             if (soqlCount > 0)
             {
                 sb.AppendLine($"  - {soqlCount} **read** operation{(soqlCount > 1 ? "s" : "")} (SOQL queries) - asking for data");
@@ -92,7 +92,7 @@ public class LogExplainerService
                 sb.AppendLine($"  - {dmlCount} **write** operation{(dmlCount > 1 ? "s" : "")} (DML statements) - saving/updating/deleting records");
             }
         }
-        
+
         if (analysis.Flows.Count > 0)
         {
             sb.AppendLine($"• **Triggered {analysis.Flows.Count} Flow{(analysis.Flows.Count > 1 ? "s" : "")} or Process Builder{(analysis.Flows.Count > 1 ? "s" : "")}**");
@@ -102,12 +102,12 @@ public class LogExplainerService
                 sb.AppendLine($"  - ⚠️ {faultedFlows.Count} of them had errors!");
             }
         }
-        
+
         sb.AppendLine();
-        
+
         return sb.ToString();
     }
-    
+
     /// <summary>
     /// Generate comprehensive, educational issue explanations with code examples
     /// </summary>
@@ -115,13 +115,16 @@ public class LogExplainerService
     {
         var issues = new List<DetailedIssue>();
         var lastLimitSnapshot = analysis.LimitSnapshots.LastOrDefault();
-        if (lastLimitSnapshot == null) return issues;
-        
+        if (lastLimitSnapshot == null)
+        {
+            return issues;
+        }
+
         // Issue 1: Governor limit dangers
         var soqlPercent = SafePercent(lastLimitSnapshot.SoqlQueries, lastLimitSnapshot.SoqlQueriesLimit);
         var cpuPercent = SafePercent(lastLimitSnapshot.CpuTime, lastLimitSnapshot.CpuTimeLimit);
         var dmlPercent = SafePercent(lastLimitSnapshot.DmlStatements, lastLimitSnapshot.DmlStatementsLimit);
-        
+
         if (soqlPercent >= 90 || cpuPercent >= 90 || dmlPercent >= 90)
         {
             issues.Add(GenerateCriticalLimitIssue(analysis, lastLimitSnapshot, soqlPercent, cpuPercent, dmlPercent));
@@ -131,7 +134,7 @@ public class LogExplainerService
             // Warning level - not critical yet but getting close
             issues.Add(GenerateCriticalLimitIssue(analysis, lastLimitSnapshot, soqlPercent, cpuPercent, dmlPercent));
         }
-        
+
         // Issue 2: N+1 query pattern (threshold: ≥3 repetitions of the same query)
         var repeatedQueryGroup = analysis.DatabaseOperations
             .Where(d => d.OperationType == "SOQL")
@@ -144,26 +147,26 @@ public class LogExplainerService
         {
             issues.Add(GenerateNPlusOneIssue(repeatedQueryGroup, analysis));
         }
-        
+
         // Issue 3: Stack overflow risk
-        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical || 
+        if (analysis.StackAnalysis.RiskLevel == StackRiskLevel.Critical ||
             analysis.StackAnalysis.RiskLevel == StackRiskLevel.Warning)
         {
             issues.Add(GenerateStackOverflowIssue(analysis));
         }
-        
+
         // Issue 4: Slow queries
         var slowQueries = analysis.DatabaseOperations
             .Where(d => d.DurationMs > 1000)
             .OrderByDescending(d => d.DurationMs)
             .Take(3)
             .ToList();
-        
+
         if (slowQueries.Any())
         {
             issues.Add(GenerateSlowQueryIssue(slowQueries));
         }
-        
+
         // Issue 5: Trigger re-entry
         var reEntries = analysis.TriggerReEntries.Where(t => t.HasReEntry).ToList();
         if (reEntries.Any())
@@ -192,7 +195,9 @@ public class LogExplainerService
         {
             // Only add if we didn't already flag it via the N+1 path
             if (repeatedQueryGroup == null)
+            {
                 issues.Add(GenerateDuplicateSoqlIssue(topDuplicate));
+            }
         }
 
         // Issue 9: Callout errors
@@ -204,39 +209,50 @@ public class LogExplainerService
 
         return issues;
     }
-    
+
     private DetailedIssue GenerateCriticalLimitIssue(LogAnalysis analysis, GovernorLimitSnapshot limits, double soqlPercent, double cpuPercent, double dmlPercent)
     {
         var sb = new StringBuilder();
         sb.AppendLine("### 🚨 CRITICAL: You're At The Absolute Maximum!\n");
-        
+
         var criticalLimits = new List<string>();
-        if (soqlPercent >= 90) criticalLimits.Add($"**Database queries:** {limits.SoqlQueries}/{limits.SoqlQueriesLimit} ({soqlPercent:F0}%)");
-        if (cpuPercent >= 90) criticalLimits.Add($"**Processing time:** {limits.CpuTime}ms/{limits.CpuTimeLimit}ms ({cpuPercent:F0}%)");
-        if (dmlPercent >= 90) criticalLimits.Add($"**Database writes:** {limits.DmlStatements}/{limits.DmlStatementsLimit} ({dmlPercent:F0}%)");
-        
+        if (soqlPercent >= 90)
+        {
+            criticalLimits.Add($"**Database queries:** {limits.SoqlQueries}/{limits.SoqlQueriesLimit} ({soqlPercent:F0}%)");
+        }
+
+        if (cpuPercent >= 90)
+        {
+            criticalLimits.Add($"**Processing time:** {limits.CpuTime}ms/{limits.CpuTimeLimit}ms ({cpuPercent:F0}%)");
+        }
+
+        if (dmlPercent >= 90)
+        {
+            criticalLimits.Add($"**Database writes:** {limits.DmlStatements}/{limits.DmlStatementsLimit} ({dmlPercent:F0}%)");
+        }
+
         sb.AppendLine("**What's wrong:**");
         foreach (var limit in criticalLimits)
         {
             sb.AppendLine($"• {limit}");
         }
         sb.AppendLine();
-        
+
         sb.AppendLine("**What this means in plain English:**");
         sb.AppendLine("Imagine Salesforce giving you 100 tokens to query the database. Your code used 95+ tokens. " +
             "If you need even ONE more query, Salesforce will throw an error and roll back everything. " +
             "Your users will see a scary red error message saying *\"Too many SOQL queries: 101\"*.\n");
-        
+
         sb.AppendLine("**Why Salesforce has these limits:**");
         sb.AppendLine("Salesforce is a shared platform (like an apartment building). If one tenant blasts music at full volume, " +
             "everyone suffers. Governor limits = noise complaints that force you to turn it down. These limits protect ALL customers.\n");
-        
+
         sb.AppendLine("**What happens if you hit the limit:**");
         sb.AppendLine("1. Salesforce throws an exception: `System.LimitException: Too many SOQL queries: 101`");
         sb.AppendLine("2. Everything your code did gets UNDONE (rolled back)");
         sb.AppendLine("3. The user sees an error and their changes aren't saved");
         sb.AppendLine("4. You get angry emails/tickets from users 😱\n");
-        
+
         return new DetailedIssue
         {
             Severity = IssueSeverity.Critical.ToString(),
@@ -247,35 +263,35 @@ public class LogExplainerService
             Priority = 1
         };
     }
-    
+
     private DetailedIssue GenerateNPlusOneIssue(IGrouping<string, DatabaseOperation> repeatedQueries, LogAnalysis analysis)
     {
         var sb = new StringBuilder();
         var queryCount = repeatedQueries.Count();
         var exampleQuery = repeatedQueries.First().Query;
-        
+
         sb.AppendLine("### 🔁 You're Asking The Same Question Over and Over (N+1 Pattern)\n");
-        
+
         sb.AppendLine("**What's happening:**");
         sb.AppendLine($"Your code is running this query **{queryCount} times:**");
         sb.AppendLine($"```sql\n{TruncateQuery(exampleQuery)}\n```\n");
-        
+
         sb.AppendLine("**The Analogy:**");
         sb.AppendLine("This is like calling a friend 100 times asking \"What's the weather in New York?\" " +
             "Instead of asking once and writing it down. Each call takes time - even if they answer instantly, " +
             "you waste time dialing, waiting for them to pick up, etc.\n");
-        
+
         sb.AppendLine("Or imagine going to the grocery store 100 times to buy one item each time, " +
             "instead of making ONE trip with a shopping list. That's what your code is doing!\n");
-        
+
         sb.AppendLine("**Why it's slow:**");
         sb.AppendLine($"• Each database query takes 50-100ms on average");
         sb.AppendLine($"• {queryCount} queries × 75ms = **{queryCount * 75}ms wasted** just waiting");
         sb.AppendLine("• Plus you're burning through your 100-query limit!\n");
-        
+
         sb.AppendLine("**How to fix it (Bulkification):**");
         sb.AppendLine("Instead of querying inside a loop, collect ALL the IDs first, then query ONCE:\n");
-        
+
         sb.AppendLine("**❌ BAD (Current Code):**");
         sb.AppendLine("```apex");
         sb.AppendLine("for (Account acc : Trigger.new) {");
@@ -284,7 +300,7 @@ public class LogExplainerService
         sb.AppendLine("    // Do something with contacts...");
         sb.AppendLine("}");
         sb.AppendLine("```\n");
-        
+
         sb.AppendLine("**✅ GOOD (Fixed Code):**");
         sb.AppendLine("```apex");
         sb.AppendLine("// Step 1: Collect all Account IDs first");
@@ -310,13 +326,13 @@ public class LogExplainerService
         sb.AppendLine("    }");
         sb.AppendLine("}");
         sb.AppendLine("```\n");
-        
+
         sb.AppendLine("**Impact of this change:**");
         sb.AppendLine($"• **Before:** {queryCount} queries, {FormatDuration(queryCount * 75)} wasted");
         sb.AppendLine($"• **After:** 1 query, ~75ms total");
         sb.AppendLine($"• **Speedup:** {queryCount}x faster! ⚡");
         sb.AppendLine($"• **Governor limits:** Uses only 1 out of 100 queries instead of {queryCount}\n");
-        
+
         return new DetailedIssue
         {
             Severity = IssueSeverity.High.ToString(),
@@ -327,39 +343,39 @@ public class LogExplainerService
             Priority = 2
         };
     }
-    
+
     private DetailedIssue GenerateStackOverflowIssue(LogAnalysis analysis)
     {
         var sb = new StringBuilder();
         sb.AppendLine("### 🚨 Stack Overflow Risk Detected\n");
-        
+
         sb.AppendLine("**What's happening:**");
         sb.AppendLine($"Your code is calling methods nested {analysis.StackAnalysis.MaxDepth} levels deep. " +
             $"Salesforce's limit is 1,000 stack frames - you're at {SafePercent(analysis.StackAnalysis.MaxDepth, 1000):F0}%.\n");
-        
+
         sb.AppendLine("**The Analogy:**");
         sb.AppendLine("Imagine a tower of blocks. Each time a method calls another method, you add a block. " +
             "If the tower gets too tall (1,000 blocks), it falls over (stack overflow). " +
             "Your tower is currently " + analysis.StackAnalysis.MaxDepth + " blocks tall.\n");
-        
+
         sb.AppendLine("**What causes this:**");
         sb.AppendLine($"The main culprit is: `{analysis.StackAnalysis.MaxDepthMethod}`\n");
-        
+
         var topLoopPattern = analysis.StackAnalysis.LoopPatterns
             .OrderByDescending(p => p.TotalFrames)
             .FirstOrDefault();
-        
+
         if (topLoopPattern != null)
         {
             sb.AppendLine($"This method is being called **{topLoopPattern.CallCount} times inside a loop**, " +
                 $"creating {topLoopPattern.TotalFrames} stack frames.\n");
         }
-        
+
         sb.AppendLine("**How to fix it:**");
         sb.AppendLine("1. **Cache before the loop** - If you're calling a method 100+ times, call it ONCE and store the result");
         sb.AppendLine("2. **Flatten method chains** - If method A → B → C → D, consider combining them");
         sb.AppendLine("3. **Process in batches** - Instead of 281 trigger configs, process 50 at a time\n");
-        
+
         sb.AppendLine("**Example fix:**");
         sb.AppendLine("```apex");
         sb.AppendLine("// ❌ BAD: Calling method in loop");
@@ -373,7 +389,7 @@ public class LogExplainerService
         sb.AppendLine("    RecordType rt = rtMap.get(td.Object__c + '.' + td.Record_Type_Name__c); // Fast Map lookup");
         sb.AppendLine("}");
         sb.AppendLine("```\n");
-        
+
         return new DetailedIssue
         {
             Severity = IssueSeverity.Critical.ToString(),
@@ -384,33 +400,33 @@ public class LogExplainerService
             Priority = 1
         };
     }
-    
+
     private DetailedIssue GenerateSlowQueryIssue(List<DatabaseOperation> slowQueries)
     {
         var sb = new StringBuilder();
         sb.AppendLine("### 🐌 Slow Database Queries Detected\n");
-        
+
         sb.AppendLine($"**What's happening:**");
         sb.AppendLine($"You have {slowQueries.Count} database quer{(slowQueries.Count > 1 ? "ies" : "y")} that took over 1 second each:\n");
-        
+
         foreach (var query in slowQueries)
         {
             sb.AppendLine($"• {FormatDuration((long)query.DurationMs)} - `{TruncateQuery(query.Query)}`");
         }
         sb.AppendLine();
-        
+
         sb.AppendLine("**Why this matters:**");
         sb.AppendLine("A good SOQL query should take 50-200ms. Anything over 1 second means:");
         sb.AppendLine("1. You're searching through too much data (millions of records)");
         sb.AppendLine("2. The database doesn't have proper indexes (like a book without a table of contents)");
         sb.AppendLine("3. Your WHERE clause is too complex or not using indexed fields\n");
-        
+
         sb.AppendLine("**How to fix it:**");
         sb.AppendLine("1. **Add filters (WHERE clauses)** to narrow down the search");
         sb.AppendLine("2. **Use indexed fields** - Id, Name, RecordTypeId, CreatedDate, etc.");
         sb.AppendLine("3. **Add custom indexes** - Ask a Salesforce admin to index frequently-queried fields");
         sb.AppendLine("4. **Reduce SELECT fields** - Only get the fields you actually need\n");
-        
+
         sb.AppendLine("**Example improvement:**");
         sb.AppendLine("```apex");
         sb.AppendLine("// ❌ SLOW: No filters, searching millions of records");
@@ -421,7 +437,7 @@ public class LogExplainerService
         sb.AppendLine("                     WHERE CreatedDate = LAST_N_DAYS:30 ");
         sb.AppendLine("                     AND Status != 'Closed' LIMIT 1000];");
         sb.AppendLine("```\n");
-        
+
         return new DetailedIssue
         {
             Severity = IssueSeverity.Medium.ToString(),
@@ -432,27 +448,27 @@ public class LogExplainerService
             Priority = 3
         };
     }
-    
+
     private DetailedIssue GenerateTriggerReEntryIssue(TriggerReEntry reEntry, LogAnalysis analysis)
     {
         var sb = new StringBuilder();
         sb.AppendLine("### 🔄 Trigger Fired Multiple Times (Recursion)\n");
-        
+
         sb.AppendLine("**What's happening:**");
         sb.AppendLine($"Your trigger `{reEntry.TriggerName}` on {reEntry.ObjectType} fired **{reEntry.TotalFireCount} times** " +
             $"when it should have only fired once.\n");
-        
+
         sb.AppendLine("**Why this is a problem:**");
         sb.AppendLine("This is called **trigger recursion** - your trigger is triggering itself. Here's the cycle:");
         sb.AppendLine("1. User updates a Case");
         sb.AppendLine($"2. {reEntry.TriggerName} fires and updates the Case");
         sb.AppendLine("3. Updating the Case triggers the trigger AGAIN");
         sb.AppendLine("4. This repeats until you hit governor limits or max depth\n");
-        
+
         sb.AppendLine("**The Analogy:**");
         sb.AppendLine("Imagine a microphone next to a speaker. The mic picks up sound → sends it to the speaker → " +
             "speaker plays it → mic picks it up again → FEEDBACK LOOP! That's trigger recursion.\n");
-        
+
         sb.AppendLine("**How to fix it (Add Recursion Control):**");
         sb.AppendLine("```apex");
         sb.AppendLine("// Step 1: Create a static variable to track if trigger already ran");
@@ -477,7 +493,7 @@ public class LogExplainerService
         sb.AppendLine("    // Your trigger logic here...");
         sb.AppendLine("}");
         sb.AppendLine("```\n");
-        
+
         return new DetailedIssue
         {
             Severity = IssueSeverity.High.ToString(),
@@ -488,7 +504,7 @@ public class LogExplainerService
             Priority = 2
         };
     }
-    
+
     private DetailedIssue GenerateFaultedFlowIssue(List<FlowExecution> faultedFlows)
     {
         var sb = new StringBuilder();
@@ -499,13 +515,17 @@ public class LogExplainerService
         {
             sb.AppendLine($"Your Flow `{faultedFlows[0].FlowName}` hit an unhandled error and followed its **Fault path**.");
             if (!string.IsNullOrEmpty(faultedFlows[0].FaultMessage))
+            {
                 sb.AppendLine($"\nFault message: `{faultedFlows[0].FaultMessage}`");
+            }
         }
         else
         {
             sb.AppendLine($"{faultedFlows.Count} Flows faulted in this transaction:");
             foreach (var f in faultedFlows)
+            {
                 sb.AppendLine($"• `{f.FlowName}`{(f.FaultMessage != null ? $" — {f.FaultMessage}" : "")}");
+            }
         }
         sb.AppendLine();
 
@@ -629,7 +649,10 @@ public class LogExplainerService
             sb.AppendLine($"• **HTTP {c.StatusCode}** — `{c.HttpMethod} {endpoint}`");
         }
         if (failedCallouts.Count > 3)
+        {
             sb.AppendLine($"• ...and {failedCallouts.Count - 3} more");
+        }
+
         sb.AppendLine();
 
         sb.AppendLine("**What HTTP error codes mean:**");
@@ -666,40 +689,49 @@ public class LogExplainerService
         {
             "apex trigger" => "**What this means:** A user created/updated/deleted a record, which automatically ran this trigger code. " +
                 "Triggers are like motion sensors - they detect changes and react automatically.",
-            
+
             "flow" => "**What this means:** Salesforce ran an automated Flow or Process Builder. This could have been triggered by a record change, " +
                 "a scheduled time, or a user clicking a button. Flows are like recipes - step-by-step instructions for Salesforce to follow.",
-            
+
             "lightning" => "**What this means:** A user interacted with a Lightning Component on a Salesforce page. They might have clicked a button, " +
                 "loaded a page, or filled out a form. This code runs on the server to fetch or save data.",
-            
+
             "async apex" => "**What this means:** This is asynchronous (background) code that runs separately from the user's action. " +
                 "Think of it like sending an email in the background while you continue working. The user didn't wait for this - it runs later.",
-            
+
             "batch apex" => "**What this means:** This is a scheduled job that processes many records in chunks (batches). " +
                 "Like processing 1 million records 200 at a time to avoid hitting limits. This runs in the background.",
-            
+
             _ => "**What this means:** This code ran in response to some action or event in Salesforce."
         };
     }
-    
+
     private string FormatDuration(long ms)
     {
         if (ms < 1000)
+        {
             return $"{ms}ms";
+        }
         else if (ms < 60 * 1000)
+        {
             return $"{ms / 1000.0:F1} seconds";
+        }
         else
+        {
             return $"{ms / 60000:F1} minutes";
+        }
     }
-    
+
     private string TruncateQuery(string query)
     {
         if (query.Length <= 100)
+        {
             return query;
+        }
+
         return query.Substring(0, 97) + "...";
     }
-    
+
     private string SimplifyQuery(string query)
     {
         // Remove WHERE clause values to group similar queries
@@ -707,7 +739,7 @@ public class LogExplainerService
         simplified = System.Text.RegularExpressions.Regex.Replace(simplified, @"=\s*\d+", "= ?");
         return simplified;
     }
-    
+
     private double SafePercent(int value, int max)
     {
         return max == 0 ? 0 : (value * 100.0 / max);

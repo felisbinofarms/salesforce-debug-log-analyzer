@@ -1,5 +1,5 @@
-using Serilog;
 using SalesforceDebugAnalyzer.Models;
+using Serilog;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -97,7 +97,10 @@ public class ShieldAnomalyDetector
             {
                 var userId = login.UserId ?? "unknown";
                 if (!_knownUserIps.ContainsKey(userId))
+                {
                     _knownUserIps[userId] = new HashSet<string>();
+                }
+
                 _knownUserIps[userId].Add(login.ClientIp!);
             }
             Log.Information("Seeded known IPs for {UserCount} users from login history", _knownUserIps.Count);
@@ -114,7 +117,10 @@ public class ShieldAnomalyDetector
     private async Task DetectLoginAnomalies()
     {
         var recentLogins = await _db.GetRecentShieldEventsAsync("Login", _anchor.AddHours(-1));
-        if (recentLogins.Count == 0) return;
+        if (recentLogins.Count == 0)
+        {
+            return;
+        }
 
         // 1. Failed login spike
         var failedLogins = recentLogins.Where(l => !l.IsSuccess).ToList();
@@ -174,7 +180,7 @@ public class ShieldAnomalyDetector
         foreach (var login in recentLogins.Where(l => l.IsSuccess))
         {
             if (DateTime.TryParse(login.EventDate, null,
-                    System.Globalization.DateTimeStyles.RoundtripKind | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
                     out var loginTime))
             {
                 var hour = loginTime.Hour;
@@ -204,13 +210,19 @@ public class ShieldAnomalyDetector
         var recentApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddHours(-1));
         var historicalApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddDays(-7));
 
-        if (recentApi.Count == 0 || historicalApi.Count < 24) return; // Not enough data
+        if (recentApi.Count == 0 || historicalApi.Count < 24)
+        {
+            return; // Not enough data
+        }
 
         // Calculate hourly average from last 7 days
         var totalHours = 7 * 24.0; // 168 hours in 7 days
         var avgPerHour = historicalApi.Count / totalHours;
 
-        if (avgPerHour < 1) return; // Too few API calls to be meaningful
+        if (avgPerHour < 1)
+        {
+            return; // Too few API calls to be meaningful
+        }
 
         // Calculate standard deviation of hourly counts
         // Group historical events by hour
@@ -224,12 +236,18 @@ public class ShieldAnomalyDetector
             .Select(g => (double)g.Count())
             .ToList();
 
-        if (hourlyBuckets.Count < 3) return;
+        if (hourlyBuckets.Count < 3)
+        {
+            return;
+        }
 
         var mean = hourlyBuckets.Average();
         var stddev = Math.Sqrt(hourlyBuckets.Sum(v => (v - mean) * (v - mean)) / (hourlyBuckets.Count - 1));
 
-        if (stddev < 1) return; // Not enough variance
+        if (stddev < 1)
+        {
+            return; // Not enough variance
+        }
 
         var z = (recentApi.Count - mean) / stddev;
 
@@ -259,13 +277,19 @@ public class ShieldAnomalyDetector
     private async Task DetectApiFailures()
     {
         var recentApi = await _db.GetRecentShieldEventsAsync("API", _anchor.AddHours(-1));
-        if (recentApi.Count == 0) return;
+        if (recentApi.Count == 0)
+        {
+            return;
+        }
 
         var failedApi = recentApi
             .Where(e => !e.IsSuccess || (e.StatusCode.HasValue && e.StatusCode.Value >= 400))
             .ToList();
 
-        if (failedApi.Count == 0) return;
+        if (failedApi.Count == 0)
+        {
+            return;
+        }
 
         // --- Per-endpoint failure spikes ---
         var endpointGroups = failedApi
@@ -348,7 +372,10 @@ public class ShieldAnomalyDetector
     private async Task DetectPagePerformanceDegradation()
     {
         var recentPages = await _db.GetRecentShieldEventsAsync("LightningPageView", _anchor.AddHours(-1));
-        if (recentPages.Count < 5) return; // Need meaningful sample
+        if (recentPages.Count < 5)
+        {
+            return; // Need meaningful sample
+        }
 
         // Group by page/URI and check EPT
         var pageGroups = recentPages
@@ -388,7 +415,10 @@ public class ShieldAnomalyDetector
         var recentExceptions = await _db.GetRecentShieldEventsAsync(
             "ApexUnexpectedException", _anchor.AddHours(-1));
 
-        if (recentExceptions.Count == 0) return;
+        if (recentExceptions.Count == 0)
+        {
+            return;
+        }
 
         // Group by URI/exception type
         var exceptionGroups = recentExceptions
@@ -404,7 +434,8 @@ public class ShieldAnomalyDetector
             // Extract unique exception messages from the group
             var messages = group
                 .Where(e => e.ExtraJson != null)
-                .Select(e => {
+                .Select(e =>
+                {
                     try { return Newtonsoft.Json.Linq.JObject.Parse(e.ExtraJson!)["exceptionMessage"]?.ToString(); }
                     catch { return null; }
                 })
@@ -414,7 +445,9 @@ public class ShieldAnomalyDetector
                 .ToList();
 
             if (messages.Count > 0)
+            {
                 descParts.Add("Messages: " + string.Join(" | ", messages));
+            }
 
             // Collect affected user IDs for auto trace flag
             var affectedUserIds = group
@@ -448,7 +481,9 @@ public class ShieldAnomalyDetector
 
             // Request automatic trace flag creation for each affected user
             foreach (var userId in affectedUserIds)
+            {
                 AutoTraceFlagRequested?.Invoke(this, userId!);
+            }
         }
     }
 
@@ -494,7 +529,11 @@ public class ShieldAnomalyDetector
             var offHoursExports = reportExports
                 .Where(e =>
                 {
-                    if (!DateTime.TryParse(e.EventDate, out var dt)) return false;
+                    if (!DateTime.TryParse(e.EventDate, out var dt))
+                    {
+                        return false;
+                    }
+
                     var hour = dt.Hour;
                     return hour >= QuietHourStart && hour < QuietHourEnd;
                 })
@@ -556,7 +595,10 @@ public class ShieldAnomalyDetector
     {
         var since = _anchor.AddHours(-24);
         var setupEvents = await _db.GetRecentShieldEventsAsync("SetupAuditTrail", since);
-        if (setupEvents.Count == 0) return;
+        if (setupEvents.Count == 0)
+        {
+            return;
+        }
 
         // High-risk sections that warrant immediate alerting
         var criticalSections = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -569,7 +611,11 @@ public class ShieldAnomalyDetector
         var highRiskEvents = setupEvents
             .Where(e =>
             {
-                if (e.ExtraJson == null) return false;
+                if (e.ExtraJson == null)
+                {
+                    return false;
+                }
+
                 try
                 {
                     var j = Newtonsoft.Json.Linq.JObject.Parse(e.ExtraJson);
@@ -616,7 +662,11 @@ public class ShieldAnomalyDetector
         var offHoursSetup = setupEvents
             .Where(e =>
             {
-                if (!DateTime.TryParse(e.EventDate, out var dt)) return false;
+                if (!DateTime.TryParse(e.EventDate, out var dt))
+                {
+                    return false;
+                }
+
                 var hour = dt.Hour;
                 return hour >= QuietHourStart && hour < QuietHourEnd;
             })
@@ -653,7 +703,10 @@ public class ShieldAnomalyDetector
         var recentPages = await _db.GetRecentShieldEventsAsync("LightningPageView", _anchor.AddHours(-24));
 
         var totalEvents = recentLogins.Count + recentApi.Count + recentExceptions.Count + recentPages.Count;
-        if (totalEvents == 0) return;
+        if (totalEvents == 0)
+        {
+            return;
+        }
 
         var uniqueUsers = recentLogins.Select(l => l.UserId).Where(u => u != null).Distinct().Count();
         var failedLogins = recentLogins.Count(l => !l.IsSuccess);
@@ -662,9 +715,20 @@ public class ShieldAnomalyDetector
         var parts = new List<string>();
         parts.Add($"{uniqueUsers} users logged in");
         parts.Add($"{recentApi.Count:N0} API calls");
-        if (recentPages.Count > 0) parts.Add($"{recentPages.Count:N0} page views");
-        if (failedLogins > 0) parts.Add($"{failedLogins} failed logins");
-        if (exceptionCount > 0) parts.Add($"{exceptionCount} Apex exceptions");
+        if (recentPages.Count > 0)
+        {
+            parts.Add($"{recentPages.Count:N0} page views");
+        }
+
+        if (failedLogins > 0)
+        {
+            parts.Add($"{failedLogins} failed logins");
+        }
+
+        if (exceptionCount > 0)
+        {
+            parts.Add($"{exceptionCount} Apex exceptions");
+        }
 
         await TryCreateAlert(new MonitoringAlert
         {
@@ -686,7 +750,10 @@ public class ShieldAnomalyDetector
         alert.CreatedAt = DateTime.UtcNow;
 
         var existing = await _db.GetRecentAlertAsync(alert.AlertType, alert.EntryPoint, alert.MetricName);
-        if (existing != null) return;
+        if (existing != null)
+        {
+            return;
+        }
 
         await _db.InsertAlertAsync(alert);
         AlertGenerated?.Invoke(this, alert);

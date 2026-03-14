@@ -1,6 +1,6 @@
+using System.IO;
 using Newtonsoft.Json;
 using Serilog;
-using System.IO;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -42,7 +42,9 @@ public class SettingsService
     public AppSettings Load()
     {
         if (_cachedSettings != null)
+        {
             return _cachedSettings;
+        }
 
         if (File.Exists(_settingsPath))
         {
@@ -50,9 +52,11 @@ public class SettingsService
             {
                 var json = File.ReadAllText(_settingsPath);
                 _cachedSettings = JsonConvert.DeserializeObject<AppSettings>(json);
-                
+
                 if (_cachedSettings != null)
+                {
                     return _cachedSettings;
+                }
             }
             catch (Exception ex)
             {

@@ -54,14 +54,14 @@ public class License
     public int MaxDevices { get; set; } = 1;
     public string DeviceFingerprint { get; set; } = string.Empty;
     public int DaysUntilExpiration => (ExpiresDate - DateTime.UtcNow).Days;
-    
+
     // Feature flags based on tier
     public bool CanGroupTransactions => Tier != LicenseTier.Free;
     public bool CanUseCliStreaming => Tier != LicenseTier.Free;
     public bool CanExportReports => Tier != LicenseTier.Free;
     public bool CanSubmitToMarketplace => Tier != LicenseTier.Free;
     public int MaxLogSizeMB => Tier == LicenseTier.Free ? 30 : int.MaxValue;
-    
+
     // Validation helpers
     public bool IsExpired => DateTime.UtcNow > ExpiresDate;
     public bool NeedsOnlineValidation => (DateTime.UtcNow - LastValidated).Days >= 30;

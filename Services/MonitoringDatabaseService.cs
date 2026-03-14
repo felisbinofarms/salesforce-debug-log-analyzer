@@ -1,7 +1,7 @@
+using System.IO;
 using Microsoft.Data.Sqlite;
 using SalesforceDebugAnalyzer.Models;
 using Serilog;
-using System.IO;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -399,7 +399,9 @@ public class MonitoringDatabaseService : IDisposable
             WHERE org_id = @orgId AND captured_at >= @since";
 
         if (entryPoint != null)
+        {
             sql += " AND entry_point = @entryPoint";
+        }
 
         sql += " ORDER BY captured_at ASC";
 
@@ -407,7 +409,9 @@ public class MonitoringDatabaseService : IDisposable
         cmd.Parameters.AddWithValue("@orgId", _orgId);
         cmd.Parameters.AddWithValue("@since", since.ToString("O"));
         if (entryPoint != null)
+        {
             cmd.Parameters.AddWithValue("@entryPoint", entryPoint);
+        }
 
         var snapshots = new List<LogSnapshot>();
         using var reader = await cmd.ExecuteReaderAsync();
@@ -596,9 +600,13 @@ public class MonitoringDatabaseService : IDisposable
               AND period_type = @periodType AND period_start >= @since";
 
         if (entryPoint != null)
+        {
             sql += " AND entry_point = @entryPoint";
+        }
         else
+        {
             sql += " AND entry_point IS NULL";
+        }
 
         sql += " ORDER BY period_start ASC";
 
@@ -608,7 +616,9 @@ public class MonitoringDatabaseService : IDisposable
         cmd.Parameters.AddWithValue("@periodType", periodType);
         cmd.Parameters.AddWithValue("@since", since.ToString("O"));
         if (entryPoint != null)
+        {
             cmd.Parameters.AddWithValue("@entryPoint", entryPoint);
+        }
 
         var aggregates = new List<MetricAggregate>();
         using var reader = await cmd.ExecuteReaderAsync();
@@ -702,9 +712,14 @@ public class MonitoringDatabaseService : IDisposable
               AND created_at >= @since AND is_dismissed = 0";
 
         if (entryPoint != null)
+        {
             cmd.CommandText += " AND entry_point = @entryPoint";
+        }
+
         if (metricName != null)
+        {
             cmd.CommandText += " AND metric_name = @metricName";
+        }
 
         cmd.CommandText += " ORDER BY created_at DESC LIMIT 1";
 
@@ -712,13 +727,20 @@ public class MonitoringDatabaseService : IDisposable
         cmd.Parameters.AddWithValue("@alertType", alertType);
         cmd.Parameters.AddWithValue("@since", since);
         if (entryPoint != null)
+        {
             cmd.Parameters.AddWithValue("@entryPoint", entryPoint);
+        }
+
         if (metricName != null)
+        {
             cmd.Parameters.AddWithValue("@metricName", metricName);
+        }
 
         using var reader = await cmd.ExecuteReaderAsync();
         if (await reader.ReadAsync())
+        {
             return ReadAlert(reader);
+        }
 
         return null;
     }
@@ -735,9 +757,14 @@ public class MonitoringDatabaseService : IDisposable
         var sql = "SELECT * FROM alerts WHERE org_id = @orgId";
 
         if (!includeDismissed)
+        {
             sql += " AND is_dismissed = 0";
+        }
+
         if (severityFilter != null)
+        {
             sql += " AND severity = @severity";
+        }
 
         sql += " ORDER BY created_at DESC LIMIT @limit";
 
@@ -745,7 +772,9 @@ public class MonitoringDatabaseService : IDisposable
         cmd.Parameters.AddWithValue("@orgId", _orgId);
         cmd.Parameters.AddWithValue("@limit", limit);
         if (severityFilter != null)
+        {
             cmd.Parameters.AddWithValue("@severity", severityFilter);
+        }
 
         var alerts = new List<MonitoringAlert>();
         using var reader = await cmd.ExecuteReaderAsync();
@@ -953,7 +982,9 @@ public class MonitoringDatabaseService : IDisposable
 
             var deleted = await cmd.ExecuteNonQueryAsync();
             if (deleted > 0)
+            {
                 Log.Information("Pruned {Count} old monitoring records", deleted);
+            }
         }
         finally
         {
@@ -1020,7 +1051,10 @@ public class MonitoringDatabaseService : IDisposable
     /// </summary>
     public async Task InsertShieldEventsAsync(List<ShieldEvent> events)
     {
-        if (events.Count == 0) return;
+        if (events.Count == 0)
+        {
+            return;
+        }
 
         await _writeLock.WaitAsync();
         try
@@ -1079,7 +1113,10 @@ public class MonitoringDatabaseService : IDisposable
         var result = await cmd.ExecuteScalarAsync();
         if (result is string dateStr && DateTime.TryParse(dateStr, null,
                 System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+        {
             return dt;
+        }
+
         return null;
     }
 
@@ -1144,13 +1181,16 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@since", since);
             using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
+            {
                 data.TopApiEndpoints.Add(new ShieldDashboardRow
                 {
-                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    Label = r.GetString(0),
+                    Count = r.GetInt64(1),
                     AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
                     MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
                     UniqueUsers = r.GetInt32(4)
                 });
+            }
         }
 
         // Sort insights by impact score (highest first)
@@ -1207,7 +1247,9 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@since", since);
             using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
+            {
                 exceptions.Add((r.GetString(0), r.GetInt64(1), r.GetInt32(2), null, null));
+            }
         }
 
         data.ExceptionTotal = (int)exceptions.Sum(e => e.count);
@@ -1253,7 +1295,9 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@since", since);
             using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
+            {
                 prevCounts[r.GetString(0)] = r.GetInt64(1);
+            }
         }
 
         // Generate insights
@@ -1264,16 +1308,23 @@ public class MonitoringDatabaseService : IDisposable
                 ? $"↑ {(count - prevCount) * 100 / prevCount}% vs previous {(since.Contains("24") ? "24h" : "period")}"
                 : prevCount == 0 && count > 0 ? "🆕 New — not seen in previous period" : null;
             if (prevCount > 0 && count <= prevCount)
+            {
                 trend = count == prevCount ? "→ Same as previous period" : $"↓ {(prevCount - count) * 100 / prevCount}% vs previous period";
+            }
 
             var severity = count >= 50 || users >= 5 ? "critical" : count >= 5 ? "warning" : "info";
             var title = type.Length > 80 ? type[..80] + "…" : type;
 
             var detail = "";
             if (!string.IsNullOrEmpty(message))
+            {
                 detail += message + "\n";
+            }
+
             if (!string.IsNullOrEmpty(stackTrace))
+            {
                 detail += "\n" + stackTrace;
+            }
 
             var recommendation = InferExceptionRecommendation(type, message, stackTrace);
 
@@ -1293,18 +1344,28 @@ public class MonitoringDatabaseService : IDisposable
 
             data.ApexExceptions.Add(new ShieldDashboardRow
             {
-                Label = type, Count = count, UniqueUsers = users,
-                SubLabel = message, SeverityColor = "#F85149"
+                Label = type,
+                Count = count,
+                UniqueUsers = users,
+                SubLabel = message,
+                SeverityColor = "#F85149"
             });
         }
     }
 
     private static readonly Dictionary<string, string> LoginTypeMap = new()
     {
-        ["3"] = "Partner Portal", ["4"] = "SSO SAML", ["5"] = "Customer Portal",
-        ["6"] = "OAuth Refresh Token", ["7"] = "AppExchange", ["8"] = "SAML SSO",
-        ["9"] = "SAML SSO Internal", ["A"] = "Application Login",
-        ["I"] = "OAuth API", ["i"] = "OAuth JS-API", ["r"] = "Remote Access 2.0"
+        ["3"] = "Partner Portal",
+        ["4"] = "SSO SAML",
+        ["5"] = "Customer Portal",
+        ["6"] = "OAuth Refresh Token",
+        ["7"] = "AppExchange",
+        ["8"] = "SAML SSO",
+        ["9"] = "SAML SSO Internal",
+        ["A"] = "Application Login",
+        ["I"] = "OAuth API",
+        ["i"] = "OAuth JS-API",
+        ["r"] = "Remote Access 2.0"
     };
 
     private static readonly Dictionary<string, string> LoginStatusMap = new()
@@ -1327,17 +1388,48 @@ public class MonitoringDatabaseService : IDisposable
 
     private static string DecodeBrowser(string? browser)
     {
-        if (string.IsNullOrEmpty(browser)) return "Unknown";
+        if (string.IsNullOrEmpty(browser))
+        {
+            return "Unknown";
+        }
+
         if (browser.Contains("Web Service Connector", StringComparison.OrdinalIgnoreCase))
+        {
             return "Salesforce WSC (Java Integration)";
-        if (browser.Contains("Edg/", StringComparison.OrdinalIgnoreCase)) return "Edge";
-        if (browser.Contains("CriOS", StringComparison.OrdinalIgnoreCase)) return "Chrome (iOS)";
+        }
+
+        if (browser.Contains("Edg/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Edge";
+        }
+
+        if (browser.Contains("CriOS", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chrome (iOS)";
+        }
+
         if (browser.Contains("Safari", StringComparison.OrdinalIgnoreCase) &&
-            browser.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) return "Chrome";
-        if (browser.Contains("Safari", StringComparison.OrdinalIgnoreCase)) return "Safari";
-        if (browser.Contains("Firefox", StringComparison.OrdinalIgnoreCase)) return "Firefox";
+            browser.Contains("Chrome", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chrome";
+        }
+
+        if (browser.Contains("Safari", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Safari";
+        }
+
+        if (browser.Contains("Firefox", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Firefox";
+        }
+
         if (browser.Contains("iPhone", StringComparison.OrdinalIgnoreCase) ||
-            browser.Contains("Mobile", StringComparison.OrdinalIgnoreCase)) return "Mobile Browser";
+            browser.Contains("Mobile", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Mobile Browser";
+        }
+
         return browser.Length > 40 ? browser[..40] + "…" : browser;
     }
 
@@ -1404,9 +1496,13 @@ public class MonitoringDatabaseService : IDisposable
                 if (topReason == null) { topReason = reason; topLoginType = lt; topBrowser = browser; }
 
                 if (!detail.ReasonBreakdown.ContainsKey(FriendlyReason(reason)))
+                {
                     detail.ReasonBreakdown[FriendlyReason(reason)] = cnt;
+                }
                 else
+                {
                     detail.ReasonBreakdown[FriendlyReason(reason)] += cnt;
+                }
             }
             detail.PrimaryReason = topReason ?? "Unknown";
             detail.PrimaryReasonFriendly = FriendlyReason(topReason);
@@ -1432,7 +1528,9 @@ public class MonitoringDatabaseService : IDisposable
                 var cnt = r.GetInt64(1);
                 data.FailedLogins.Add(new ShieldDashboardRow
                 {
-                    Label = FriendlyReason(reason), Count = cnt, UniqueUsers = r.GetInt32(2),
+                    Label = FriendlyReason(reason),
+                    Count = cnt,
+                    UniqueUsers = r.GetInt32(2),
                     SubLabel = $"{r.GetInt32(3)} IPs",
                     SeverityColor = cnt > 20 ? "#F85149" : "#D29922"
                 });
@@ -1595,15 +1693,18 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@since", since);
             using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
+            {
                 data.TopPages.Add(new ShieldDashboardRow
                 {
-                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    Label = r.GetString(0),
+                    Count = r.GetInt64(1),
                     AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
                     MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
                     UniqueUsers = r.GetInt32(4),
                     SeverityColor = (r.IsDBNull(2) ? 0 : r.GetDouble(2)) > 3000 ? "#F85149"
                                   : (r.IsDBNull(2) ? 0 : r.GetDouble(2)) > 1000 ? "#D29922" : null
                 });
+            }
         }
     }
 
@@ -1678,41 +1779,72 @@ public class MonitoringDatabaseService : IDisposable
             cmd.Parameters.AddWithValue("@since", since);
             using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
+            {
                 data.SlowestApiEndpoints.Add(new ShieldDashboardRow
                 {
-                    Label = r.GetString(0), Count = r.GetInt64(1),
+                    Label = r.GetString(0),
+                    Count = r.GetInt64(1),
                     AvgDurationMs = r.IsDBNull(2) ? null : r.GetDouble(2),
                     MaxDurationMs = r.IsDBNull(3) ? null : r.GetDouble(3),
                     UniqueUsers = r.GetInt32(4)
                 });
+            }
         }
     }
 
     private static string? InferExceptionRecommendation(string exceptionType, string? message, string? stackTrace)
     {
         if (string.IsNullOrEmpty(exceptionType) && string.IsNullOrEmpty(message))
+        {
             return "Review the exception details in Salesforce Setup → Debug Logs or Apex Exception Email notifications.";
+        }
 
         var combined = $"{exceptionType} {message} {stackTrace}".ToLowerInvariant();
 
         if (combined.Contains("null") || combined.Contains("de-reference"))
+        {
             return "NullPointerException: Add null checks before accessing object properties. Check if SOQL queries return results before using them.";
+        }
+
         if (combined.Contains("soql") || combined.Contains("101") || combined.Contains("too many"))
+        {
             return "Governor limit hit: Move queries outside of loops. Use collections and maps for bulk processing. Consider @future or Queueable for heavy operations.";
+        }
+
         if (combined.Contains("dml") || combined.Contains("150"))
+        {
             return "DML limit hit: Collect records into lists and perform single DML operations. Use Database.insert with allOrNone=false for partial success.";
+        }
+
         if (combined.Contains("cpu") || combined.Contains("timeout"))
+        {
             return "CPU/timeout: Optimize loops and nested iterations. Move heavy processing to async (@future/Queueable). Check for recursive triggers.";
+        }
+
         if (combined.Contains("callout"))
+        {
             return "Callout exception: Check external service availability. Add retry logic with exponential backoff. Verify endpoint URL and authentication.";
+        }
+
         if (combined.Contains("visualforce") || combined.Contains("viewstate"))
+        {
             return "Visualforce issue: Reduce view state size by using transient variables. Consider migrating to Lightning Web Components.";
+        }
+
         if (combined.Contains("flow") || combined.Contains("process"))
+        {
             return "Flow/Process Builder error: Review the flow for missing null checks on record variables. Test with different record types and field values.";
+        }
+
         if (combined.Contains("trigger"))
+        {
             return "Trigger exception: Add recursion control (static boolean flag). Ensure trigger handles bulk operations (200+ records).";
+        }
+
         if (combined.Contains("mixed_dml"))
+        {
             return "Mixed DML: Separate setup object DML from non-setup object DML. Use @future method for the setup object operation.";
+        }
 
         return "Review the stack trace to identify the root cause. Check recent deployments that may have introduced this error.";
     }
@@ -1836,7 +1968,11 @@ public class MonitoringDatabaseService : IDisposable
     /// </summary>
     public async Task RepairLoginSuccessAsync(List<ShieldEvent> failedLogins)
     {
-        if (failedLogins.Count == 0) return;
+        if (failedLogins.Count == 0)
+        {
+            return;
+        }
+
         await _writeLock.WaitAsync();
         try
         {

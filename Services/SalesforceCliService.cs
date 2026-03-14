@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Linq;
+using System.Text;
 using SalesforceDebugAnalyzer.Models;
 
 namespace SalesforceDebugAnalyzer.Services;
@@ -58,7 +58,10 @@ public class SalesforceCliService
             };
 
             using var process = Process.Start(startInfo);
-            if (process == null) return false;
+            if (process == null)
+            {
+                return false;
+            }
 
             process.WaitForExit(5000);
             return process.ExitCode == 0;
@@ -79,7 +82,10 @@ public class SalesforceCliService
                 };
 
                 using var process = Process.Start(startInfo);
-                if (process == null) return false;
+                if (process == null)
+                {
+                    return false;
+                }
 
                 process.WaitForExit(5000);
                 return process.ExitCode == 0;
@@ -98,11 +104,15 @@ public class SalesforceCliService
     {
         // Check if sf has apex commands (newer CLI versions)
         if (CheckCommand("sf") && CheckSfApexCommands())
+        {
             return ("sf", false);
+        }
 
         // Fall back to legacy CLI (sfdx) with force:apex commands
         if (CheckCommand("sfdx"))
+        {
             return ("sfdx", true);
+        }
 
         return (string.Empty, false);
     }
@@ -184,7 +194,7 @@ public class SalesforceCliService
             _streamingStartTime = DateTime.UtcNow.AddHours(-24);
             _processedLogIds.Clear();
             _isStreaming = true;
-            
+
             StatusChanged?.Invoke(this, $"📅 Looking for logs since {_streamingStartTime:HH:mm:ss} UTC ({_streamingStartTime.ToLocalTime():g} local)");
 
             // Start polling timer (check for new logs every 3 seconds)
@@ -206,17 +216,20 @@ public class SalesforceCliService
     /// </summary>
     private async Task PollForNewLogsAsync()
     {
-        if (!_isStreaming || _apiService == null) return;
+        if (!_isStreaming || _apiService == null)
+        {
+            return;
+        }
 
         try
         {
             StatusChanged?.Invoke(this, "🔍 Polling for new logs via API...");
-            
+
             // Query logs since streaming started
             var logs = await _apiService.QueryLogsAsync(50); // Get last 50 logs
-            
+
             StatusChanged?.Invoke(this, $"📋 API returned {logs?.Count ?? 0} total logs");
-            
+
             if (logs == null || logs.Count == 0)
             {
                 StatusChanged?.Invoke(this, "📋 No logs found");
@@ -228,7 +241,7 @@ public class SalesforceCliService
                 .Where(log => log.StartTime >= _streamingStartTime)
                 .Where(log => !_processedLogIds.ContainsKey(log.Id))
                 .ToList();
-                
+
             StatusChanged?.Invoke(this, $"🔍 {newLogs.Count} logs match time filter (after {_streamingStartTime:HH:mm:ss} UTC)");
 
             if (newLogs.Count == 0)
@@ -260,7 +273,10 @@ public class SalesforceCliService
     /// </summary>
     private async Task DownloadAndEmitLogAsync(string logId)
     {
-        if (_apiService == null) return;
+        if (_apiService == null)
+        {
+            return;
+        }
 
         try
         {
@@ -304,7 +320,7 @@ public class SalesforceCliService
             if (logContent.Length > 200 && (logContent.Contains("EXECUTION_STARTED") || logContent.Contains("CODE_UNIT_STARTED")))
             {
                 StatusChanged?.Invoke(this, $"✅ Emitting log {logId.Substring(0, 8)}... ({logContent.Length} chars)");
-                
+
                 LogReceived?.Invoke(this, new LogReceivedEventArgs
                 {
                     LogContent = logContent,
@@ -332,7 +348,7 @@ public class SalesforceCliService
     {
         _pollingTimer?.Dispose();
         _pollingTimer = null;
-        
+
         if (_cliProcess != null && !_cliProcess.HasExited)
         {
             _cliProcess.Kill();
@@ -382,7 +398,7 @@ public class SalesforceCliService
                     downloadCommand = $"{_cliPath} apex get log --log-id {logId} --output-dir {outputFolder}";
                 }
                 await ExecuteCliCommandAsync(downloadCommand);
-                
+
                 var logFilePath = Path.Combine(outputFolder, $"apex-{logId}.log");
                 if (File.Exists(logFilePath))
                 {
@@ -418,7 +434,7 @@ public class SalesforceCliService
         };
 
         process.Start();
-        
+
         while (!process.StandardOutput.EndOfStream)
         {
             var line = await process.StandardOutput.ReadLineAsync();
@@ -434,14 +450,17 @@ public class SalesforceCliService
 
     private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
     {
-        if (string.IsNullOrEmpty(e.Data)) return;
+        if (string.IsNullOrEmpty(e.Data))
+        {
+            return;
+        }
 
         // Buffer log lines until we have a complete log
         // Start marker: EXECUTION_STARTED or timestamp pattern [HH:MM:SS.mmm]
         // End marker: EXECUTION_FINISHED or next EXECUTION_STARTED
-        
+
         var line = e.Data;
-        
+
         // Detect start of a new log
         if (line.Contains("EXECUTION_STARTED") || line.Contains("CODE_UNIT_STARTED"))
         {
@@ -450,7 +469,7 @@ public class SalesforceCliService
             {
                 EmitBufferedLog();
             }
-            
+
             _isBufferingLog = true;
             _logBuffer.Clear();
             _logBuffer.AppendLine(line);
@@ -458,7 +477,7 @@ public class SalesforceCliService
         else if (_isBufferingLog)
         {
             _logBuffer.AppendLine(line);
-            
+
             // Detect end of log
             if (line.Contains("EXECUTION_FINISHED") || line.Contains("CODE_UNIT_FINISHED"))
             {
@@ -471,13 +490,16 @@ public class SalesforceCliService
             StatusChanged?.Invoke(this, line);
         }
     }
-    
+
     private void EmitBufferedLog()
     {
-        if (_logBuffer.Length == 0) return;
-        
+        if (_logBuffer.Length == 0)
+        {
+            return;
+        }
+
         var logContent = _logBuffer.ToString();
-        
+
         // Only emit if it looks like a complete log (has meaningful content)
         if (logContent.Length > 100)
         {
@@ -487,7 +509,7 @@ public class SalesforceCliService
                 Timestamp = DateTime.UtcNow
             });
         }
-        
+
         _logBuffer.Clear();
         _isBufferingLog = false;
     }

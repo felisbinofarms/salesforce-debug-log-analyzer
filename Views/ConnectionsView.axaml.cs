@@ -1,13 +1,13 @@
-﻿using Avalonia;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using SalesforceDebugAnalyzer.Services;
 using SalesforceDebugAnalyzer.Models;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.Json;
+using SalesforceDebugAnalyzer.Services;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -35,10 +35,10 @@ public partial class ConnectionsView : UserControl
             "connections.json"
         );
         _recentConnections = new ObservableCollection<SavedConnection>();
-        
+
         AddHandler(DragDrop.DragOverEvent, DropZone_DragOver);
         AddHandler(DragDrop.DropEvent, DropZone_Drop);
-        
+
         LoadRecentConnections();
     }
 
@@ -89,7 +89,10 @@ public partial class ConnectionsView : UserControl
             // TODO: Implement OAuthBrowserDialog for Avalonia
             // For now, show a message directing to manual token
             var parentWindow = TopLevel.GetTopLevel(this) as Window;
-            if (parentWindow == null) return;
+            if (parentWindow == null)
+            {
+                return;
+            }
 
             var dialog = new ConnectionDialog(useSandbox);
             var result = await dialog.ShowDialog<ConnectionDialogResult?>(parentWindow);
@@ -131,7 +134,9 @@ public partial class ConnectionsView : UserControl
         var accessToken = ManualAccessToken?.Text?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(instanceUrl) || string.IsNullOrEmpty(accessToken))
+        {
             return;
+        }
 
         try
         {
@@ -158,7 +163,10 @@ public partial class ConnectionsView : UserControl
     private async void DropZone_Click(object? sender, RoutedEventArgs e)
     {
         var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
+        if (topLevel == null)
+        {
+            return;
+        }
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -209,7 +217,10 @@ public partial class ConnectionsView : UserControl
                 foreach (var item in files)
                 {
                     var path = item.TryGetLocalPath();
-                    if (path == null) continue;
+                    if (path == null)
+                    {
+                        continue;
+                    }
 
                     if (Directory.Exists(path))
                     {

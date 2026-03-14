@@ -1,9 +1,9 @@
-﻿using Avalonia.Controls;
+using System.Diagnostics;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using SalesforceDebugAnalyzer.Services;
-using System.Diagnostics;
 
 namespace SalesforceDebugAnalyzer.Views;
 
@@ -24,7 +24,10 @@ public partial class UpgradeDialog : Window
     private async void StartTrial_Click(object? sender, RoutedEventArgs e)
     {
         var email = await PromptForEmailAsync("Start Free Trial", "Your email address", "you@example.com");
-        if (string.IsNullOrWhiteSpace(email)) return;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return;
+        }
 
         try
         {
@@ -62,7 +65,10 @@ public partial class UpgradeDialog : Window
     private async void ActivateKey_Click(object? sender, RoutedEventArgs e)
     {
         var (key, email) = await PromptForKeyAsync();
-        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(email)) return;
+        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(email))
+        {
+            return;
+        }
 
         try
         {
@@ -86,7 +92,8 @@ public partial class UpgradeDialog : Window
         var dialog = new Window
         {
             Title = title,
-            Width = 440, Height = 200,
+            Width = 440,
+            Height = 200,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
             Background = new SolidColorBrush(Color.Parse("#1E1F22"))
@@ -130,7 +137,8 @@ public partial class UpgradeDialog : Window
         var dialog = new Window
         {
             Title = "Activate License Key",
-            Width = 440, Height = 260,
+            Width = 440,
+            Height = 260,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
             Background = new SolidColorBrush(Color.Parse("#1E1F22"))

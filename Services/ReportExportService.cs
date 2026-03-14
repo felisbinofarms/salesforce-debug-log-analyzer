@@ -1,8 +1,8 @@
+using System.IO;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SalesforceDebugAnalyzer.Models;
-using System.IO;
 
 namespace SalesforceDebugAnalyzer.Services;
 
@@ -128,7 +128,10 @@ public class ReportExportService
 
     private void ComposeHealthSection(IContainer container, LogAnalysis analysis)
     {
-        if (analysis.Health == null) return;
+        if (analysis.Health == null)
+        {
+            return;
+        }
 
         container.Column(column =>
         {
@@ -177,7 +180,10 @@ public class ReportExportService
 
     private void ComposeIssuesSection(IContainer container, LogAnalysis analysis)
     {
-        if (analysis.Health == null) return;
+        if (analysis.Health == null)
+        {
+            return;
+        }
 
         container.Column(column =>
         {
@@ -195,7 +201,7 @@ public class ReportExportService
                         .FontSize(12)
                         .Bold()
                         .FontColor("#F04747");
-                    
+
                     foreach (var issue in analysis.Health.CriticalIssues)
                     {
                         AddIssueItem(inner, issue);
@@ -209,7 +215,7 @@ public class ReportExportService
                         .FontSize(12)
                         .Bold()
                         .FontColor("#FAA61A");
-                    
+
                     foreach (var issue in analysis.Health.HighPriorityIssues)
                     {
                         AddIssueItem(inner, issue);
@@ -223,7 +229,7 @@ public class ReportExportService
                         .FontSize(12)
                         .Bold()
                         .FontColor("#43B581");
-                    
+
                     foreach (var issue in analysis.Health.QuickWins)
                     {
                         AddIssueItem(inner, issue);
@@ -278,7 +284,10 @@ public class ReportExportService
 
     private void ComposeGovernorLimitsSection(IContainer container, LogAnalysis analysis)
     {
-        if (!analysis.LimitSnapshots.Any()) return;
+        if (!analysis.LimitSnapshots.Any())
+        {
+            return;
+        }
 
         // Get the last (final) snapshot
         var finalLimits = analysis.LimitSnapshots.Last();
@@ -305,8 +314,8 @@ public class ReportExportService
     private void AddLimitRow(ColumnDescriptor column, string name, double used, double limit, string unit = "")
     {
         var percentage = limit > 0 ? (used / limit) * 100 : 0;
-        var color = percentage >= 80 ? "#F04747" : 
-                   percentage >= 50 ? "#FAA61A" : 
+        var color = percentage >= 80 ? "#F04747" :
+                   percentage >= 50 ? "#FAA61A" :
                    "#43B581";
 
         column.Item().PaddingTop(3).Row(row =>
@@ -434,7 +443,7 @@ public class ReportExportService
         var text = new System.Text.StringBuilder();
         text.AppendLine($"Black Widow Analysis - {DateTime.Now:yyyy-MM-dd}");
         text.AppendLine($"Log: {analysis.LogName}");
-        
+
         if (analysis.Health != null)
         {
             text.AppendLine($"Health Score: {analysis.Health.Score}/100 ({analysis.Health.Grade})");
@@ -450,9 +459,14 @@ public class ReportExportService
                 {
                     text.AppendLine($"  • {issue.Title}");
                     if (!string.IsNullOrWhiteSpace(issue.Problem))
+                    {
                         text.AppendLine($"    Problem: {issue.Problem}");
+                    }
+
                     if (!string.IsNullOrWhiteSpace(issue.Fix))
+                    {
                         text.AppendLine($"    Fix: {issue.Fix}");
+                    }
                 }
             }
 
@@ -464,7 +478,9 @@ public class ReportExportService
                 {
                     text.AppendLine($"  • {issue.Title}");
                     if (!string.IsNullOrWhiteSpace(issue.Fix))
+                    {
                         text.AppendLine($"    Fix: {issue.Fix}");
+                    }
                 }
             }
 

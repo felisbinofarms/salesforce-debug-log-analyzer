@@ -1,4 +1,4 @@
-﻿namespace SalesforceDebugAnalyzer.Services.Abstractions;
+namespace SalesforceDebugAnalyzer.Services.Abstractions;
 
 /// <summary>
 /// Abstracts UI thread dispatching so ViewModels don't reference WPF/Avalonia directly.
