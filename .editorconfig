@@ -40,7 +40,7 @@ dotnet_style_coalesce_expression                             = true:suggestion
 # Naming conventions
 dotnet_naming_rule.private_fields_underscore.symbols         = private_fields
 dotnet_naming_rule.private_fields_underscore.style           = underscore_prefix
-dotnet_naming_rule.private_fields_underscore.severity        = warning
+dotnet_naming_rule.private_fields_underscore.severity        = suggestion
 
 dotnet_naming_symbols.private_fields.applicable_kinds        = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private

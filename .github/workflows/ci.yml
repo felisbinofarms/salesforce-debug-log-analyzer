@@ -33,9 +33,10 @@ jobs:
         run: dotnet restore
 
       - name: Verify code formatting
-        # dotnet format --verify-no-changes exits non-zero if any file is out of format.
-        # We run it on the main project only; the Tests project shares the same editorconfig.
-        run: dotnet format --verify-no-changes --severity warn
+        # --severity error: only block on errors (whitespace, braces, etc.)
+        # Naming convention warnings (IDE1006) are skipped here because dotnet format
+        # cannot auto-fix them -- they're enforced as suggestions in the IDE instead.
+        run: dotnet format --verify-no-changes --severity error
         continue-on-error: false
 
   # ── Job 2: Build ─────────────────────────────────────────────────────────────
