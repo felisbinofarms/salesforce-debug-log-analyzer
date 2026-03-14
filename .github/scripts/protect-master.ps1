@@ -62,7 +62,8 @@ $payload = @{
             "Build",              # Release compile, warnings-as-errors
             "Security scan",      # vulnerable NuGet package detection
             "Test",               # xUnit suite + 60% coverage floor
-            "PR Title"            # conventional commit format check
+            "PR Title",           # conventional commit format check
+            "Require tests for logic changes"  # test coverage contract
         )
     }
 
@@ -101,7 +102,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "Rules now active on '$Branch':" -ForegroundColor White
     Write-Host "  • Direct pushes blocked — PRs required" -ForegroundColor Gray
-    Write-Host "  • Required checks: Pre-build checks, Build, Security scan, Test, PR Title" -ForegroundColor Gray
+    Write-Host "  * Required checks: Pre-build checks, Build, Security scan, Test, PR Title, Require tests for logic changes" -ForegroundColor Gray
     Write-Host "  • Branches must be up-to-date before merge" -ForegroundColor Gray
     Write-Host "  • Human approvals: not required (pipeline-only gate)" -ForegroundColor Gray
     Write-Host "  • Enforce for admins: yes" -ForegroundColor Gray

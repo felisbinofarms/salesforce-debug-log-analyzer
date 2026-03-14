@@ -1,0 +1,119 @@
+# Enforces the "test coverage contract":
+# If a PR modifies logic files (Services, ViewModels, Models, Helpers),
+# it MUST also include changes to at least one file under Tests/.
+#
+# This does NOT check whether the tests are good — that's the test job's job.
+# This check only ensures tests were not forgotten entirely.
+#
+# Exempt paths (changes here never require test updates):
+#   - Docs, markdown, config, CI files
+#   - Views / XAML (UI layout — tested via integration tests, not unit tests)
+#   - Assets, themes
+
+name: Test Coverage Contract
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  require-tests:
+    name: Require tests for logic changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Fetch the full list of files changed in this PR
+          FILES=$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only)
+          echo "Changed files:"
+          echo "$FILES"
+
+          # ── Logic paths that require accompanying tests ──────────────────
+          LOGIC=$(echo "$FILES" | grep -E \
+            '^(Services|ViewModels|Models|Helpers)/' \
+            || true)
+
+          # ── Test path changes ────────────────────────────────────────────
+          TESTS=$(echo "$FILES" | grep -E \
+            '^Tests/' \
+            || true)
+
+          echo ""
+          echo "Logic files changed:"
+          echo "${LOGIC:-  (none)"}"
+          echo ""
+          echo "Test files changed:"
+          echo "${TESTS:-  (none)"}"
+
+          # Export for next step
+          if [ -n "$LOGIC" ]; then
+            echo "logic_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "logic_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -n "$TESTS" ]; then
+            echo "tests_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tests_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Store lists for the failure message
+          echo "logic_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$LOGIC" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce test requirement
+        env:
+          LOGIC_CHANGED: ${{ steps.changed.outputs.logic_changed }}
+          TESTS_CHANGED: ${{ steps.changed.outputs.tests_changed }}
+          LOGIC_FILES:   ${{ steps.changed.outputs.logic_files }}
+        run: |
+          if [ "$LOGIC_CHANGED" = "true" ] && [ "$TESTS_CHANGED" = "false" ]; then
+            echo "::error::This PR modifies logic files but includes no changes to Tests/."
+            echo ""
+            echo "Logic files changed:"
+            echo "$LOGIC_FILES" | sed 's/^/  /'
+            echo ""
+            echo "Please add or update tests in Tests/ that cover your changes."
+            echo "If this change genuinely needs no tests (e.g. a refactor with"
+            echo "100% existing coverage), add the label 'skip-test-contract' to"
+            echo "the PR and document the reason in the PR description."
+            exit 1
+          elif [ "$LOGIC_CHANGED" = "false" ]; then
+            echo "No logic files changed — test contract check skipped."
+          else
+            echo "Logic files changed AND tests updated — contract satisfied."
+          fi
+
+      - name: Check for skip label override
+        # If the job failed above but the PR has 'skip-test-contract', re-pass.
+        # This gives an escape hatch for genuine exceptions (pure refactors, etc.)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels \
+            --jq '.labels[].name')
+          echo "PR labels: $LABELS"
+          if echo "$LABELS" | grep -q "skip-test-contract"; then
+            echo "Label 'skip-test-contract' found — override accepted."
+            echo "Ensure PR description explains why tests are not required."
+            exit 0
+          fi
+          exit 1
