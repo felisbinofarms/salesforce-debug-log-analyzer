@@ -9,9 +9,41 @@ on:
 permissions:
   contents: read
 
+# Cancel in-progress runs for the same PR/branch so we don't waste minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ── Job 1: Pre-build checks ─────────────────────────────────────────────────
+  # Restores packages and validates code formatting.
+  # Branch protection requires THIS job to pass by name: "pre-build"
+  pre-build:
+    name: Pre-build checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Verify code formatting
+        # dotnet format --verify-no-changes exits non-zero if any file is out of format.
+        # We run it on the main project only; the Tests project shares the same editorconfig.
+        run: dotnet format --verify-no-changes --severity warn
+        continue-on-error: false
+
+  # ── Job 2: Build ─────────────────────────────────────────────────────────────
+  # Compiles the project in Release mode, warnings treated as errors.
+  # Branch protection requires THIS job to pass by name: "Build"
   build:
-    name: Build & Test
+    name: Build
+    needs: pre-build
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +57,78 @@ jobs:
         run: dotnet restore
 
       - name: Build (Release)
-        run: dotnet build --configuration Release --no-restore --warnaserror-
+        # --warnaserror turns ALL warnings into errors — keeps the codebase clean.
+        run: dotnet build --configuration Release --no-restore --warnaserror
 
-      - name: Run tests
-        run: dotnet test Tests/SalesforceDebugAnalyzer.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+  # ── Job 3: Security scan ──────────────────────────────────────────────────────
+  # Runs in PARALLEL with build (both depend only on pre-build).
+  # Fails the PR if any NuGet dependency has a known CVE.
+  # Branch protection requires THIS job to pass by name: "Security scan"
+  security-scan:
+    name: Security scan
+    needs: pre-build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Scan for vulnerable NuGet packages
+        shell: pwsh
+        run: |
+          $output = dotnet list package --vulnerable --include-transitive 2>&1
+          Write-Host $output
+          if ($output -match "has the following vulnerable packages") {
+            Write-Host "::error::Vulnerable NuGet packages detected. Update them before merging."
+            exit 1
+          }
+          Write-Host "No vulnerable packages found."
+
+  # ── Job 4: Tests ─────────────────────────────────────────────────────────────
+  # Runs the full xUnit suite with a 60% line-coverage floor.
+  # Branch protection requires THIS job to pass by name: "Test"
+  test:
+    name: Test
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests (with coverage threshold)
+        # .runsettings configures coverlet: 60% line coverage floor.
+        # If coverage drops below the threshold the step exits non-zero.
+        run: >
+          dotnet test Tests/SalesforceDebugAnalyzer.Tests.csproj
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --settings coverlet.runsettings
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: '**/test-results.trx'
-          retention-days: 7
+          path: |
+            **/test-results.trx
+            **/coverage.cobertura.xml
+          retention-days: 14

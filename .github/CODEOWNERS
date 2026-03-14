@@ -1,0 +1,17 @@
+# CODEOWNERS — https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Every PR to master requires approval from a code owner.
+# Add team members as the project grows.
+
+# Default owner for everything in the repo
+# Replace with your actual GitHub username(s) or team handles (@org/team-name)
+*                   @felisbinofarms
+
+# Core services — extra care needed
+Services/           @felisbinofarms
+ViewModels/         @felisbinofarms
+Models/             @felisbinofarms
+
+# CI/CD and project config
+.github/            @felisbinofarms
+*.csproj            @felisbinofarms

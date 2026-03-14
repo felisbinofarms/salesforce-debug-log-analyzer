@@ -1,0 +1,60 @@
+# Validates that every PR title follows Conventional Commits format.
+# This keeps the changelog and release notes clean and automatable.
+#
+# Allowed prefixes:
+#   feat:     new feature
+#   fix:      bug fix
+#   chore:    maintenance (deps, config, build)
+#   docs:     documentation only
+#   refactor: code change that is neither a fix nor a feature
+#   test:     adding or updating tests
+#   perf:     performance improvement
+#   ci:       CI/CD pipeline changes
+#   revert:   reverts a previous commit
+#
+# Examples:
+#   ✅  feat: add license expiry banner to dashboard
+#   ✅  fix(parser): handle empty log files gracefully
+#   ✅  chore: bump Avalonia to 11.3.0
+#   ❌  Update stuff
+#   ❌  WIP
+
+name: PR Title
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-title:
+    name: PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Conventional Commits regex
+          # Pattern: type(optional-scope)!?: description
+          PATTERN='^(feat|fix|chore|docs|refactor|test|perf|ci|revert)(\([a-z0-9._-]+\))?!?: .{1,100}$'
+
+          echo "PR title: '$PR_TITLE'"
+
+          if echo "$PR_TITLE" | grep -qP "$PATTERN"; then
+            echo "✅ PR title follows Conventional Commits format."
+          else
+            echo "❌ PR title does not follow Conventional Commits format."
+            echo ""
+            echo "Expected format: type(optional-scope): description"
+            echo "Allowed types:   feat | fix | chore | docs | refactor | test | perf | ci | revert"
+            echo ""
+            echo "Examples:"
+            echo "  feat: add license expiry banner"
+            echo "  fix(parser): handle empty log files"
+            echo "  chore: bump Avalonia to 11.3.0"
+            exit 1
+          fi

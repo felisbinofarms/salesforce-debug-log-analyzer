@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  coverlet.runsettings
+  ─────────────────────
+  Configures XPlat Code Coverage (coverlet) for `dotnet test`.
+  Referenced in ci.yml via: dotnet test ... -\-settings coverlet.runsettings
+
+  Coverage threshold: 60% line coverage across the entire solution.
+  Raise this gradually as the test suite matures (aim for 80% by v1.1).
+
+  Docs: https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/MSBuildIntegration.md
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <!-- Output format — cobertura is widely supported (GitHub, Codecov, SonarCloud) -->
+          <Format>cobertura</Format>
+
+          <!-- Coverage floor: fail the job if ANY metric drops below threshold -->
+          <Threshold>60</Threshold>
+          <ThresholdType>line</ThresholdType>
+          <ThresholdStat>minimum</ThresholdStat>
+
+          <!--
+            Exclude generated / infrastructure code from coverage calculation.
+            Add patterns as the project grows.
+          -->
+          <Exclude>
+            <!-- Auto-generated Avalonia designer code -->
+            [*]*.g.*
+            <!-- Program entry point -->
+            [*]Program
+            <!-- AssemblyInfo -->
+            [*]AssemblyInfo
+          </Exclude>
+
+          <ExcludeByAttribute>
+            <!-- Exclude methods tagged [ExcludeFromCodeCoverage] -->
+            ExcludeFromCodeCoverage
+            <!-- Exclude auto-generated attribute -->
+            GeneratedCode
+          </ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
